@@ -19,10 +19,16 @@ body {
   /* Inter: enable ligatures/contextual alternates, disable faux weights. */
   font-feature-settings: "liga" 1, "calt" 1;
   font-synthesis-weight: none;
-  /* Inter reads better with a hair of negative tracking at UI sizes. */
+  /* Base tracking for Inter (English). Be Vietnam Pro tightened below. */
   letter-spacing: -0.011em;
   line-height: 1.6;
   color: #1a1a1a;
+}
+
+/* Be Vietnam Pro (Vietnamese) renders a touch wide; tighten it for cohesion.
+   Applied on the lang root so it inherits into the prose body too. */
+html[lang="vi"] body {
+  letter-spacing: -0.018em;
 }
 
 /* Avoid long words/URLs overflowing on small screens. */
@@ -30,16 +36,15 @@ p, h1, h2, h3, h4, li, blockquote, a {
   overflow-wrap: break-word;
 }
 
-/* Nicer line breaks (no orphans) where supported. */
+/* Improve last-line/orphans without narrowing the block (balance shrinks it). */
 h1, h2, h3 {
-  text-wrap: balance;
+  text-wrap: pretty;
 }
 
 /* Rendered post body + TipTap editor share these typographic rules. */
 .prose {
   font-size: 1.0625rem; /* ~17px: comfortable for long-form reading */
   line-height: 1.75;
-  letter-spacing: -0.003em;
   color: #2a2a2a;
 }
 .prose > * + * {
