@@ -98,7 +98,10 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">Hiển thị ảnh</span>
+        <span className="text-sm font-medium text-neutral-700">Hiển thị ảnh đại diện</span>
+        <p className="text-xs text-neutral-400">
+          Ảnh trong bài: chọn ảnh rồi bấm &quot;Ảnh toàn màn hình&quot; trên thanh công cụ.
+        </p>
         <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
           {(['post', 'full'] as ImageDisplay[]).map((d) => (
             <button

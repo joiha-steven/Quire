@@ -1,14 +1,17 @@
 'use client'
 
 // TipTap markdown editor with a compact toolbar.
-// - Toolbar: bold, italic, heading, list, blockquote, code, link, image.
-// - Drag an image file into the editor -> auto-uploads -> inserts at cursor.
+// Marks/nodes: bold, italic, underline, strike, H1-H3, list, quote, code, link,
+// image (+ per-image full-width toggle), and embedded video (YouTube).
+// Drag an image file into the editor -> auto-uploads -> inserts at cursor.
 // Parent owns the markdown via onChange and can insert images through `apiRef`.
 import { useEffect } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import LinkExt from '@tiptap/extension-link'
 import ImageExt from '@tiptap/extension-image'
+import Underline from '@tiptap/extension-underline'
+import Youtube from '@tiptap/extension-youtube'
 import { Markdown } from 'tiptap-markdown'
 
 export type EditorApi = { insertImage: (url: string) => void }
@@ -17,6 +20,14 @@ export type EditorApi = { insertImage: (url: string) => void }
 type MarkdownStorage = { markdown: { getMarkdown: () => string } }
 function readMarkdown(editor: TiptapEditor): string {
   return (editor.storage as unknown as MarkdownStorage).markdown.getMarkdown()
+}
+
+// Append/remove a "#full" marker on the selected image's src.
+function toggleImageFull(editor: TiptapEditor): void {
+  const src = editor.getAttributes('image').src as string | undefined
+  if (!src) return
+  const next = src.includes('#full') ? src.replace(/#full$/, '') : `${src}#full`
+  editor.chain().focus().updateAttributes('image', { src: next }).run()
 }
 
 type Props = {
@@ -28,16 +39,10 @@ type Props = {
 }
 
 const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100'
-const ACTIVE = 'bg-neutral-200 text-neutral-900'
 
-function Toolbar({
-  editor,
-  onPickImage,
-}: {
-  editor: TiptapEditor
-  onPickImage: () => void
-}) {
-  const cls = (active: boolean) => `${BTN} ${active ? ACTIVE : 'text-neutral-600'}`
+function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: () => void }) {
+  const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-600'}`
+  const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-200 p-2">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
@@ -46,12 +51,23 @@ function Toolbar({
       <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={cls(editor.isActive('italic'))}>
         <em>I</em>
       </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={cls(editor.isActive('underline'))}>
+        <u>U</u>
+      </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={cls(editor.isActive('strike'))}>
+        <s>S</s>
+      </button>
+      {sep}
+      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cls(editor.isActive('heading', { level: 1 }))}>
+        H1
+      </button>
       <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={cls(editor.isActive('heading', { level: 2 }))}>
         H2
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={cls(editor.isActive('heading', { level: 3 }))}>
         H3
       </button>
+      {sep}
       <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>
         • Danh sách
       </button>
@@ -61,6 +77,7 @@ function Toolbar({
       <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}>
         {'</>'}
       </button>
+      {sep}
       <button
         type="button"
         onClick={() => {
@@ -74,6 +91,25 @@ function Toolbar({
       <button type="button" onClick={onPickImage} className={cls(false)}>
         Ảnh
       </button>
+      <button
+        type="button"
+        onClick={() => toggleImageFull(editor)}
+        disabled={!editor.isActive('image')}
+        className={`${BTN} text-neutral-600 disabled:opacity-40`}
+        title="Chọn ảnh trong bài rồi bấm để bật/tắt toàn màn hình"
+      >
+        Ảnh toàn màn hình
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          const url = window.prompt('Dán link video (YouTube):')
+          if (url) editor.commands.setYoutubeVideo({ src: url })
+        }}
+        className={cls(false)}
+      >
+        Video
+      </button>
     </div>
   )
 }
@@ -83,9 +119,11 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
     immediatelyRender: false,
     extensions: [
       StarterKit,
+      Underline,
       LinkExt.configure({ openOnClick: false }),
       ImageExt,
-      Markdown.configure({ html: false }),
+      Youtube.configure({ width: 640, height: 360, nocookie: true }),
+      Markdown.configure({ html: true }),
     ],
     content: initialContent,
     editorProps: {
