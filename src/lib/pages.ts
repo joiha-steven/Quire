@@ -5,6 +5,7 @@ import matter from 'gray-matter'
 import type { Page, PageWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
+import { ensureSlugFree } from '@/lib/slugs'
 
 const INDEX_PATH = 'pages/_index.json'
 const mdPath = (slug: string) => `pages/${slug}.md`
@@ -81,6 +82,8 @@ export async function savePage(
   previousSlug?: string,
 ): Promise<Page> {
   const page = normalize(input)
+  // Reject a slug already taken by another page or post (shared URL namespace).
+  await ensureSlugFree(page.slug, 'page', previousSlug)
   await writeText(mdPath(page.slug), serialize(page))
 
   // If the slug changed, drop the old markdown file.

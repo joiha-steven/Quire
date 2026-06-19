@@ -98,7 +98,10 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
           body: JSON.stringify(payload),
         })
         const json = (await res.json()) as ApiResponse<{ slug: string }>
-        if (!json.success || !json.data) throw new Error(json.error)
+        if (!json.success || !json.data) {
+          notify(json.error === 'slug_taken' ? t.slugTaken : t.saveFailed, 'error')
+          return false
+        }
         currentSlug.current = json.data.slug
         setSavedAt(new Date().toISOString())
         // Keep the address bar in sync without remounting the editor.
