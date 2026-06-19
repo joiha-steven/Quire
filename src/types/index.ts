@@ -36,8 +36,10 @@ export type SiteSettings = {
   title: string
   description: string
   logoUrl: string // '' when no logo
+  logoWidth: number // px, horizontal width of the logo in the header
   showLogo: boolean
   showDescription: boolean
+  contentWidth: number // px, max width of the content column (desktop)
 }
 
 // Uniform API envelope returned by every route.
