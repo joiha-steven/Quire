@@ -1,0 +1,63 @@
+// GET    /api/posts/[slug]  -> full post (public read)
+// PUT    /api/posts/[slug]  -> overwrite post (owner only)
+// DELETE /api/posts/[slug]  -> delete post (owner only)
+
+import type { NextRequest } from 'next/server'
+import type { PostWithContent } from '@/types'
+import { getPost, savePost, deletePost } from '@/lib/posts'
+import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
+
+export async function GET(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]'>): Promise<Response> {
+  const start = Date.now()
+  try {
+    const { slug } = await ctx.params
+    const post = await getPost(slug)
+    if (!post) {
+      logRequest(req, 404, start)
+      return fail('Post not found', 404)
+    }
+    logRequest(req, 200, start)
+    return ok(post)
+  } catch (error) {
+    logError(req, error)
+    logRequest(req, 500, start)
+    return fail('Failed to read post', 500)
+  }
+}
+
+export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]'>): Promise<Response> {
+  const start = Date.now()
+  try {
+    if (!(await requireOwner())) {
+      logRequest(req, 401, start)
+      return fail('Unauthorized', 401)
+    }
+    const { slug } = await ctx.params
+    const body = (await req.json()) as Partial<PostWithContent>
+    const meta = await savePost(body, slug)
+    logRequest(req, 200, start)
+    return ok(meta)
+  } catch (error) {
+    logError(req, error)
+    logRequest(req, 500, start)
+    return fail('Failed to update post', 500)
+  }
+}
+
+export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]'>): Promise<Response> {
+  const start = Date.now()
+  try {
+    if (!(await requireOwner())) {
+      logRequest(req, 401, start)
+      return fail('Unauthorized', 401)
+    }
+    const { slug } = await ctx.params
+    await deletePost(slug)
+    logRequest(req, 200, start)
+    return ok({ slug })
+  } catch (error) {
+    logError(req, error)
+    logRequest(req, 500, start)
+    return fail('Failed to delete post', 500)
+  }
+}

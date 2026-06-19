@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# vibeblog
 
-## Getting Started
+An AI-operated personal blog platform. Write and publish from a Vietnamese admin
+UI; everything (posts + media) is stored in **Vercel Blob** — no database.
 
-First, run the development server:
+- **Framework:** Next.js (App Router) + TypeScript (strict)
+- **Storage:** Vercel Blob (`posts/`, `media/`, each with an `_index.json` manifest)
+- **Auth:** NextAuth v5, GitHub OAuth, single authorized owner
+- **Editor:** TipTap with markdown
+- **Styles:** Tailwind CSS v4
+- **Deploy:** Vercel
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in the values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Required environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+See [`.env.example`](./.env.example). In short:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable                | What it is                                  |
+| ----------------------- | ------------------------------------------- |
+| `AUTH_SECRET`           | NextAuth secret — `npx auth secret`         |
+| `AUTH_GITHUB_ID`        | GitHub OAuth app client id                  |
+| `AUTH_GITHUB_SECRET`    | GitHub OAuth app client secret              |
+| `AUTHORIZED_EMAIL`      | The only GitHub email allowed into `/admin` |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read/write token                |
 
-## Learn More
+GitHub OAuth callback URL: `https://<your-domain>/api/auth/callback/github`
+(use `http://localhost:3000/...` for local development).
 
-To learn more about Next.js, take a look at the following resources:
+## Two-repo pattern
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This repo (`vibeblog`) is the **public, open-source platform** — MIT licensed,
+zero personal data. Anyone can fork and self-host.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Keep your personal stuff in a **separate private repo** (e.g. `vibeblog-private`),
+containing only:
 
-## Deploy on Vercel
+- `.env.local` with your real credentials
+- `CLAUDE.md` with your personal operating notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Your actual blog content lives in Vercel Blob, not in git.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy to Vercel
+
+1. Push this repo to GitHub and import it into Vercel.
+2. Add a **Blob** store (Storage tab) — this sets `BLOB_READ_WRITE_TOKEN`.
+3. Add the remaining env vars from `.env.example`.
+4. Deploy. Visit `/admin` and sign in with the authorized GitHub account.
+
+## Usage
+
+- `/` — public blog (published, date-reached posts only)
+- `/admin` — dashboard (owner only)
+- `/admin/editor` — write a new post
+- `/admin/media` — media library
+
+## License
+
+MIT
