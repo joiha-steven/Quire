@@ -3,7 +3,6 @@
 // Editor screen: left = TipTap editor, right = settings, bottom = action bar.
 // Handles auto-save, manual save (draft/publish) and the media picker modal.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import type { PostWithContent, MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -44,7 +43,6 @@ function toDraft(initial?: PostWithContent): Draft {
 }
 
 export function PostForm({ initial, allCategories, allTags }: Props) {
-  const router = useRouter()
   const { notify } = useToast()
   const [draft, setDraft] = useState<Draft>(() => toDraft(initial))
   const [saving, setSaving] = useState(false)
@@ -68,15 +66,19 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
     })
   }, [])
 
-  // Persist current draft. statusOverride forces draft/published.
-  const persist = useCallback(
+  // One save at a time: every save runs after the previous finishes (chained),
+  // so autosave and manual save never race or double-create a post.
+  const saveChain = useRef<Promise<unknown>>(Promise.resolve())
+
+  const doPersist = useCallback(
     async (statusOverride?: Draft['status']): Promise<boolean> => {
       const d = draftRef.current
       if (!d.title.trim() && !d.content.trim()) return false
       setSaving(true)
       const payload: Partial<PostWithContent> = {
         title: d.title,
-        slug: d.slug || slugify(d.title),
+        // Always have a slug so the API never rejects a content-only draft.
+        slug: d.slug || slugify(d.title) || `post-${Date.now()}`,
         date: d.date ? new Date(d.date).toISOString() : new Date().toISOString(),
         status: statusOverride ?? d.status,
         categories: d.categories,
@@ -95,10 +97,10 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
         })
         const json = (await res.json()) as ApiResponse<{ slug: string }>
         if (!json.success || !json.data) throw new Error(json.error)
-        const wasNew = !editing
         currentSlug.current = json.data.slug
         setSavedAt(new Date().toISOString())
-        if (wasNew) router.replace(`/admin/editor/${json.data.slug}`)
+        // Keep the address bar in sync without remounting the editor.
+        window.history.replaceState(null, '', `/admin/editor/${json.data.slug}`)
         return true
       } catch {
         notify('Lưu thất bại', 'error')
@@ -107,7 +109,18 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
         setSaving(false)
       }
     },
-    [notify, router],
+    [notify],
+  )
+
+  // Queue a save behind any in-flight save and return its result.
+  const enqueueSave = useCallback(
+    (statusOverride?: Draft['status']): Promise<boolean> => {
+      const run = () => doPersist(statusOverride)
+      const result = saveChain.current.then(run, run)
+      saveChain.current = result.catch(() => {})
+      return result
+    },
+    [doPersist],
   )
 
   // Debounced auto-save on any draft change (skips the initial mount).
@@ -117,13 +130,17 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
       mounted.current = true
       return
     }
-    const id = setTimeout(() => void persist(), 2000)
+    const id = setTimeout(() => void enqueueSave(), 2000)
     return () => clearTimeout(id)
-  }, [draft, persist])
+  }, [draft, enqueueSave])
 
   async function handleSave(status: Draft['status'], successMsg: string) {
+    if (status === 'published' && !draftRef.current.title.trim()) {
+      notify('Cần tiêu đề để đăng bài', 'error')
+      return
+    }
     update({ status })
-    const okSaved = await persist(status)
+    const okSaved = await enqueueSave(status)
     if (okSaved) notify(successMsg)
   }
 

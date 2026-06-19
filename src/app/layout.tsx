@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { CSSProperties } from 'react'
-import { Inter, Be_Vietnam_Pro } from 'next/font/google'
+import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { getSettings } from '@/lib/settings'
@@ -12,11 +13,16 @@ const inter = Inter({
   display: 'swap',
 })
 
-const beVietnamPro = Be_Vietnam_Pro({
+// Be Vietnam Pro from the official bettergui build (best Vietnamese coverage).
+const beVietnamPro = localFont({
   variable: '--font-bvp',
-  subsets: ['latin', 'latin-ext', 'vietnamese'],
-  weight: ['400', '500', '600', '700'],
   display: 'swap',
+  src: [
+    { path: './fonts/BeVietnamPro-Regular.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/BeVietnamPro-Medium.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/BeVietnamPro-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: './fonts/BeVietnamPro-Bold.woff2', weight: '700', style: 'normal' },
+  ],
 })
 
 export async function generateMetadata(): Promise<Metadata> {
