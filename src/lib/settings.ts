@@ -74,6 +74,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showLogo: false,
   showDescription: true,
   contentWidth: 672,
+  postsPerPage: 10,
   menu: [],
   theme: DEFAULT_THEME,
 }
@@ -115,6 +116,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     showLogo: input.showLogo ?? current.showLogo,
     showDescription: input.showDescription ?? current.showDescription,
     contentWidth: clampNumber(input.contentWidth, 360, 1600, current.contentWidth),
+    postsPerPage: clampNumber(input.postsPerPage, 1, 100, current.postsPerPage),
     menu: sanitizeMenu(input.menu, current.menu),
     theme: sanitizeTheme(input.theme, current.theme),
   }

@@ -75,6 +75,7 @@ export type SiteSettings = {
   showLogo: boolean
   showDescription: boolean
   contentWidth: number // px, max width of the content column (desktop)
+  postsPerPage: number // posts shown per page on home/category/tag lists
   menu: MenuItem[] // header navigation links
   theme: ThemeSettings // per-mode reading colors
 }

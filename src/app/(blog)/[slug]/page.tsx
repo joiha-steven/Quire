@@ -7,11 +7,23 @@ import { notFound } from 'next/navigation'
 import { getPost } from '@/lib/posts'
 import { getPage } from '@/lib/pages'
 import { getSettings } from '@/lib/settings'
-import { formatDate } from '@/lib/i18n'
+import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { isPublicallyVisible } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
+
+// Render a taxonomy list as comma-separated links: "a, b, c".
+function taxoLinks(items: string[], make: (s: string) => string) {
+  return items.map((it, i) => (
+    <span key={it}>
+      {i > 0 && ', '}
+      <Link href={make(it)} className="hover:text-[var(--c-heading)]">
+        {it}
+      </Link>
+    </span>
+  ))
+}
 
 export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promise<Metadata> {
   const { slug } = await params
@@ -51,32 +63,24 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">{formatDate(post.date, language)}</p>
 
-        {(post.categories.length > 0 || post.tags.length > 0) && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {post.categories.map((c) => (
-              <Link
-                key={`c-${c}`}
-                href={`/category/${encodeURIComponent(c)}`}
-                className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-              >
-                {c}
-              </Link>
-            ))}
-            {post.tags.map((tag) => (
-              <Link
-                key={`t-${tag}`}
-                href={`/tag/${encodeURIComponent(tag)}`}
-                className="rounded-full px-3 py-1 text-xs text-neutral-500 ring-1 ring-neutral-200 hover:bg-neutral-50 dark:text-neutral-400 dark:ring-neutral-700 dark:hover:bg-neutral-800"
-              >
-                #{tag}
-              </Link>
-            ))}
-          </div>
-        )}
-
         <div className="mt-8">
           <PostContent markdown={post.content} />
         </div>
+
+        {(post.tags.length > 0 || post.categories.length > 0) && (
+          <footer className="mt-12 space-y-1 border-t border-[var(--c-rule)] pt-6 text-sm text-meta">
+            {post.tags.length > 0 && (
+              <p>
+                {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${encodeURIComponent(s)}`)}
+              </p>
+            )}
+            {post.categories.length > 0 && (
+              <p>
+                {t(language).categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${encodeURIComponent(s)}`)}
+              </p>
+            )}
+          </footer>
+        )}
       </article>
     )
   }

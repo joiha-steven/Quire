@@ -7,6 +7,9 @@ export type Dict = {
   emptyTag: string
   categoryLabel: string
   tagLabel: string
+  newer: string
+  older: string
+  pageOf: (page: number, total: number) => string
   menu: string
   theme: string
   themeLight: string
@@ -22,6 +25,9 @@ const DICT: Record<SiteLang, Dict> = {
     emptyTag: 'Chưa có bài viết với thẻ này.',
     categoryLabel: 'Danh mục',
     tagLabel: 'Thẻ',
+    newer: 'Mới hơn',
+    older: 'Cũ hơn',
+    pageOf: (page, total) => `Trang ${page} / ${total}`,
     menu: 'Menu',
     theme: 'Giao diện',
     themeLight: 'Sáng',
@@ -35,6 +41,9 @@ const DICT: Record<SiteLang, Dict> = {
     emptyTag: 'No posts with this tag yet.',
     categoryLabel: 'Category',
     tagLabel: 'Tag',
+    newer: 'Newer',
+    older: 'Older',
+    pageOf: (page, total) => `Page ${page} / ${total}`,
     menu: 'Menu',
     theme: 'Theme',
     themeLight: 'Light',

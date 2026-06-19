@@ -99,6 +99,8 @@ export type AdminStrings = {
   logoWidthHint: string
   siteWidth: string
   siteWidthHint: string
+  postsPerPage: string
+  postsPerPageHint: string
   saveSettings: string
   savedSettings: string
   menuTitle: string
@@ -219,6 +221,8 @@ const DICT: Record<SiteLang, AdminStrings> = {
     logoWidthHint: 'Áp dụng cho logo hiển thị trên header trang chủ (không ảnh hưởng preview ở trên).',
     siteWidth: 'Bề rộng site - desktop (px)',
     siteWidthHint: 'Độ rộng tối đa của cột nội dung trên màn lớn (mặc định 672).',
+    postsPerPage: 'Số bài mỗi trang',
+    postsPerPageHint: 'Số bài hiển thị trên một trang ở trang chủ, danh mục, thẻ (mặc định 10).',
     saveSettings: 'Lưu cài đặt',
     savedSettings: 'Đã lưu cài đặt',
     menuTitle: 'Menu header',
@@ -335,6 +339,8 @@ const DICT: Record<SiteLang, AdminStrings> = {
     logoWidthHint: 'Applies to the logo shown in the homepage header (not the preview above).',
     siteWidth: 'Site width - desktop (px)',
     siteWidthHint: 'Max width of the content column on large screens (default 672).',
+    postsPerPage: 'Posts per page',
+    postsPerPageHint: 'How many posts show on one page of home/category/tag lists (default 10).',
     saveSettings: 'Save settings',
     savedSettings: 'Settings saved',
     menuTitle: 'Header menu',

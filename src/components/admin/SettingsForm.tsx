@@ -157,6 +157,18 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         {t.siteWidthHint}
       </p>
 
+      <Input
+        label={t.postsPerPage}
+        type="number"
+        min={1}
+        max={100}
+        value={s.postsPerPage}
+        onChange={(e) => update({ postsPerPage: Number(e.target.value) })}
+      />
+      <p className="-mt-3 text-xs text-neutral-400 dark:text-neutral-500">
+        {t.postsPerPageHint}
+      </p>
+
       <hr className="border-neutral-200 dark:border-neutral-800" />
 
       <div className="space-y-3">

@@ -72,6 +72,22 @@ function toIso(wpDate, fallback) {
   return Number.isNaN(d.getTime()) ? fallback : d.toISOString()
 }
 
+// First 50 words of the body (matches lib/utils deriveExcerpt) for when the
+// WordPress export has no excerpt of its own.
+function deriveExcerpt(md, maxWords = 50) {
+  const plain = md
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#>*_`~]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!plain) return undefined
+  const words = plain.split(' ')
+  return words.length <= maxWords ? plain : `${words.slice(0, maxWords).join(' ')}...`
+}
+
 function serialize(frontmatter, body) {
   const clean = Object.fromEntries(Object.entries(frontmatter).filter(([, v]) => v !== undefined))
   return matter.stringify(body ?? '', clean)
@@ -170,7 +186,7 @@ for (const item of items) {
       status: mappedStatus,
       categories: [...new Set(cats)],
       tags: [...new Set(tags)],
-      excerpt: excerptRaw || undefined,
+      excerpt: excerptRaw || deriveExcerpt(body),
     },
     body,
   })
