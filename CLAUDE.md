@@ -103,18 +103,29 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 | `rebuild-index.mjs` | Rebuild `posts/_index.json` + `media/_index.json` from Blob files (recovery tool) |
 
 ## SEO (toggleable in Admin → Settings → SEO)
-- `settings.seo` = `{ autoSchema, sitemap, llms, robots }` (all default true) +
-  `settings.siteUrl` (canonical base; '' → `VERCEL_PROJECT_PRODUCTION_URL` → localhost,
-  via `resolveSiteUrl()`). Used by `metadataBase` and every absolute URL below.
+- `settings.seo` = `{ autoSchema, sitemap, llms, robots, rss, ogImage, ogFallbackImage }`
+  (booleans default true; `ogFallbackImage` '') + `settings.siteUrl` (canonical base;
+  '' → `VERCEL_PROJECT_PRODUCTION_URL` → localhost, via `resolveSiteUrl()`). Drives
+  `metadataBase` and every absolute URL below.
 - `app/robots.ts` → robots.txt (always disallows `/admin` + `/api`; advertises the
-  sitemap when both robots + sitemap are on).
+  sitemap when robots + sitemap are on).
 - `app/sitemap.ts` → sitemap.xml (home + posts + pages + categories + tags).
 - `app/llms.txt/route.ts` → /llms.txt, a Markdown content index for AI crawlers
   (llmstxt.org); 404 when off.
+- `app/feed.xml/route.ts` → RSS 2.0 (latest 50 posts); 404 when off; auto-discovered
+  via root metadata `alternates`.
+- `app/og/route.tsx` → dynamic OG image (1200×630, **edge runtime**, Be Vietnam Pro
+  TTFs bundled beside it and loaded via `fetch(new URL('./x.ttf', import.meta.url))`).
+  Fully query-driven (`title`/`site`/`bg`), no Blob read. `lib/og.ts#ogImageUrl`
+  picks `bg` = post featured image → `seo.ogFallbackImage` → none, and is used in
+  post/page `generateMetadata` for `og:image`.
 - JSON-LD via `components/blog/JsonLd.tsx` (`websiteSchema` on home, `articleSchema`
   on posts), gated by `seo.autoSchema`.
 - robots/sitemap are static but tagged `settings`, so toggling a feature + saving
   regenerates them (revalidateTag('settings')).
+- **Cache-key versioning**: `getSettings` uses key `site-settings-v2`. Vercel's Data
+  Cache persists across deploys, so when the settings SHAPE changes (new field) bump
+  this key, else the cached object keeps serving without the new key (e.g. rss 404).
 
 ## Conventions
 - UI text (labels, buttons, toasts, placeholders) → Vietnamese.
