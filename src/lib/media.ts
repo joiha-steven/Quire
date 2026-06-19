@@ -1,11 +1,17 @@
 // Media data access. media/_index.json is the manifest; files live at
-// media/{timestamp}-{name} with their original filename preserved.
+// media/{name}.{ext} with a clean, readable name (a "-2", "-3"... suffix is
+// only added when a name collides). Raster images are optimized on upload.
 
+import sharp from 'sharp'
 import type { MediaItem } from '@/types'
 import { readJson, writeJson, uploadFile, deleteByUrl } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
 
 const INDEX_PATH = 'media/_index.json'
+
+// Resize cap + formats we re-encode. SVG/GIF (vector/animation) pass through.
+const MAX_WIDTH = 1600
+const OPTIMIZABLE = /^image\/(jpeg|png|webp|avif|tiff|bmp)$/
 
 // Read the media manifest, newest upload first.
 export async function getMedia(): Promise<MediaItem[]> {
@@ -15,30 +21,71 @@ export async function getMedia(): Promise<MediaItem[]> {
   )
 }
 
-// Build a collision-resistant, URL-safe pathname that keeps the readable name.
-function buildPathname(filename: string): string {
-  const dot = filename.lastIndexOf('.')
-  const ext = dot >= 0 ? filename.slice(dot + 1).toLowerCase() : ''
-  const base = slugify(dot >= 0 ? filename.slice(0, dot) : filename) || 'file'
-  const stamp = Date.now()
-  return ext ? `media/${stamp}-${base}.${ext}` : `media/${stamp}-${base}`
+// Optimize a raster image: auto-orient, cap width, re-encode to WebP q80, strip
+// metadata. Returns null for formats we leave untouched or on any failure.
+async function optimize(
+  body: ArrayBuffer,
+  contentType: string,
+): Promise<{ data: Buffer; contentType: string; ext: string } | null> {
+  if (!OPTIMIZABLE.test(contentType)) return null
+  try {
+    const img = sharp(Buffer.from(body), { failOn: 'none' }).rotate()
+    const meta = await img.metadata()
+    if ((meta.width ?? 0) > MAX_WIDTH) img.resize({ width: MAX_WIDTH })
+    const data = await img.webp({ quality: 80 }).toBuffer()
+    return { data, contentType: 'image/webp', ext: 'webp' }
+  } catch {
+    return null
+  }
 }
 
-// Upload one file and append it to the manifest (read -> modify -> write).
+// Existing pathnames (e.g. "media/logo.webp") from the manifest, for dedupe.
+function existingPathnames(items: MediaItem[]): Set<string> {
+  const set = new Set<string>()
+  for (const m of items) {
+    try {
+      set.add(new URL(m.url).pathname.replace(/^\//, ''))
+    } catch {
+      /* skip malformed url */
+    }
+  }
+  return set
+}
+
+// First free "media/{base}.{ext}", adding -2, -3... only on collision.
+function freePathname(base: string, ext: string, taken: Set<string>): string {
+  const make = (n: number) => `media/${n === 1 ? base : `${base}-${n}`}${ext ? `.${ext}` : ''}`
+  let n = 1
+  while (taken.has(make(n))) n++
+  return make(n)
+}
+
+// Upload one file: optimize if possible, give it a clean name, append to the
+// manifest (read -> modify -> write).
 export async function addMedia(
   filename: string,
   body: ArrayBuffer,
   contentType: string,
 ): Promise<MediaItem> {
-  const pathname = buildPathname(filename)
-  const url = await uploadFile(pathname, body, contentType)
+  const dot = filename.lastIndexOf('.')
+  const origExt = dot >= 0 ? filename.slice(dot + 1).toLowerCase() : ''
+  const base = slugify(dot >= 0 ? filename.slice(0, dot) : filename) || 'file'
+
+  const opt = await optimize(body, contentType)
+  const data = opt ? opt.data : Buffer.from(body)
+  const type = opt ? opt.contentType : contentType
+  const ext = opt ? opt.ext : origExt
+
+  const current = await readJson<MediaItem[]>(INDEX_PATH, [])
+  const pathname = freePathname(base, ext, existingPathnames(current))
+  const url = await uploadFile(pathname, data, type)
+
   const item: MediaItem = {
     url,
-    filename,
-    size: body.byteLength,
+    filename: pathname.replace(/^media\//, ''),
+    size: data.byteLength,
     uploadedAt: new Date().toISOString(),
   }
-  const current = await readJson<MediaItem[]>(INDEX_PATH, [])
   await writeJson(INDEX_PATH, [item, ...current])
   return item
 }
