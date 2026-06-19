@@ -26,10 +26,10 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
 
   return (
     <div className="space-y-1.5">
-      <span className="text-sm font-medium text-neutral-700">{label}</span>
+      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
       <div className="flex flex-wrap gap-1.5">
         {value.map((v) => (
-          <span key={v} className="flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1 text-xs text-white">
+          <span key={v} className="flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1 text-xs text-white dark:bg-neutral-200 dark:text-neutral-900">
             {v}
             <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} aria-label={t.removeAria}>
               ×
@@ -47,7 +47,7 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
           }
         }}
         placeholder={placeholder ?? t.multiPlaceholder}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-neutral-400"
       />
       {suggestions.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -56,7 +56,7 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
               key={o}
               type="button"
               onClick={() => add(o)}
-              className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 hover:bg-neutral-200"
+              className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200"
             >
               + {o}
             </button>

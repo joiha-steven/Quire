@@ -99,6 +99,11 @@ export type AdminStrings = {
   siteWidthHint: string
   saveSettings: string
   savedSettings: string
+  menuTitle: string
+  menuLabelField: string
+  menuHrefField: string
+  menuAdd: string
+  menuHint: string
 }
 
 const DICT: Record<SiteLang, AdminStrings> = {
@@ -191,6 +196,11 @@ const DICT: Record<SiteLang, AdminStrings> = {
     siteWidthHint: 'Độ rộng tối đa của cột nội dung trên màn lớn (mặc định 672).',
     saveSettings: 'Lưu cài đặt',
     savedSettings: 'Đã lưu cài đặt',
+    menuTitle: 'Menu header',
+    menuLabelField: 'Nhãn',
+    menuHrefField: 'Đường dẫn',
+    menuAdd: 'Thêm mục',
+    menuHint: 'Đường dẫn: trang chủ /, danh mục /category/ten, trang /page/ten, hoặc link ngoài https://...',
   },
   en: {
     navAdmin: 'Admin',
@@ -281,6 +291,11 @@ const DICT: Record<SiteLang, AdminStrings> = {
     siteWidthHint: 'Max width of the content column on large screens (default 672).',
     saveSettings: 'Save settings',
     savedSettings: 'Settings saved',
+    menuTitle: 'Header menu',
+    menuLabelField: 'Label',
+    menuHrefField: 'Link',
+    menuAdd: 'Add item',
+    menuHint: 'Link: home /, category /category/name, page /page/name, or external https://...',
   },
 }
 

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode (toggled on <html class="dark">). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-sans: var(--font-inter);
 }
@@ -134,6 +137,26 @@ h1, h2, h3 {
   height: auto;
   border: 0;
   border-radius: 0.5rem;
+}
+
+/* Dark-mode reading colors. */
+.dark .prose {
+  color: #cfcfcf;
+}
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3 {
+  color: #f5f5f5;
+}
+.dark .prose a {
+  color: #7fb0ff;
+}
+.dark .prose blockquote {
+  border-color: #404040;
+  color: #a3a3a3;
+}
+.dark .prose :not(pre) > code {
+  background: #262626;
 }
 
 /* TipTap empty-state placeholder. */

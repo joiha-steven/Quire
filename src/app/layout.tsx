@@ -4,7 +4,12 @@ import { Inter } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings } from '@/lib/settings'
+
+// Runs before paint: applies the saved theme (or system/time default) so there
+// is no light flash on dark.
+const NO_FOUC = `(function(){try{var m=localStorage.getItem('theme')||'system';var d=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(d)document.documentElement.classList.add('dark')}catch(e){}})();`
 
 // English uses Inter; Vietnamese uses Be Vietnam Pro. Both self-hosted.
 const inter = Inter({
@@ -39,8 +44,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`${inter.variable} ${beVietnamPro.variable} h-full antialiased`}
       style={{ '--font-sans': fontVar } as CSSProperties}
     >
-      <body className="min-h-full bg-white text-neutral-900">
-        <ToastProvider>{children}</ToastProvider>
+      <body className="min-h-full bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+        <script dangerouslySetInnerHTML={{ __html: NO_FOUC }} />
+        <ThemeProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

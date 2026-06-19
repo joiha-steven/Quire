@@ -9,11 +9,14 @@ import { useToast } from '@/components/ui/Toast'
 import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
 
+const MENU_FIELD =
+  'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-400'
+
 // A simple labeled on/off switch.
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center justify-between gap-4">
-      <span className="text-sm font-medium text-neutral-700">{label}</span>
+      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
       <button
         type="button"
         role="switch"
@@ -62,22 +65,22 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
   return (
     <div className="max-w-xl space-y-6">
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">{t.siteLanguage}</span>
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.siteLanguage}</span>
+        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
           {LANGS.map((l) => (
             <button
               key={l.value}
               type="button"
               onClick={() => update({ language: l.value })}
               className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
-                s.language === l.value ? 'bg-white shadow-sm' : 'text-neutral-500'
+                s.language === l.value ? 'bg-white shadow-sm dark:bg-neutral-700' : 'text-neutral-500'
               }`}
             >
               {l.label}
             </button>
           ))}
         </div>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">
           {t.siteLanguageHint}
         </p>
       </div>
@@ -103,7 +106,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         onChange={(v) => update({ showDescription: v })}
       />
 
-      <hr className="border-neutral-200" />
+      <hr className="border-neutral-200 dark:border-neutral-800" />
 
       <Toggle label={t.showLogo} checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
 
@@ -114,7 +117,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={s.logoUrl} alt="Logo" className="h-12 w-auto rounded bg-neutral-100 p-1" />
           ) : (
-            <p className="text-xs text-neutral-400">{t.noLogo}</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.noLogo}</p>
           )}
           <div className="flex gap-2">
             <Button variant="secondary" type="button" onClick={() => setPicking(true)}>
@@ -134,13 +137,13 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             value={s.logoWidth}
             onChange={(e) => update({ logoWidth: Number(e.target.value) })}
           />
-          <p className="-mt-3 text-xs text-neutral-400">
+          <p className="-mt-3 text-xs text-neutral-400 dark:text-neutral-500">
             {t.logoWidthHint}
           </p>
         </div>
       )}
 
-      <hr className="border-neutral-200" />
+      <hr className="border-neutral-200 dark:border-neutral-800" />
 
       <Input
         label={t.siteWidth}
@@ -150,9 +153,47 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         value={s.contentWidth}
         onChange={(e) => update({ contentWidth: Number(e.target.value) })}
       />
-      <p className="-mt-3 text-xs text-neutral-400">
+      <p className="-mt-3 text-xs text-neutral-400 dark:text-neutral-500">
         {t.siteWidthHint}
       </p>
+
+      <hr className="border-neutral-200 dark:border-neutral-800" />
+
+      <div className="space-y-3">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.menuTitle}</span>
+        {s.menu.map((item, i) => (
+          <div key={i} className="flex gap-2">
+            <input
+              value={item.label}
+              onChange={(e) =>
+                update({ menu: s.menu.map((m, idx) => (idx === i ? { ...m, label: e.target.value } : m)) })
+              }
+              placeholder={t.menuLabelField}
+              className={MENU_FIELD}
+            />
+            <input
+              value={item.href}
+              onChange={(e) =>
+                update({ menu: s.menu.map((m, idx) => (idx === i ? { ...m, href: e.target.value } : m)) })
+              }
+              placeholder={t.menuHrefField}
+              className={MENU_FIELD}
+            />
+            <button
+              type="button"
+              onClick={() => update({ menu: s.menu.filter((_, idx) => idx !== i) })}
+              aria-label={t.delete}
+              className="shrink-0 rounded-lg px-2 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <Button variant="secondary" type="button" onClick={() => update({ menu: [...s.menu, { label: '', href: '' }] })}>
+          {t.menuAdd}
+        </Button>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.menuHint}</p>
+      </div>
 
       <div className="pt-2">
         <Button onClick={save} disabled={saving}>

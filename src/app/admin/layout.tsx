@@ -21,23 +21,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AdminI18nProvider lang={language}>
-      <div className="min-h-screen bg-neutral-50">
-        <header className="border-b border-neutral-200 bg-white">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+        <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
             <nav className="flex items-center gap-5 text-sm">
               <Link href="/admin" className="font-bold">
                 {t.navAdmin}
               </Link>
-              <Link href="/admin" className="text-neutral-600 hover:text-neutral-900">
+              <Link href="/admin" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navDashboard}
               </Link>
-              <Link href="/admin/media" className="text-neutral-600 hover:text-neutral-900">
+              <Link href="/admin/media" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navMedia}
               </Link>
-              <Link href="/admin/settings" className="text-neutral-600 hover:text-neutral-900">
+              <Link href="/admin/settings" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navSettings}
               </Link>
-              <Link href="/" className="text-neutral-600 hover:text-neutral-900">
+              <Link href="/" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navViewBlog}
               </Link>
             </nav>
@@ -47,7 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 await signOut({ redirectTo: '/' })
               }}
             >
-              <button className="text-sm text-neutral-500 hover:text-neutral-900">{t.signOut}</button>
+              <button className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">{t.signOut}</button>
             </form>
           </div>
         </header>

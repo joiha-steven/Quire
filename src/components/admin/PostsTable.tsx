@@ -47,13 +47,13 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
       <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.dashboardTitle}</h1>
 
       <div className="mb-5 flex items-center justify-between">
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
+        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                filter === tab.key ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500'
+                filter === tab.key ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500'
               }`}
             >
               {tab.label}
@@ -66,11 +66,11 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
       </div>
 
       {visible.length === 0 ? (
-        <p className="py-16 text-center text-neutral-500">{t.noPosts}</p>
+        <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.noPosts}</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
           <table className="w-full text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500">
+            <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500">
               <tr>
                 <th className="px-4 py-3 font-medium">{t.colTitle}</th>
                 <th className="px-4 py-3 font-medium">{t.colStatus}</th>
@@ -81,7 +81,7 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
             </thead>
             <tbody>
               {visible.map((p) => (
-                <tr key={p.slug} className="border-b border-neutral-100 last:border-0">
+                <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
                   <td className="px-4 py-3 font-medium">{p.title || t.untitled}</td>
                   <td className="px-4 py-3">
                     <span
@@ -94,12 +94,12 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
                       {p.status === 'published' ? t.statusPublished : t.statusDraft}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-neutral-500">{formatDate(p.date, lang)}</td>
-                  <td className="px-4 py-3 text-neutral-500">{p.categories.join(', ')}</td>
+                  <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{formatDate(p.date, lang)}</td>
+                  <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.categories.join(', ')}</td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Link
                       href={`/admin/editor/${p.slug}`}
-                      className="text-neutral-600 hover:text-neutral-900"
+                      className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
                     >
                       {t.edit}
                     </Link>

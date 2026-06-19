@@ -34,6 +34,12 @@ export type MediaItem = {
 // Site-wide settings, stored at settings/site.json.
 export type SiteLang = 'vi' | 'en'
 
+// One configurable header navigation link (page, category, or custom URL).
+export type MenuItem = {
+  label: string
+  href: string
+}
+
 export type SiteSettings = {
   language: SiteLang // public site language: drives lang attr, font, labels, dates
   title: string
@@ -43,6 +49,7 @@ export type SiteSettings = {
   showLogo: boolean
   showDescription: boolean
   contentWidth: number // px, max width of the content column (desktop)
+  menu: MenuItem[] // header navigation links
 }
 
 // Uniform API envelope returned by every route.

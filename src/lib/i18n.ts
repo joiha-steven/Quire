@@ -7,6 +7,12 @@ export type Dict = {
   emptyTag: string
   categoryLabel: string
   tagLabel: string
+  menu: string
+  theme: string
+  themeLight: string
+  themeDark: string
+  themeSystem: string
+  themeTime: string
 }
 
 const DICT: Record<SiteLang, Dict> = {
@@ -16,6 +22,12 @@ const DICT: Record<SiteLang, Dict> = {
     emptyTag: 'Chưa có bài viết với thẻ này.',
     categoryLabel: 'Danh mục',
     tagLabel: 'Thẻ',
+    menu: 'Menu',
+    theme: 'Giao diện',
+    themeLight: 'Sáng',
+    themeDark: 'Tối',
+    themeSystem: 'Theo hệ thống',
+    themeTime: 'Theo giờ',
   },
   en: {
     emptyPosts: 'No posts yet.',
@@ -23,6 +35,12 @@ const DICT: Record<SiteLang, Dict> = {
     emptyTag: 'No posts with this tag yet.',
     categoryLabel: 'Category',
     tagLabel: 'Tag',
+    menu: 'Menu',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System',
+    themeTime: 'By time',
   },
 }
 

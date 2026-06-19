@@ -28,7 +28,7 @@ export default async function PostPage({ params }: PageProps<'/[slug]'>) {
       )}
 
       <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
-      <p className="mt-3 text-sm text-neutral-500">{formatDate(post.date, language)}</p>
+      <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{formatDate(post.date, language)}</p>
 
       {(post.categories.length > 0 || post.tags.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -36,18 +36,18 @@ export default async function PostPage({ params }: PageProps<'/[slug]'>) {
             <Link
               key={`c-${c}`}
               href={`/category/${encodeURIComponent(c)}`}
-              className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200"
+              className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
             >
               {c}
             </Link>
           ))}
-          {post.tags.map((t) => (
+          {post.tags.map((tag) => (
             <Link
-              key={`t-${t}`}
-              href={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full px-3 py-1 text-xs text-neutral-500 ring-1 ring-neutral-200 hover:bg-neutral-50"
+              key={`t-${tag}`}
+              href={`/tag/${encodeURIComponent(tag)}`}
+              className="rounded-full px-3 py-1 text-xs text-neutral-500 ring-1 ring-neutral-200 hover:bg-neutral-50 dark:text-neutral-400 dark:ring-neutral-700 dark:hover:bg-neutral-800"
             >
-              #{t}
+              #{tag}
             </Link>
           ))}
         </div>
