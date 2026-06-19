@@ -36,6 +36,8 @@ type Props = {
   onPickImage: () => void
   onUploadFile: (file: File) => Promise<string | null>
   apiRef: React.MutableRefObject<EditorApi | null>
+  // Width of the public single-post column, so typing mirrors the live layout.
+  contentWidth: number
 }
 
 const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -45,7 +47,7 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
   const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
   const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-200 p-2 dark:border-neutral-800">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
         <strong>B</strong>
       </button>
@@ -75,7 +77,7 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
       <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cls(editor.isActive('blockquote'))}>
         ❝
       </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}>
+      <button type="button" onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={cls(editor.isActive('codeBlock'))}>
         {'</>'}
       </button>
       {sep}
@@ -106,7 +108,7 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
   )
 }
 
-export function Editor({ initialContent, onChange, onPickImage, onUploadFile, apiRef }: Props) {
+export function Editor({ initialContent, onChange, onPickImage, onUploadFile, apiRef, contentWidth }: Props) {
   const t = useAdminT()
   const editor = useEditor({
     immediatelyRender: false,
@@ -153,7 +155,11 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
   return (
     <div className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <Toolbar editor={editor} onPickImage={onPickImage} />
-      <EditorContent editor={editor} />
+      {/* Center the writing column at the public single-post width so what you
+          type wraps exactly like the published article. */}
+      <div className="mx-auto w-full" style={{ maxWidth: contentWidth }}>
+        <EditorContent editor={editor} />
+      </div>
     </div>
   )
 }

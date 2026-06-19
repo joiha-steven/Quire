@@ -16,6 +16,7 @@ type Props = {
   initial?: PostWithContent
   allCategories: string[]
   allTags: string[]
+  contentWidth: number
 }
 
 type PickTarget = 'editor' | 'featured'
@@ -42,7 +43,7 @@ function toDraft(initial?: PostWithContent): Draft {
   }
 }
 
-export function PostForm({ initial, allCategories, allTags }: Props) {
+export function PostForm({ initial, allCategories, allTags, contentWidth }: Props) {
   const t = useAdminT()
   const { notify } = useToast()
   const [draft, setDraft] = useState<Draft>(() => toDraft(initial))
@@ -183,6 +184,7 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
           onPickImage={() => setPicker('editor')}
           onUploadFile={uploadInline}
           apiRef={editorApi}
+          contentWidth={contentWidth}
         />
         <PostSettings
           draft={draft}
@@ -194,7 +196,7 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 dark:border-neutral-800 dark:bg-neutral-900/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>

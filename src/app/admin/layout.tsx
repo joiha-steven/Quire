@@ -7,6 +7,7 @@ import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { email, authorized } = await getAuthState()
@@ -18,12 +19,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const { language } = await getSettings()
   const t = adminT(language)
+  // Wider admin shell so the editor's writing column can match the public
+  // single-post width with room to spare for the settings panel.
+  const shell = 'mx-auto max-w-7xl px-6'
 
   return (
     <AdminI18nProvider lang={language}>
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
         <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
+          <div className={`${shell} flex items-center justify-between gap-4 py-3`}>
             <nav className="flex items-center gap-5 text-sm">
               <Link href="/admin" className="font-bold">
                 {t.navAdmin}
@@ -41,17 +45,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 {t.navViewBlog}
               </a>
             </nav>
-            <form
-              action={async () => {
-                'use server'
-                await signOut({ redirectTo: '/' })
-              }}
-            >
-              <button className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">{t.signOut}</button>
-            </form>
+            <div className="flex items-center gap-2">
+              <ThemeToggle lang={language} />
+              <form
+                action={async () => {
+                  'use server'
+                  await signOut({ redirectTo: '/' })
+                }}
+              >
+                <button className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">{t.signOut}</button>
+              </form>
+            </div>
           </div>
         </header>
-        <div className="mx-auto max-w-5xl px-5 py-8">{children}</div>
+        <div className={`${shell} py-8`}>{children}</div>
       </div>
     </AdminI18nProvider>
   )
