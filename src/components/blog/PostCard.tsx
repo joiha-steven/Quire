@@ -1,9 +1,9 @@
 // Single post preview used in lists.
 import Link from 'next/link'
-import type { Post } from '@/types'
-import { formatDateVi } from '@/lib/utils'
+import type { Post, SiteLang } from '@/types'
+import { formatDate } from '@/lib/i18n'
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, lang }: { post: Post; lang: SiteLang }) {
   return (
     <article className="border-b border-neutral-200 pb-8">
       <h2 className="text-2xl font-bold tracking-tight">
@@ -11,7 +11,7 @@ export function PostCard({ post }: { post: Post }) {
           {post.title}
         </Link>
       </h2>
-      <p className="mt-1 text-sm text-neutral-500">{formatDateVi(post.date)}</p>
+      <p className="mt-1 text-sm text-neutral-500">{formatDate(post.date, lang)}</p>
       {post.excerpt && <p className="mt-3 text-neutral-700">{post.excerpt}</p>}
       {post.categories.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">

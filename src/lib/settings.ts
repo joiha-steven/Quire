@@ -8,6 +8,7 @@ import { readJson, writeJson } from '@/lib/blob'
 const SETTINGS_PATH = 'settings/site.json'
 
 export const DEFAULT_SETTINGS: SiteSettings = {
+  language: 'vi',
   title: 'vibeblog',
   description: '',
   logoUrl: '',
@@ -38,6 +39,7 @@ export async function getSettings(): Promise<SiteSettings> {
 export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSettings> {
   const current = await getSettings()
   const next: SiteSettings = {
+    language: input.language === 'en' || input.language === 'vi' ? input.language : current.language,
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
     description: input.description ?? current.description,
     logoUrl: input.logoUrl ?? current.logoUrl,

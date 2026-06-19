@@ -2,7 +2,7 @@
 
 // Site settings form: title, description, logo (toggle + picker), show-description.
 import { useState } from 'react'
-import type { SiteSettings, ApiResponse } from '@/types'
+import type { SiteSettings, SiteLang, ApiResponse } from '@/types'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -52,8 +52,34 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
     }
   }
 
+  const LANGS: { value: SiteLang; label: string }[] = [
+    { value: 'vi', label: 'Tiếng Việt' },
+    { value: 'en', label: 'English' },
+  ]
+
   return (
     <div className="max-w-xl space-y-6">
+      <div className="space-y-1.5">
+        <span className="text-sm font-medium text-neutral-700">Ngôn ngữ site</span>
+        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
+          {LANGS.map((l) => (
+            <button
+              key={l.value}
+              type="button"
+              onClick={() => update({ language: l.value })}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
+                s.language === l.value ? 'bg-white shadow-sm' : 'text-neutral-500'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-neutral-400">
+          Đổi ngôn ngữ, định dạng ngày và font hiển thị (Việt: Be Vietnam Pro, Anh: Inter).
+        </p>
+      </div>
+
       <Input
         label="Tiêu đề site"
         value={s.title}

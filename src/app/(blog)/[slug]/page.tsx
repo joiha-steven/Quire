@@ -3,14 +3,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost } from '@/lib/posts'
+import { getSettings } from '@/lib/settings'
+import { formatDate } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
-import { formatDateVi, isPublicallyVisible } from '@/lib/utils'
+import { isPublicallyVisible } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
 export default async function PostPage({ params }: PageProps<'/[slug]'>) {
   const { slug } = await params
-  const post = await getPost(slug)
+  const [post, { language }] = await Promise.all([getPost(slug), getSettings()])
   if (!post || !isPublicallyVisible(post.status, post.date)) notFound()
 
   const full = post.imageDisplay === 'full' && post.featuredImage
@@ -26,7 +28,7 @@ export default async function PostPage({ params }: PageProps<'/[slug]'>) {
       )}
 
       <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
-      <p className="mt-2 text-sm text-neutral-500">{formatDateVi(post.date)}</p>
+      <p className="mt-2 text-sm text-neutral-500">{formatDate(post.date, language)}</p>
 
       {(post.categories.length > 0 || post.tags.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-2">
