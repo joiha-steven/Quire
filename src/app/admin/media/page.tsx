@@ -3,7 +3,6 @@ import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
 import { MediaLibrary } from '@/components/admin/MediaLibrary'
 
-export const dynamic = 'force-dynamic'
 
 export default async function MediaPage() {
   const { language } = await getSettings()

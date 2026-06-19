@@ -6,7 +6,6 @@ import { paginate, parsePage } from '@/lib/paginate'
 import { PostList } from '@/components/blog/PostList'
 import { Pagination } from '@/components/blog/Pagination'
 
-export const dynamic = 'force-dynamic'
 
 export default async function HomePage({ searchParams }: PageProps<'/'>) {
   const [posts, { language, postsPerPage }] = await Promise.all([getPublicPosts(), getSettings()])

@@ -2,6 +2,7 @@
 // Reads are resilient: any failure (missing file, Blob down) falls back to
 // defaults so the public header and <title> never crash.
 
+import { unstable_cache } from 'next/cache'
 import type { MenuItem, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson } from '@/lib/blob'
 
@@ -93,16 +94,21 @@ function clampNumber(value: unknown, min: number, max: number, fallback: number)
 }
 
 // Read settings merged over defaults. Returns defaults on any error.
-export async function getSettings(): Promise<SiteSettings> {
-  try {
-    const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
-    // Deep-merge theme so older/partial stored configs keep all color keys.
-    return { ...DEFAULT_SETTINGS, ...stored, theme: sanitizeTheme(stored.theme, DEFAULT_THEME) }
-  } catch (error) {
-    console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
-    return DEFAULT_SETTINGS
-  }
-}
+// unstable_cache caches across requests; invalidated via revalidateTag('settings', ...) after saves.
+export const getSettings = unstable_cache(
+  async (): Promise<SiteSettings> => {
+    try {
+      const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
+      // Deep-merge theme so older/partial stored configs keep all color keys.
+      return { ...DEFAULT_SETTINGS, ...stored, theme: sanitizeTheme(stored.theme, DEFAULT_THEME) }
+    } catch (error) {
+      console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
+      return DEFAULT_SETTINGS
+    }
+  },
+  ['site-settings'],
+  { tags: ['settings'] },
+)
 
 // Merge a partial update over current settings and persist. Returns the result.
 export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSettings> {

@@ -6,7 +6,6 @@ import { paginate, parsePage } from '@/lib/paginate'
 import { PostList } from '@/components/blog/PostList'
 import { Pagination } from '@/components/blog/Pagination'
 
-export const dynamic = 'force-dynamic'
 
 export default async function TagPage({ params, searchParams }: PageProps<'/tag/[slug]'>) {
   const { slug } = await params

@@ -17,6 +17,24 @@ const COMMON = {
 // never served stale (belt-and-suspenders with cacheControlMaxAge above).
 const fresh = (url: string) => `${url}${url.includes('?') ? '&' : '?'}ts=${Date.now()}`
 
+// Token format: vercel_blob_rw_<storeId>_<secret>
+// Public URL format: https://<storeId>.public.blob.vercel-storage.com/<pathname>
+// Cached at module scope — constant for the lifetime of a deployment.
+let _blobBase: string | undefined
+function blobBase(): string {
+  if (_blobBase) return _blobBase
+  const token = process.env.BLOB_READ_WRITE_TOKEN ?? ''
+  const m = token.match(/^vercel_blob_rw_([^_]+)_/)
+  if (!m) throw new Error('Cannot derive Blob base URL from BLOB_READ_WRITE_TOKEN')
+  _blobBase = `https://${m[1]}.public.blob.vercel-storage.com`
+  return _blobBase
+}
+
+// Construct the deterministic public URL for a pathname without any API call.
+export function blobUrl(pathname: string): string {
+  return `${blobBase()}/${pathname}`
+}
+
 // List every blob (pathname + size), following pagination. Used for site stats.
 export async function listBlobs(): Promise<{ pathname: string; size: number }[]> {
   const out: { pathname: string; size: number }[] = []
@@ -34,24 +52,10 @@ export async function listBlobs(): Promise<{ pathname: string; size: number }[]>
   }
 }
 
-// Resolve the public URL for a known pathname, or null if it does not exist.
-export async function resolveUrl(pathname: string): Promise<string | null> {
-  try {
-    const { blobs } = await list({ prefix: pathname, limit: 1 })
-    const hit = blobs.find((b) => b.pathname === pathname)
-    return hit?.url ?? null
-  } catch (error) {
-    console.error(`[ERROR] blob.resolveUrl(${pathname}): ${(error as Error).message}`)
-    throw error
-  }
-}
-
 // Read and parse a JSON blob; returns fallback when the blob is missing.
 export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
   try {
-    const url = await resolveUrl(pathname)
-    if (!url) return fallback
-    const res = await fetch(fresh(url), { cache: 'no-store' })
+    const res = await fetch(fresh(blobUrl(pathname)), { cache: 'no-store' })
     if (!res.ok) return fallback
     return (await res.json()) as T
   } catch (error) {
@@ -63,9 +67,7 @@ export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
 // Read a text blob (e.g. markdown); returns null when missing.
 export async function readText(pathname: string): Promise<string | null> {
   try {
-    const url = await resolveUrl(pathname)
-    if (!url) return null
-    const res = await fetch(fresh(url), { cache: 'no-store' })
+    const res = await fetch(fresh(blobUrl(pathname)), { cache: 'no-store' })
     if (!res.ok) return null
     return await res.text()
   } catch (error) {
@@ -132,8 +134,7 @@ export async function deleteByUrl(url: string): Promise<void> {
   }
 }
 
-// Delete a blob by pathname (resolves URL first). No-op when missing.
+// Delete a blob by pathname. No-op when missing (del is idempotent).
 export async function deleteByPathname(pathname: string): Promise<void> {
-  const url = await resolveUrl(pathname)
-  if (url) await deleteByUrl(url)
+  await deleteByUrl(blobUrl(pathname))
 }

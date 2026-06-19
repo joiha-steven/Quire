@@ -1,6 +1,8 @@
 // Post data access. _index.json (metadata only) is the single query layer;
 // full content lives in posts/{slug}.md as YAML frontmatter + markdown body.
 
+import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
@@ -17,13 +19,19 @@ export async function getIndex(): Promise<Post[]> {
 }
 
 // Public-facing list: published + date reached only.
-export async function getPublicPosts(): Promise<Post[]> {
-  const all = await getIndex()
-  return all.filter((p) => isPublicallyVisible(p.status, p.date))
-}
+// unstable_cache caches across requests; invalidated via revalidateTag('posts', ...) after any write.
+export const getPublicPosts = unstable_cache(
+  async (): Promise<Post[]> => {
+    const all = await getIndex()
+    return all.filter((p) => isPublicallyVisible(p.status, p.date))
+  },
+  ['public-posts'],
+  { tags: ['posts'] },
+)
 
 // Read a single post with its markdown body, or null when missing.
-export async function getPost(slug: string): Promise<PostWithContent | null> {
+// React.cache() deduplicates within a render tree (generateMetadata + page component).
+export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
   const raw = await readText(mdPath(slug))
   if (!raw) return null
   const { data, content } = matter(raw)
@@ -39,7 +47,7 @@ export async function getPost(slug: string): Promise<PostWithContent | null> {
     excerpt: meta.excerpt,
     content: content.trim(),
   }
-}
+})
 
 // Normalize incoming data into a complete Post + content pair.
 function normalize(input: Partial<PostWithContent>): PostWithContent {

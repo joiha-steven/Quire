@@ -4,14 +4,21 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPost } from '@/lib/posts'
-import { getPage } from '@/lib/pages'
+import { getPost, getPublicPosts } from '@/lib/posts'
+import { getPage, getPublicPages } from '@/lib/pages'
 import { getSettings } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { isPublicallyVisible } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+// Pre-build all public slugs at deploy time; new slugs render on first visit (ISR).
+export async function generateStaticParams() {
+  const [posts, pages] = await Promise.all([getPublicPosts(), getPublicPages()])
+  const slugs = new Set([...posts.map((p) => p.slug), ...pages.map((p) => p.slug)])
+  return [...slugs].map((slug) => ({ slug }))
+}
+
+export const dynamicParams = true
 
 // Render a taxonomy list as comma-separated links: "a, b, c".
 function taxoLinks(items: string[], make: (s: string) => string) {
