@@ -9,7 +9,7 @@ import { useTheme, type ThemeMode } from './ThemeProvider'
 // Half-filled circle (contrast) icon for the trigger.
 function ContrastIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
       <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
     </svg>
@@ -34,7 +34,7 @@ export function ThemeToggle({ lang }: { lang: SiteLang }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={s.theme}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
       >
         <ContrastIcon />
       </button>
