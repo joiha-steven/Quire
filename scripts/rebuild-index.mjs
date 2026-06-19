@@ -71,6 +71,34 @@ async function rebuild(prefix, kind) {
   }
 }
 
+// Media index is rebuilt straight from the media/* blobs (no .md involved).
+async function rebuildMedia() {
+  const out = []
+  let cursor
+  do {
+    const res = await list({ prefix: 'media/', cursor, token: TOKEN, limit: 1000 })
+    for (const b of res.blobs) {
+      if (b.pathname.endsWith('_index.json')) continue
+      out.push({
+        url: b.url,
+        filename: b.pathname.replace(/^media\//, ''),
+        size: b.size,
+        uploadedAt: new Date(b.uploadedAt).toISOString(),
+      })
+    }
+    cursor = res.cursor
+  } while (cursor)
+  out.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
+  console.log(`media/_index.json: ${out.length} files`)
+  if (!DRY) {
+    await put('media/_index.json', JSON.stringify(out, null, 2), {
+      access: 'public', addRandomSuffix: false, allowOverwrite: true,
+      contentType: 'application/json', cacheControlMaxAge: 0, token: TOKEN,
+    })
+  }
+}
+
 await rebuild('posts/', 'post')
 await rebuild('pages/', 'page')
+await rebuildMedia()
 console.log(DRY ? 'DRY: nothing written.' : 'Done.')
