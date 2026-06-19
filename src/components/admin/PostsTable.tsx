@@ -7,12 +7,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Post, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
-import { formatDate } from '@/lib/i18n'
-import { useAdminT, useAdminLang } from './I18nProvider'
+import { formatDateTimeShort } from '@/lib/utils'
+import { RowActions, StatusPill } from './RowActions'
+import { useAdminT } from './I18nProvider'
 
 export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
   const t = useAdminT()
-  const lang = useAdminLang()
   const router = useRouter()
   const { notify } = useToast()
   const [posts, setPosts] = useState(initialPosts)
@@ -50,30 +50,18 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
         <tbody>
           {posts.map((p) => (
             <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
-              <td className="px-4 py-3 font-medium">{p.title || t.untitled}</td>
-              <td className="px-4 py-3">
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    p.status === 'published'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
-                >
-                  {p.status === 'published' ? t.statusPublished : t.statusDraft}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{formatDate(p.date, lang)}</td>
-              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.categories.join(', ')}</td>
-              <td className="px-4 py-3 text-right whitespace-nowrap">
-                <Link
-                  href={`/admin/editor/${p.slug}`}
-                  className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
-                >
-                  {t.edit}
+              <td className="px-4 py-3 font-medium">
+                <Link href={`/admin/editor/${p.slug}`} className="hover:underline">
+                  {p.title || t.untitled}
                 </Link>
-                <button onClick={() => handleDelete(p.slug)} className="ml-4 text-red-600 hover:text-red-700">
-                  {t.delete}
-                </button>
+              </td>
+              <td className="px-4 py-3">
+                <StatusPill published={p.status === 'published'} label={p.status === 'published' ? t.statusPublished : t.statusDraft} />
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap text-neutral-500 dark:text-neutral-400">{formatDateTimeShort(p.date)}</td>
+              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.categories.join(', ')}</td>
+              <td className="px-4 py-3">
+                <RowActions editHref={`/admin/editor/${p.slug}`} onDelete={() => handleDelete(p.slug)} />
               </td>
             </tr>
           ))}

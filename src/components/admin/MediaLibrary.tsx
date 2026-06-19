@@ -3,7 +3,7 @@
 // Media grid. Two modes:
 // - 'page'   : full library; click a thumbnail to zoom, plus copy-URL / delete.
 // - 'picker' : modal for choosing an image (calls onSelect with the URL).
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -17,12 +17,16 @@ type Props = {
   onClose?: () => void
 }
 
+const PAGE = 50 // render this many, then load more on scroll (keeps it light)
+
 export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   const t = useAdminT()
   const { notify } = useToast()
   const [items, setItems] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [zoom, setZoom] = useState<MediaItem | null>(null)
+  const [visible, setVisible] = useState(PAGE)
+  const sentinel = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/media')
@@ -31,6 +35,17 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
       .catch(() => notify(t.loadMediaFailed, 'error'))
       .finally(() => setLoading(false))
   }, [notify, t])
+
+  // Infinite scroll: reveal another page when the sentinel comes into view.
+  useEffect(() => {
+    const el = sentinel.current
+    if (!el || visible >= items.length) return
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setVisible((v) => v + PAGE)
+    })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [visible, items.length])
 
   async function handleDelete(url: string) {
     if (!confirm(t.confirmDeleteMedia)) return
@@ -51,39 +66,42 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   }
 
   const grid = (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-      {items.map((m) => (
-        <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-          <button
-            type="button"
-            // Page mode: click to zoom. Picker mode: click to select.
-            onClick={() => (mode === 'picker' ? onSelect?.(m.url) : setZoom(m))}
-            className="block aspect-square w-full bg-neutral-100 dark:bg-neutral-800"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={m.url} alt={m.filename} className="h-full w-full object-cover" />
-          </button>
-          <figcaption className="space-y-1 p-2 text-xs">
-            <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
-              {m.filename}
-            </p>
-            <p className="text-neutral-400">
-              {formatBytes(m.size)} · {formatDateVi(m.uploadedAt)}
-            </p>
-            {mode === 'page' && (
-              <div className="flex gap-3 pt-1">
-                <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                  {t.copyUrl}
-                </button>
-                <button onClick={() => handleDelete(m.url)} className="text-red-600 hover:text-red-700">
-                  {t.delete}
-                </button>
-              </div>
-            )}
-          </figcaption>
-        </figure>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+        {items.slice(0, visible).map((m) => (
+          <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+            <button
+              type="button"
+              // Page mode: click to zoom. Picker mode: click to select.
+              onClick={() => (mode === 'picker' ? onSelect?.(m.url) : setZoom(m))}
+              className="block aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={m.url} alt={m.filename} className="h-full w-full object-cover" />
+            </button>
+            <figcaption className="space-y-1 p-2 text-xs">
+              <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
+                {m.filename}
+              </p>
+              <p className="text-neutral-400">
+                {formatBytes(m.size)} · {formatDateVi(m.uploadedAt)}
+              </p>
+              {mode === 'page' && (
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                    {t.copyUrl}
+                  </button>
+                  <button onClick={() => handleDelete(m.url)} className="text-red-600 hover:text-red-700">
+                    {t.delete}
+                  </button>
+                </div>
+              )}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      {visible < items.length && <div ref={sentinel} className="h-10" />}
+    </>
   )
 
   const body = (

@@ -21,6 +21,16 @@ export function formatDateVi(iso: string): string {
   return `${d.getDate()} tháng ${d.getMonth() + 1}, ${d.getFullYear()}`
 }
 
+// Terse date + 24h time for the admin tables, e.g. "4/6/26 - 14:05".
+export function formatDateTimeShort(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const yy = String(d.getFullYear()).slice(-2)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${d.getDate()}/${d.getMonth() + 1}/${yy} - ${hh}:${mm}`
+}
+
 // Format an ISO date as "HH:mm" for the auto-save indicator.
 export function formatTime(iso: string): string {
   const d = new Date(iso)

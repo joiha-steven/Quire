@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Page, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
+import { RowActions, StatusPill } from './RowActions'
 import { useAdminT } from './I18nProvider'
 
 export function PagesTable({ initialPages }: { initialPages: Page[] }) {
@@ -46,29 +47,17 @@ export function PagesTable({ initialPages }: { initialPages: Page[] }) {
         <tbody>
           {pages.map((p) => (
             <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
-              <td className="px-4 py-3 font-medium">{p.title || t.untitled}</td>
+              <td className="px-4 py-3 font-medium">
+                <Link href={`/admin/page-editor/${p.slug}`} className="hover:underline">
+                  {p.title || t.untitled}
+                </Link>
+              </td>
               <td className="px-4 py-3">
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    p.status === 'published'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
-                >
-                  {p.status === 'published' ? t.statusPublished : t.statusDraft}
-                </span>
+                <StatusPill published={p.status === 'published'} label={p.status === 'published' ? t.statusPublished : t.statusDraft} />
               </td>
               <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">/{p.slug}</td>
-              <td className="px-4 py-3 text-right whitespace-nowrap">
-                <Link
-                  href={`/admin/page-editor/${p.slug}`}
-                  className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
-                >
-                  {t.edit}
-                </Link>
-                <button onClick={() => handleDelete(p.slug)} className="ml-4 text-red-600 hover:text-red-700">
-                  {t.delete}
-                </button>
+              <td className="px-4 py-3">
+                <RowActions editHref={`/admin/page-editor/${p.slug}`} onDelete={() => handleDelete(p.slug)} />
               </td>
             </tr>
           ))}

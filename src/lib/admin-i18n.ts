@@ -51,8 +51,11 @@ export type AdminStrings = {
   tbReview: string
   editorPlaceholder: string
   // in-body image (figure)
-  imgWidthColumn: string
-  imgWidthFull: string
+  imgAlignLeft: string
+  imgAlignCenter: string
+  imgAlignRight: string
+  imgSizeColumn: string
+  imgSizeWide: string
   captionPlaceholder: string
   // settings panel (post)
   slug: string
@@ -178,8 +181,11 @@ const DICT: Record<SiteLang, AdminStrings> = {
     tbMarkdown: 'Markdown',
     tbReview: 'Xem trước',
     editorPlaceholder: 'Bắt đầu viết...',
-    imgWidthColumn: 'Khung',
-    imgWidthFull: 'Toàn màn hình',
+    imgAlignLeft: 'Trái',
+    imgAlignCenter: 'Giữa',
+    imgAlignRight: 'Phải',
+    imgSizeColumn: 'Khung',
+    imgSizeWide: 'Lớn (+30%)',
     captionPlaceholder: 'Chú thích ảnh',
     slug: 'Đường dẫn (slug)',
     publishDate: 'Ngày đăng',
@@ -296,8 +302,11 @@ const DICT: Record<SiteLang, AdminStrings> = {
     tbMarkdown: 'Markdown',
     tbReview: 'Preview',
     editorPlaceholder: 'Start writing...',
-    imgWidthColumn: 'Column',
-    imgWidthFull: 'Full width',
+    imgAlignLeft: 'Left',
+    imgAlignCenter: 'Center',
+    imgAlignRight: 'Right',
+    imgSizeColumn: 'Column',
+    imgSizeWide: 'Wide (+30%)',
     captionPlaceholder: 'Image caption',
     slug: 'Slug (URL)',
     publishDate: 'Publish date',
