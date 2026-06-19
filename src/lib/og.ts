@@ -11,7 +11,7 @@ export function ogImageUrl(
   const { ogImage, ogFallbackImage } = settings.seo
   const bg = opts.featuredImage || ogFallbackImage || ''
   if (ogImage) {
-    const p = new URLSearchParams({ title: opts.title })
+    const p = new URLSearchParams({ title: opts.title, site: settings.title })
     if (bg) p.set('bg', bg)
     return `${base}/og?${p.toString()}`
   }

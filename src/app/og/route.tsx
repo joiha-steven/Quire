@@ -3,8 +3,11 @@
 // The title is rendered over the background image (a post's featured image or
 // the owner's fallback image); with no bg it falls back to a dark gradient.
 import { ImageResponse } from 'next/og'
-import { getSettings } from '@/lib/settings'
 
+// Edge runtime: fetch(new URL('./font.ttf', import.meta.url)) only resolves the
+// bundled asset here (Node fetch can't read a file:// URL). Everything comes
+// from query params, so no Blob/settings read is needed.
+export const runtime = 'edge'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -16,7 +19,7 @@ export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url)
   const title = (searchParams.get('title') || '').slice(0, 160)
   const bg = searchParams.get('bg') || ''
-  const { title: site } = await getSettings()
+  const site = searchParams.get('site') || ''
 
   const [semibold, regular] = await Promise.all([
     font('BeVietnamPro-SemiBold.ttf'),
