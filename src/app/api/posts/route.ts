@@ -2,6 +2,7 @@
 // POST /api/posts  -> create a post (owner only)
 
 import type { NextRequest } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getIndex, savePost } from '@/lib/posts'
 import { SlugConflictError } from '@/lib/slugs'
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('Title or slug is required', 400)
     }
     const meta = await savePost(body)
+    revalidateTag('posts', { expire: 0 })
+    revalidatePath(`/${meta.slug}`)
     logRequest(req, 201, start)
     return ok(meta, 201)
   } catch (error) {

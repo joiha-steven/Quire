@@ -3,6 +3,7 @@
 // DELETE /api/posts/[slug]  -> delete post (owner only)
 
 import type { NextRequest } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getPost, savePost, deletePost } from '@/lib/posts'
 import { SlugConflictError } from '@/lib/slugs'
@@ -41,6 +42,9 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]
     const { slug } = await ctx.params
     const body = (await req.json()) as Partial<PostWithContent>
     const meta = await savePost(body, slug)
+    revalidateTag('posts', { expire: 0 })
+    revalidatePath(`/${meta.slug}`)
+    if (slug !== meta.slug) revalidatePath(`/${slug}`)
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -63,6 +67,8 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/posts/[sl
     }
     const { slug } = await ctx.params
     await deletePost(slug)
+    revalidateTag('posts', { expire: 0 })
+    revalidatePath(`/${slug}`)
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {

@@ -3,6 +3,7 @@
 // DELETE /api/pages/[slug]  -> delete page (owner only)
 
 import type { NextRequest } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import type { PageWithContent } from '@/types'
 import { getPage, savePage, deletePage } from '@/lib/pages'
 import { SlugConflictError } from '@/lib/slugs'
@@ -40,6 +41,9 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]
     const { slug } = await ctx.params
     const body = (await req.json()) as Partial<PageWithContent>
     const meta = await savePage(body, slug)
+    revalidateTag('pages', { expire: 0 })
+    revalidatePath(`/${meta.slug}`)
+    if (slug !== meta.slug) revalidatePath(`/${slug}`)
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -62,6 +66,8 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/pages/[sl
     }
     const { slug } = await ctx.params
     await deletePage(slug)
+    revalidateTag('pages', { expire: 0 })
+    revalidatePath(`/${slug}`)
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {

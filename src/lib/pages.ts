@@ -1,6 +1,8 @@
 // Static page data access. Mirrors posts.ts but with no taxonomy or date.
 // _index.json holds metadata only; full content lives in pages/{slug}.md.
 
+import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Page, PageWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
@@ -17,13 +19,19 @@ export async function getPageIndex(): Promise<Page[]> {
 }
 
 // Public-facing list: published only (pages have no date gate).
-export async function getPublicPages(): Promise<Page[]> {
-  const all = await getPageIndex()
-  return all.filter((p) => p.status === 'published')
-}
+// unstable_cache caches across requests; invalidated via revalidateTag('pages', ...) after any write.
+export const getPublicPages = unstable_cache(
+  async (): Promise<Page[]> => {
+    const all = await getPageIndex()
+    return all.filter((p) => p.status === 'published')
+  },
+  ['public-pages'],
+  { tags: ['pages'] },
+)
 
 // Read a single page with its markdown body, or null when missing.
-export async function getPage(slug: string): Promise<PageWithContent | null> {
+// React.cache() deduplicates within a render tree (generateMetadata + page component).
+export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
   const raw = await readText(mdPath(slug))
   if (!raw) return null
   const { data, content } = matter(raw)
@@ -35,7 +43,7 @@ export async function getPage(slug: string): Promise<PageWithContent | null> {
     featuredImage: meta.featuredImage,
     content: content.trim(),
   }
-}
+})
 
 // Normalize incoming data into a complete Page + content pair.
 function normalize(input: Partial<PageWithContent>): PageWithContent {

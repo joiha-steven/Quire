@@ -5,7 +5,6 @@ import { getPageIndex } from '@/lib/pages'
 import { listBlobs } from '@/lib/blob'
 import { Overview } from '@/components/admin/Overview'
 
-export const dynamic = 'force-dynamic'
 
 // Tally a string[] field across posts into [name, count] pairs, busiest first.
 function tally(values: string[]): { name: string; count: number }[] {

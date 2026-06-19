@@ -34,6 +34,10 @@ Enable at least one provider; each loads only when its credentials are set.
 OAuth callback URLs: `https://<your-domain>/api/auth/callback/google` and/or
 `.../callback/github` (use `http://localhost:3000/...` locally).
 
+> **Note:** `BLOB_READ_WRITE_TOKEN` is also used to derive the public Blob store
+> URL at runtime — no extra env var needed. The token format
+> `vercel_blob_rw_<storeId>_<secret>` encodes the store ID directly.
+
 ## Two-repo pattern
 
 This repo (`vibeblog`) is the **public, open-source platform** — MIT licensed,
@@ -46,6 +50,18 @@ containing only:
 - `CLAUDE.md` with your personal operating notes
 
 Your actual blog content lives in Vercel Blob, not in git.
+
+## Performance & caching
+
+Post detail pages (`/[slug]`) are statically generated at deploy time (ISR). New
+posts are rendered on-demand on first visit, then cached. Admin save/delete
+automatically invalidates the relevant caches via `revalidateTag` +
+`revalidatePath`.
+
+List pages (home, category, tag) are server-rendered per request (because of
+pagination via `searchParams`), but `getPublicPosts` and `getSettings` are cached
+via Next.js 16 Cache Components (`'use cache'` directive) and only re-fetched when
+a post or setting is changed.
 
 ## Deploy to Vercel
 

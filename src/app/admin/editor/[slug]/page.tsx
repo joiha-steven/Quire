@@ -4,7 +4,6 @@ import { getPost, getCategories, getTags } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
 import { PostForm } from '@/components/admin/PostForm'
 
-export const dynamic = 'force-dynamic'
 
 export default async function EditPostPage({ params }: PageProps<'/admin/editor/[slug]'>) {
   const { slug } = await params
