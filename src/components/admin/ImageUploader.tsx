@@ -4,6 +4,7 @@
 import { useRef, useState } from 'react'
 import type { MediaItem, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
+import { useAdminT } from './I18nProvider'
 
 // Upload via XHR so we can report progress.
 function uploadFiles(files: File[], onProgress: (pct: number) => void): Promise<MediaItem[]> {
@@ -30,6 +31,7 @@ function uploadFiles(files: File[], onProgress: (pct: number) => void): Promise<
 }
 
 export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[]) => void }) {
+  const t = useAdminT()
   const { notify } = useToast()
   const inputRef = useRef<HTMLInputElement>(null)
   const [progress, setProgress] = useState<number | null>(null)
@@ -42,9 +44,9 @@ export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[])
     try {
       const items = await uploadFiles(images, setProgress)
       onUploaded(items)
-      notify('Đã tải lên thành công')
+      notify(t.uploaded)
     } catch {
-      notify('Tải lên thất bại', 'error')
+      notify(t.uploadFailed, 'error')
     } finally {
       setProgress(null)
     }
@@ -68,7 +70,7 @@ export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[])
           dragging ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-300 text-neutral-500'
         }`}
       >
-        Kéo thả ảnh vào đây hoặc bấm để chọn
+        {t.dropzone}
         <input
           ref={inputRef}
           type="file"

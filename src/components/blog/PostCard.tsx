@@ -12,7 +12,9 @@ export function PostCard({ post, lang }: { post: Post; lang: SiteLang }) {
         </Link>
       </h2>
       <p className="mt-1 text-sm text-neutral-500">{formatDate(post.date, lang)}</p>
-      {post.excerpt && <p className="mt-3 text-neutral-700">{post.excerpt}</p>}
+      {post.excerpt && (
+        <p className="mt-3 text-[1.0625rem] leading-relaxed text-neutral-600">{post.excerpt}</p>
+      )}
       {post.categories.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {post.categories.map((c) => (

@@ -2,6 +2,7 @@
 
 // Multi-select with inline create. Used for categories and tags.
 import { useState } from 'react'
+import { useAdminT } from './I18nProvider'
 
 type Props = {
   label: string
@@ -12,6 +13,7 @@ type Props = {
 }
 
 export function MultiSelect({ label, value, options, placeholder, onChange }: Props) {
+  const t = useAdminT()
   const [draft, setDraft] = useState('')
   const suggestions = options.filter((o) => !value.includes(o))
 
@@ -29,7 +31,7 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
         {value.map((v) => (
           <span key={v} className="flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1 text-xs text-white">
             {v}
-            <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} aria-label="Xóa">
+            <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} aria-label={t.removeAria}>
               ×
             </button>
           </span>
@@ -44,7 +46,7 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
             add(draft)
           }
         }}
-        placeholder={placeholder ?? 'Nhập rồi nhấn Enter'}
+        placeholder={placeholder ?? t.multiPlaceholder}
         className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
       />
       {suggestions.length > 0 && (

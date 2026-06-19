@@ -10,6 +10,7 @@ import { slugify, formatTime } from '@/lib/utils'
 import { Editor, type EditorApi } from './Editor'
 import { PostSettings, type Draft } from './PostSettings'
 import { MediaLibrary } from './MediaLibrary'
+import { useAdminT } from './I18nProvider'
 
 type Props = {
   initial?: PostWithContent
@@ -43,6 +44,7 @@ function toDraft(initial?: PostWithContent): Draft {
 }
 
 export function PostForm({ initial, allCategories, allTags }: Props) {
+  const t = useAdminT()
   const { notify } = useToast()
   const [draft, setDraft] = useState<Draft>(() => toDraft(initial))
   const [saving, setSaving] = useState(false)
@@ -103,13 +105,13 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
         window.history.replaceState(null, '', `/admin/editor/${json.data.slug}`)
         return true
       } catch {
-        notify('Lưu thất bại', 'error')
+        notify(t.saveFailed, 'error')
         return false
       } finally {
         setSaving(false)
       }
     },
-    [notify],
+    [notify, t],
   )
 
   // Queue a save behind any in-flight save and return its result.
@@ -136,7 +138,7 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
 
   async function handleSave(status: Draft['status'], successMsg: string) {
     if (status === 'published' && !draftRef.current.title.trim()) {
-      notify('Cần tiêu đề để đăng bài', 'error')
+      notify(t.needTitle, 'error')
       return
     }
     update({ status })
@@ -159,7 +161,7 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
       if (!json.success || !json.data?.[0]) throw new Error(json.error)
       return json.data[0].url
     } catch {
-      notify('Tải ảnh thất bại', 'error')
+      notify(t.imageUploadFailed, 'error')
       return null
     }
   }
@@ -169,7 +171,7 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
       <input
         value={draft.title}
         onChange={(e) => update({ title: e.target.value })}
-        placeholder="Tiêu đề bài viết"
+        placeholder={t.titlePlaceholder}
         className="mb-6 w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300"
       />
 
@@ -193,15 +195,11 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
       <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
           <span className="text-sm text-neutral-400">
-            {saving ? 'Đang lưu...' : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : ''}
+            {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => handleSave('draft', 'Đã lưu nháp')} disabled={saving}>
-              Lưu nháp
-            </Button>
-            <Button onClick={() => handleSave('published', 'Đã đăng bài')} disabled={saving}>
-              Đăng bài
-            </Button>
+            <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving}> {t.saveDraft} </Button>
+            <Button onClick={() => handleSave('published', t.published)} disabled={saving}> {t.publish} </Button>
           </div>
         </div>
       </div>

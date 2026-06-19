@@ -6,10 +6,5 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {
   const posts = await getIndex()
-  return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">Bảng điều khiển</h1>
-      <PostsTable initialPosts={posts} />
-    </div>
-  )
+  return <PostsTable initialPosts={posts} />
 }

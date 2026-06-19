@@ -13,6 +13,7 @@ import ImageExt from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import Youtube from '@tiptap/extension-youtube'
 import { Markdown } from 'tiptap-markdown'
+import { useAdminT } from './I18nProvider'
 
 export type EditorApi = { insertImage: (url: string) => void }
 
@@ -41,6 +42,7 @@ type Props = {
 const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100'
 
 function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: () => void }) {
+  const t = useAdminT()
   const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-600'}`
   const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
   return (
@@ -69,7 +71,7 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
       </button>
       {sep}
       <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>
-        • Danh sách
+        • {t.tbList}
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cls(editor.isActive('blockquote'))}>
         ❝
@@ -81,40 +83,41 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
       <button
         type="button"
         onClick={() => {
-          const url = window.prompt('Nhập đường dẫn liên kết:')
+          const url = window.prompt(t.promptLink)
           if (url) editor.chain().focus().setLink({ href: url }).run()
         }}
         className={cls(editor.isActive('link'))}
       >
-        Liên kết
+        {t.tbLink}
       </button>
       <button type="button" onClick={onPickImage} className={cls(false)}>
-        Ảnh
+        {t.tbImage}
       </button>
       <button
         type="button"
         onClick={() => toggleImageFull(editor)}
         disabled={!editor.isActive('image')}
         className={`${BTN} text-neutral-600 disabled:opacity-40`}
-        title="Chọn ảnh trong bài rồi bấm để bật/tắt toàn màn hình"
+        title={t.tbImageFullHint}
       >
-        Ảnh toàn màn hình
+        {t.tbImageFull}
       </button>
       <button
         type="button"
         onClick={() => {
-          const url = window.prompt('Dán link video (YouTube):')
+          const url = window.prompt(t.promptVideo)
           if (url) editor.commands.setYoutubeVideo({ src: url })
         }}
         className={cls(false)}
       >
-        Video
+        {t.tbVideo}
       </button>
     </div>
   )
 }
 
 export function Editor({ initialContent, onChange, onPickImage, onUploadFile, apiRef }: Props) {
+  const t = useAdminT()
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -127,7 +130,7 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
     ],
     content: initialContent,
     editorProps: {
-      attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4', 'data-placeholder': 'Bắt đầu viết...' },
+      attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4', 'data-placeholder': t.editorPlaceholder },
       handleDrop(view, event) {
         const files = Array.from(event.dataTransfer?.files ?? []).filter((f) => f.type.startsWith('image/'))
         if (files.length === 0) return false

@@ -1,7 +1,7 @@
 'use client'
 
 // Media grid. Two modes:
-// - 'page'   : full library with copy-URL / delete actions.
+// - 'page'   : full library; click a thumbnail to zoom, plus copy-URL / delete.
 // - 'picker' : modal for choosing an image (calls onSelect with the URL).
 import { useEffect, useState } from 'react'
 import type { MediaItem, ApiResponse } from '@/types'
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { formatBytes, formatDateVi } from '@/lib/utils'
 import { ImageUploader } from './ImageUploader'
+import { useAdminT } from './I18nProvider'
 
 type Props = {
   mode?: 'page' | 'picker'
@@ -17,34 +18,36 @@ type Props = {
 }
 
 export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
+  const t = useAdminT()
   const { notify } = useToast()
   const [items, setItems] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [zoom, setZoom] = useState<MediaItem | null>(null)
 
   useEffect(() => {
     fetch('/api/media')
       .then((r) => r.json() as Promise<ApiResponse<MediaItem[]>>)
       .then((j) => setItems(j.data ?? []))
-      .catch(() => notify('Không tải được thư viện', 'error'))
+      .catch(() => notify(t.loadMediaFailed, 'error'))
       .finally(() => setLoading(false))
-  }, [notify])
+  }, [notify, t])
 
   async function handleDelete(url: string) {
-    if (!confirm('Xóa ảnh này? Hành động không thể hoàn tác.')) return
+    if (!confirm(t.confirmDeleteMedia)) return
     try {
       const res = await fetch(`/api/media/by?url=${encodeURIComponent(url)}`, { method: 'DELETE' })
       const json = (await res.json()) as ApiResponse
       if (!json.success) throw new Error(json.error)
       setItems((prev) => prev.filter((m) => m.url !== url))
-      notify('Đã xóa')
+      notify(t.deleted)
     } catch {
-      notify('Xóa thất bại', 'error')
+      notify(t.deleteFailed, 'error')
     }
   }
 
   async function copyUrl(url: string) {
     await navigator.clipboard.writeText(url)
-    notify('Đã sao chép URL')
+    notify(t.copiedUrl)
   }
 
   const grid = (
@@ -53,7 +56,8 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
         <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <button
             type="button"
-            onClick={() => (mode === 'picker' ? onSelect?.(m.url) : copyUrl(m.url))}
+            // Page mode: click to zoom. Picker mode: click to select.
+            onClick={() => (mode === 'picker' ? onSelect?.(m.url) : setZoom(m))}
             className="block aspect-square w-full bg-neutral-100"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -69,10 +73,10 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
             {mode === 'page' && (
               <div className="flex gap-3 pt-1">
                 <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900">
-                  Sao chép URL
+                  {t.copyUrl}
                 </button>
                 <button onClick={() => handleDelete(m.url)} className="text-red-600 hover:text-red-700">
-                  Xóa
+                  {t.delete}
                 </button>
               </div>
             )}
@@ -86,25 +90,51 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <div className="space-y-5">
       <ImageUploader onUploaded={(uploaded) => setItems((prev) => [...uploaded, ...prev])} />
       {loading ? (
-        <p className="py-10 text-center text-neutral-400">Đang tải...</p>
+        <p className="py-10 text-center text-neutral-400">{t.loading}</p>
       ) : items.length === 0 ? (
-        <p className="py-10 text-center text-neutral-400">Chưa có ảnh nào.</p>
+        <p className="py-10 text-center text-neutral-400">{t.noMedia}</p>
       ) : (
         grid
       )}
     </div>
   )
 
-  if (mode === 'page') return body
+  // Full-size zoom overlay (page mode).
+  const lightbox = zoom && (
+    <div
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/80 p-4"
+      onClick={() => setZoom(null)}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={zoom.url}
+        alt={zoom.filename}
+        className="max-h-[85vh] max-w-full rounded-lg object-contain"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <p className="mt-3 text-sm text-white/80">
+        {zoom.filename} · {formatBytes(zoom.size)}
+      </p>
+    </div>
+  )
+
+  if (mode === 'page') {
+    return (
+      <>
+        {body}
+        {lightbox}
+      </>
+    )
+  }
 
   // Picker modal.
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Thư viện ảnh</h2>
+          <h2 className="text-lg font-bold">{t.mediaTitle}</h2>
           <Button variant="ghost" onClick={onClose}>
-            Đóng
+            {t.close}
           </Button>
         </div>
         <div className="overflow-y-auto">{body}</div>

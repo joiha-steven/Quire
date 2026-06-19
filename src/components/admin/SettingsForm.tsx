@@ -7,6 +7,7 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { MediaLibrary } from './MediaLibrary'
+import { useAdminT } from './I18nProvider'
 
 // A simple labeled on/off switch.
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -27,6 +28,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 export function SettingsForm({ initial }: { initial: SiteSettings }) {
+  const t = useAdminT()
   const { notify } = useToast()
   const [s, setS] = useState<SiteSettings>(initial)
   const [saving, setSaving] = useState(false)
@@ -44,9 +46,9 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
       })
       const json = (await res.json()) as ApiResponse<SiteSettings>
       if (!json.success) throw new Error(json.error)
-      notify('Đã lưu cài đặt')
+      notify(t.savedSettings)
     } catch {
-      notify('Lưu thất bại', 'error')
+      notify(t.saveFailed, 'error')
     } finally {
       setSaving(false)
     }
@@ -60,7 +62,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
   return (
     <div className="max-w-xl space-y-6">
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">Ngôn ngữ site</span>
+        <span className="text-sm font-medium text-neutral-700">{t.siteLanguage}</span>
         <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
           {LANGS.map((l) => (
             <button
@@ -76,34 +78,34 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
           ))}
         </div>
         <p className="text-xs text-neutral-400">
-          Đổi ngôn ngữ, định dạng ngày và font hiển thị (Việt: Be Vietnam Pro, Anh: Inter).
+          {t.siteLanguageHint}
         </p>
       </div>
 
       <Input
-        label="Tiêu đề site"
+        label={t.siteTitle}
         value={s.title}
         onChange={(e) => update({ title: e.target.value })}
         placeholder="vibeblog"
       />
 
       <Textarea
-        label="Mô tả site"
+        label={t.siteDescription}
         rows={2}
         value={s.description}
         onChange={(e) => update({ description: e.target.value })}
-        placeholder="Một dòng giới thiệu ngắn về blog"
+        placeholder={t.siteDescriptionPlaceholder}
       />
 
       <Toggle
-        label="Hiện mô tả site"
+        label={t.showDescription}
         checked={s.showDescription}
         onChange={(v) => update({ showDescription: v })}
       />
 
       <hr className="border-neutral-200" />
 
-      <Toggle label="Hiện logo" checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
+      <Toggle label={t.showLogo} checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
 
       {s.showLogo && (
         <div className="space-y-3">
@@ -112,20 +114,20 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={s.logoUrl} alt="Logo" className="h-12 w-auto rounded bg-neutral-100 p-1" />
           ) : (
-            <p className="text-xs text-neutral-400">Chưa chọn logo.</p>
+            <p className="text-xs text-neutral-400">{t.noLogo}</p>
           )}
           <div className="flex gap-2">
             <Button variant="secondary" type="button" onClick={() => setPicking(true)}>
-              Chọn logo
+              {t.chooseLogo}
             </Button>
             {s.logoUrl && (
               <Button variant="ghost" type="button" onClick={() => update({ logoUrl: '' })}>
-                Bỏ logo
+                {t.removeLogo}
               </Button>
             )}
           </div>
           <Input
-            label="Bề rộng logo trên header (px)"
+            label={t.logoWidth}
             type="number"
             min={24}
             max={600}
@@ -133,7 +135,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             onChange={(e) => update({ logoWidth: Number(e.target.value) })}
           />
           <p className="-mt-3 text-xs text-neutral-400">
-            Áp dụng cho logo hiển thị trên header trang chủ (không ảnh hưởng preview ở trên).
+            {t.logoWidthHint}
           </p>
         </div>
       )}
@@ -141,7 +143,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
       <hr className="border-neutral-200" />
 
       <Input
-        label="Bề rộng site - desktop (px)"
+        label={t.siteWidth}
         type="number"
         min={360}
         max={1600}
@@ -149,12 +151,12 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         onChange={(e) => update({ contentWidth: Number(e.target.value) })}
       />
       <p className="-mt-3 text-xs text-neutral-400">
-        Độ rộng tối đa của cột nội dung trên màn lớn (mặc định 672).
+        {t.siteWidthHint}
       </p>
 
       <div className="pt-2">
         <Button onClick={save} disabled={saving}>
-          {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
+          {saving ? t.saving : t.saveSettings}
         </Button>
       </div>
 

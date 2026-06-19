@@ -28,7 +28,7 @@ body {
 /* Be Vietnam Pro (Vietnamese) renders a touch wide; tighten it for cohesion.
    Applied on the lang root so it inherits into the prose body too. */
 html[lang="vi"] body {
-  letter-spacing: -0.018em;
+  letter-spacing: -0.006em;
 }
 
 /* Avoid long words/URLs overflowing on small screens. */
@@ -44,17 +44,12 @@ h1, h2, h3 {
 /* Rendered post body + TipTap editor share these typographic rules.
    Tuned for long-form reading (Medium-like): larger body, airy spacing. */
 .prose {
-  font-size: 1.25rem; /* ~20px */
-  line-height: 1.8;
+  font-size: 1.0625rem; /* ~17px, synced with the home excerpt */
+  line-height: 1.7;
   color: #242424;
 }
-@media (max-width: 640px) {
-  .prose {
-    font-size: 1.125rem; /* ~18px on phones */
-  }
-}
 .prose > * + * {
-  margin-top: 1.5em;
+  margin-top: 1.3em;
 }
 .prose h1 {
   font-size: 1.9rem;
@@ -78,7 +73,7 @@ h1, h2, h3 {
   margin-top: 1.5em;
 }
 .prose p {
-  margin-top: 1.5em;
+  margin-top: 1.3em;
   text-wrap: pretty;
 }
 .prose a {

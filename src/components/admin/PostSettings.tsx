@@ -5,6 +5,7 @@ import type { PostStatus, ImageDisplay } from '@/types'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { MultiSelect } from './MultiSelect'
+import { useAdminT } from './I18nProvider'
 
 export type Draft = {
   title: string
@@ -28,24 +29,25 @@ type Props = {
 }
 
 export function PostSettings({ draft, update, allCategories, allTags, onPickFeatured }: Props) {
+  const t = useAdminT()
   return (
     <aside className="space-y-5">
       <Input
-        label="Đường dẫn (slug)"
+        label={t.slug}
         value={draft.slug}
         onChange={(e) => update({ slug: e.target.value })}
         placeholder="tu-dong-tu-tieu-de"
       />
 
       <Input
-        label="Ngày đăng"
+        label={t.publishDate}
         type="datetime-local"
         value={draft.date}
         onChange={(e) => update({ date: e.target.value })}
       />
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">Trạng thái</span>
+        <span className="text-sm font-medium text-neutral-700">{t.status}</span>
         <div className="flex gap-4 text-sm">
           {(['draft', 'published'] as PostStatus[]).map((s) => (
             <label key={s} className="flex items-center gap-1.5">
@@ -55,52 +57,52 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
                 checked={draft.status === s}
                 onChange={() => update({ status: s })}
               />
-              {s === 'draft' ? 'Bản nháp' : 'Đã đăng'}
+              {s === 'draft' ? t.statusDraft : t.statusPublished}
             </label>
           ))}
         </div>
       </div>
 
       <MultiSelect
-        label="Danh mục"
+        label={t.categories}
         value={draft.categories}
         options={allCategories}
         onChange={(categories) => update({ categories })}
       />
 
       <MultiSelect
-        label="Thẻ tag"
+        label={t.tags}
         value={draft.tags}
         options={allTags}
         onChange={(tags) => update({ tags })}
       />
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">Ảnh đại diện</span>
+        <span className="text-sm font-medium text-neutral-700">{t.featuredImage}</span>
         {draft.featuredImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={draft.featuredImage} alt="" className="aspect-video w-full rounded-lg object-cover" />
         ) : (
           <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-400">
-            Chưa chọn ảnh
+            {t.noImageSelected}
           </div>
         )}
         <div className="flex gap-2">
           <Button variant="secondary" onClick={onPickFeatured} type="button">
-            Chọn ảnh
+            {t.chooseImage}
           </Button>
           {draft.featuredImage && (
             <Button variant="ghost" onClick={() => update({ featuredImage: '' })} type="button">
-              Bỏ chọn
+              {t.removeSelection}
             </Button>
           )}
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">Hiển thị ảnh đại diện</span>
+        <span className="text-sm font-medium text-neutral-700">{t.featuredDisplay}</span>
         <p className="text-xs text-neutral-400">
-          Ảnh trong bài: chọn ảnh rồi bấm &quot;Ảnh toàn màn hình&quot; trên thanh công cụ.
+          {t.featuredDisplayHint}
         </p>
         <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
           {(['post', 'full'] as ImageDisplay[]).map((d) => (
@@ -112,19 +114,19 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
                 draft.imageDisplay === d ? 'bg-white shadow-sm' : 'text-neutral-500'
               }`}
             >
-              {d === 'post' ? 'Vừa bài' : 'Toàn màn hình'}
+              {d === 'post' ? t.fitPost : t.fullWidth}
             </button>
           ))}
         </div>
       </div>
 
       <Textarea
-        label="Mô tả"
+        label={t.excerpt}
         rows={3}
         maxLength={200}
         value={draft.excerpt}
         onChange={(e) => update({ excerpt: e.target.value })}
-        placeholder="Để trống sẽ tự lấy 50 chữ đầu bài. Tối đa 200 ký tự."
+        placeholder={t.excerptPlaceholder}
       />
     </aside>
   )
