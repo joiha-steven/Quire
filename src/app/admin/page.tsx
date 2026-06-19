@@ -1,10 +1,11 @@
-// Dashboard: list all posts (any status).
+// Dashboard: posts + pages, tabbed.
 import { getIndex } from '@/lib/posts'
-import { PostsTable } from '@/components/admin/PostsTable'
+import { getPageIndex } from '@/lib/pages'
+import { ContentDashboard } from '@/components/admin/ContentDashboard'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {
-  const posts = await getIndex()
-  return <PostsTable initialPosts={posts} />
+  const [posts, pages] = await Promise.all([getIndex(), getPageIndex()])
+  return <ContentDashboard posts={posts} pages={pages} />
 }

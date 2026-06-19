@@ -23,6 +23,21 @@ export type PostWithContent = Post & {
   content: string
 }
 
+// A static page (About, Contact...). Like a post but with no taxonomy or date:
+// not part of the feed, only reachable directly at /page/{slug}.
+export type Page = {
+  title: string
+  slug: string
+  status: PostStatus
+  featuredImage?: string // Vercel Blob URL
+  imageDisplay?: ImageDisplay
+}
+
+// Full page = metadata + markdown body.
+export type PageWithContent = Page & {
+  content: string
+}
+
 // One entry in media/_index.json.
 export type MediaItem = {
   url: string

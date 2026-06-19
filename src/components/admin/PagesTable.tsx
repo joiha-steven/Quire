@@ -1,29 +1,26 @@
 'use client'
 
-// Posts list (no chrome): rows with per-row edit/delete. Tabs + heading +
-// "new" button live in ContentDashboard, which renders this.
+// Pages list (no chrome): title + status only, with per-row edit/delete.
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { Post, ApiResponse } from '@/types'
+import type { Page, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
-import { formatDate } from '@/lib/i18n'
-import { useAdminT, useAdminLang } from './I18nProvider'
+import { useAdminT } from './I18nProvider'
 
-export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
+export function PagesTable({ initialPages }: { initialPages: Page[] }) {
   const t = useAdminT()
-  const lang = useAdminLang()
   const router = useRouter()
   const { notify } = useToast()
-  const [posts, setPosts] = useState(initialPosts)
+  const [pages, setPages] = useState(initialPages)
 
   async function handleDelete(slug: string) {
-    if (!confirm(t.confirmDeletePost)) return
+    if (!confirm(t.confirmDeletePage)) return
     try {
-      const res = await fetch(`/api/posts/${slug}`, { method: 'DELETE' })
+      const res = await fetch(`/api/pages/${slug}`, { method: 'DELETE' })
       const json = (await res.json()) as ApiResponse
       if (!json.success) throw new Error(json.error)
-      setPosts((prev) => prev.filter((p) => p.slug !== slug))
+      setPages((prev) => prev.filter((p) => p.slug !== slug))
       notify(t.deleted)
       router.refresh()
     } catch {
@@ -31,8 +28,8 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
     }
   }
 
-  if (posts.length === 0) {
-    return <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.noPosts}</p>
+  if (pages.length === 0) {
+    return <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.noPages}</p>
   }
 
   return (
@@ -42,13 +39,12 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
           <tr>
             <th className="px-4 py-3 font-medium">{t.colTitle}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
-            <th className="px-4 py-3 font-medium">{t.colDate}</th>
-            <th className="px-4 py-3 font-medium">{t.colCategories}</th>
+            <th className="px-4 py-3 font-medium">{t.slug}</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody>
-          {posts.map((p) => (
+          {pages.map((p) => (
             <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
               <td className="px-4 py-3 font-medium">{p.title || t.untitled}</td>
               <td className="px-4 py-3">
@@ -62,11 +58,10 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
                   {p.status === 'published' ? t.statusPublished : t.statusDraft}
                 </span>
               </td>
-              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{formatDate(p.date, lang)}</td>
-              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.categories.join(', ')}</td>
+              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">/page/{p.slug}</td>
               <td className="px-4 py-3 text-right whitespace-nowrap">
                 <Link
-                  href={`/admin/editor/${p.slug}`}
+                  href={`/admin/page-editor/${p.slug}`}
                   className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
                 >
                   {t.edit}

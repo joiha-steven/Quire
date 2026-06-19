@@ -11,11 +11,13 @@ export type AdminStrings = {
   signOut: string
   // dashboard
   dashboardTitle: string
-  filterAll: string
-  filterPublished: string
-  filterDraft: string
+  tabPosts: string
+  tabPages: string
   newPost: string
+  newPage: string
   noPosts: string
+  noPages: string
+  confirmDeletePage: string
   colTitle: string
   colStatus: string
   colDate: string
@@ -109,17 +111,19 @@ export type AdminStrings = {
 const DICT: Record<SiteLang, AdminStrings> = {
   vi: {
     navAdmin: 'Quản trị',
-    navDashboard: 'Bảng điều khiển',
+    navDashboard: 'Trang / Bài viết',
     navMedia: 'Thư viện ảnh',
     navSettings: 'Cài đặt',
     navViewBlog: 'Xem blog',
     signOut: 'Đăng xuất',
-    dashboardTitle: 'Bảng điều khiển',
-    filterAll: 'Tất cả',
-    filterPublished: 'Đã đăng',
-    filterDraft: 'Bản nháp',
+    dashboardTitle: 'Trang / Bài viết',
+    tabPosts: 'Bài viết',
+    tabPages: 'Trang',
     newPost: 'Viết bài mới',
+    newPage: 'Tạo trang mới',
     noPosts: 'Chưa có bài viết nào.',
+    noPages: 'Chưa có trang nào.',
+    confirmDeletePage: 'Xóa trang này? Hành động không thể hoàn tác.',
     colTitle: 'Tiêu đề',
     colStatus: 'Trạng thái',
     colDate: 'Ngày',
@@ -204,17 +208,19 @@ const DICT: Record<SiteLang, AdminStrings> = {
   },
   en: {
     navAdmin: 'Admin',
-    navDashboard: 'Dashboard',
+    navDashboard: 'Pages / Posts',
     navMedia: 'Media',
     navSettings: 'Settings',
     navViewBlog: 'View blog',
     signOut: 'Sign out',
-    dashboardTitle: 'Dashboard',
-    filterAll: 'All',
-    filterPublished: 'Published',
-    filterDraft: 'Draft',
+    dashboardTitle: 'Pages / Posts',
+    tabPosts: 'Posts',
+    tabPages: 'Pages',
     newPost: 'New post',
+    newPage: 'New page',
     noPosts: 'No posts yet.',
+    noPages: 'No pages yet.',
+    confirmDeletePage: 'Delete this page? This action cannot be undone.',
     colTitle: 'Title',
     colStatus: 'Status',
     colDate: 'Date',
