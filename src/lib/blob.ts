@@ -7,7 +7,15 @@ const COMMON = {
   access: 'public' as const,
   addRandomSuffix: false,
   allowOverwrite: true,
+  // Mutable content (the _index.json query layer + post/page .md) is overwritten
+  // in place. Blob's default 1-year cache made the CDN serve a STALE index after
+  // a save -> new posts 404'd / lists looked empty. 0 keeps reads fresh.
+  cacheControlMaxAge: 0,
 }
+
+// Bust the Blob CDN cache on reads of mutable content so an overwritten blob is
+// never served stale (belt-and-suspenders with cacheControlMaxAge above).
+const fresh = (url: string) => `${url}${url.includes('?') ? '&' : '?'}ts=${Date.now()}`
 
 // List every blob (pathname + size), following pagination. Used for site stats.
 export async function listBlobs(): Promise<{ pathname: string; size: number }[]> {
@@ -43,7 +51,7 @@ export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
   try {
     const url = await resolveUrl(pathname)
     if (!url) return fallback
-    const res = await fetch(url, { cache: 'no-store' })
+    const res = await fetch(fresh(url), { cache: 'no-store' })
     if (!res.ok) return fallback
     return (await res.json()) as T
   } catch (error) {
@@ -57,7 +65,7 @@ export async function readText(pathname: string): Promise<string | null> {
   try {
     const url = await resolveUrl(pathname)
     if (!url) return null
-    const res = await fetch(url, { cache: 'no-store' })
+    const res = await fetch(fresh(url), { cache: 'no-store' })
     if (!res.ok) return null
     return await res.text()
   } catch (error) {

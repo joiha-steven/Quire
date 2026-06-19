@@ -50,16 +50,24 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [picker, setPicker] = useState<PickTarget | null>(null)
+  // Unsaved-changes flag: drives button states, autosave and the exit warning.
+  const [dirty, setDirty] = useState(false)
+  const [savedSlug, setSavedSlug] = useState<string | null>(initial?.slug ?? null)
 
   const slugTouched = useRef(Boolean(initial?.slug))
   const currentSlug = useRef<string | null>(initial?.slug ?? null)
   const editorApi = useRef<EditorApi | null>(null)
   const draftRef = useRef(draft)
+  const dirtyRef = useRef(dirty)
   useEffect(() => {
     draftRef.current = draft
   }, [draft])
+  useEffect(() => {
+    dirtyRef.current = dirty
+  }, [dirty])
 
   const update = useCallback((partial: Partial<Draft>) => {
+    setDirty(true)
     setDraft((prev) => {
       const next = { ...prev, ...partial }
       if ('slug' in partial) slugTouched.current = true
@@ -102,7 +110,9 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
           return false
         }
         currentSlug.current = json.data.slug
+        setSavedSlug(json.data.slug)
         setSavedAt(new Date().toISOString())
+        setDirty(false)
         // Keep the address bar in sync without remounting the editor.
         window.history.replaceState(null, '', `/admin/editor/${json.data.slug}`)
         return true
@@ -127,16 +137,25 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
     [doPersist],
   )
 
-  // Debounced auto-save on any draft change (skips the initial mount).
-  const mounted = useRef(false)
+  // Auto-save once a minute when there are unsaved changes.
   useEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true
-      return
+    const id = setInterval(() => {
+      if (dirtyRef.current) void enqueueSave()
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [enqueueSave])
+
+  // Warn before leaving with unsaved changes.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
     }
-    const id = setTimeout(() => void enqueueSave(), 2000)
-    return () => clearTimeout(id)
-  }, [draft, enqueueSave])
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
 
   async function handleSave(status: Draft['status'], successMsg: string) {
     if (status === 'published' && !draftRef.current.title.trim()) {
@@ -180,7 +199,10 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <Editor
           initialContent={draft.content}
-          onChange={(content) => setDraft((prev) => ({ ...prev, content }))}
+          onChange={(content) => {
+            setDirty(true)
+            setDraft((prev) => ({ ...prev, content }))
+          }}
           onPickImage={() => setPicker('editor')}
           onUploadFile={uploadInline}
           apiRef={editorApi}
@@ -200,9 +222,14 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
           <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving}> {t.saveDraft} </Button>
-            <Button onClick={() => handleSave('published', t.published)} disabled={saving}> {t.publish} </Button>
+          <div className="flex items-center gap-2">
+            {draft.status === 'published' && savedSlug && (
+              <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                {t.viewPost}
+              </a>
+            )}
+            <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving || !dirty}> {t.saveDraft} </Button>
+            <Button onClick={() => handleSave('published', t.published)} disabled={saving || (!dirty && draft.status === 'published')}> {t.publish} </Button>
           </div>
         </div>
       </div>
