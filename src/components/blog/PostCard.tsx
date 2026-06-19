@@ -5,7 +5,7 @@ import { formatDate } from '@/lib/i18n'
 
 export function PostCard({ post, lang }: { post: Post; lang: SiteLang }) {
   return (
-    <article className="border-b border-neutral-200 pb-7 dark:border-neutral-800">
+    <article>
       <h2 className="text-[1.35rem] font-semibold tracking-tight">
         <Link href={`/${post.slug}`} className="hover:text-neutral-600 dark:hover:text-neutral-300">
           {post.title}
@@ -16,19 +16,6 @@ export function PostCard({ post, lang }: { post: Post; lang: SiteLang }) {
         <p className="mt-3 text-[1.0625rem] leading-relaxed text-neutral-600 dark:text-neutral-300">
           {post.excerpt}
         </p>
-      )}
-      {post.categories.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {post.categories.map((c) => (
-            <Link
-              key={c}
-              href={`/category/${encodeURIComponent(c)}`}
-              className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-            >
-              {c}
-            </Link>
-          ))}
-        </div>
       )}
     </article>
   )

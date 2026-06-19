@@ -14,7 +14,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
       className="mx-auto flex min-h-screen w-full flex-col px-5"
       style={{ maxWidth: settings.contentWidth }}
     >
-      <header className="flex items-start justify-between gap-4 py-7">
+      <header className="flex items-center justify-between gap-4 py-7">
         <div>
           <Link href="/" className="inline-flex items-center gap-3">
             {showLogo ? (
@@ -29,8 +29,8 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <HeaderMenu items={settings.menu} lang={settings.language} />
           <ThemeToggle lang={settings.language} />
+          <HeaderMenu items={settings.menu} lang={settings.language} />
         </div>
       </header>
       <main className="flex-1 py-4">{children}</main>
