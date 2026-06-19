@@ -1,13 +1,13 @@
 'use client'
 
-// SEO tab: canonical site URL + four independently toggleable crawler features
-// (JSON-LD schema, sitemap.xml, llms.txt, robots.txt). Saves through the shared
-// /api/settings endpoint, which merges the partial { siteUrl, seo }.
+// SEO tab: canonical site URL + crawler/feed/share features, each toggleable.
+// Saves through the shared /api/settings endpoint (merges { siteUrl, seo }).
 import { useState } from 'react'
 import type { SiteSettings, SeoSettings, ApiResponse } from '@/types'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
+import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
 
 type Feature = { key: keyof SeoSettings; label: string; desc: string; path: string }
@@ -15,8 +15,10 @@ type Feature = { key: keyof SeoSettings; label: string; desc: string; path: stri
 const FEATURES: Feature[] = [
   { key: 'autoSchema', label: 'Tự động Schema (JSON-LD)', desc: 'Chèn dữ liệu có cấu trúc cho Google: WebSite ở trang chủ, BlogPosting ở mỗi bài viết.', path: '' },
   { key: 'sitemap', label: 'Sitemap', desc: 'Liệt kê mọi bài viết, trang, danh mục và thẻ để công cụ tìm kiếm thu thập đầy đủ.', path: '/sitemap.xml' },
+  { key: 'rss', label: 'RSS Feed', desc: 'Nguồn cấp RSS 2.0 cho người đọc và trình tổng hợp tin theo dõi bài mới.', path: '/feed.xml' },
   { key: 'llms', label: 'llms.txt', desc: 'Mục lục nội dung dạng Markdown cho các trình thu thập AI (chuẩn llmstxt.org).', path: '/llms.txt' },
   { key: 'robots', label: 'robots.txt', desc: 'Cho phép thu thập, trỏ tới sitemap, và luôn chặn /admin với /api.', path: '/robots.txt' },
+  { key: 'ogImage', label: 'Ảnh chia sẻ động (OG Image)', desc: 'Tự tạo ảnh chia sẻ cho mỗi bài: tiêu đề đặt trên ảnh nổi bật, hoặc trên ảnh dự phòng bên dưới.', path: '/og' },
 ]
 
 function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -39,6 +41,9 @@ export function SeoForm({ initial }: { initial: SiteSettings }) {
   const [siteUrl, setSiteUrl] = useState(initial.siteUrl)
   const [seo, setSeo] = useState<SeoSettings>(initial.seo)
   const [saving, setSaving] = useState(false)
+  const [picking, setPicking] = useState(false)
+
+  const setFlag = (key: keyof SeoSettings, v: boolean) => setSeo((prev) => ({ ...prev, [key]: v }))
 
   async function save() {
     setSaving(true)
@@ -68,7 +73,7 @@ export function SeoForm({ initial }: { initial: SiteSettings }) {
           placeholder="https://manhhung.me"
         />
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          Dùng cho sitemap, schema, llms.txt và thẻ canonical. Để trống sẽ tự dùng tên miền Vercel.
+          Dùng cho sitemap, RSS, schema, llms.txt, ảnh OG và thẻ canonical. Để trống sẽ tự dùng tên miền Vercel.
         </p>
       </div>
 
@@ -82,12 +87,46 @@ export function SeoForm({ initial }: { initial: SiteSettings }) {
               </div>
               <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{f.desc}</p>
             </div>
-            <Switch checked={seo[f.key]} onChange={(v) => setSeo((prev) => ({ ...prev, [f.key]: v }))} />
+            <Switch checked={Boolean(seo[f.key])} onChange={(v) => setFlag(f.key, v)} />
           </div>
         ))}
       </div>
 
+      {/* Fallback share image used when a post has no featured image. */}
+      <div className="space-y-2">
+        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          Ảnh dự phòng (khi bài không có ảnh nổi bật)
+        </div>
+        <div className="flex items-center gap-4">
+          {seo.ogFallbackImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={seo.ogFallbackImage} alt="OG" className="h-20 w-36 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800" />
+          ) : (
+            <div className="flex h-20 w-36 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-400 dark:border-neutral-700">
+              Chưa chọn
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button variant="secondary" type="button" onClick={() => setPicking(true)}>Chọn ảnh</Button>
+            {seo.ogFallbackImage && (
+              <Button variant="ghost" type="button" onClick={() => setSeo((p) => ({ ...p, ogFallbackImage: '' }))}>Xoá</Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <Button onClick={save} disabled={saving}>{saving ? t.saving : t.saveSettings}</Button>
+
+      {picking && (
+        <MediaLibrary
+          mode="picker"
+          onSelect={(url) => {
+            setSeo((p) => ({ ...p, ogFallbackImage: url }))
+            setPicking(false)
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </div>
   )
 }

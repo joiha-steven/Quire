@@ -52,6 +52,10 @@ function sanitizeSeo(input: unknown, fallback: SeoSettings): SeoSettings {
     sitemap: bool(o.sitemap, fallback.sitemap),
     llms: bool(o.llms, fallback.llms),
     robots: bool(o.robots, fallback.robots),
+    rss: bool(o.rss, fallback.rss),
+    ogImage: bool(o.ogImage, fallback.ogImage),
+    // A full image URL (keep the path); only the type is validated.
+    ogFallbackImage: typeof o.ogFallbackImage === 'string' ? o.ogFallbackImage.trim() : fallback.ogFallbackImage,
   }
 }
 
@@ -95,6 +99,9 @@ export const DEFAULT_SEO: SeoSettings = {
   sitemap: true,
   llms: true,
   robots: true,
+  rss: true,
+  ogImage: true,
+  ogFallbackImage: '',
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
