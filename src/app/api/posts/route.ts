@@ -4,6 +4,7 @@
 import type { NextRequest } from 'next/server'
 import type { PostWithContent } from '@/types'
 import { getIndex, savePost } from '@/lib/posts'
+import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -40,6 +41,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     logRequest(req, 201, start)
     return ok(meta, 201)
   } catch (error) {
+    if (error instanceof SlugConflictError) {
+      logRequest(req, 409, start)
+      return fail('slug_taken', 409)
+    }
     logError(req, error)
     logRequest(req, 500, start)
     return fail('Failed to create post', 500)

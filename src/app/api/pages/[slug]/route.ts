@@ -5,6 +5,7 @@
 import type { NextRequest } from 'next/server'
 import type { PageWithContent } from '@/types'
 import { getPage, savePage, deletePage } from '@/lib/pages'
+import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export async function GET(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]'>): Promise<Response> {
@@ -42,6 +43,10 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
+    if (error instanceof SlugConflictError) {
+      logRequest(req, 409, start)
+      return fail('slug_taken', 409)
+    }
     logError(req, error)
     logRequest(req, 500, start)
     return fail('Failed to update page', 500)

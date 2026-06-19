@@ -5,6 +5,7 @@ import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible } from '@/lib/utils'
+import { ensureSlugFree } from '@/lib/slugs'
 
 const INDEX_PATH = 'posts/_index.json'
 const mdPath = (slug: string) => `posts/${slug}.md`
@@ -91,6 +92,8 @@ export async function savePost(
   previousSlug?: string,
 ): Promise<Post> {
   const post = normalize(input)
+  // Reject a slug already taken by another post or page (shared URL namespace).
+  await ensureSlugFree(post.slug, 'post', previousSlug)
   await writeText(mdPath(post.slug), serialize(post))
 
   // If the slug changed, drop the old markdown file.

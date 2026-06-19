@@ -37,6 +37,7 @@ export type AdminStrings = {
   saving: string
   savedAtPrefix: string
   saveFailed: string
+  slugTaken: string
   needTitle: string
   savedDraft: string
   published: string
@@ -142,6 +143,7 @@ const DICT: Record<SiteLang, AdminStrings> = {
     saving: 'Đang lưu...',
     savedAtPrefix: 'Đã lưu lúc',
     saveFailed: 'Lưu thất bại',
+    slugTaken: 'Đường dẫn (slug) đã tồn tại, chọn đường dẫn khác',
     needTitle: 'Cần tiêu đề để đăng bài',
     savedDraft: 'Đã lưu nháp',
     published: 'Đã đăng bài',
@@ -204,7 +206,7 @@ const DICT: Record<SiteLang, AdminStrings> = {
     menuLabelField: 'Nhãn',
     menuHrefField: 'Đường dẫn',
     menuAdd: 'Thêm mục',
-    menuHint: 'Đường dẫn: trang chủ /, danh mục /category/ten, trang /page/ten, hoặc link ngoài https://...',
+    menuHint: 'Đường dẫn: trang chủ /, bài viết hoặc trang /duong-dan, danh mục /category/ten, hoặc link ngoài https://...',
   },
   en: {
     navAdmin: 'Admin',
@@ -239,6 +241,7 @@ const DICT: Record<SiteLang, AdminStrings> = {
     saving: 'Saving...',
     savedAtPrefix: 'Saved at',
     saveFailed: 'Save failed',
+    slugTaken: 'That slug is already taken, choose another',
     needTitle: 'A title is required to publish',
     savedDraft: 'Draft saved',
     published: 'Published',
@@ -301,7 +304,7 @@ const DICT: Record<SiteLang, AdminStrings> = {
     menuLabelField: 'Label',
     menuHrefField: 'Link',
     menuAdd: 'Add item',
-    menuHint: 'Link: home /, category /category/name, page /page/name, or external https://...',
+    menuHint: 'Link: home /, post or page /slug, category /category/name, or external https://...',
   },
 }
 

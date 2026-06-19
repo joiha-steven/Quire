@@ -58,7 +58,7 @@ export function PagesTable({ initialPages }: { initialPages: Page[] }) {
                   {p.status === 'published' ? t.statusPublished : t.statusDraft}
                 </span>
               </td>
-              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">/page/{p.slug}</td>
+              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">/{p.slug}</td>
               <td className="px-4 py-3 text-right whitespace-nowrap">
                 <Link
                   href={`/admin/page-editor/${p.slug}`}
