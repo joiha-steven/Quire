@@ -24,7 +24,8 @@ body {
   font-synthesis-weight: none;
   letter-spacing: -0.011em;
   line-height: 1.6;
-  color: #1a1a1a;
+  background: var(--c-bg);
+  color: var(--c-text);
 }
 
 /* Avoid long words/URLs overflowing on small screens. */
@@ -35,11 +36,12 @@ p, h1, h2, h3, h4, li, blockquote, a {
 /* Improve last-line/orphans without narrowing the block (balance shrinks it). */
 h1, h2, h3 {
   text-wrap: pretty;
+  color: var(--c-heading);
 }
 
-/* Dark mode: headings/titles render pure white. */
-.dark h1, .dark h2, .dark h3 {
-  color: #fff;
+/* Secondary text (dates, captions) — owner-themed. */
+.text-meta {
+  color: var(--c-meta);
 }
 
 /* Rendered post body + TipTap editor share these typographic rules.
@@ -47,7 +49,7 @@ h1, h2, h3 {
 .prose {
   font-size: 1.0625rem; /* ~17px, synced with the home excerpt */
   line-height: 1.7;
-  color: #242424;
+  color: var(--c-text);
 }
 .prose > * + * {
   margin-top: 1.3em;
@@ -78,8 +80,13 @@ h1, h2, h3 {
   text-wrap: pretty;
 }
 .prose a {
-  color: #2563eb;
+  color: var(--c-link);
   text-decoration: underline;
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--c-rule);
+  margin: 2em 0;
 }
 .prose ul {
   list-style: disc;
@@ -93,9 +100,9 @@ h1, h2, h3 {
   margin-top: 0.35em;
 }
 .prose blockquote {
-  border-left: 3px solid #d4d4d4;
+  border-left: 3px solid var(--c-rule);
   padding-left: 1em;
-  color: #525252;
+  color: var(--c-meta);
   font-style: italic;
 }
 .prose pre {
@@ -120,13 +127,32 @@ h1, h2, h3 {
   max-width: 100%;
   height: auto;
 }
-/* Full-bleed image: break out of the centered content column. */
-.prose img.img-full {
+/* Figures: image + optional caption. Default fits the content column. */
+.prose figure {
+  margin: 1.6em 0;
+}
+.prose figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+/* Full-bleed figure: break out of the centered content column. */
+.prose figure.img-full {
   width: 100vw;
   max-width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
+}
+.prose figure.img-full img {
   border-radius: 0;
+}
+/* Caption: small and centered, styled like the blog date. */
+.prose figcaption {
+  margin-top: 0.55em;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--c-meta);
 }
 /* Embedded video (iframe) scales to the column, 16:9. */
 .prose iframe {
@@ -137,22 +163,8 @@ h1, h2, h3 {
   border-radius: 0.5rem;
 }
 
-/* Dark-mode reading colors. */
-.dark .prose {
-  color: #cfcfcf;
-}
-.dark .prose h1,
-.dark .prose h2,
-.dark .prose h3 {
-  color: #fff;
-}
-.dark .prose a {
-  color: #7fb0ff;
-}
-.dark .prose blockquote {
-  border-color: #404040;
-  color: #a3a3a3;
-}
+/* Dark mode: only the inline-code chip needs a manual swap; text/heading/link/
+   rule colors all come from the themed CSS variables above. */
 .dark .prose :not(pre) > code {
   background: #262626;
 }

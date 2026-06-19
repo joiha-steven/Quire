@@ -22,7 +22,6 @@ function toDraft(initial?: PageWithContent): PageDraft {
     slug: initial?.slug ?? '',
     status: initial?.status ?? 'draft',
     featuredImage: initial?.featuredImage ?? '',
-    imageDisplay: initial?.imageDisplay ?? 'post',
     content: initial?.content ?? '',
   }
 }
@@ -65,7 +64,6 @@ export function PageForm({ initial }: Props) {
         slug: d.slug || slugify(d.title) || `page-${Date.now()}`,
         status: statusOverride ?? d.status,
         featuredImage: d.featuredImage || undefined,
-        imageDisplay: d.imageDisplay,
         content: d.content,
       }
       try {

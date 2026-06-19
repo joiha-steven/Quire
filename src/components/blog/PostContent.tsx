@@ -4,16 +4,24 @@ import { marked } from 'marked'
 
 marked.setOptions({ gfm: true, breaks: true })
 
-// Images whose src ends with "#full" render full-bleed: strip the marker and tag
-// them so CSS can break them out of the content column.
-function applyFullImages(html: string): string {
-  return html.replace(/<img\b[^>]*?>/g, (tag) => {
-    if (!/src="[^"]*#full"/.test(tag)) return tag
-    return tag.replace(/(src="[^"]*?)#full(")/, '$1$2').replace('<img', '<img class="img-full"')
-  })
+// Wrap each image in a <figure>: caption (from alt) below, and full-bleed when
+// the src carries a "#full" marker. Lone images sit in their own <p>, which we
+// unwrap first so the block-level <figure> is valid.
+function buildFigures(html: string): string {
+  return html
+    .replace(/<p>\s*(<img\b[^>]*>)\s*<\/p>/g, '$1')
+    .replace(/<img\b[^>]*>/g, (tag) => {
+      const src = tag.match(/\bsrc="([^"]*)"/)?.[1]
+      if (!src) return tag
+      const alt = tag.match(/\balt="([^"]*)"/)?.[1] ?? ''
+      const full = src.includes('#full')
+      const cleanSrc = src.replace(/#full$/, '')
+      const caption = alt ? `<figcaption>${alt}</figcaption>` : ''
+      return `<figure class="${full ? 'img-full' : ''}"><img src="${cleanSrc}" alt="${alt}">${caption}</figure>`
+    })
 }
 
 export async function PostContent({ markdown }: { markdown: string }) {
-  const html = applyFullImages(await marked.parse(markdown))
+  const html = buildFigures(await marked.parse(markdown))
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }

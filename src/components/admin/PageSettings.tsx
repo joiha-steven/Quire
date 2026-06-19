@@ -2,7 +2,7 @@
 
 // Right-hand settings panel of the page editor. Pages have no taxonomy or date:
 // just slug, status, and an optional featured image.
-import type { PostStatus, ImageDisplay } from '@/types'
+import type { PostStatus } from '@/types'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAdminT } from './I18nProvider'
@@ -12,7 +12,6 @@ export type PageDraft = {
   slug: string
   status: PostStatus
   featuredImage: string
-  imageDisplay: ImageDisplay
   content: string
 }
 
@@ -52,6 +51,7 @@ export function PageSettings({ draft, update, onPickFeatured }: Props) {
 
       <div className="space-y-1.5">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.featuredImage}</span>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.featuredImageHint}</p>
         {draft.featuredImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={draft.featuredImage} alt="" className="aspect-video w-full rounded-lg object-cover" />
@@ -69,24 +69,6 @@ export function PageSettings({ draft, update, onPickFeatured }: Props) {
               {t.removeSelection}
             </Button>
           )}
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.featuredDisplay}</span>
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
-          {(['post', 'full'] as ImageDisplay[]).map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => update({ imageDisplay: d })}
-              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
-                draft.imageDisplay === d ? 'bg-white shadow-sm dark:bg-neutral-700' : 'text-neutral-500'
-              }`}
-            >
-              {d === 'post' ? t.fitPost : t.fullWidth}
-            </button>
-          ))}
         </div>
       </div>
     </aside>

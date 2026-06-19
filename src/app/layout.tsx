@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { getSettings } from '@/lib/settings'
+import { getSettings, themeToCss } from '@/lib/settings'
 
 // Runs before paint: applies the saved theme (or system/time default) so there
 // is no light flash on dark.
@@ -22,10 +22,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language } = await getSettings()
+  const { language, theme } = await getSettings()
   return (
     <html lang={language} className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+      <body className="min-h-full">
+        {/* Owner-configured reading colors (light + dark) as CSS variables. */}
+        <style dangerouslySetInnerHTML={{ __html: themeToCss(theme) }} />
         <script dangerouslySetInnerHTML={{ __html: NO_FOUC }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>

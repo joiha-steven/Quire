@@ -2,8 +2,6 @@
 
 export type PostStatus = 'draft' | 'published'
 
-export type ImageDisplay = 'post' | 'full'
-
 // Frontmatter + metadata for a single post.
 // Stored as YAML frontmatter inside posts/{slug}.md and mirrored in _index.json.
 export type Post = {
@@ -13,8 +11,7 @@ export type Post = {
   status: PostStatus
   categories: string[]
   tags: string[]
-  featuredImage?: string // Vercel Blob URL
-  imageDisplay?: ImageDisplay
+  featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
   excerpt?: string // auto-extracted from first paragraph if empty
 }
 
@@ -29,8 +26,7 @@ export type Page = {
   title: string
   slug: string
   status: PostStatus
-  featuredImage?: string // Vercel Blob URL
-  imageDisplay?: ImageDisplay
+  featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
 }
 
 // Full page = metadata + markdown body.
@@ -55,6 +51,21 @@ export type MenuItem = {
   href: string
 }
 
+// Customizable reading-surface colors (one set per light/dark mode). All hex.
+export type ThemeColors = {
+  bg: string // page background
+  text: string // body text
+  heading: string // h1/h2/h3 titles
+  meta: string // secondary text (dates, captions)
+  link: string // links
+  rule: string // horizontal rule (---) and borders
+}
+
+export type ThemeSettings = {
+  light: ThemeColors
+  dark: ThemeColors
+}
+
 export type SiteSettings = {
   language: SiteLang // public site language: drives lang attr, font, labels, dates
   title: string
@@ -65,6 +76,7 @@ export type SiteSettings = {
   showDescription: boolean
   contentWidth: number // px, max width of the content column (desktop)
   menu: MenuItem[] // header navigation links
+  theme: ThemeSettings // per-mode reading colors
 }
 
 // Uniform API envelope returned by every route.

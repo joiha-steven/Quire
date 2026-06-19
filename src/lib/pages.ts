@@ -33,7 +33,6 @@ export async function getPage(slug: string): Promise<PageWithContent | null> {
     slug: meta.slug ?? slug,
     status: meta.status === 'published' ? 'published' : 'draft',
     featuredImage: meta.featuredImage,
-    imageDisplay: meta.imageDisplay ?? 'post',
     content: content.trim(),
   }
 }
@@ -48,7 +47,6 @@ function normalize(input: Partial<PageWithContent>): PageWithContent {
     slug,
     status: input.status === 'published' ? 'published' : 'draft',
     featuredImage: input.featuredImage || undefined,
-    imageDisplay: input.imageDisplay ?? 'post',
     content,
   }
 }

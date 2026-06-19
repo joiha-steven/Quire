@@ -37,7 +37,6 @@ function toDraft(initial?: PostWithContent): Draft {
     categories: initial?.categories ?? [],
     tags: initial?.tags ?? [],
     featuredImage: initial?.featuredImage ?? '',
-    imageDisplay: initial?.imageDisplay ?? 'post',
     excerpt: initial?.excerpt ?? '',
     content: initial?.content ?? '',
   }
@@ -86,7 +85,6 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
         categories: d.categories,
         tags: d.tags,
         featuredImage: d.featuredImage || undefined,
-        imageDisplay: d.imageDisplay,
         excerpt: d.excerpt,
         content: d.content,
       }

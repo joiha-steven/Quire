@@ -37,6 +37,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin/settings" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navSettings}
               </Link>
+              <Link href="/admin/appearance" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                {t.navAppearance}
+              </Link>
               <Link href="/" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navViewBlog}
               </Link>
