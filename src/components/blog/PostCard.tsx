@@ -5,8 +5,8 @@ import { formatDate } from '@/lib/i18n'
 
 export function PostCard({ post, lang }: { post: Post; lang: SiteLang }) {
   return (
-    <article className="border-b border-neutral-200 pb-8 dark:border-neutral-800">
-      <h2 className="text-2xl font-bold tracking-tight">
+    <article className="border-b border-neutral-200 pb-7 dark:border-neutral-800">
+      <h2 className="text-[1.35rem] font-semibold tracking-tight">
         <Link href={`/${post.slug}`} className="hover:text-neutral-600 dark:hover:text-neutral-300">
           {post.title}
         </Link>

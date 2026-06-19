@@ -44,22 +44,24 @@ function sanitizeTheme(input: unknown, fallback: ThemeSettings): ThemeSettings {
 
 const SETTINGS_PATH = 'settings/site.json'
 
+// Neutral, almost-hueless palette (vibeblog redesign). Mirrors the fallback
+// tokens in globals.css so a fresh install looks right without saving anything.
 export const DEFAULT_THEME: ThemeSettings = {
   light: {
-    bg: '#ffffff',
-    text: '#242424',
-    heading: '#111111',
-    meta: '#737373',
-    link: '#2563eb',
-    rule: '#d4d4d4',
+    bg: '#fbfbfa',
+    text: '#26262b',
+    heading: '#14141a',
+    meta: '#8a8a90',
+    link: '#14141a',
+    rule: '#e9e9e4',
   },
   dark: {
-    bg: '#0a0a0a',
-    text: '#cfcfcf',
-    heading: '#ffffff',
-    meta: '#a3a3a3',
-    link: '#7fb0ff',
-    rule: '#404040',
+    bg: '#0e0e0f',
+    text: '#d4d4d8',
+    heading: '#f1f1f2',
+    meta: '#85858c',
+    link: '#f1f1f2',
+    rule: '#27272a',
   },
 }
 

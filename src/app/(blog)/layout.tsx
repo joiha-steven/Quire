@@ -14,7 +14,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
       className="mx-auto flex min-h-screen w-full flex-col px-5"
       style={{ maxWidth: settings.contentWidth }}
     >
-      <header className="flex items-start justify-between gap-4 py-8">
+      <header className="flex items-start justify-between gap-4 py-7">
         <div>
           <Link href="/" className="inline-flex items-center gap-3">
             {showLogo ? (
@@ -34,7 +34,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
         </div>
       </header>
       <main className="flex-1 py-4">{children}</main>
-      <footer className="py-10 text-center text-sm text-neutral-400 dark:text-neutral-500">
+      <footer className="py-12 text-center text-sm text-neutral-400 dark:text-neutral-500">
         © {new Date().getFullYear()} {settings.title} ·{' '}
         <a href={REPO_URL} target="_blank" rel="noopener" className="hover:text-neutral-600 dark:hover:text-neutral-300">
           powered by vibeblog
