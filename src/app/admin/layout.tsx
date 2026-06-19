@@ -27,6 +27,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/media" className="text-neutral-600 hover:text-neutral-900">
               Thư viện ảnh
             </Link>
+            <Link href="/admin/settings" className="text-neutral-600 hover:text-neutral-900">
+              Cài đặt
+            </Link>
             <Link href="/" className="text-neutral-600 hover:text-neutral-900">
               Xem blog
             </Link>

@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
+import { getSettings } from '@/lib/settings'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin', 'latin-ext'] })
 
-export const metadata: Metadata = {
-  title: 'vibeblog',
-  description: 'Blog cá nhân vận hành bằng AI',
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await getSettings()
+  return { title, description: description || undefined }
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

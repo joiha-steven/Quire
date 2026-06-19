@@ -31,6 +31,15 @@ export type MediaItem = {
   uploadedAt: string // ISO 8601
 }
 
+// Site-wide settings, stored at settings/site.json.
+export type SiteSettings = {
+  title: string
+  description: string
+  logoUrl: string // '' when no logo
+  showLogo: boolean
+  showDescription: boolean
+}
+
 // Uniform API envelope returned by every route.
 export type ApiResponse<T = unknown> = {
   success: boolean

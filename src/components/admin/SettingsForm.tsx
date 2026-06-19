@@ -1,0 +1,121 @@
+'use client'
+
+// Site settings form: title, description, logo (toggle + picker), show-description.
+import { useState } from 'react'
+import type { SiteSettings, ApiResponse } from '@/types'
+import { Input, Textarea } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
+import { MediaLibrary } from './MediaLibrary'
+
+// A simple labeled on/off switch.
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-4">
+      <span className="text-sm font-medium text-neutral-700">{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? 'bg-neutral-900' : 'bg-neutral-300'}`}
+      >
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      </button>
+    </label>
+  )
+}
+
+export function SettingsForm({ initial }: { initial: SiteSettings }) {
+  const { notify } = useToast()
+  const [s, setS] = useState<SiteSettings>(initial)
+  const [saving, setSaving] = useState(false)
+  const [picking, setPicking] = useState(false)
+
+  const update = (partial: Partial<SiteSettings>) => setS((prev) => ({ ...prev, ...partial }))
+
+  async function save() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(s),
+      })
+      const json = (await res.json()) as ApiResponse<SiteSettings>
+      if (!json.success) throw new Error(json.error)
+      notify('Đã lưu cài đặt')
+    } catch {
+      notify('Lưu thất bại', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="max-w-xl space-y-6">
+      <Input
+        label="Tiêu đề site"
+        value={s.title}
+        onChange={(e) => update({ title: e.target.value })}
+        placeholder="vibeblog"
+      />
+
+      <Textarea
+        label="Mô tả site"
+        rows={2}
+        value={s.description}
+        onChange={(e) => update({ description: e.target.value })}
+        placeholder="Một dòng giới thiệu ngắn về blog"
+      />
+
+      <Toggle
+        label="Hiện mô tả site"
+        checked={s.showDescription}
+        onChange={(v) => update({ showDescription: v })}
+      />
+
+      <hr className="border-neutral-200" />
+
+      <Toggle label="Hiện logo" checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
+
+      {s.showLogo && (
+        <div className="space-y-2">
+          {s.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.logoUrl} alt="Logo" className="h-12 w-auto rounded bg-neutral-100 p-1" />
+          ) : (
+            <p className="text-xs text-neutral-400">Chưa chọn logo.</p>
+          )}
+          <div className="flex gap-2">
+            <Button variant="secondary" type="button" onClick={() => setPicking(true)}>
+              Chọn logo
+            </Button>
+            {s.logoUrl && (
+              <Button variant="ghost" type="button" onClick={() => update({ logoUrl: '' })}>
+                Bỏ logo
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="pt-2">
+        <Button onClick={save} disabled={saving}>
+          {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
+        </Button>
+      </div>
+
+      {picking && (
+        <MediaLibrary
+          mode="picker"
+          onSelect={(url) => {
+            update({ logoUrl: url })
+            setPicking(false)
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
+    </div>
+  )
+}
