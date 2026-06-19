@@ -69,8 +69,13 @@ function toMeta(post: PostWithContent): Post {
 }
 
 // Serialize a post to frontmatter + markdown.
+// Strip undefined fields first — js-yaml throws on undefined values.
 function serialize(post: PostWithContent): string {
-  return matter.stringify(post.content, toMeta(post))
+  const meta = toMeta(post)
+  const clean = Object.fromEntries(
+    Object.entries(meta).filter(([, v]) => v !== undefined),
+  )
+  return matter.stringify(post.content, clean)
 }
 
 // Read index, apply an update in memory, write it back. Never partial-write.
