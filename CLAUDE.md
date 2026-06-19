@@ -31,13 +31,21 @@ credentials + personal notes live in a separate private repo (see README).
 ## Caching model — Previous model (no `cacheComponents`)
 `cacheComponents` is NOT enabled. Uses `unstable_cache` + `React.cache()`:
 
+Every Blob read is wrapped in `unstable_cache` with a tag, so reads are served
+from the Next data cache (no Blob round-trip) until a mutation revalidates the
+tag. Images are the only long-cached layer (1 year, set in `uploadFile`).
+
 | Function | How cached | Tag |
 |---|---|---|
 | `getSettings()` | `unstable_cache` | `settings` |
-| `getPublicPosts()` | `unstable_cache` | `posts` |
-| `getPublicPages()` | `unstable_cache` | `pages` |
-| `getPost(slug)` | `React.cache()` | — |
-| `getPage(slug)` | `React.cache()` | — |
+| `getIndex()` / `getPublicPosts()` | `unstable_cache` (shared `readIndex`) | `posts` |
+| `getPageIndex()` / `getPublicPages()` | `unstable_cache` (shared `readIndex`) | `pages` |
+| `getPost(slug)` | `unstable_cache` (per slug) + `React.cache()` | `posts` |
+| `getPage(slug)` | `unstable_cache` (per slug) + `React.cache()` | `pages` |
+| `getMedia()` | `unstable_cache` | `media` |
+
+Because `getPost`/`getPage` are now cached, `/[slug]` prerenders as **SSG** (static
+HTML) and regenerates on tag/path revalidation — instant reads, fresh on edit.
 
 - **After any post write/delete**: call `revalidateTag('posts', { expire: 0 })` +
   `revalidatePath('/new-slug')` (and old slug if it changed).
@@ -45,16 +53,20 @@ credentials + personal notes live in a separate private repo (see README).
   `revalidatePath('/', 'layout')`.
 - **After page write/delete**: call `revalidateTag('pages', { expire: 0 })` +
   `revalidatePath('/slug')` (and old slug if changed).
+- **After media upload/delete**: call `revalidateTag('media', { expire: 0 })`.
+- Client Router Cache is disabled (`experimental.staleTimes: { dynamic: 0, static: 0 }`
+  in `next.config.ts`) so a navigation after an edit never shows a stale RSC.
 - `{ expire: 0 }` = immediate expiration (correct for admin writes). Never use 1-arg
   `revalidateTag(tag)` — TypeScript error in Next.js 16 (signature requires 2 args).
 - **DO NOT** add `cacheComponents: true` to `next.config.ts` — it enables PPR which
   is incompatible with `React.cache()`, `Date.now()`, and route segment configs.
 
 ## ISR — `src/app/(blog)/[slug]/page.tsx`
-- `generateStaticParams` + `dynamicParams = true`: all known slugs are attempted at
-  deploy, new slugs render on-demand (ISR). In practice, because `readText` uses
-  `cacheControlMaxAge: 0` fetches, Next.js falls back all slug routes to dynamic (`ƒ`)
-  — but `generateStaticParams` is kept for forward-compat if fetch caching improves.
+- `generateStaticParams` + `dynamicParams = true`: all known slugs are prerendered as
+  static HTML (`●` SSG) at deploy; new slugs render on-demand (ISR). This works because
+  `getPost` is wrapped in `unstable_cache` (tag `posts`), so the underlying `no-store`
+  Blob fetch sits behind the data cache and the page output is cacheable. An edit
+  (`revalidateTag('posts')` + `revalidatePath('/slug')`) regenerates the static page.
 - List pages (home, category, tag) are dynamic because they access `searchParams`.
 - `unstable_cache` still provides cross-request caching for list data even though
   detail pages are dynamic.

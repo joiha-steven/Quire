@@ -57,6 +57,9 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   const slugTouched = useRef(Boolean(initial?.slug))
   const currentSlug = useRef<string | null>(initial?.slug ?? null)
   const editorApi = useRef<EditorApi | null>(null)
+  // Live editor content lives here (not in React state) so typing never
+  // re-renders the form. Saves read editorApi.getMarkdown() for the latest text.
+  const contentRef = useRef<string>(initial?.content ?? '')
   const draftRef = useRef(draft)
   const dirtyRef = useRef(dirty)
   useEffect(() => {
@@ -83,7 +86,8 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   const doPersist = useCallback(
     async (statusOverride?: Draft['status']): Promise<boolean> => {
       const d = draftRef.current
-      if (!d.title.trim() && !d.content.trim()) return false
+      const content = editorApi.current?.getMarkdown() ?? contentRef.current
+      if (!d.title.trim() && !content.trim()) return false
       setSaving(true)
       const payload: Partial<PostWithContent> = {
         title: d.title,
@@ -95,7 +99,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
         tags: d.tags,
         featuredImage: d.featuredImage || undefined,
         excerpt: d.excerpt,
-        content: d.content,
+        content,
       }
       try {
         const editing = currentSlug.current
@@ -199,10 +203,8 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <Editor
           initialContent={draft.content}
-          onChange={(content) => {
-            setDirty(true)
-            setDraft((prev) => ({ ...prev, content }))
-          }}
+          onChange={(md) => { contentRef.current = md }}
+          onDirty={() => setDirty(true)}
           onPickImage={() => setPicker('editor')}
           onUploadFile={uploadInline}
           apiRef={editorApi}

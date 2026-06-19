@@ -3,6 +3,7 @@
 // only added when a name collides). Raster images are optimized on upload.
 
 import sharp from 'sharp'
+import { unstable_cache } from 'next/cache'
 import type { MediaItem } from '@/types'
 import { readJson, writeJson, uploadFile, deleteByUrl } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
@@ -13,13 +14,18 @@ const INDEX_PATH = 'media/_index.json'
 const MAX_WIDTH = 1600
 const OPTIMIZABLE = /^image\/(jpeg|png|webp|avif|tiff|bmp)$/
 
-// Read the media manifest, newest upload first.
-export async function getMedia(): Promise<MediaItem[]> {
-  const items = await readJson<MediaItem[]>(INDEX_PATH, [])
-  return [...items].sort(
-    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-  )
-}
+// Read the media manifest, newest upload first. Cached across requests under
+// tag 'media'; upload/delete routes call revalidateTag('media') to refresh.
+export const getMedia = unstable_cache(
+  async (): Promise<MediaItem[]> => {
+    const items = await readJson<MediaItem[]>(INDEX_PATH, [])
+    return [...items].sort(
+      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+    )
+  },
+  ['media-index'],
+  { tags: ['media'] },
+)
 
 // Optimize a raster image: auto-orient, cap width, re-encode to WebP q80, strip
 // metadata. Returns null for formats we leave untouched or on any failure.

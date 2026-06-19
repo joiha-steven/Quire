@@ -2,6 +2,7 @@
 // Accepts multipart/form-data with one or more "file" fields.
 
 import type { NextRequest } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import type { MediaItem } from '@/types'
 import { addMedia } from '@/lib/media'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       const buffer = await file.arrayBuffer()
       uploaded.push(await addMedia(file.name, buffer, file.type || 'application/octet-stream'))
     }
+    revalidateTag('media', { expire: 0 })
     logRequest(req, 201, start)
     return ok(uploaded, 201)
   } catch (error) {

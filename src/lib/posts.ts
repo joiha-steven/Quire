@@ -12,42 +12,56 @@ import { ensureSlugFree } from '@/lib/slugs'
 const INDEX_PATH = 'posts/_index.json'
 const mdPath = (slug: string) => `posts/${slug}.md`
 
-// Read the full metadata manifest, newest first.
-export async function getIndex(): Promise<Post[]> {
-  const posts = await readJson<Post[]>(INDEX_PATH, [])
-  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-}
-
-// Public-facing list: published + date reached only.
-// unstable_cache caches across requests; invalidated via revalidateTag('posts', ...) after any write.
-export const getPublicPosts = unstable_cache(
+// Raw manifest read, cached across requests under tag 'posts'. Every post
+// write/delete calls revalidateTag('posts'), so reads stay served from the Next
+// data cache (no Blob round-trip) until something actually changes.
+const readIndex = unstable_cache(
   async (): Promise<Post[]> => {
-    const all = await getIndex()
-    return all.filter((p) => isPublicallyVisible(p.status, p.date))
+    const posts = await readJson<Post[]>(INDEX_PATH, [])
+    return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   },
-  ['public-posts'],
+  ['posts-index'],
   { tags: ['posts'] },
 )
 
-// Read a single post with its markdown body, or null when missing.
-// React.cache() deduplicates within a render tree (generateMetadata + page component).
-export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
-  const raw = await readText(mdPath(slug))
-  if (!raw) return null
-  const { data, content } = matter(raw)
-  const meta = data as Partial<Post>
-  return {
-    title: meta.title ?? slug,
-    slug: meta.slug ?? slug,
-    date: meta.date ?? new Date().toISOString(),
-    status: meta.status === 'published' ? 'published' : 'draft',
-    categories: meta.categories ?? [],
-    tags: meta.tags ?? [],
-    featuredImage: meta.featuredImage,
-    excerpt: meta.excerpt,
-    content: content.trim(),
-  }
-})
+// Full metadata manifest, newest first (admin list incl. drafts). Tag 'posts'.
+export async function getIndex(): Promise<Post[]> {
+  return readIndex()
+}
+
+// Public-facing list: published + date reached only. Derives from the cached index.
+export async function getPublicPosts(): Promise<Post[]> {
+  const all = await readIndex()
+  return all.filter((p) => isPublicallyVisible(p.status, p.date))
+}
+
+// Read+parse one post's markdown, cached per slug under tag 'posts' so detail
+// pages are served from the data cache instead of hitting Blob every request.
+const readPost = unstable_cache(
+  async (slug: string): Promise<PostWithContent | null> => {
+    const raw = await readText(mdPath(slug))
+    if (!raw) return null
+    const { data, content } = matter(raw)
+    const meta = data as Partial<Post>
+    return {
+      title: meta.title ?? slug,
+      slug: meta.slug ?? slug,
+      date: meta.date ?? new Date().toISOString(),
+      status: meta.status === 'published' ? 'published' : 'draft',
+      categories: meta.categories ?? [],
+      tags: meta.tags ?? [],
+      featuredImage: meta.featuredImage,
+      excerpt: meta.excerpt,
+      content: content.trim(),
+    }
+  },
+  ['post'],
+  { tags: ['posts'] },
+)
+
+// React.cache() deduplicates within a render tree (generateMetadata + page);
+// unstable_cache (readPost) caches across requests until revalidated.
+export const getPost = cache((slug: string): Promise<PostWithContent | null> => readPost(slug))
 
 // Normalize incoming data into a complete Post + content pair.
 function normalize(input: Partial<PostWithContent>): PostWithContent {

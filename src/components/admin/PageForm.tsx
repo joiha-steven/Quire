@@ -39,6 +39,9 @@ export function PageForm({ initial, contentWidth }: Props) {
   const slugTouched = useRef(Boolean(initial?.slug))
   const currentSlug = useRef<string | null>(initial?.slug ?? null)
   const editorApi = useRef<EditorApi | null>(null)
+  // Live editor content lives here (not in React state) so typing never
+  // re-renders the form. Saves read editorApi.getMarkdown() for the latest text.
+  const contentRef = useRef<string>(initial?.content ?? '')
   const draftRef = useRef(draft)
   const dirtyRef = useRef(dirty)
   useEffect(() => {
@@ -64,14 +67,15 @@ export function PageForm({ initial, contentWidth }: Props) {
   const doPersist = useCallback(
     async (statusOverride?: PageDraft['status']): Promise<boolean> => {
       const d = draftRef.current
-      if (!d.title.trim() && !d.content.trim()) return false
+      const content = editorApi.current?.getMarkdown() ?? contentRef.current
+      if (!d.title.trim() && !content.trim()) return false
       setSaving(true)
       const payload: Partial<PageWithContent> = {
         title: d.title,
         slug: d.slug || slugify(d.title) || `page-${Date.now()}`,
         status: statusOverride ?? d.status,
         featuredImage: d.featuredImage || undefined,
-        content: d.content,
+        content,
       }
       try {
         const editing = currentSlug.current
@@ -173,10 +177,8 @@ export function PageForm({ initial, contentWidth }: Props) {
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <Editor
           initialContent={draft.content}
-          onChange={(content) => {
-            setDirty(true)
-            setDraft((prev) => ({ ...prev, content }))
-          }}
+          onChange={(md) => { contentRef.current = md }}
+          onDirty={() => setDirty(true)}
           onPickImage={() => setPicker('editor')}
           onUploadFile={uploadInline}
           apiRef={editorApi}

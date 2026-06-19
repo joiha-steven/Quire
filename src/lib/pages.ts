@@ -12,38 +12,49 @@ import { ensureSlugFree } from '@/lib/slugs'
 const INDEX_PATH = 'pages/_index.json'
 const mdPath = (slug: string) => `pages/${slug}.md`
 
-// Read the metadata manifest, ordered by title for a stable list.
-export async function getPageIndex(): Promise<Page[]> {
-  const pages = await readJson<Page[]>(INDEX_PATH, [])
-  return [...pages].sort((a, b) => a.title.localeCompare(b.title))
-}
-
-// Public-facing list: published only (pages have no date gate).
-// unstable_cache caches across requests; invalidated via revalidateTag('pages', ...) after any write.
-export const getPublicPages = unstable_cache(
+// Raw manifest read, cached across requests under tag 'pages'. Invalidated by
+// revalidateTag('pages') on every page write/delete.
+const readIndex = unstable_cache(
   async (): Promise<Page[]> => {
-    const all = await getPageIndex()
-    return all.filter((p) => p.status === 'published')
+    const pages = await readJson<Page[]>(INDEX_PATH, [])
+    return [...pages].sort((a, b) => a.title.localeCompare(b.title))
   },
-  ['public-pages'],
+  ['pages-index'],
   { tags: ['pages'] },
 )
 
-// Read a single page with its markdown body, or null when missing.
-// React.cache() deduplicates within a render tree (generateMetadata + page component).
-export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
-  const raw = await readText(mdPath(slug))
-  if (!raw) return null
-  const { data, content } = matter(raw)
-  const meta = data as Partial<Page>
-  return {
-    title: meta.title ?? slug,
-    slug: meta.slug ?? slug,
-    status: meta.status === 'published' ? 'published' : 'draft',
-    featuredImage: meta.featuredImage,
-    content: content.trim(),
-  }
-})
+// Metadata manifest, ordered by title (admin list incl. drafts). Tag 'pages'.
+export async function getPageIndex(): Promise<Page[]> {
+  return readIndex()
+}
+
+// Public-facing list: published only (pages have no date gate).
+export async function getPublicPages(): Promise<Page[]> {
+  const all = await readIndex()
+  return all.filter((p) => p.status === 'published')
+}
+
+// Read+parse one page's markdown, cached per slug under tag 'pages'.
+const readPage = unstable_cache(
+  async (slug: string): Promise<PageWithContent | null> => {
+    const raw = await readText(mdPath(slug))
+    if (!raw) return null
+    const { data, content } = matter(raw)
+    const meta = data as Partial<Page>
+    return {
+      title: meta.title ?? slug,
+      slug: meta.slug ?? slug,
+      status: meta.status === 'published' ? 'published' : 'draft',
+      featuredImage: meta.featuredImage,
+      content: content.trim(),
+    }
+  },
+  ['page'],
+  { tags: ['pages'] },
+)
+
+// React.cache() dedupes within a render; readPage caches across requests.
+export const getPage = cache((slug: string): Promise<PageWithContent | null> => readPage(slug))
 
 // Normalize incoming data into a complete Page + content pair.
 function normalize(input: Partial<PageWithContent>): PageWithContent {

@@ -17,7 +17,12 @@ import { Video } from './VideoNode'
 import { isVideoUrl } from '@/lib/video'
 import { useAdminT } from './I18nProvider'
 
-export type EditorApi = { insertImage: (url: string) => void }
+export type EditorApi = {
+  insertImage: (url: string) => void
+  // Serialize the current document to Markdown on demand (used at save time, so
+  // a save always captures the latest text even mid-debounce).
+  getMarkdown: () => string
+}
 
 // tiptap-markdown augments storage at runtime but ships no type for it.
 type MarkdownStorage = { markdown: { getMarkdown: () => string } }
@@ -54,7 +59,11 @@ function videoUrlsToNodes(editor: TiptapEditor): void {
 
 type Props = {
   initialContent: string
+  // Latest Markdown, pushed on a trailing debounce (keeps fast typing smooth).
   onChange: (markdown: string) => void
+  // Fired immediately on every edit. Cheap: lets the parent flag "unsaved" without
+  // serializing the whole document on each keystroke.
+  onDirty: () => void
   onPickImage: () => void
   onUploadFile: (file: File) => Promise<string | null>
   apiRef: React.MutableRefObject<EditorApi | null>
@@ -144,11 +153,22 @@ function Toolbar({
   )
 }
 
-export function Editor({ initialContent, onChange, onPickImage, onUploadFile, apiRef, contentWidth }: Props) {
+export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploadFile, apiRef, contentWidth }: Props) {
   const t = useAdminT()
   // Markdown source view: edit the raw markdown directly (still saves live).
   const [raw, setRaw] = useState(false)
   const [rawText, setRawText] = useState('')
+  // Refs so getMarkdown / the debounce read live values without re-subscribing.
+  const onChangeRef = useRef(onChange)
+  const onDirtyRef = useRef(onDirty)
+  const rawRef = useRef(raw)
+  const rawTextRef = useRef(rawText)
+  const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => { onChangeRef.current = onChange }, [onChange])
+  useEffect(() => { onDirtyRef.current = onDirty }, [onDirty])
+  useEffect(() => { rawRef.current = raw }, [raw])
+  useEffect(() => { rawTextRef.current = rawText }, [rawText])
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -195,7 +215,11 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
       videoUrlsToNodes(editor)
     },
     onUpdate({ editor }) {
-      onChange(readMarkdown(editor))
+      // Per-keystroke work is kept tiny: flag dirty now, serialize the whole
+      // document to Markdown on a trailing debounce so typing never stutters.
+      onDirtyRef.current()
+      if (flushTimer.current) clearTimeout(flushTimer.current)
+      flushTimer.current = setTimeout(() => onChangeRef.current(readMarkdown(editor)), 400)
     },
   })
 
@@ -214,8 +238,13 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
     apiRef.current = {
       insertImage: (url: string) =>
         editor.chain().focus().setImage({ src: url, alt: captionFromUrl(url) }).run(),
+      // In raw mode the textarea is the source of truth; otherwise serialize live.
+      getMarkdown: () => (rawRef.current ? rawTextRef.current : readMarkdown(editor)),
     }
   }, [editor, apiRef])
+
+  // Drop any pending debounce when the editor unmounts.
+  useEffect(() => () => { if (flushTimer.current) clearTimeout(flushTimer.current) }, [])
 
   if (!editor) return <div className="min-h-[480px] animate-pulse bg-neutral-50 dark:bg-neutral-900" />
 
@@ -246,6 +275,7 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
             value={rawText}
             onChange={(e) => {
               setRawText(e.target.value)
+              onDirty()
               onChange(e.target.value)
             }}
             spellCheck={false}
