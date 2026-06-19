@@ -30,20 +30,37 @@ export function formatTime(iso: string): string {
   return `${hh}:${mm}`
 }
 
-// Derive a plain-text excerpt from markdown: first non-empty paragraph, trimmed.
-export function deriveExcerpt(markdown: string, maxLen = 200): string {
-  const firstPara =
-    markdown
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .find((p) => p.length > 0) ?? ''
-  const plain = firstPara
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images
+// Max characters kept from an author-provided excerpt.
+export const EXCERPT_MAX_CHARS = 200
+
+// Strip markdown/HTML to plain text.
+function toPlainText(markdown: string): string {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ' ') // code blocks
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // images
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links -> text
-    .replace(/[#>*_`~-]/g, '')
+    .replace(/<[^>]+>/g, ' ') // html tags (e.g. video iframes)
+    .replace(/[#>*_`~]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-  return plain.length > maxLen ? `${plain.slice(0, maxLen).trim()}...` : plain
+}
+
+// Auto excerpt: first `maxWords` words of the body, ending with "..." if cut.
+export function deriveExcerpt(markdown: string, maxWords = 50): string {
+  const plain = toPlainText(markdown)
+  if (!plain) return ''
+  const words = plain.split(' ')
+  if (words.length <= maxWords) return plain
+  return `${words.slice(0, maxWords).join(' ')}...`
+}
+
+// Clamp an author-provided excerpt to a character limit (cut on a word boundary).
+export function clampExcerpt(text: string, maxChars = EXCERPT_MAX_CHARS): string {
+  const clean = text.replace(/\s+/g, ' ').trim()
+  if (clean.length <= maxChars) return clean
+  const cut = clean.slice(0, maxChars)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()}...`
 }
 
 // Human-readable file size from bytes, e.g. "1.2 MB".

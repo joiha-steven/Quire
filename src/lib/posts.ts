@@ -4,7 +4,7 @@
 import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
-import { slugify, deriveExcerpt, isPublicallyVisible } from '@/lib/utils'
+import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible } from '@/lib/utils'
 
 const INDEX_PATH = 'posts/_index.json'
 const mdPath = (slug: string) => `posts/${slug}.md`
@@ -46,7 +46,8 @@ function normalize(input: Partial<PostWithContent>): PostWithContent {
   const content = (input.content ?? '').trim()
   const title = (input.title ?? '').trim()
   const slug = input.slug?.trim() ? slugify(input.slug) : slugify(title)
-  const excerpt = input.excerpt?.trim() ? input.excerpt.trim() : deriveExcerpt(content)
+  // Author excerpt wins (but is length-capped); otherwise auto from the body.
+  const excerpt = input.excerpt?.trim() ? clampExcerpt(input.excerpt.trim()) : deriveExcerpt(content)
   return {
     title,
     slug,
