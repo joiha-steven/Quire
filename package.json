@@ -2,6 +2,12 @@
   "name": "vibeblog",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    ">0.3%",
+    "last 2 versions",
+    "not dead",
+    "supports es6-module"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

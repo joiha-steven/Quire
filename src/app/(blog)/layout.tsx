@@ -1,5 +1,6 @@
 // Public blog shell: header (from site settings) + content column + footer.
 import Link from 'next/link'
+import Image from 'next/image'
 import { getSettings } from '@/lib/settings'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { HeaderMenu } from '@/components/blog/HeaderMenu'
@@ -18,8 +19,18 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
         <div>
           <Link href="/" className="inline-flex items-center gap-3">
             {showLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={settings.logoUrl} alt={settings.title} style={{ width: settings.logoWidth }} className="h-auto" />
+              // next/image resizes the logo to its display width (the uploaded
+              // file can be up to 1600px). width/height 0 + sizes lets it work
+              // without knowing the logo's intrinsic ratio.
+              <Image
+                src={settings.logoUrl}
+                alt={settings.title}
+                width={0}
+                height={0}
+                sizes={`${settings.logoWidth}px`}
+                style={{ width: settings.logoWidth, height: 'auto' }}
+                priority
+              />
             ) : (
               <span className="text-lg font-bold tracking-tight">{settings.title}</span>
             )}
