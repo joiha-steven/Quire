@@ -44,11 +44,11 @@ export type AdminStrings = {
   imageUploadFailed: string
   // toolbar
   promptLink: string
-  promptVideo: string
   tbList: string
   tbLink: string
   tbImage: string
-  tbVideo: string
+  tbMarkdown: string
+  tbReview: string
   editorPlaceholder: string
   // in-body image (figure)
   imgWidthColumn: string
@@ -172,11 +172,11 @@ const DICT: Record<SiteLang, AdminStrings> = {
     published: 'Đã đăng bài',
     imageUploadFailed: 'Tải ảnh thất bại',
     promptLink: 'Nhập đường dẫn liên kết:',
-    promptVideo: 'Dán link video (YouTube):',
     tbList: 'Danh sách',
     tbLink: 'Liên kết',
     tbImage: 'Ảnh',
-    tbVideo: 'Video',
+    tbMarkdown: 'Markdown',
+    tbReview: 'Xem trước',
     editorPlaceholder: 'Bắt đầu viết...',
     imgWidthColumn: 'Khung',
     imgWidthFull: 'Toàn màn hình',
@@ -290,11 +290,11 @@ const DICT: Record<SiteLang, AdminStrings> = {
     published: 'Published',
     imageUploadFailed: 'Image upload failed',
     promptLink: 'Enter the link URL:',
-    promptVideo: 'Paste a video link (YouTube):',
     tbList: 'List',
     tbLink: 'Link',
     tbImage: 'Image',
-    tbVideo: 'Video',
+    tbMarkdown: 'Markdown',
+    tbReview: 'Preview',
     editorPlaceholder: 'Start writing...',
     imgWidthColumn: 'Column',
     imgWidthFull: 'Full width',
