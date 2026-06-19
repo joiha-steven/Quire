@@ -29,8 +29,8 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <ThemeToggle lang={settings.language} />
           <HeaderMenu items={settings.menu} lang={settings.language} />
+          <ThemeToggle lang={settings.language} />
         </div>
       </header>
       <main className="flex-1 py-4">{children}</main>
