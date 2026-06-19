@@ -2,8 +2,17 @@
 // Reads are resilient: any failure (missing file, Blob down) falls back to
 // defaults so the public header and <title> never crash.
 
-import type { SiteSettings } from '@/types'
+import type { MenuItem, SiteSettings } from '@/types'
 import { readJson, writeJson } from '@/lib/blob'
+
+// Keep only well-formed menu items (label + href both present).
+function sanitizeMenu(input: unknown, fallback: MenuItem[]): MenuItem[] {
+  if (!Array.isArray(input)) return fallback
+  return input
+    .filter((m): m is MenuItem => !!m && typeof m.label === 'string' && typeof m.href === 'string')
+    .map((m) => ({ label: m.label.trim(), href: m.href.trim() }))
+    .filter((m) => m.label && m.href)
+}
 
 const SETTINGS_PATH = 'settings/site.json'
 
@@ -16,6 +25,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showLogo: false,
   showDescription: true,
   contentWidth: 672,
+  menu: [],
 }
 
 // Clamp a possibly-invalid number into a range, falling back to a default.
@@ -47,6 +57,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     showLogo: input.showLogo ?? current.showLogo,
     showDescription: input.showDescription ?? current.showDescription,
     contentWidth: clampNumber(input.contentWidth, 360, 1600, current.contentWidth),
+    menu: sanitizeMenu(input.menu, current.menu),
   }
   await writeJson(SETTINGS_PATH, next)
   return next

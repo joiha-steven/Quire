@@ -53,18 +53,18 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   const grid = (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
       {items.map((m) => (
-        <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
           <button
             type="button"
             // Page mode: click to zoom. Picker mode: click to select.
             onClick={() => (mode === 'picker' ? onSelect?.(m.url) : setZoom(m))}
-            className="block aspect-square w-full bg-neutral-100"
+            className="block aspect-square w-full bg-neutral-100 dark:bg-neutral-800"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={m.url} alt={m.filename} className="h-full w-full object-cover" />
           </button>
           <figcaption className="space-y-1 p-2 text-xs">
-            <p className="truncate font-medium text-neutral-700" title={m.filename}>
+            <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
               {m.filename}
             </p>
             <p className="text-neutral-400">
@@ -72,7 +72,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
             </p>
             {mode === 'page' && (
               <div className="flex gap-3 pt-1">
-                <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900">
+                <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                   {t.copyUrl}
                 </button>
                 <button onClick={() => handleDelete(m.url)} className="text-red-600 hover:text-red-700">
@@ -90,9 +90,9 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <div className="space-y-5">
       <ImageUploader onUploaded={(uploaded) => setItems((prev) => [...uploaded, ...prev])} />
       {loading ? (
-        <p className="py-10 text-center text-neutral-400">{t.loading}</p>
+        <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.loading}</p>
       ) : items.length === 0 ? (
-        <p className="py-10 text-center text-neutral-400">{t.noMedia}</p>
+        <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.noMedia}</p>
       ) : (
         grid
       )}
@@ -130,7 +130,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   // Picker modal.
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl bg-white p-5">
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl bg-white p-5 dark:bg-neutral-900">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">{t.mediaTitle}</h2>
           <Button variant="ghost" onClick={onClose}>

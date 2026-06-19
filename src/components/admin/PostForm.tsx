@@ -172,7 +172,7 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
         value={draft.title}
         onChange={(e) => update({ title: e.target.value })}
         placeholder={t.titlePlaceholder}
-        className="mb-6 w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300"
+        className="mb-6 w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
       />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -192,9 +192,9 @@ export function PostForm({ initial, allCategories, allTags }: Props) {
         />
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 dark:border-neutral-800 dark:bg-neutral-900/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-          <span className="text-sm text-neutral-400">
+          <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>
           <div className="flex gap-2">

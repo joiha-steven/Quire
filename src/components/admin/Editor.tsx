@@ -39,14 +39,14 @@ type Props = {
   apiRef: React.MutableRefObject<EditorApi | null>
 }
 
-const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100'
+const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
 
 function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: () => void }) {
   const t = useAdminT()
-  const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900' : 'text-neutral-600'}`
+  const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
   const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-200 p-2">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-200 p-2 dark:border-neutral-800">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
         <strong>B</strong>
       </button>
@@ -154,10 +154,10 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
     }
   }, [editor, apiRef])
 
-  if (!editor) return <div className="min-h-[480px] animate-pulse bg-neutral-50" />
+  if (!editor) return <div className="min-h-[480px] animate-pulse bg-neutral-50 dark:bg-neutral-900" />
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white">
+    <div className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <Toolbar editor={editor} onPickImage={onPickImage} />
       <EditorContent editor={editor} />
     </div>

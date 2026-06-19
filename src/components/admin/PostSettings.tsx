@@ -47,7 +47,7 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
       />
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">{t.status}</span>
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.status}</span>
         <div className="flex gap-4 text-sm">
           {(['draft', 'published'] as PostStatus[]).map((s) => (
             <label key={s} className="flex items-center gap-1.5">
@@ -78,12 +78,12 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
       />
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">{t.featuredImage}</span>
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.featuredImage}</span>
         {draft.featuredImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={draft.featuredImage} alt="" className="aspect-video w-full rounded-lg object-cover" />
         ) : (
-          <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-400">
+          <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500 dark:text-neutral-500">
             {t.noImageSelected}
           </div>
         )}
@@ -100,18 +100,18 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700">{t.featuredDisplay}</span>
-        <p className="text-xs text-neutral-400">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.featuredDisplay}</span>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">
           {t.featuredDisplayHint}
         </p>
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1">
+        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
           {(['post', 'full'] as ImageDisplay[]).map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => update({ imageDisplay: d })}
               className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
-                draft.imageDisplay === d ? 'bg-white shadow-sm' : 'text-neutral-500'
+                draft.imageDisplay === d ? 'bg-white shadow-sm dark:bg-neutral-700' : 'text-neutral-500'
               }`}
             >
               {d === 'post' ? t.fitPost : t.fullWidth}
