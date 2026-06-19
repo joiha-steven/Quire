@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin" className="font-bold">
                 {t.navAdmin}
               </Link>
-              <Link href="/admin" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+              <Link href="/admin/content" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navDashboard}
               </Link>
               <Link href="/admin/media" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
@@ -37,12 +37,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin/settings" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navSettings}
               </Link>
-              <Link href="/admin/appearance" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.navAppearance}
-              </Link>
-              <Link href="/" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+              <a href="/" target="_blank" rel="noopener" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.navViewBlog}
-              </Link>
+              </a>
             </nav>
             <form
               action={async () => {

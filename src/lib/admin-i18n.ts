@@ -119,6 +119,15 @@ export type AdminStrings = {
   colorLink: string
   colorRule: string
   resetDefault: string
+  // overview (admin home)
+  overviewTitle: string
+  statPosts: string
+  statPages: string
+  statMedia: string
+  statStorage: string
+  statCategories: string
+  statTags: string
+  statEmpty: string
 }
 
 const DICT: Record<SiteLang, AdminStrings> = {
@@ -229,6 +238,14 @@ const DICT: Record<SiteLang, AdminStrings> = {
     colorLink: 'Liên kết',
     colorRule: 'Đường gạch ngang',
     resetDefault: 'Khôi phục mặc định',
+    overviewTitle: 'Tổng quan',
+    statPosts: 'Bài viết',
+    statPages: 'Trang',
+    statMedia: 'File đính kèm',
+    statStorage: 'Dung lượng site',
+    statCategories: 'Danh mục',
+    statTags: 'Thẻ tag',
+    statEmpty: 'Chưa có.',
   },
   en: {
     navAdmin: 'Admin',
@@ -337,6 +354,14 @@ const DICT: Record<SiteLang, AdminStrings> = {
     colorLink: 'Links',
     colorRule: 'Horizontal rule',
     resetDefault: 'Reset to default',
+    overviewTitle: 'Overview',
+    statPosts: 'Posts',
+    statPages: 'Pages',
+    statMedia: 'Attachments',
+    statStorage: 'Site storage',
+    statCategories: 'Categories',
+    statTags: 'Tags',
+    statEmpty: 'None yet.',
   },
 }
 

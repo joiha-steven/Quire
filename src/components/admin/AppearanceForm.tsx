@@ -108,10 +108,7 @@ export function AppearanceForm({ initial, defaults }: { initial: ThemeSettings; 
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t.appearanceTitle}</h1>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.appearanceHint}</p>
-      </div>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.appearanceHint}</p>
 
       <div className="flex flex-col gap-4 sm:flex-row">
         <ModeColumn
