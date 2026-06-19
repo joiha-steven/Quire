@@ -34,6 +34,7 @@ export type AdminStrings = {
   titlePlaceholder: string
   saveDraft: string
   publish: string
+  viewPost: string
   saving: string
   savedAtPrefix: string
   saveFailed: string
@@ -166,6 +167,7 @@ const DICT: Record<SiteLang, AdminStrings> = {
     titlePlaceholder: 'Tiêu đề bài viết',
     saveDraft: 'Lưu nháp',
     publish: 'Đăng bài',
+    viewPost: 'Xem bài viết',
     saving: 'Đang lưu...',
     savedAtPrefix: 'Đã lưu lúc',
     saveFailed: 'Lưu thất bại',
@@ -287,6 +289,7 @@ const DICT: Record<SiteLang, AdminStrings> = {
     titlePlaceholder: 'Post title',
     saveDraft: 'Save draft',
     publish: 'Publish',
+    viewPost: 'View post',
     saving: 'Saving...',
     savedAtPrefix: 'Saved at',
     saveFailed: 'Save failed',
