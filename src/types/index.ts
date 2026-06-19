@@ -32,7 +32,10 @@ export type MediaItem = {
 }
 
 // Site-wide settings, stored at settings/site.json.
+export type SiteLang = 'vi' | 'en'
+
 export type SiteSettings = {
+  language: SiteLang // public site language: drives lang attr, font, labels, dates
   title: string
   description: string
   logoUrl: string // '' when no logo
