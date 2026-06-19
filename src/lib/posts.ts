@@ -36,7 +36,6 @@ export async function getPost(slug: string): Promise<PostWithContent | null> {
     categories: meta.categories ?? [],
     tags: meta.tags ?? [],
     featuredImage: meta.featuredImage,
-    imageDisplay: meta.imageDisplay ?? 'post',
     excerpt: meta.excerpt,
     content: content.trim(),
   }
@@ -57,7 +56,6 @@ function normalize(input: Partial<PostWithContent>): PostWithContent {
     categories: input.categories ?? [],
     tags: input.tags ?? [],
     featuredImage: input.featuredImage || undefined,
-    imageDisplay: input.imageDisplay ?? 'post',
     excerpt,
     content,
   }

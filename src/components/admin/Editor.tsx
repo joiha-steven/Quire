@@ -9,10 +9,10 @@ import { useEffect } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import LinkExt from '@tiptap/extension-link'
-import ImageExt from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import Youtube from '@tiptap/extension-youtube'
 import { Markdown } from 'tiptap-markdown'
+import { CaptionedImage } from './CaptionedImage'
 import { useAdminT } from './I18nProvider'
 
 export type EditorApi = { insertImage: (url: string) => void }
@@ -23,12 +23,11 @@ function readMarkdown(editor: TiptapEditor): string {
   return (editor.storage as unknown as MarkdownStorage).markdown.getMarkdown()
 }
 
-// Append/remove a "#full" marker on the selected image's src.
-function toggleImageFull(editor: TiptapEditor): void {
-  const src = editor.getAttributes('image').src as string | undefined
-  if (!src) return
-  const next = src.includes('#full') ? src.replace(/#full$/, '') : `${src}#full`
-  editor.chain().focus().updateAttributes('image', { src: next }).run()
+// Default caption from a media URL: the file name without its upload-timestamp
+// prefix or extension (e.g. ".../1781-my-photo.jpg" -> "my-photo").
+function captionFromUrl(url: string): string {
+  const base = decodeURIComponent(url.split('/').pop() ?? '').replace(/[#?].*$/, '')
+  return base.replace(/^\d+-/, '').replace(/\.[a-z0-9]+$/i, '')
 }
 
 type Props = {
@@ -95,15 +94,6 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
       </button>
       <button
         type="button"
-        onClick={() => toggleImageFull(editor)}
-        disabled={!editor.isActive('image')}
-        className={`${BTN} text-neutral-600 disabled:opacity-40`}
-        title={t.tbImageFullHint}
-      >
-        {t.tbImageFull}
-      </button>
-      <button
-        type="button"
         onClick={() => {
           const url = window.prompt(t.promptVideo)
           if (url) editor.commands.setYoutubeVideo({ src: url })
@@ -124,7 +114,7 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
       StarterKit,
       Underline,
       LinkExt.configure({ openOnClick: false }),
-      ImageExt,
+      CaptionedImage,
       Youtube.configure({ width: 640, height: 360, nocookie: true }),
       Markdown.configure({ html: true }),
     ],
@@ -137,7 +127,10 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
         event.preventDefault()
         files.forEach(async (file) => {
           const url = await onUploadFile(file)
-          if (url) editor?.chain().focus().setImage({ src: url }).run()
+          if (url) {
+            const alt = file.name.replace(/\.[a-z0-9]+$/i, '')
+            editor?.chain().focus().setImage({ src: url, alt }).run()
+          }
         })
         return true
       },
@@ -150,7 +143,8 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
   useEffect(() => {
     if (!editor) return
     apiRef.current = {
-      insertImage: (url: string) => editor.chain().focus().setImage({ src: url }).run(),
+      insertImage: (url: string) =>
+        editor.chain().focus().setImage({ src: url, alt: captionFromUrl(url) }).run(),
     }
   }, [editor, apiRef])
 

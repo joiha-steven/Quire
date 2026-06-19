@@ -1,6 +1,7 @@
 // Root-level detail. A slug resolves to a post or a static page (shared URL
 // namespace, so at most one matches). Drafts / future-dated posts are hidden.
-import Image from 'next/image'
+// The featured image is used only for SEO/social meta, never rendered in-page.
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost } from '@/lib/posts'
@@ -12,6 +13,29 @@ import { isPublicallyVisible } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
+export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promise<Metadata> {
+  const { slug } = await params
+  const [post, page] = await Promise.all([getPost(slug), getPage(slug)])
+  if (post && isPublicallyVisible(post.status, post.date)) {
+    const images = post.featuredImage ? [post.featuredImage] : undefined
+    return {
+      title: post.title,
+      description: post.excerpt || undefined,
+      openGraph: { title: post.title, description: post.excerpt || undefined, images, type: 'article' },
+      twitter: { card: images ? 'summary_large_image' : 'summary', images },
+    }
+  }
+  if (page && page.status === 'published') {
+    const images = page.featuredImage ? [page.featuredImage] : undefined
+    return {
+      title: page.title,
+      openGraph: { title: page.title, images, type: 'website' },
+      twitter: { card: images ? 'summary_large_image' : 'summary', images },
+    }
+  }
+  return {}
+}
+
 export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   const { slug } = await params
   const [post, page, { language }] = await Promise.all([
@@ -22,18 +46,10 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
 
   // Post wins if visible; otherwise fall back to a published page.
   if (post && isPublicallyVisible(post.status, post.date)) {
-    const full = post.imageDisplay === 'full' && post.featuredImage
     return (
       <article>
-        {full && (
-          <div className="relative left-1/2 mb-8 w-screen -translate-x-1/2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.featuredImage} alt={post.title} className="h-auto w-full" />
-          </div>
-        )}
-
         <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{formatDate(post.date, language)}</p>
+        <p className="mt-3 text-sm text-meta">{formatDate(post.date, language)}</p>
 
         {(post.categories.length > 0 || post.tags.length > 0) && (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -58,17 +74,6 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           </div>
         )}
 
-        {!full && post.featuredImage && (
-          <Image
-            src={post.featuredImage}
-            alt={post.title}
-            width={1280}
-            height={720}
-            className="mt-8 h-auto w-full rounded-lg"
-            unoptimized
-          />
-        )}
-
         <div className="mt-8">
           <PostContent markdown={post.content} />
         </div>
@@ -77,29 +82,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   }
 
   if (page && page.status === 'published') {
-    const full = page.imageDisplay === 'full' && page.featuredImage
     return (
       <article>
-        {full && (
-          <div className="relative left-1/2 mb-8 w-screen -translate-x-1/2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={page.featuredImage} alt={page.title} className="h-auto w-full" />
-          </div>
-        )}
-
         <h1 className="text-3xl font-bold leading-tight tracking-tight">{page.title}</h1>
-
-        {!full && page.featuredImage && (
-          <Image
-            src={page.featuredImage}
-            alt={page.title}
-            width={1280}
-            height={720}
-            className="mt-8 h-auto w-full rounded-lg"
-            unoptimized
-          />
-        )}
-
         <div className="mt-8">
           <PostContent markdown={page.content} />
         </div>

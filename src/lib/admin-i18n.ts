@@ -48,10 +48,12 @@ export type AdminStrings = {
   tbList: string
   tbLink: string
   tbImage: string
-  tbImageFull: string
-  tbImageFullHint: string
   tbVideo: string
   editorPlaceholder: string
+  // in-body image (figure)
+  imgWidthColumn: string
+  imgWidthFull: string
+  captionPlaceholder: string
   // settings panel (post)
   slug: string
   publishDate: string
@@ -59,13 +61,10 @@ export type AdminStrings = {
   categories: string
   tags: string
   featuredImage: string
+  featuredImageHint: string
   noImageSelected: string
   chooseImage: string
   removeSelection: string
-  featuredDisplay: string
-  featuredDisplayHint: string
-  fitPost: string
-  fullWidth: string
   excerpt: string
   excerptPlaceholder: string
   // multi-select
@@ -107,6 +106,19 @@ export type AdminStrings = {
   menuHrefField: string
   menuAdd: string
   menuHint: string
+  // appearance (theme colors)
+  navAppearance: string
+  appearanceTitle: string
+  appearanceHint: string
+  modeLight: string
+  modeDark: string
+  colorBg: string
+  colorText: string
+  colorHeading: string
+  colorMeta: string
+  colorLink: string
+  colorRule: string
+  resetDefault: string
 }
 
 const DICT: Record<SiteLang, AdminStrings> = {
@@ -153,23 +165,21 @@ const DICT: Record<SiteLang, AdminStrings> = {
     tbList: 'Danh sách',
     tbLink: 'Liên kết',
     tbImage: 'Ảnh',
-    tbImageFull: 'Ảnh toàn màn hình',
-    tbImageFullHint: 'Chọn ảnh trong bài rồi bấm để bật/tắt toàn màn hình',
     tbVideo: 'Video',
     editorPlaceholder: 'Bắt đầu viết...',
+    imgWidthColumn: 'Khung',
+    imgWidthFull: 'Toàn màn hình',
+    captionPlaceholder: 'Chú thích ảnh',
     slug: 'Đường dẫn (slug)',
     publishDate: 'Ngày đăng',
     status: 'Trạng thái',
     categories: 'Danh mục',
     tags: 'Thẻ tag',
     featuredImage: 'Ảnh đại diện',
+    featuredImageHint: 'Chỉ dùng cho SEO và chia sẻ mạng xã hội, không hiển thị trong bài.',
     noImageSelected: 'Chưa chọn ảnh',
     chooseImage: 'Chọn ảnh',
     removeSelection: 'Bỏ chọn',
-    featuredDisplay: 'Hiển thị ảnh đại diện',
-    featuredDisplayHint: 'Ảnh trong bài: chọn ảnh rồi bấm "Ảnh toàn màn hình" trên thanh công cụ.',
-    fitPost: 'Vừa bài',
-    fullWidth: 'Toàn màn hình',
     excerpt: 'Mô tả',
     excerptPlaceholder: 'Để trống sẽ tự lấy 50 chữ đầu bài. Tối đa 200 ký tự.',
     multiPlaceholder: 'Nhập rồi nhấn Enter',
@@ -207,6 +217,18 @@ const DICT: Record<SiteLang, AdminStrings> = {
     menuHrefField: 'Đường dẫn',
     menuAdd: 'Thêm mục',
     menuHint: 'Đường dẫn: trang chủ /, bài viết hoặc trang /duong-dan, danh mục /category/ten, hoặc link ngoài https://...',
+    navAppearance: 'Giao diện',
+    appearanceTitle: 'Giao diện',
+    appearanceHint: 'Tùy chỉnh màu cho chế độ sáng và tối: nền, chữ, tiêu đề, chữ phụ, liên kết, đường gạch ngang.',
+    modeLight: 'Chế độ sáng',
+    modeDark: 'Chế độ tối',
+    colorBg: 'Nền',
+    colorText: 'Chữ',
+    colorHeading: 'Tiêu đề',
+    colorMeta: 'Chữ phụ (ngày, chú thích)',
+    colorLink: 'Liên kết',
+    colorRule: 'Đường gạch ngang',
+    resetDefault: 'Khôi phục mặc định',
   },
   en: {
     navAdmin: 'Admin',
@@ -251,23 +273,21 @@ const DICT: Record<SiteLang, AdminStrings> = {
     tbList: 'List',
     tbLink: 'Link',
     tbImage: 'Image',
-    tbImageFull: 'Full-width image',
-    tbImageFullHint: 'Select an image in the post, then toggle full-width',
     tbVideo: 'Video',
     editorPlaceholder: 'Start writing...',
+    imgWidthColumn: 'Column',
+    imgWidthFull: 'Full width',
+    captionPlaceholder: 'Image caption',
     slug: 'Slug (URL)',
     publishDate: 'Publish date',
     status: 'Status',
     categories: 'Categories',
     tags: 'Tags',
     featuredImage: 'Featured image',
+    featuredImageHint: 'Used only for SEO and social sharing; never shown in the article.',
     noImageSelected: 'No image selected',
     chooseImage: 'Choose image',
     removeSelection: 'Remove',
-    featuredDisplay: 'Featured image display',
-    featuredDisplayHint: 'In-body images: select an image, then use "Full-width image" on the toolbar.',
-    fitPost: 'In column',
-    fullWidth: 'Full width',
     excerpt: 'Excerpt',
     excerptPlaceholder: 'Leave blank to auto-use the first 50 words. Max 200 characters.',
     multiPlaceholder: 'Type, then press Enter',
@@ -305,6 +325,18 @@ const DICT: Record<SiteLang, AdminStrings> = {
     menuHrefField: 'Link',
     menuAdd: 'Add item',
     menuHint: 'Link: home /, post or page /slug, category /category/name, or external https://...',
+    navAppearance: 'Appearance',
+    appearanceTitle: 'Appearance',
+    appearanceHint: 'Customize colors for light and dark mode: background, text, headings, secondary text, links, horizontal rule.',
+    modeLight: 'Light mode',
+    modeDark: 'Dark mode',
+    colorBg: 'Background',
+    colorText: 'Text',
+    colorHeading: 'Headings',
+    colorMeta: 'Secondary text (dates, captions)',
+    colorLink: 'Links',
+    colorRule: 'Horizontal rule',
+    resetDefault: 'Reset to default',
   },
 }
 
