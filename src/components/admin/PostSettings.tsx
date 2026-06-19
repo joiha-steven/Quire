@@ -121,9 +121,10 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
       <Textarea
         label="Mô tả"
         rows={3}
+        maxLength={200}
         value={draft.excerpt}
         onChange={(e) => update({ excerpt: e.target.value })}
-        placeholder="Tự động lấy từ đoạn đầu nếu để trống"
+        placeholder="Để trống sẽ tự lấy 50 chữ đầu bài. Tối đa 200 ký tự."
       />
     </aside>
   )
