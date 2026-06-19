@@ -6,9 +6,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost, getPublicPosts } from '@/lib/posts'
 import { getPage, getPublicPages } from '@/lib/pages'
-import { getSettings } from '@/lib/settings'
+import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
+import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
 import { isPublicallyVisible } from '@/lib/utils'
 
 // Pre-build all public slugs at deploy time; new slugs render on first visit (ISR).
@@ -57,16 +58,30 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
 
 export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   const { slug } = await params
-  const [post, page, { language }] = await Promise.all([
+  const [post, page, settings] = await Promise.all([
     getPost(slug),
     getPage(slug),
     getSettings(),
   ])
+  const { language } = settings
 
   // Post wins if visible; otherwise fall back to a published page.
   if (post && isPublicallyVisible(post.status, post.date)) {
+    const base = resolveSiteUrl(settings)
     return (
       <article>
+        {settings.seo.autoSchema && (
+          <JsonLd
+            data={articleSchema({
+              title: post.title,
+              url: `${base}/${post.slug}`,
+              datePublished: post.date,
+              description: post.excerpt || undefined,
+              image: post.featuredImage,
+              authorName: settings.title,
+            })}
+          />
+        )}
         <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">{formatDate(post.date, language)}</p>
 

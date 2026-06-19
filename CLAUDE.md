@@ -102,6 +102,20 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 | `rehost-images.mjs` | Re-upload external image URLs to Blob |
 | `rebuild-index.mjs` | Rebuild `posts/_index.json` + `media/_index.json` from Blob files (recovery tool) |
 
+## SEO (toggleable in Admin → Settings → SEO)
+- `settings.seo` = `{ autoSchema, sitemap, llms, robots }` (all default true) +
+  `settings.siteUrl` (canonical base; '' → `VERCEL_PROJECT_PRODUCTION_URL` → localhost,
+  via `resolveSiteUrl()`). Used by `metadataBase` and every absolute URL below.
+- `app/robots.ts` → robots.txt (always disallows `/admin` + `/api`; advertises the
+  sitemap when both robots + sitemap are on).
+- `app/sitemap.ts` → sitemap.xml (home + posts + pages + categories + tags).
+- `app/llms.txt/route.ts` → /llms.txt, a Markdown content index for AI crawlers
+  (llmstxt.org); 404 when off.
+- JSON-LD via `components/blog/JsonLd.tsx` (`websiteSchema` on home, `articleSchema`
+  on posts), gated by `seo.autoSchema`.
+- robots/sitemap are static but tagged `settings`, so toggling a feature + saving
+  regenerates them (revalidateTag('settings')).
+
 ## Conventions
 - UI text (labels, buttons, toasts, placeholders) → Vietnamese.
 - Code, comments, identifiers, filenames, commits → English.

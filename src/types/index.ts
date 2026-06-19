@@ -66,10 +66,19 @@ export type ThemeSettings = {
   dark: ThemeColors
 }
 
+// Search-engine / AI-crawler features, each independently toggleable.
+export type SeoSettings = {
+  autoSchema: boolean // inject JSON-LD structured data (WebSite + Article)
+  sitemap: boolean // serve /sitemap.xml
+  llms: boolean // serve /llms.txt (content index for AI crawlers)
+  robots: boolean // serve a crawl-friendly robots.txt referencing the sitemap
+}
+
 export type SiteSettings = {
   language: SiteLang // public site language: drives lang attr, font, labels, dates
   title: string
   description: string
+  siteUrl: string // canonical base URL (e.g. https://manhhung.me); '' -> derive from env
   logoUrl: string // '' when no logo
   logoWidth: number // px, horizontal width of the logo in the header
   showLogo: boolean
@@ -78,6 +87,7 @@ export type SiteSettings = {
   postsPerPage: number // posts shown per page on home/category/tag lists
   menu: MenuItem[] // header navigation links
   theme: ThemeSettings // per-mode reading colors
+  seo: SeoSettings // SEO / crawler feature toggles
 }
 
 // Uniform API envelope returned by every route.

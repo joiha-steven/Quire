@@ -9,11 +9,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Don't reuse the client-side Router Cache across navigations: an edit/delete
-  // must show immediately when clicking back to a list. Data freshness comes
-  // from revalidateTag; this just stops the browser holding a stale RSC payload.
+  // Client Router Cache tuning:
+  // - dynamic: 0  -> list pages (home/category/tag, which read searchParams) are
+  //   never reused stale, so an edit/delete shows immediately on navigation.
+  // - static: 180 -> post/page detail (prerendered SSG) is reused for 3 min, so
+  //   hover/viewport prefetch makes clicking a post open instantly. Server-side
+  //   edits still bust it via revalidatePath; the editor's "Xem bài viết" opens
+  //   a fresh tab, so the owner never sees a stale post.
   experimental: {
-    staleTimes: { dynamic: 0, static: 0 },
+    staleTimes: { dynamic: 0, static: 180 },
   },
 }
 

@@ -35,6 +35,15 @@ export function blobUrl(pathname: string): string {
   return `${blobBase()}/${pathname}`
 }
 
+// Public Blob origin (for a <link rel="preconnect">), or '' when no token.
+export function blobOrigin(): string {
+  try {
+    return blobBase()
+  } catch {
+    return ''
+  }
+}
+
 // List every blob (pathname + size), following pagination. Used for site stats.
 export async function listBlobs(): Promise<{ pathname: string; size: number }[]> {
   const out: { pathname: string; size: number }[] = []

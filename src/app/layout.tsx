@@ -3,7 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { getSettings, themeToCss } from '@/lib/settings'
+import { getSettings, themeToCss, resolveSiteUrl } from '@/lib/settings'
+import { blobOrigin } from '@/lib/blob'
 
 // Runs before paint: applies the saved theme (or system/time default) so there
 // is no light flash on dark.
@@ -17,15 +18,29 @@ const inter = Inter({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { title, description } = await getSettings()
-  return { title, description: description || undefined }
+  const settings = await getSettings()
+  const { title, description } = settings
+  return {
+    // Absolute base for canonical + OG/Twitter image URLs.
+    metadataBase: new URL(resolveSiteUrl(settings)),
+    title: { default: title, template: `%s · ${title}` },
+    description: description || undefined,
+  }
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { language, theme } = await getSettings()
+  // Content images in posts are raw Blob URLs; warm that connection early.
+  const blob = blobOrigin()
   return (
     <html lang={language} className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full">
+        {blob && (
+          <>
+            <link rel="preconnect" href={blob} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={blob} />
+          </>
+        )}
         {/* Owner-configured reading colors (light + dark) as CSS variables. */}
         <style dangerouslySetInnerHTML={{ __html: themeToCss(theme) }} />
         <script dangerouslySetInnerHTML={{ __html: NO_FOUC }} />

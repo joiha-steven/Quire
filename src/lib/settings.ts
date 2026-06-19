@@ -3,7 +3,7 @@
 // defaults so the public header and <title> never crash.
 
 import { unstable_cache } from 'next/cache'
-import type { MenuItem, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
+import type { MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson } from '@/lib/blob'
 
 // Keep only well-formed menu items (label + href both present).
@@ -43,6 +43,30 @@ function sanitizeTheme(input: unknown, fallback: ThemeSettings): ThemeSettings {
   }
 }
 
+const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback)
+
+function sanitizeSeo(input: unknown, fallback: SeoSettings): SeoSettings {
+  const o = (input ?? {}) as Partial<SeoSettings>
+  return {
+    autoSchema: bool(o.autoSchema, fallback.autoSchema),
+    sitemap: bool(o.sitemap, fallback.sitemap),
+    llms: bool(o.llms, fallback.llms),
+    robots: bool(o.robots, fallback.robots),
+  }
+}
+
+// Accept only a valid http(s) URL with no trailing slash; '' otherwise.
+function sanitizeUrl(value: unknown): string {
+  if (typeof value !== 'string' || !value.trim()) return ''
+  try {
+    const u = new URL(value.trim())
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
+    return u.origin
+  } catch {
+    return ''
+  }
+}
+
 const SETTINGS_PATH = 'settings/site.json'
 
 // Neutral, almost-hueless palette (vibeblog redesign). Mirrors the fallback
@@ -66,10 +90,18 @@ export const DEFAULT_THEME: ThemeSettings = {
   },
 }
 
+export const DEFAULT_SEO: SeoSettings = {
+  autoSchema: true,
+  sitemap: true,
+  llms: true,
+  robots: true,
+}
+
 export const DEFAULT_SETTINGS: SiteSettings = {
   language: 'vi',
   title: 'vibeblog',
   description: '',
+  siteUrl: '',
   logoUrl: '',
   logoWidth: 120,
   showLogo: false,
@@ -78,6 +110,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   postsPerPage: 10,
   menu: [],
   theme: DEFAULT_THEME,
+  seo: DEFAULT_SEO,
+}
+
+// Resolve the canonical base URL: owner-set value wins, else the Vercel
+// production domain, else localhost (dev). Always without a trailing slash.
+export function resolveSiteUrl(s: SiteSettings): string {
+  if (s.siteUrl) return s.siteUrl
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (vercel) return `https://${vercel}`
+  return 'http://localhost:3000'
 }
 
 // CSS for the theme: variables on :root (light) and .dark (dark mode).
@@ -99,8 +141,14 @@ export const getSettings = unstable_cache(
   async (): Promise<SiteSettings> => {
     try {
       const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
-      // Deep-merge theme so older/partial stored configs keep all color keys.
-      return { ...DEFAULT_SETTINGS, ...stored, theme: sanitizeTheme(stored.theme, DEFAULT_THEME) }
+      // Deep-merge theme + seo so older/partial stored configs keep every key.
+      return {
+        ...DEFAULT_SETTINGS,
+        ...stored,
+        siteUrl: sanitizeUrl(stored.siteUrl),
+        theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
+        seo: sanitizeSeo(stored.seo, DEFAULT_SEO),
+      }
     } catch (error) {
       console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
       return DEFAULT_SETTINGS
@@ -117,6 +165,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     language: input.language === 'en' || input.language === 'vi' ? input.language : current.language,
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
     description: input.description ?? current.description,
+    siteUrl: input.siteUrl !== undefined ? sanitizeUrl(input.siteUrl) : current.siteUrl,
     logoUrl: input.logoUrl ?? current.logoUrl,
     logoWidth: clampNumber(input.logoWidth, 24, 600, current.logoWidth),
     showLogo: input.showLogo ?? current.showLogo,
@@ -125,6 +174,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     postsPerPage: clampNumber(input.postsPerPage, 1, 100, current.postsPerPage),
     menu: sanitizeMenu(input.menu, current.menu),
     theme: sanitizeTheme(input.theme, current.theme),
+    seo: sanitizeSeo(input.seo, current.seo),
   }
   await writeJson(SETTINGS_PATH, next)
   return next

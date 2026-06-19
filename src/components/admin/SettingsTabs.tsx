@@ -1,13 +1,14 @@
 'use client'
 
-// Settings screen with two tabs: site settings and appearance (theme colors).
+// Settings screen with three tabs: site settings, appearance (theme), and SEO.
 import { useState } from 'react'
 import type { SiteSettings, ThemeSettings } from '@/types'
 import { SettingsForm } from './SettingsForm'
 import { AppearanceForm } from './AppearanceForm'
+import { SeoForm } from './SeoForm'
 import { useAdminT } from './I18nProvider'
 
-type Tab = 'site' | 'appearance'
+type Tab = 'site' | 'appearance' | 'seo'
 
 export function SettingsTabs({ settings, defaultTheme }: { settings: SiteSettings; defaultTheme: ThemeSettings }) {
   const t = useAdminT()
@@ -16,6 +17,7 @@ export function SettingsTabs({ settings, defaultTheme }: { settings: SiteSetting
   const tabs: { key: Tab; label: string }[] = [
     { key: 'site', label: t.navSettings },
     { key: 'appearance', label: t.navAppearance },
+    { key: 'seo', label: 'SEO' },
   ]
 
   return (
@@ -38,11 +40,9 @@ export function SettingsTabs({ settings, defaultTheme }: { settings: SiteSetting
         ))}
       </div>
 
-      {tab === 'site' ? (
-        <SettingsForm initial={settings} />
-      ) : (
-        <AppearanceForm initial={settings.theme} defaults={defaultTheme} />
-      )}
+      {tab === 'site' && <SettingsForm initial={settings} />}
+      {tab === 'appearance' && <AppearanceForm initial={settings.theme} defaults={defaultTheme} />}
+      {tab === 'seo' && <SeoForm initial={settings} />}
     </div>
   )
 }
