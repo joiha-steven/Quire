@@ -27,8 +27,10 @@ export default async function PostPage({ params }: PageProps<'/[slug]'>) {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
-      <p className="mt-2 text-sm text-neutral-500">{formatDate(post.date, language)}</p>
+      <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+        {post.title}
+      </h1>
+      <p className="mt-4 text-sm text-neutral-500">{formatDate(post.date, language)}</p>
 
       {(post.categories.length > 0 || post.tags.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-2">

@@ -41,14 +41,20 @@ h1, h2, h3 {
   text-wrap: pretty;
 }
 
-/* Rendered post body + TipTap editor share these typographic rules. */
+/* Rendered post body + TipTap editor share these typographic rules.
+   Tuned for long-form reading (Medium-like): larger body, airy spacing. */
 .prose {
-  font-size: 1.0625rem; /* ~17px: comfortable for long-form reading */
-  line-height: 1.75;
-  color: #2a2a2a;
+  font-size: 1.25rem; /* ~20px */
+  line-height: 1.8;
+  color: #242424;
+}
+@media (max-width: 640px) {
+  .prose {
+    font-size: 1.125rem; /* ~18px on phones */
+  }
 }
 .prose > * + * {
-  margin-top: 1.2em;
+  margin-top: 1.5em;
 }
 .prose h1 {
   font-size: 1.9rem;
@@ -72,7 +78,7 @@ h1, h2, h3 {
   margin-top: 1.5em;
 }
 .prose p {
-  margin-top: 1.2em;
+  margin-top: 1.5em;
   text-wrap: pretty;
 }
 .prose a {
