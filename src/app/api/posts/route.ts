@@ -9,6 +9,11 @@ import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
   try {
+    // Owner only: this returns ALL posts incl. drafts. Public pages read server-side.
+    if (!(await requireOwner())) {
+      logRequest(req, 401, start)
+      return fail('Unauthorized', 401)
+    }
     const posts = await getIndex()
     logRequest(req, 200, start)
     return ok(posts)

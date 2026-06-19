@@ -2,11 +2,16 @@
 
 import type { NextRequest } from 'next/server'
 import { getMedia } from '@/lib/media'
-import { ok, fail, logRequest, logError } from '@/lib/api'
+import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
   try {
+    // Owner only: only the admin media library consumes this (same-origin, cookied).
+    if (!(await requireOwner())) {
+      logRequest(req, 401, start)
+      return fail('Unauthorized', 401)
+    }
     const items = await getMedia()
     logRequest(req, 200, start)
     return ok(items)
