@@ -9,6 +9,23 @@ const COMMON = {
   allowOverwrite: true,
 }
 
+// List every blob (pathname + size), following pagination. Used for site stats.
+export async function listBlobs(): Promise<{ pathname: string; size: number }[]> {
+  const out: { pathname: string; size: number }[] = []
+  let cursor: string | undefined
+  try {
+    do {
+      const res = await list({ cursor, limit: 1000 })
+      for (const b of res.blobs) out.push({ pathname: b.pathname, size: b.size })
+      cursor = res.cursor
+    } while (cursor)
+    return out
+  } catch (error) {
+    console.error(`[ERROR] blob.listBlobs: ${(error as Error).message}`)
+    return out
+  }
+}
+
 // Resolve the public URL for a known pathname, or null if it does not exist.
 export async function resolveUrl(pathname: string): Promise<string | null> {
   try {
