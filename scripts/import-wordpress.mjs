@@ -48,7 +48,22 @@ const slugify = (s) =>
     .replace(/^-+|-+$/g, '')
 
 const asArray = (v) => (v == null ? [] : Array.isArray(v) ? v : [v])
-const text = (v) => (v == null ? '' : typeof v === 'object' ? (v['#text'] ?? '') : String(v))
+const raw = (v) => (v == null ? '' : typeof v === 'object' ? (v['#text'] ?? '') : String(v))
+
+// Decode HTML entities WordPress leaves in plain-text fields (titles, excerpts),
+// including double-encoded ones (&amp;amp; -> &). Runs a couple of passes.
+const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”' }
+function decodeEntities(s) {
+  let out = s
+  for (let i = 0; i < 2; i++) {
+    out = out
+      .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)))
+      .replace(/&([a-z]+);/gi, (m, name) => NAMED[name.toLowerCase()] ?? m)
+  }
+  return out
+}
+const text = (v) => decodeEntities(raw(v))
 
 function toIso(wpDate, fallback) {
   const s = text(wpDate)
@@ -129,7 +144,7 @@ for (const item of items) {
   const base = slugify(text(item['wp:post_name']) || title)
   const slug = uniqueSlug(base)
   const date = toIso(item['wp:post_date_gmt'] ?? item['wp:post_date'], new Date().toISOString())
-  const html = text(item['content:encoded'])
+  const html = raw(item['content:encoded'])
   const body = html ? td.turndown(html).trim() : ''
   const excerptRaw = text(item['excerpt:encoded']).trim()
   const mappedStatus = status === 'publish' ? 'published' : 'draft'
