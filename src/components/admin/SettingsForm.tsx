@@ -81,14 +81,10 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
 
       {s.showLogo && (
         <div className="space-y-3">
+          {/* Fixed-size preview just to confirm which image is selected. */}
           {s.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={s.logoUrl}
-              alt="Logo"
-              style={{ width: s.logoWidth }}
-              className="h-auto rounded bg-neutral-100 p-1"
-            />
+            <img src={s.logoUrl} alt="Logo" className="h-12 w-auto rounded bg-neutral-100 p-1" />
           ) : (
             <p className="text-xs text-neutral-400">Chưa chọn logo.</p>
           )}
@@ -103,13 +99,16 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
             )}
           </div>
           <Input
-            label="Bề rộng logo (px)"
+            label="Bề rộng logo trên header (px)"
             type="number"
             min={24}
             max={600}
             value={s.logoWidth}
             onChange={(e) => update({ logoWidth: Number(e.target.value) })}
           />
+          <p className="-mt-3 text-xs text-neutral-400">
+            Áp dụng cho logo hiển thị trên header trang chủ (không ảnh hưởng preview ở trên).
+          </p>
         </div>
       )}
 
