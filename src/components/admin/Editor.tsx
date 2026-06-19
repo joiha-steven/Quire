@@ -1,11 +1,11 @@
 'use client'
 
 // TipTap markdown editor with a compact toolbar.
-// Marks/nodes: bold, italic, underline, strike, H1-H3, list, quote, code, link,
-// image (+ per-image full-width toggle), and embedded video (YouTube).
-// Drag an image file into the editor -> auto-uploads -> inserts at cursor.
-// Parent owns the markdown via onChange and can insert images through `apiRef`.
-import { useEffect, useState } from 'react'
+// Marks/nodes: bold, italic, underline, strike, H1-H3, list, quote, code block,
+// link, image (align + wide), GFM tables, and video (paste a YouTube/Vimeo/
+// TikTok URL). Drag an image file in -> auto-uploads -> inserts at cursor. A
+// Markdown/Review toggle swaps the formatted view for the raw Markdown source.
+import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import LinkExt from '@tiptap/extension-link'
@@ -13,6 +13,8 @@ import Underline from '@tiptap/extension-underline'
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import { Markdown } from 'tiptap-markdown'
 import { CaptionedImage } from './CaptionedImage'
+import { Video } from './VideoNode'
+import { isVideoUrl } from '@/lib/video'
 import { useAdminT } from './I18nProvider'
 
 export type EditorApi = { insertImage: (url: string) => void }
@@ -28,6 +30,26 @@ function readMarkdown(editor: TiptapEditor): string {
 function captionFromUrl(url: string): string {
   const base = decodeURIComponent(url.split('/').pop() ?? '').replace(/[#?].*$/, '')
   return base.replace(/^\d+-/, '').replace(/\.[a-z0-9]+$/i, '')
+}
+
+// After loading/parsing markdown, promote any paragraph that is just a video URL
+// into a video node, so reloaded posts show the embed (not a bare link).
+function videoUrlsToNodes(editor: TiptapEditor): void {
+  const { state } = editor
+  const videoType = state.schema.nodes.video
+  if (!videoType) return
+  const hits: { from: number; to: number; src: string }[] = []
+  state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'paragraph') return
+    const text = node.textContent.trim()
+    if (text && !/\s/.test(text) && isVideoUrl(text)) hits.push({ from: pos, to: pos + node.nodeSize, src: text })
+  })
+  if (!hits.length) return
+  let tr = state.tr
+  hits.reverse().forEach(({ from, to, src }) => {
+    tr = tr.replaceWith(from, to, videoType.create({ src }))
+  })
+  editor.view.dispatch(tr)
 }
 
 type Props = {
@@ -134,6 +156,7 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
       Underline,
       LinkExt.configure({ openOnClick: false }),
       CaptionedImage,
+      Video,
       Table.configure({ resizable: false }),
       TableRow,
       TableHeader,
@@ -158,11 +181,33 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
         })
         return true
       },
+      // Paste a lone video URL (YouTube/Vimeo/TikTok) -> insert a video embed.
+      handlePaste(view, event) {
+        const text = event.clipboardData?.getData('text/plain')?.trim() ?? ''
+        if (text && !/\s/.test(text) && isVideoUrl(text)) {
+          editor?.chain().focus().setVideo(text).run()
+          return true
+        }
+        return false
+      },
+    },
+    onCreate({ editor }) {
+      videoUrlsToNodes(editor)
     },
     onUpdate({ editor }) {
       onChange(readMarkdown(editor))
     },
   })
+
+  const taRef = useRef<HTMLTextAreaElement>(null)
+  // Grow the Markdown source box to fit its content (no tiny inner scrollbox).
+  useEffect(() => {
+    const ta = taRef.current
+    if (raw && ta) {
+      ta.style.height = 'auto'
+      ta.style.height = `${ta.scrollHeight}px`
+    }
+  }, [raw, rawText])
 
   useEffect(() => {
     if (!editor) return
@@ -180,6 +225,7 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
     if (!editor) return
     if (raw) {
       editor.commands.setContent(rawText)
+      videoUrlsToNodes(editor)
       onChange(rawText)
       setRaw(false)
     } else {
@@ -196,13 +242,14 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
       <div className="mx-auto w-full" style={{ maxWidth: contentWidth }}>
         {raw ? (
           <textarea
+            ref={taRef}
             value={rawText}
             onChange={(e) => {
               setRawText(e.target.value)
               onChange(e.target.value)
             }}
             spellCheck={false}
-            className="min-h-[420px] w-full resize-y bg-transparent px-4 py-4 font-mono text-sm leading-relaxed text-neutral-800 outline-none dark:text-neutral-200"
+            className="min-h-[60vh] w-full resize-none overflow-hidden bg-transparent px-4 py-4 font-mono text-sm leading-relaxed text-neutral-800 outline-none dark:text-neutral-200"
           />
         ) : (
           <EditorContent editor={editor} />

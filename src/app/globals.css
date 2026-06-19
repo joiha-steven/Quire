@@ -185,24 +185,41 @@ hr {
   max-width: 100%;
   height: auto;
 }
-/* Figures: image + optional caption. Default fits the content column. */
+/* Figures: image + optional caption. Width = column (default) or 30% wider
+   (img-wide, breaks out / overflows on mobile). Alignment positions it. */
 .prose figure {
-  margin: 1.9em 0;
+  margin: 1.9em auto; /* center by default */
+  width: 100%;
 }
 .prose figure img {
   width: 100%;
   height: auto;
   border-radius: 0.625rem;
 }
-/* Full-bleed figure: break out of the centered content column. */
-.prose figure.img-full {
-  width: 100vw;
-  max-width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+.prose figure.img-left {
+  margin-left: 0;
+  margin-right: auto;
 }
-.prose figure.img-full img {
-  border-radius: 0;
+.prose figure.img-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+/* 30% wider than the column; alignment decides which way it overflows. */
+.prose figure.img-wide {
+  width: 130%;
+  max-width: 130%;
+}
+.prose figure.img-wide.img-center {
+  margin-left: -15%;
+  margin-right: -15%;
+}
+.prose figure.img-wide.img-left {
+  margin-left: 0;
+  margin-right: -30%;
+}
+.prose figure.img-wide.img-right {
+  margin-left: -30%;
+  margin-right: 0;
 }
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {
@@ -231,6 +248,21 @@ hr {
 .prose th {
   font-weight: 600;
   color: var(--c-heading);
+}
+/* Video embed (YouTube/Vimeo/TikTok) from a standalone URL, responsive 16:9. */
+.prose .video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 1.9em 0;
+}
+.prose .video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0.625rem;
 }
 
 /* Dark mode: only chips/code need a manual swap; text/heading/link/rule colors
