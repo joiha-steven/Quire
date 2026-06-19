@@ -212,13 +212,25 @@ hr {
   text-align: center;
   color: var(--c-meta);
 }
-/* Embedded video (iframe) scales to the column, 16:9. */
-.prose iframe {
+/* GFM tables (Markdown). Clean, faint rules in the site's palette. */
+.prose table {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
-  border: 0;
-  border-radius: 0.625rem;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  margin: 1.6em 0;
+  display: block;
+  overflow-x: auto;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--c-rule);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  vertical-align: top;
+}
+.prose th {
+  font-weight: 600;
+  color: var(--c-heading);
 }
 
 /* Dark mode: only chips/code need a manual swap; text/heading/link/rule colors

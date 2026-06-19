@@ -1,8 +1,20 @@
-// Renders owner-authored markdown to HTML. Content is trusted (single author),
-// so embedded HTML (e.g. video iframes) is allowed through.
-import { marked } from 'marked'
+// Renders owner-authored markdown to HTML. The blog is 100% Markdown: any raw
+// HTML/CSS in the source is NOT rendered, it is escaped and shown verbatim as
+// code. Only Markdown-generated elements (incl. GFM tables) are produced.
+import { marked, type Tokens } from 'marked'
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 marked.setOptions({ gfm: true, breaks: true })
+// Raw HTML tokens (block + inline) -> shown as visible text, never executed.
+marked.use({
+  renderer: {
+    html(token: Tokens.HTML | Tokens.Tag) {
+      return escapeHtml(token.raw)
+    },
+  },
+})
 
 // Wrap each image in a <figure>: caption (from alt) below, and full-bleed when
 // the src carries a "#full" marker. Lone images sit in their own <p>, which we

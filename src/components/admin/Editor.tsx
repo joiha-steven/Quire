@@ -5,12 +5,12 @@
 // image (+ per-image full-width toggle), and embedded video (YouTube).
 // Drag an image file into the editor -> auto-uploads -> inserts at cursor.
 // Parent owns the markdown via onChange and can insert images through `apiRef`.
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import LinkExt from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
-import Youtube from '@tiptap/extension-youtube'
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import { Markdown } from 'tiptap-markdown'
 import { CaptionedImage } from './CaptionedImage'
 import { useAdminT } from './I18nProvider'
@@ -42,10 +42,33 @@ type Props = {
 
 const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
 
-function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: () => void }) {
+function Toolbar({
+  editor,
+  onPickImage,
+  raw,
+  onToggleRaw,
+}: {
+  editor: TiptapEditor
+  onPickImage: () => void
+  raw: boolean
+  onToggleRaw: () => void
+}) {
   const t = useAdminT()
   const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
   const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
+  const toggle = (
+    <button type="button" onClick={onToggleRaw} className={`${BTN} ml-auto font-medium text-neutral-600`}>
+      {raw ? t.tbReview : t.tbMarkdown}
+    </button>
+  )
+  // In Markdown source mode the formatting buttons don't apply to plain text.
+  if (raw) {
+    return (
+      <div className="sticky top-0 z-10 flex items-center rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
+        {toggle}
+      </div>
+    )
+  }
   return (
     <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
@@ -94,22 +117,16 @@ function Toolbar({ editor, onPickImage }: { editor: TiptapEditor; onPickImage: (
       <button type="button" onClick={onPickImage} className={cls(false)}>
         {t.tbImage}
       </button>
-      <button
-        type="button"
-        onClick={() => {
-          const url = window.prompt(t.promptVideo)
-          if (url) editor.commands.setYoutubeVideo({ src: url })
-        }}
-        className={cls(false)}
-      >
-        {t.tbVideo}
-      </button>
+      {toggle}
     </div>
   )
 }
 
 export function Editor({ initialContent, onChange, onPickImage, onUploadFile, apiRef, contentWidth }: Props) {
   const t = useAdminT()
+  // Markdown source view: edit the raw markdown directly (still saves live).
+  const [raw, setRaw] = useState(false)
+  const [rawText, setRawText] = useState('')
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -117,8 +134,13 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
       Underline,
       LinkExt.configure({ openOnClick: false }),
       CaptionedImage,
-      Youtube.configure({ width: 640, height: 360, nocookie: true }),
-      Markdown.configure({ html: true }),
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      // html:false -> raw HTML in the source is treated as plain text, never
+      // parsed into nodes. Keeps the blog 100% Markdown.
+      Markdown.configure({ html: false }),
     ],
     content: initialContent,
     editorProps: {
@@ -152,13 +174,39 @@ export function Editor({ initialContent, onChange, onPickImage, onUploadFile, ap
 
   if (!editor) return <div className="min-h-[480px] animate-pulse bg-neutral-50 dark:bg-neutral-900" />
 
+  // Review -> Markdown: snapshot the current markdown. Markdown -> Review:
+  // re-parse the (possibly edited) markdown back into the formatted editor.
+  function toggleRaw() {
+    if (!editor) return
+    if (raw) {
+      editor.commands.setContent(rawText)
+      onChange(rawText)
+      setRaw(false)
+    } else {
+      setRawText(readMarkdown(editor))
+      setRaw(true)
+    }
+  }
+
   return (
     <div className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-      <Toolbar editor={editor} onPickImage={onPickImage} />
+      <Toolbar editor={editor} onPickImage={onPickImage} raw={raw} onToggleRaw={toggleRaw} />
       {/* Center the writing column at the public single-post width so what you
           type wraps exactly like the published article. */}
       <div className="mx-auto w-full" style={{ maxWidth: contentWidth }}>
-        <EditorContent editor={editor} />
+        {raw ? (
+          <textarea
+            value={rawText}
+            onChange={(e) => {
+              setRawText(e.target.value)
+              onChange(e.target.value)
+            }}
+            spellCheck={false}
+            className="min-h-[420px] w-full resize-y bg-transparent px-4 py-4 font-mono text-sm leading-relaxed text-neutral-800 outline-none dark:text-neutral-200"
+          />
+        ) : (
+          <EditorContent editor={editor} />
+        )}
       </div>
     </div>
   )
