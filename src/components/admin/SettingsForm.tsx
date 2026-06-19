@@ -80,10 +80,15 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
       <Toggle label="Hiện logo" checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
 
       {s.showLogo && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {s.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={s.logoUrl} alt="Logo" className="h-12 w-auto rounded bg-neutral-100 p-1" />
+            <img
+              src={s.logoUrl}
+              alt="Logo"
+              style={{ width: s.logoWidth }}
+              className="h-auto rounded bg-neutral-100 p-1"
+            />
           ) : (
             <p className="text-xs text-neutral-400">Chưa chọn logo.</p>
           )}
@@ -97,8 +102,30 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
               </Button>
             )}
           </div>
+          <Input
+            label="Bề rộng logo (px)"
+            type="number"
+            min={24}
+            max={600}
+            value={s.logoWidth}
+            onChange={(e) => update({ logoWidth: Number(e.target.value) })}
+          />
         </div>
       )}
+
+      <hr className="border-neutral-200" />
+
+      <Input
+        label="Bề rộng site - desktop (px)"
+        type="number"
+        min={360}
+        max={1600}
+        value={s.contentWidth}
+        onChange={(e) => update({ contentWidth: Number(e.target.value) })}
+      />
+      <p className="-mt-3 text-xs text-neutral-400">
+        Độ rộng tối đa của cột nội dung trên màn lớn (mặc định 672).
+      </p>
 
       <div className="pt-2">
         <Button onClick={save} disabled={saving}>
