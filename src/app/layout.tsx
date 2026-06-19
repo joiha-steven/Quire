@@ -25,6 +25,8 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(resolveSiteUrl(settings)),
     title: { default: title, template: `%s · ${title}` },
     description: description || undefined,
+    // Advertise the RSS feed so readers/aggregators can auto-discover it.
+    alternates: settings.seo.rss ? { types: { 'application/rss+xml': '/feed.xml' } } : undefined,
   }
 }
 

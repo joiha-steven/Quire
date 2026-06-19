@@ -10,6 +10,7 @@ import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
+import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible } from '@/lib/utils'
 
 // Pre-build all public slugs at deploy time; new slugs render on first visit (ISR).
@@ -35,9 +36,11 @@ function taxoLinks(items: string[], make: (s: string) => string) {
 
 export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promise<Metadata> {
   const { slug } = await params
-  const [post, page] = await Promise.all([getPost(slug), getPage(slug)])
+  const [post, page, settings] = await Promise.all([getPost(slug), getPage(slug), getSettings()])
+  const base = resolveSiteUrl(settings)
   if (post && isPublicallyVisible(post.status, post.date)) {
-    const images = post.featuredImage ? [post.featuredImage] : undefined
+    const og = ogImageUrl(settings, base, { title: post.title, featuredImage: post.featuredImage })
+    const images = og ? [og] : undefined
     return {
       title: post.title,
       description: post.excerpt || undefined,
@@ -46,7 +49,8 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
     }
   }
   if (page && page.status === 'published') {
-    const images = page.featuredImage ? [page.featuredImage] : undefined
+    const og = ogImageUrl(settings, base, { title: page.title, featuredImage: page.featuredImage })
+    const images = og ? [og] : undefined
     return {
       title: page.title,
       openGraph: { title: page.title, images, type: 'website' },

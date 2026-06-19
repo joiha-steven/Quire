@@ -72,6 +72,9 @@ export type SeoSettings = {
   sitemap: boolean // serve /sitemap.xml
   llms: boolean // serve /llms.txt (content index for AI crawlers)
   robots: boolean // serve a crawl-friendly robots.txt referencing the sitemap
+  rss: boolean // serve /feed.xml (RSS 2.0)
+  ogImage: boolean // generate a dynamic OG share image per post/page
+  ogFallbackImage: string // image used when a post has no featured image; '' = none
 }
 
 export type SiteSettings = {
