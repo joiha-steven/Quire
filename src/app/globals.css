@@ -22,16 +22,9 @@ body {
   /* Inter: enable ligatures/contextual alternates, disable faux weights. */
   font-feature-settings: "liga" 1, "calt" 1;
   font-synthesis-weight: none;
-  /* Base tracking for Inter (English). Be Vietnam Pro tightened below. */
   letter-spacing: -0.011em;
   line-height: 1.6;
   color: #1a1a1a;
-}
-
-/* Be Vietnam Pro (Vietnamese) renders a touch wide; tighten it for cohesion.
-   Applied on the lang root so it inherits into the prose body too. */
-html[lang="vi"] body {
-  letter-spacing: -0.006em;
 }
 
 /* Avoid long words/URLs overflowing on small screens. */
@@ -42,6 +35,11 @@ p, h1, h2, h3, h4, li, blockquote, a {
 /* Improve last-line/orphans without narrowing the block (balance shrinks it). */
 h1, h2, h3 {
   text-wrap: pretty;
+}
+
+/* Dark mode: headings/titles render pure white. */
+.dark h1, .dark h2, .dark h3 {
+  color: #fff;
 }
 
 /* Rendered post body + TipTap editor share these typographic rules.
@@ -146,7 +144,7 @@ h1, h2, h3 {
 .dark .prose h1,
 .dark .prose h2,
 .dark .prose h3 {
-  color: #f5f5f5;
+  color: #fff;
 }
 .dark .prose a {
   color: #7fb0ff;
