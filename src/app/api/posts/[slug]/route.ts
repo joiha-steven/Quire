@@ -10,6 +10,11 @@ import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 export async function GET(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]'>): Promise<Response> {
   const start = Date.now()
   try {
+    // Owner only: returns any post incl. drafts. Public detail page reads server-side.
+    if (!(await requireOwner())) {
+      logRequest(req, 401, start)
+      return fail('Unauthorized', 401)
+    }
     const { slug } = await ctx.params
     const post = await getPost(slug)
     if (!post) {
