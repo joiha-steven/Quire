@@ -64,11 +64,19 @@ p, h1, h2, h3, h4, li, blockquote, a {
   overflow-wrap: break-word;
 }
 
-/* Improve last-line/orphans without narrowing the block (balance shrinks it). */
+/* Greedy wrap (no balance/pretty): lines fill to the right edge instead of
+   breaking early and leaving a wide right gap. */
 h1, h2, h3 {
-  text-wrap: pretty;
   color: var(--c-heading);
   letter-spacing: -0.018em;
+}
+
+/* One divider style for the whole site: faint, 50% wide, left-aligned. */
+hr {
+  border: none;
+  border-top: 1px solid var(--c-rule);
+  width: 50%;
+  margin: 0;
 }
 
 /* Secondary text (dates, captions) — owner-themed. */
@@ -110,7 +118,6 @@ h1, h2, h3 {
 }
 .prose p {
   margin-top: 1.4em;
-  text-wrap: pretty;
 }
 .prose a {
   color: var(--c-link);
@@ -124,9 +131,7 @@ h1, h2, h3 {
   text-decoration-color: var(--c-link);
 }
 .prose hr {
-  border: none;
-  border-top: 1px solid var(--c-rule);
-  margin: 2.4em 0;
+  margin: 2.4em 0; /* inherits the site hr look (faint, 50%, left) */
 }
 .prose ul {
   list-style: disc;
