@@ -33,6 +33,24 @@ if (!TOKEN && !DRY) {
 const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' })
 td.use(gfm)
 
+// WordPress wraps captioned images in <figure><img><figcaption>…</figcaption>.
+// vibeblog stores the caption in the image alt (it renders the figcaption from
+// alt), so fold the caption INTO the alt instead of leaving it as a separate
+// italic paragraph below the image. (Classic [caption] shortcodes that aren't
+// real <figure> nodes are mopped up afterwards by fix-import-captions.mjs.)
+td.addRule('figureCaption', {
+  filter: 'figure',
+  replacement: (content, node) => {
+    const img = node.querySelector?.('img')
+    if (!img) return content
+    const src = img.getAttribute('src') || ''
+    if (!src) return content
+    const cap = node.querySelector?.('figcaption')?.textContent || img.getAttribute('alt') || ''
+    const alt = cap.replace(/[\[\]]/g, '').replace(/\s+/g, ' ').trim()
+    return `\n\n![${alt}](${src})\n\n`
+  },
+})
+
 // --- helpers ---------------------------------------------------------------
 
 const slugify = (s) =>
