@@ -22,16 +22,17 @@ npm run dev
 
 See [`.env.example`](./.env.example). In short:
 
-| Variable                | What it is                                  |
-| ----------------------- | ------------------------------------------- |
-| `AUTH_SECRET`           | NextAuth secret — `npx auth secret`         |
-| `AUTH_GITHUB_ID`        | GitHub OAuth app client id                  |
-| `AUTH_GITHUB_SECRET`    | GitHub OAuth app client secret              |
-| `AUTHORIZED_EMAIL`      | The only GitHub email allowed into `/admin` |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read/write token                |
+| Variable                          | What it is                                |
+| --------------------------------- | ----------------------------------------- |
+| `AUTH_SECRET`                     | NextAuth secret — `npx auth secret`       |
+| `AUTH_GOOGLE_ID` / `_SECRET`      | Google OAuth client (optional provider)   |
+| `AUTH_GITHUB_ID` / `_SECRET`      | GitHub OAuth app (optional provider)      |
+| `AUTHORIZED_EMAIL`                | The only email allowed into `/admin`      |
+| `BLOB_READ_WRITE_TOKEN`           | Vercel Blob read/write token              |
 
-GitHub OAuth callback URL: `https://<your-domain>/api/auth/callback/github`
-(use `http://localhost:3000/...` for local development).
+Enable at least one provider; each loads only when its credentials are set.
+OAuth callback URLs: `https://<your-domain>/api/auth/callback/google` and/or
+`.../callback/github` (use `http://localhost:3000/...` locally).
 
 ## Two-repo pattern
 
