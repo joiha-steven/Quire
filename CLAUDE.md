@@ -400,8 +400,16 @@ Load the Blob token from `.env.local`; all support `--dry`:
 `node --env-file=.env.local scripts/<name>.mjs [args] [--dry]`. Idempotent
 (merge by slug / skip done work). After bulk `.md` edits run `rebuild-index.mjs`.
 
+### Versioning — owner's rule (do NOT auto-bump)
+- The version line is **`0.9.x`**. Every change just **increments the patch `x`** in
+  `package.json` (e.g. `0.9.1` → `0.9.2` → … up to `0.9.999`). `x` resets nothing and has
+  no semver meaning here — it is a running change counter.
+- **Never raise the minor/major yourself** (`0.9` → `0.10`, or `→ 1.0.0`). Bump the
+  `0.9` part ONLY when the owner explicitly asks. Until then, stay on `0.9.x`.
+- A change that touches code bumps `x`; pure-docs tweaks may skip it (as before).
+
 ### Cutting a release
-1. Bump `package.json` version — semver: `0.x.0` feature batch, `0.x.y` fix/polish,
-   `1.0.0` first stable. `npm run build` + `npm run lint` must exit 0; push to `main`.
-2. `gh release create v<X.Y.Z> --title "v<X.Y.Z> - <tagline>" --notes "..."`. The admin
-   footer shows the `package.json` version so users can compare against the latest release.
+1. `x` is already current in `package.json` (see Versioning above — never re-bump the
+   `0.9` part). `npm run build` + `npm run lint` must exit 0; push to `main`.
+2. `gh release create v0.9.<x> --title "v0.9.<x> - <tagline>" --notes "..."`. The admin
+   footer/Overview shows the `package.json` version so users can compare against the latest release.
