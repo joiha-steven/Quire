@@ -9,12 +9,13 @@ import { Button } from '@/components/ui/Button'
 import { ToggleField } from '@/components/ui/Switch'
 import { SITE_LANGS } from '@/locales/langs'
 import { MediaLibrary } from './MediaLibrary'
-import { useAdminT } from './I18nProvider'
+import { useAdminT, useSetAdminLang } from './I18nProvider'
 
 type Props = { s: SiteSettings; update: (p: Partial<SiteSettings>) => void }
 
 export function SiteFields({ s, update }: Props) {
   const t = useAdminT()
+  const setLang = useSetAdminLang()
   const [picking, setPicking] = useState(false)
 
   return (
@@ -26,7 +27,10 @@ export function SiteFields({ s, update }: Props) {
             <button
               key={l.value}
               type="button"
-              onClick={() => update({ language: l.value })}
+              onClick={() => {
+                update({ language: l.value })
+                setLang(l.value) // switch the admin UI instantly
+              }}
               className={`rounded-md px-3 py-1.5 text-sm font-medium ${
                 s.language === l.value ? 'bg-white shadow-sm dark:bg-neutral-700' : 'text-neutral-500'
               }`}
