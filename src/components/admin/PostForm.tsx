@@ -3,6 +3,7 @@
 // Editor screen: left = TipTap editor, right = settings, bottom = action bar.
 // Handles auto-save, manual save (draft/publish) and the media picker modal.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { PostWithContent, PostRevision, MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -46,6 +47,7 @@ function toDraft(initial?: PostWithContent): Draft {
 
 export function PostForm({ initial, allCategories, allTags, contentWidth }: Props) {
   const t = useAdminT()
+  const router = useRouter()
   const { notify } = useToast()
   const [draft, setDraft] = useState<Draft>(() => toDraft(initial))
   const [saving, setSaving] = useState(false)
@@ -121,6 +123,9 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
         setDirty(false)
         // Keep the address bar in sync without remounting the editor.
         window.history.replaceState(null, '', `/admin/editor/${json.data.slug}`)
+        // Drop the client Router Cache so admin lists + the public site show this
+        // save on the next navigation (no stale RSC). Server purge already ran.
+        router.refresh()
         return true
       } catch {
         notify(t.saveFailed, 'error')
@@ -129,7 +134,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
         setSaving(false)
       }
     },
-    [notify, t],
+    [notify, t, router],
   )
 
   // Queue a save behind any in-flight save and return its result.

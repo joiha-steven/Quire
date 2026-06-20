@@ -1,6 +1,25 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **refactor(cache): all invalidation centralized in `src/lib/revalidate.ts` + scoped purges.**
+  Edits now apply reliably and without dumping the whole site each time: a new post refreshes
+  only the list/taxonomy surfaces (home, pagination, every category/tag page, feed/sitemap/llms)
+  and leaves other post bodies warm; editing/deleting a post also refreshes its own page;
+  editing a static page touches just its URL + sitemap; settings still purge the whole site and
+  now re-warm it. Each helper is a deliberate SUPERSET of affected surfaces, so a change is
+  never under-purged (the old "applies late" bug). One accepted minor staleness: the related-
+  posts box on other posts (self-heals ≤1h, or use "Clear all cache")
+- **fix(admin): editor save now calls `router.refresh()`** (PostForm + PageForm, matching
+  SettingsView) so the client Router Cache is dropped — saves show on the next navigation
+  instead of lagging behind a stale RSC. Pairs with the `staleTimes` config fix below
+- **feat(security): baseline security response headers on every route** (`next.config.ts`
+  `headers()`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy:
+  strict-origin-when-cross-origin`, `Permissions-Policy` (camera/mic/geo/topics off). HSTS is
+  already added by Vercel. CSP deliberately deferred (needs nonces + Report-Only rollout for
+  the inline theme script + Analytics + OG + Blob images)
+- fix(config): `experimental.staleTimes.static` was set to `0`, which Next 16 rejects (min 30)
+  and silently ignored — leaving static routes on the ~5min client-cache default. Set to `30`
+  (lowest accepted), so soft-nav freshness now matches the documented intent
 - **refactor(cache): ISR pages + full purge on save (replaces yesterday's force-dynamic).**
   Public pages are ISR-cached again for speed (`revalidate = 3600`; `/[slug]` prerendered via
   `generateStaticParams`), but every admin write now calls a single `revalidatePath('/',

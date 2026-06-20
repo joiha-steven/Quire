@@ -4,6 +4,7 @@
 // Same flow as PostForm (auto-save + serialized manual save) but hits /api/pages
 // and has no taxonomy or date.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { PageWithContent, MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -28,6 +29,7 @@ function toDraft(initial?: PageWithContent): PageDraft {
 
 export function PageForm({ initial, contentWidth }: Props) {
   const t = useAdminT()
+  const router = useRouter()
   const { notify } = useToast()
   const [draft, setDraft] = useState<PageDraft>(() => toDraft(initial))
   const [saving, setSaving] = useState(false)
@@ -94,6 +96,8 @@ export function PageForm({ initial, contentWidth }: Props) {
         setSavedAt(new Date().toISOString())
         setDirty(false)
         window.history.replaceState(null, '', `/admin/page-editor/${json.data.slug}`)
+        // Drop the client Router Cache so the save shows on the next navigation.
+        router.refresh()
         return true
       } catch {
         notify(t.saveFailed, 'error')
@@ -102,7 +106,7 @@ export function PageForm({ initial, contentWidth }: Props) {
         setSaving(false)
       }
     },
-    [notify, t],
+    [notify, t, router],
   )
 
   const enqueueSave = useCallback(

@@ -2,10 +2,10 @@
 // POST /api/pages  -> create a page (owner only)
 
 import type { NextRequest } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import type { PageWithContent } from '@/types'
 import { getPageIndex, savePage } from '@/lib/pages'
 import { finalizeContentMedia } from '@/lib/media'
+import { revalidatePage } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     const meta = await savePage(body)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
-    revalidatePath('/', 'layout') // purge whole site cache; next read is fresh
+    revalidatePage(meta.slug) // a page shows only on its own URL + sitemap/llms
     logRequest(req, 201, start)
     return ok(meta, 201)
   } catch (error) {
