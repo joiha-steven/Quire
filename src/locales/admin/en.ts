@@ -71,6 +71,8 @@ const en = {
   removeAria: 'Remove',
   mediaTitle: 'Media library',
   copyUrl: 'Copy URL',
+  downloadOriginal: 'Download original',
+  unsupportedType: 'Unsupported file type (use JPG, PNG, WebP, SVG, GIF)',
   close: 'Close',
   loading: 'Loading...',
   noMedia: 'No media yet.',

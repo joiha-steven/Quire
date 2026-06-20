@@ -71,6 +71,8 @@ const de = {
   removeAria: 'Entfernen',
   mediaTitle: 'Medienbibliothek',
   copyUrl: 'URL kopieren',
+  downloadOriginal: 'Original herunterladen',
+  unsupportedType: 'Nicht unterstütztes Format (JPG, PNG, WebP, SVG, GIF verwenden)',
   close: 'Schließen',
   loading: 'Wird geladen...',
   noMedia: 'Noch keine Medien.',

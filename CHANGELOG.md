@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 2026-06-21
+- feat(media): responsive image pipeline — jpg/png keep the **untouched original** + auto-generate `-1024`/`-1600` in **AVIF + WebP** + a `-thumb.webp`; `PostContent` renders `<picture>` so the browser auto-picks the lightest format/size. Library shows resolution + "download original"; delete removes all variants. svg/gif/webp stored as-is. HEIC dropped. Upload route `maxDuration=60`
+- migration(blob): moved store to Singapore (`sin1`) — copied all blobs, collapsed stored URLs to pathnames, swapped `BLOB_READ_WRITE_TOKEN` (all envs), bumped cache keys for a clean cutover; media refs now store-relative end to end
 - refactor(blob): store image refs **store-relative** (pathnames, not absolute URLs). `collapseBlob` on write / `expandBlob` on read in the data layer (posts/pages/settings); UI unchanged. Removes storeId lock-in — switching Blob store/region/provider needs no content rewrite. Idempotent, backward-compatible (old absolute URLs self-heal on next save)
 - perf(region): `vercel.json` pins functions to `sin1` (Singapore) — was running in `iad1` (US-East), ~200ms from Vietnam; Singapore is ~40ms. Blob store still in `iad1` (cross-region only on cache miss)
 

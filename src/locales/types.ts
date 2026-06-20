@@ -105,6 +105,8 @@ export type AdminStrings = {
   // media
   mediaTitle: string
   copyUrl: string
+  downloadOriginal: string
+  unsupportedType: string
   close: string
   loading: string
   noMedia: string

@@ -71,6 +71,8 @@ const ja = {
   removeAria: '削除',
   mediaTitle: 'メディアライブラリ',
   copyUrl: 'URLをコピー',
+  downloadOriginal: '元画像をダウンロード',
+  unsupportedType: '対応していない形式です（JPG, PNG, WebP, SVG, GIF）',
   close: '閉じる',
   loading: '読み込み中...',
   noMedia: 'まだメディアがありません。',

@@ -43,10 +43,14 @@ export type PageWithContent = Page & {
 
 // One entry in media/_index.json.
 export type MediaItem = {
-  url: string
+  url: string // ORIGINAL (uncompressed) — stored store-relative, absolute on read
   filename: string
-  size: number // bytes
+  size: number // bytes of the original
   uploadedAt: string // ISO 8601
+  width?: number // original pixel dimensions (raster only)
+  height?: number
+  thumb?: string // library thumbnail — store-relative, absolute on read
+  variants?: boolean // true if responsive -1024/-1600 (avif+webp) were generated
 }
 
 // Site-wide settings, stored at settings/site.json.

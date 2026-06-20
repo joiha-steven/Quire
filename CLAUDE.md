@@ -97,7 +97,7 @@ HTML) and regenerates on tag/path revalidation — instant reads, fresh on edit.
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post at `revisions/{slug}.json` (newest first). Drives the editor "time machine". Moved on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; `getPublicPages` = `unstable_cache`; `getPage` = `React.cache()` |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `unstable_cache`; `themeToCss` converts ThemeSettings → CSS vars string |
-| `media.ts` | `getMedia`, `addMedia`, `deleteMedia` | Raster images auto-converted to WebP ≤1600px on upload; SVG/GIF pass through |
+| `media.ts` | `getMedia`, `addMedia`, `deleteMedia` | jpg/png → keep ORIGINAL + generate `-1024`/`-1600` (AVIF+WebP) + `-thumb.webp`; svg/gif/webp stored as-is. Variant URLs derived by name convention; `<picture>` built in `PostContent`. Delete removes all variants |
 | `auth.ts` | `handlers`, `auth`, `signIn`, `signOut`, `isAuthorized`, `getAuthState` | Anyone can sign in; only `AUTHORIZED_EMAIL` is authorized; unauthorized = silently redirected |
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the same URL namespace; throws `SlugConflictError` (→ 409) on collision |
 | `video.ts` | `videoEmbed`, `isVideoUrl` | Recognizes YouTube / Vimeo / TikTok URLs; returns embed URL. Videos stored as plain URLs in Markdown |

@@ -71,6 +71,8 @@ const ko = {
   removeAria: '삭제',
   mediaTitle: '미디어 라이브러리',
   copyUrl: 'URL 복사',
+  downloadOriginal: '원본 다운로드',
+  unsupportedType: '지원하지 않는 형식입니다 (JPG, PNG, WebP, SVG, GIF)',
   close: '닫기',
   loading: '불러오는 중...',
   noMedia: '아직 미디어가 없습니다.',
