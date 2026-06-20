@@ -53,15 +53,14 @@ Your actual blog content lives in Vercel Blob, not in git.
 
 ## Performance & caching
 
-Post detail pages (`/[slug]`) are statically generated at deploy time (ISR). New
-posts are rendered on-demand on first visit, then cached. Admin save/delete
-automatically invalidates the relevant caches via `revalidateTag` +
-`revalidatePath`.
+Post detail pages (`/[slug]`) are statically generated (SSG); new slugs render
+on-demand on first visit. List pages (home, category, tag) are server-rendered per
+request (pagination via `searchParams`). Every Blob read is wrapped in
+`unstable_cache` with a tag, so reads serve from the Next Data Cache until a write
+calls `revalidateTag` + `revalidatePath` — so edits show immediately. Images keep a
+1-year CDN cache; mutable content (manifests + settings) is never cached stale.
 
-List pages (home, category, tag) are server-rendered per request (because of
-pagination via `searchParams`), but `getPublicPosts` and `getSettings` are cached
-via Next.js 16 Cache Components (`'use cache'` directive) and only re-fetched when
-a post or setting is changed.
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full design and the *why*.
 
 ## Deploy to Vercel
 
@@ -73,9 +72,10 @@ a post or setting is changed.
 ## Usage
 
 - `/` — public blog (published, date-reached posts only)
-- `/admin` — dashboard (owner only)
-- `/admin/editor` — write a new post
-- `/admin/media` — media library
+- `/search` — client-side search · `/category/<x>`, `/tag/<x>` — taxonomy lists
+- `/admin` — dashboard (owner only); `/admin/editor`, `/admin/media`, `/admin/settings`
+- SEO / feeds (toggleable in Settings → SEO): `/sitemap.xml`, `/robots.txt`,
+  `/feed.xml` (RSS), `/llms.txt`, `/og` (dynamic share image)
 
 ## License
 
