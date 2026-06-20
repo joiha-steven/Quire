@@ -23,7 +23,7 @@ export const getMedia = unstable_cache(
       .map((m) => ({ ...m, url: expandBlob(m.url) })) // stored pathname -> absolute URL
       .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
   },
-  ['media-index'],
+  ['media-index-v2'],
   { tags: ['media'] },
 )
 

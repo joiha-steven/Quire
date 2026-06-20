@@ -189,7 +189,7 @@ export const getSettings = unstable_cache(
   // Bump this key when the settings SHAPE changes: Vercel's Data Cache persists
   // across deployments, so a new field (e.g. seo.rss) would otherwise stay
   // absent from the cached object until the owner saved. v2 = seo + siteUrl; v3 = features.
-  ['site-settings-v3'],
+  ['site-settings-v4'],
   { tags: ['settings'] },
 )
 

@@ -21,7 +21,7 @@ const readIndex = unstable_cache(
       .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
       .sort((a, b) => a.title.localeCompare(b.title))
   },
-  ['pages-index'],
+  ['pages-index-v2'],
   { tags: ['pages'] },
 )
 
@@ -51,7 +51,7 @@ const readPage = unstable_cache(
       content: expandBlob(content.trim()),
     }
   },
-  ['page'],
+  ['page-v2'],
   { tags: ['pages'] },
 )
 

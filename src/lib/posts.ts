@@ -23,7 +23,7 @@ const readIndex = unstable_cache(
       .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   },
-  ['posts-index'],
+  ['posts-index-v2'],
   { tags: ['posts'] },
 )
 
@@ -63,7 +63,7 @@ const readPost = unstable_cache(
     if (!raw) return null
     return parsePost(raw, slug)
   },
-  ['post'],
+  ['post-v2'],
   { tags: ['posts'] },
 )
 
