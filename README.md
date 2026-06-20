@@ -72,10 +72,52 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full design and the *why*.
 
 ## Deploy to Vercel
 
-1. Push this repo to GitHub and import it into Vercel.
-2. Add a **Blob** store (Storage tab) — this sets `BLOB_READ_WRITE_TOKEN`.
-3. Add the remaining env vars from `.env.example`.
-4. Deploy. Visit `/admin` and sign in with the authorized GitHub account.
+vibeblog is built for Vercel. Two ways to install your own copy: do it yourself in
+the dashboard, or hand the whole job to an AI agent.
+
+### A. Manual (Vercel dashboard)
+
+1. **Fork** this repo on GitHub (so you own the copy Vercel deploys).
+2. In Vercel: **Add New → Project**, then import your fork.
+3. **Storage → Create → Blob**, and connect the store to the project. This injects
+   `BLOB_READ_WRITE_TOKEN` automatically — the only storage config you need.
+4. Add the rest under **Settings → Environment Variables** (see `.env.example`):
+   - `AUTH_SECRET` — run `npx auth secret` and paste the output.
+   - `AUTHORIZED_EMAIL` — the single email allowed into `/admin`.
+   - At least one OAuth provider: `AUTH_GOOGLE_ID` + `AUTH_GOOGLE_SECRET`, and/or
+     `AUTH_GITHUB_ID` + `AUTH_GITHUB_SECRET`.
+5. **Deploy.**
+6. **Register the OAuth callback URL** with your provider, using the live domain:
+   - Google: `https://<your-domain>/api/auth/callback/google`
+   - GitHub: `https://<your-domain>/api/auth/callback/github`
+
+   Add both your `*.vercel.app` URL and any custom domain.
+7. Open `https://<your-domain>/admin`, sign in as `AUTHORIZED_EMAIL`, and set your
+   title / palette / menu in **Settings**. That's it — start writing.
+
+> **Two `vercel.json` settings to adjust for yourself:**
+> - `regions: ["sin1"]` pins functions to **Singapore** — that is simply the original
+>   author's nearest region (a Vietnam audience), not a requirement. **Change it to your
+>   own nearest region**, or delete the `regions` line to let Vercel pick automatically.
+> - `maxDuration: 60` gives image uploads up to 60s. That can exceed the **free (Hobby)**
+>   plan's function limit, so very large photo uploads may time out — lower it, keep
+>   images modest, or upgrade to Pro.
+
+### B. Via an AI agent (OpenClaw, Hermes, Claude, …)
+
+Rather not click through Vercel? Hand it to any AI agent that can act on **Vercel**
+(through the Vercel API / CLI / MCP) and **GitHub**. Give the agent:
+
+- this repository URL (to fork + import),
+- your `AUTHORIZED_EMAIL`,
+- your OAuth app credentials (or let it create the OAuth app if it has provider access),
+- a **Vercel token** (Account → Settings → Tokens) and GitHub access.
+
+Then ask it to: *fork the repo, create a Vercel project from it, add a Blob store,
+generate `AUTH_SECRET`, set the environment variables above, deploy, and return the
+live URL.* Finish by registering the OAuth callback URL (step 6 above) and signing in
+at `/admin`. The only step an agent can't do alone is the OAuth **provider** setup
+(it needs your Google/GitHub login) — pre-create that app, or grant access.
 
 ## Usage
 
