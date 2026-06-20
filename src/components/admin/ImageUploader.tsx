@@ -45,8 +45,9 @@ export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[])
       const items = await uploadFiles(images, setProgress)
       onUploaded(items)
       notify(t.uploaded)
-    } catch {
-      notify(t.uploadFailed, 'error')
+    } catch (err) {
+      const msg = err instanceof Error && err.message === 'unsupported_type' ? t.unsupportedType : t.uploadFailed
+      notify(msg, 'error')
     } finally {
       setProgress(null)
     }
@@ -74,7 +75,7 @@ export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[])
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/svg+xml,image/gif"
           multiple
           className="hidden"
           onChange={(e) => {

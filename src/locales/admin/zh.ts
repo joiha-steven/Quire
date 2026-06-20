@@ -71,6 +71,8 @@ const zh = {
   removeAria: '删除',
   mediaTitle: '媒体库',
   copyUrl: '复制 URL',
+  downloadOriginal: '下载原图',
+  unsupportedType: '不支持的格式（请用 JPG、PNG、WebP、SVG、GIF）',
   close: '关闭',
   loading: '加载中...',
   noMedia: '还没有媒体文件。',

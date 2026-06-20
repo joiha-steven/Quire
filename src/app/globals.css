@@ -193,6 +193,11 @@ hr {
   margin: 1.9em auto; /* center by default */
   width: 100%;
 }
+/* <picture> is just a format/size wrapper — let the <img> lay out as if it were
+   a direct child of the figure so the rules below still apply. */
+.prose figure picture {
+  display: contents;
+}
 .prose figure img {
   width: 100%;
   height: auto;

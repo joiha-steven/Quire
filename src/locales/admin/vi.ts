@@ -71,6 +71,8 @@ const vi = {
   removeAria: 'Xóa',
   mediaTitle: 'Thư viện ảnh',
   copyUrl: 'Sao chép URL',
+  downloadOriginal: 'Tải bản gốc',
+  unsupportedType: 'Định dạng không hỗ trợ (dùng JPG, PNG, WebP, SVG, GIF)',
   close: 'Đóng',
   loading: 'Đang tải...',
   noMedia: 'Chưa có ảnh nào.',

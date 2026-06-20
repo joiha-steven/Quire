@@ -33,6 +33,20 @@ function imgClasses(frag: string): string {
   const align = /left/.test(frag) ? 'img-left' : /right/.test(frag) ? 'img-right' : 'img-center'
   return /wide/.test(frag) ? `${align} img-wide` : align
 }
+
+// For an uploaded raster original (media/*.jpg|png), the AVIF/WebP @1024/1600
+// variants exist by convention -> emit a <picture> so the browser picks the
+// lightest format + best size. Other srcs (svg/webp/gif/external) stay plain.
+const SIZES_ATTR = '(max-width: 768px) 100vw, 768px'
+function responsiveSources(cleanSrc: string): string | null {
+  const m = cleanSrc.match(/^(.*\/media\/.+)\.(?:jpe?g|png)$/i)
+  if (!m) return null
+  const set = (fmt: string) => `${m[1]}-1024.${fmt} 1024w, ${m[1]}-1600.${fmt} 1600w`
+  return (
+    `<source type="image/avif" srcset="${set('avif')}" sizes="${SIZES_ATTR}">` +
+    `<source type="image/webp" srcset="${set('webp')}" sizes="${SIZES_ATTR}">`
+  )
+}
 function buildFigures(html: string): string {
   return html
     .replace(/<p>\s*(<img\b[^>]*>)\s*<\/p>/g, '$1')
@@ -42,7 +56,10 @@ function buildFigures(html: string): string {
       const alt = tag.match(/\balt="([^"]*)"/)?.[1] ?? ''
       const [cleanSrc, frag = ''] = src.split('#')
       const caption = alt ? `<figcaption>${alt}</figcaption>` : ''
-      return `<figure class="${imgClasses(frag)}"><img src="${cleanSrc}" alt="${alt}">${caption}</figure>`
+      const img = `<img src="${cleanSrc}" alt="${alt}" loading="lazy">`
+      const sources = responsiveSources(cleanSrc)
+      const media = sources ? `<picture>${sources}${img}</picture>` : img
+      return `<figure class="${imgClasses(frag)}">${media}${caption}</figure>`
     })
 }
 

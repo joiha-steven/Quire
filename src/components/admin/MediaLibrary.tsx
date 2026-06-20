@@ -77,20 +77,24 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
               className="block aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={m.url} alt={m.filename} className="h-full w-full object-cover" />
+              <img src={m.thumb ?? m.url} alt={m.filename} className="h-full w-full object-cover" />
             </button>
             <figcaption className="space-y-1 p-2 text-xs">
               <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
                 {m.filename}
               </p>
               <p className="text-neutral-400">
+                {m.width && m.height ? `${m.width}×${m.height} · ` : ''}
                 {formatBytes(m.size)} · {formatDateVi(m.uploadedAt)}
               </p>
               {mode === 'page' && (
-                <div className="flex gap-3 pt-1">
+                <div className="flex flex-wrap gap-3 pt-1">
                   <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                     {t.copyUrl}
                   </button>
+                  <a href={m.url} download={m.filename} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                    {t.downloadOriginal}
+                  </a>
                   <button onClick={() => handleDelete(m.url)} className="text-red-600 hover:text-red-700">
                     {t.delete}
                   </button>
@@ -131,7 +135,8 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       />
       <p className="mt-3 text-sm text-white/80">
-        {zoom.filename} · {formatBytes(zoom.size)}
+        {zoom.filename}
+        {zoom.width && zoom.height ? ` · ${zoom.width}×${zoom.height}` : ''} · {formatBytes(zoom.size)}
       </p>
     </div>
   )
