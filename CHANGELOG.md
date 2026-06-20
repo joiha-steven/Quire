@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-06-25
+- **docs: added `ROADMAP.md`** (Vercel-or-Docker from one codebase, publishing from Markdown
+  note apps, optional AI assist) and refreshed the guidance files for self-hosters: README
+  stack/versions + Node 20.9+ requirement + roadmap pointer, and corrected the stale
+  "full purge on every save" wording in README/ARCHITECTURE to the current scoped
+  invalidation (`src/lib/revalidate.ts`). Added an `engines.node` field to `package.json`.
+
 ## 2026-06-24
 - **feat(admin): manage categories & tags (new Phân loại tab).** A third tab on the content
   dashboard lists every category and tag with its usage count and lets you **rename** (merges
