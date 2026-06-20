@@ -99,7 +99,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         </p>
 
         <div className="mt-8">
-          {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
+          {headings.length >= 3 && (
+            <Toc headings={headings} title={t(language).tocTitle} contentWidth={settings.contentWidth} />
+          )}
           <PostContent markdown={post.content} />
         </div>
 
