@@ -39,15 +39,16 @@ html {
 
 body {
   font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Crisp, smooth glyphs across browsers/devices. */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* No -webkit-font-smoothing override: the browser default renders body text at
+     full weight. Forcing `antialiased` thinned the glyphs and made long-form
+     reading look lighter/washed-out than the old blog. */
   text-rendering: optimizeLegibility;
   /* Inter: enable ligatures/contextual alternates, disable faux weights. */
   font-feature-settings: "liga" 1, "calt" 1;
   font-synthesis-weight: none;
-  /* Gentle optical tracking — tightens slightly, never spaces letters apart. */
-  letter-spacing: -0.011em;
+  /* No body tracking: Inter is tuned for 0 at reading sizes, and negative
+     tracking cramped accented Vietnamese (stacked diacritics). Headings keep a
+     small negative tracking (below) as a deliberate display choice. */
   line-height: 1.65;
   background: var(--c-bg);
   color: var(--c-text);

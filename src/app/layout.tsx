@@ -35,8 +35,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const { language, theme } = await getSettings()
   // Content images in posts are raw Blob URLs; warm that connection early.
   const blob = blobOrigin()
+  // No `antialiased` class on <html>: it forces grayscale font-smoothing on Mac,
+  // which thins body text. Default smoothing keeps reading text at full weight.
   return (
-    <html lang={language} className={`${inter.variable} h-full antialiased`}>
+    <html lang={language} className={`${inter.variable} h-full`}>
       <body className="min-h-full">
         {blob && (
           <>
