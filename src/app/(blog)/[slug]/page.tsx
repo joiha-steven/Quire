@@ -75,12 +75,14 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   // Post wins if visible; otherwise fall back to a published page.
   if (post && isPublicallyVisible(post.status, post.date)) {
     const base = resolveSiteUrl(settings)
-    const headings = extractHeadings(post.content)
+    const { features } = settings
+    const headings = features.toc ? extractHeadings(post.content) : []
     const minutes = readingMinutes(post.content)
-    const related = await getRelatedPosts(post.slug)
+    const related = features.related ? await getRelatedPosts(post.slug) : []
+    const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     return (
       <article>
-        <ReadingProgress />
+        {features.progressBar && <ReadingProgress />}
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({
@@ -95,32 +97,40 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         )}
         <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">
-          {formatDate(post.date, language)} · {minutes} {t(language).readingSuffix}
+          {formatDate(post.date, language)}
+          {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
         </p>
 
-        <div className="mt-8">
-          {headings.length >= 3 && (
-            <Toc headings={headings} title={t(language).tocTitle} contentWidth={settings.contentWidth} />
-          )}
+        {/* relative so the desktop ToC can anchor its top to the content body */}
+        <div className="relative mt-8">
+          {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
           <PostContent markdown={post.content} />
         </div>
 
-        {(post.tags.length > 0 || post.categories.length > 0) && (
-          <footer className="mt-12 space-y-1 border-t border-[var(--c-rule)] pt-6 text-sm text-meta">
-            {post.tags.length > 0 && (
-              <p>
-                {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${encodeURIComponent(s)}`)}
-              </p>
-            )}
-            {post.categories.length > 0 && (
-              <p>
-                {t(language).categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${encodeURIComponent(s)}`)}
-              </p>
-            )}
-          </footer>
+        {hasTaxo && (
+          <>
+            <hr className="my-8" />
+            <footer className="space-y-1 text-sm text-meta">
+              {post.tags.length > 0 && (
+                <p>
+                  {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${encodeURIComponent(s)}`)}
+                </p>
+              )}
+              {post.categories.length > 0 && (
+                <p>
+                  {t(language).categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${encodeURIComponent(s)}`)}
+                </p>
+              )}
+            </footer>
+          </>
         )}
 
-        <RelatedPosts posts={related} lang={language} />
+        {related.length > 0 && (
+          <>
+            <hr className="my-8" />
+            <RelatedPosts posts={related} lang={language} />
+          </>
+        )}
       </article>
     )
   }

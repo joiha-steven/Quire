@@ -3,7 +3,7 @@
 // defaults so the public header and <title> never crash.
 
 import { unstable_cache } from 'next/cache'
-import type { MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
+import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson } from '@/lib/blob'
 
 // Keep only well-formed menu items (label + href both present).
@@ -59,6 +59,17 @@ function sanitizeSeo(input: unknown, fallback: SeoSettings): SeoSettings {
   }
 }
 
+function sanitizeFeatures(input: unknown, fallback: FeatureSettings): FeatureSettings {
+  const o = (input ?? {}) as Partial<FeatureSettings>
+  return {
+    search: bool(o.search, fallback.search),
+    toc: bool(o.toc, fallback.toc),
+    related: bool(o.related, fallback.related),
+    readingTime: bool(o.readingTime, fallback.readingTime),
+    progressBar: bool(o.progressBar, fallback.progressBar),
+  }
+}
+
 // Accept only a valid http(s) URL with no trailing slash; '' otherwise.
 function sanitizeUrl(value: unknown): string {
   if (typeof value !== 'string' || !value.trim()) return ''
@@ -104,6 +115,14 @@ export const DEFAULT_SEO: SeoSettings = {
   ogFallbackImage: '',
 }
 
+export const DEFAULT_FEATURES: FeatureSettings = {
+  search: true,
+  toc: true,
+  related: true,
+  readingTime: true,
+  progressBar: true,
+}
+
 export const DEFAULT_SETTINGS: SiteSettings = {
   language: 'vi',
   title: 'vibeblog',
@@ -118,6 +137,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   menu: [],
   theme: DEFAULT_THEME,
   seo: DEFAULT_SEO,
+  features: DEFAULT_FEATURES,
 }
 
 // Resolve the canonical base URL: owner-set value wins, else the Vercel
@@ -155,6 +175,7 @@ export const getSettings = unstable_cache(
         siteUrl: sanitizeUrl(stored.siteUrl),
         theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
         seo: sanitizeSeo(stored.seo, DEFAULT_SEO),
+        features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
       }
     } catch (error) {
       console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
@@ -163,8 +184,8 @@ export const getSettings = unstable_cache(
   },
   // Bump this key when the settings SHAPE changes: Vercel's Data Cache persists
   // across deployments, so a new field (e.g. seo.rss) would otherwise stay
-  // absent from the cached object until the owner saved. v2 = added seo + siteUrl.
-  ['site-settings-v2'],
+  // absent from the cached object until the owner saved. v2 = seo + siteUrl; v3 = features.
+  ['site-settings-v3'],
   { tags: ['settings'] },
 )
 
@@ -185,6 +206,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     menu: sanitizeMenu(input.menu, current.menu),
     theme: sanitizeTheme(input.theme, current.theme),
     seo: sanitizeSeo(input.seo, current.seo),
+    features: sanitizeFeatures(input.features, current.features),
   }
   await writeJson(SETTINGS_PATH, next)
   return next

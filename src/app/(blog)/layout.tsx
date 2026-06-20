@@ -41,16 +41,18 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <Link
-            href="/search"
-            aria-label={t(settings.language).search}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-              <path d="m20 20-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </Link>
+          {settings.features.search && (
+            <Link
+              href="/search"
+              aria-label={t(settings.language).search}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+                <path d="m20 20-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </Link>
+          )}
           <ThemeToggle lang={settings.language} />
           <HeaderMenu items={settings.menu} lang={settings.language} />
         </div>

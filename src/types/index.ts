@@ -77,6 +77,15 @@ export type SeoSettings = {
   ogFallbackImage: string // image used when a post has no featured image; '' = none
 }
 
+// Reader-facing feature toggles (Admin -> Settings -> Tính năng).
+export type FeatureSettings = {
+  search: boolean // header search icon + /search page
+  toc: boolean // table of contents on long posts
+  related: boolean // related posts at the end of an article
+  readingTime: boolean // reading-time estimate in the post meta
+  progressBar: boolean // reading-progress bar on posts
+}
+
 export type SiteSettings = {
   language: SiteLang // public site language: drives lang attr, font, labels, dates
   title: string
@@ -91,6 +100,7 @@ export type SiteSettings = {
   menu: MenuItem[] // header navigation links
   theme: ThemeSettings // per-mode reading colors
   seo: SeoSettings // SEO / crawler feature toggles
+  features: FeatureSettings // reader-facing feature toggles
 }
 
 // Uniform API envelope returned by every route.

@@ -6,9 +6,10 @@ import type { SiteSettings, ThemeSettings } from '@/types'
 import { SettingsForm } from './SettingsForm'
 import { AppearanceForm } from './AppearanceForm'
 import { SeoForm } from './SeoForm'
+import { FeaturesForm } from './FeaturesForm'
 import { useAdminT } from './I18nProvider'
 
-type Tab = 'site' | 'appearance' | 'seo'
+type Tab = 'site' | 'appearance' | 'features' | 'seo'
 
 export function SettingsTabs({ settings, defaultTheme }: { settings: SiteSettings; defaultTheme: ThemeSettings }) {
   const t = useAdminT()
@@ -17,6 +18,7 @@ export function SettingsTabs({ settings, defaultTheme }: { settings: SiteSetting
   const tabs: { key: Tab; label: string }[] = [
     { key: 'site', label: t.navSettings },
     { key: 'appearance', label: t.navAppearance },
+    { key: 'features', label: 'Tính năng' },
     { key: 'seo', label: 'SEO' },
   ]
 
@@ -42,6 +44,7 @@ export function SettingsTabs({ settings, defaultTheme }: { settings: SiteSetting
 
       {tab === 'site' && <SettingsForm initial={settings} />}
       {tab === 'appearance' && <AppearanceForm initial={settings.theme} defaults={defaultTheme} />}
+      {tab === 'features' && <FeaturesForm initial={settings} />}
       {tab === 'seo' && <SeoForm initial={settings} />}
     </div>
   )

@@ -6,8 +6,8 @@ import { formatDate, t } from '@/lib/i18n'
 export function RelatedPosts({ posts, lang }: { posts: Post[]; lang: SiteLang }) {
   if (!posts.length) return null
   return (
-    <section className="mt-16 border-t border-[var(--c-rule)] pt-8">
-      <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-meta">{t(lang).relatedTitle}</h2>
+    <section>
+      <h2 className="mb-5 text-sm font-semibold text-meta">{t(lang).relatedTitle}</h2>
       <ul className="space-y-4">
         {posts.map((p) => (
           <li key={p.slug}>
