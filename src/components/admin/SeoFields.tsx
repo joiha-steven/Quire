@@ -41,6 +41,16 @@ export function SeoFields({ s, update }: Props) {
         <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.seoCanonicalHint}</p>
       </div>
 
+      <div className="space-y-1.5">
+        <Input
+          label={t.mediaDomain}
+          value={s.mediaBaseUrl}
+          onChange={(e) => update({ mediaBaseUrl: e.target.value })}
+          placeholder="https://files.manhhung.me"
+        />
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.mediaDomainHint}</p>
+      </div>
+
       <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {FEATURES.map((f) => (
           <ToggleRow

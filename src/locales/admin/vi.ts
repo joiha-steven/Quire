@@ -144,6 +144,8 @@ const vi = {
   featProgressDesc: 'Thanh mảnh trên đầu trang chạy theo khi cuộn.',
   seoCanonical: 'Địa chỉ trang (canonical)',
   seoCanonicalHint: 'Dùng cho sitemap, RSS, schema, llms.txt, ảnh OG và thẻ canonical. Để trống sẽ tự dùng tên miền Vercel.',
+  mediaDomain: 'Tên miền ảnh (CDN)',
+  mediaDomainHint: 'Phục vụ ảnh từ tên miền riêng của bạn (proxy đứng trước kho lưu trữ, vd Cloudflare Worker). Để trống sẽ dùng host mặc định của kho.',
   seoAutoSchema: 'Tự động Schema (JSON-LD)',
   seoAutoSchemaDesc: 'Chèn dữ liệu có cấu trúc cho Google: WebSite ở trang chủ, BlogPosting ở mỗi bài viết.',
   seoSitemapDesc: 'Liệt kê mọi bài viết, trang, danh mục và thẻ để công cụ tìm kiếm thu thập đầy đủ.',

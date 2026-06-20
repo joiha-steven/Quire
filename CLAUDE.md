@@ -24,6 +24,15 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
   deterministic: `blobUrl(pathname)` constructs them directly from the token.
   Token format: `vercel_blob_rw_<storeId>_<secret>` →
   `https://<storeId>.public.blob.vercel-storage.com/<pathname>`.
+- **Vanity media domain** — serve PUBLIC media from your own host (e.g.
+  `https://files.manhhung.me`, a Cloudflare Worker proxying the store). Two sources, owner
+  setting wins: **Settings → `mediaBaseUrl`** (Admin UI, preferred) → else env
+  `BLOB_PUBLIC_BASE`. `getSettings` pushes the resolved value into `blob.ts` via
+  `setMediaBase()` each request (module-scoped; process-constant for this single site).
+  `publicBase()` then drives `expandBlob` (rendered `<img>`/markdown src) + `blobOrigin`
+  (preconnect) ONLY — internal reads (`blobUrl`/`readJson`/`readText`) stay token-derived so
+  the app never proxies its own `.md`/`_index.json` fetches (no hop, `?ts` cache-bust intact).
+  `collapseBlob` strips the vanity host too, so saved content stays store-relative.
 - `readJson(pathname, fallback)` — fetch JSON; returns fallback on 404/error.
 - `readText(pathname)` — fetch markdown; returns null on 404/error.
 - `writeJson` / `writeText` — put with `allowOverwrite: true`, `cacheControlMaxAge: 0`.
@@ -165,6 +174,8 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 | `wipe-media.mjs` | Delete every media blob except the in-use logo. Dry-run by default; `--apply` to delete (backs up the media index locally first) |
 | `backfill-reading-time.mjs` | Fill `readingMinutes` on existing `posts/_index.json` entries (new saves compute it automatically). Idempotent; `--dry` to preview |
 | `list-posts-with-images.mjs` | Read-only report of which posts reference images (to re-upload originals by hand) |
+| `check-image-links.mjs` | Read-only audit: HEAD-check every image ref (body media + featuredImage, Blob + external) across all posts; reports broken links |
+| `remap-original-images.mjs` | Recover broken `media/...` refs by fetching the ORIGINAL full-size files from the source WP site via the Rocket.net file API (`ROCKET_TOKEN`+`ROCKET_SITE` env, needs `/tmp/uploads-index.json`); strips `-WxH` suffixes, uploads to Blob, rewrites markdown. `--apply` to write |
 
 ## SEO (toggleable in Admin → Settings → SEO)
 - `settings.seo` = `{ autoSchema, sitemap, llms, robots, rss, ogImage, ogFallbackImage }`
@@ -174,6 +185,7 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - `app/robots.ts` → robots.txt (always disallows `/admin` + `/api`; advertises the
   sitemap when robots + sitemap are on).
 - `app/sitemap.ts` → sitemap.xml (home + posts + pages + categories + tags).
+  `app/sitemaps.xml/route.ts` → 308 alias to `/sitemap.xml` (for the plural form / old submissions).
 - `app/llms.txt/route.ts` → /llms.txt, a Markdown content index for AI crawlers
   (llmstxt.org); 404 when off.
 - `app/feed.xml/route.ts` → RSS 2.0 (latest 50 posts); 404 when off; auto-discovered

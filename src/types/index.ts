@@ -103,6 +103,7 @@ export type SiteSettings = {
   title: string
   description: string
   siteUrl: string // canonical base URL (e.g. https://manhhung.me); '' -> derive from env
+  mediaBaseUrl: string // vanity host for PUBLIC media URLs (e.g. https://files.manhhung.me, a proxy in front of the Blob store); '' -> Blob store host / BLOB_PUBLIC_BASE
   logoUrl: string // '' when no logo
   logoWidth: number // px, horizontal width of the logo in the header
   showLogo: boolean

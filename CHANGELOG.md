@@ -108,6 +108,22 @@
 - feat(admin): "Clear cache" button in the header (purges every data-cache tag + reloads) for an immediate "see my changes now" escape hatch
 
 ## 2026-06-20
+- feat(admin): **Media domain (CDN)** field in Settings → SEO (`mediaBaseUrl`) — set a vanity
+  host for public media URLs from the UI instead of an env var. Owner setting wins, falls back
+  to `BLOB_PUBLIC_BASE`; pushed into the Blob layer via `setMediaBase()` on each settings read.
+  New admin i18n keys `mediaDomain`/`mediaDomainHint` (all 6 locales)
+- feat(seo): `/sitemaps.xml` 308-redirects to `/sitemap.xml` (alias for the plural form / old
+  search-console submissions; no second sitemap to keep in sync)
+- feat(media): optional vanity domain for public media URLs via `BLOB_PUBLIC_BASE` (e.g. a
+  Cloudflare Worker on `files.<domain>` proxying the Blob store). `publicBase()` rewrites only
+  rendered media URLs (`expandBlob` + `blobOrigin` preconnect); internal data reads stay on the
+  store host (no proxy hop, `?ts` cache-bust intact). `collapseBlob` also strips the vanity host
+- fix(content): restored 41 broken post images across 19 imported posts. A prior media wipe
+  (removed small/resized versions) left these `media/...` refs 404ing. Re-fetched the ORIGINAL
+  full-size files from the source WordPress site via the Rocket.net file API (the public domain
+  is behind a Cloudflare challenge that blocks direct fetch), stripping WP `-WxH` resize
+  suffixes; uploaded to Blob, rewrote the markdown, rebuilt `media/_index.json`. New scripts:
+  `check-image-links.mjs` (audit), `remap-original-images.mjs` (recover + remap)
 - feat(seo): SEO tab — JSON-LD schema, `sitemap.xml`, `robots.txt`, `llms.txt`, RSS `feed.xml`, dynamic OG image (`/og`, edge runtime), canonical `siteUrl`; all toggleable
 - feat(read): client-side `/search` (lean pre-folded index), table of contents (desktop, sticky), reading-progress bar, related posts, reading time
 - feat(admin): `Tính năng` tab — toggle reader features (search/toc/related/readingTime/progressBar); `Link nháp` HMAC draft-preview links (`/preview/[slug]`)

@@ -185,6 +185,8 @@ export type AdminStrings = {
   // SEO fields
   seoCanonical: string
   seoCanonicalHint: string
+  mediaDomain: string
+  mediaDomainHint: string
   seoAutoSchema: string
   seoAutoSchemaDesc: string
   seoSitemapDesc: string
