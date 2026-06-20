@@ -177,6 +177,8 @@ const ko = {
   renamed: '이름이 변경되었습니다',
   favicon: '파비콘',
   faviconHint: '브라우저 탭에 표시되는 작은 아이콘. 정사각형 이미지(PNG/SVG) 권장.',
+  appIcon: '앱 아이콘(홈 화면)',
+  appIconHint: 'iPhone/Android에 설치한 앱의 아이콘. 정사각형 PNG(512×512 이상, 약간의 여백) 권장. 없으면 파비콘, 그다음 기본 아이콘을 사용합니다.',
   excerptLength: '발췌 길이(단어)',
   excerptLengthHint: '발췌가 없을 때 자동으로 사용할 단어 수(10–100). 변경 후 저장한 글에 적용.',
   relatedCount: '관련 글 개수',

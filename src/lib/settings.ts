@@ -125,6 +125,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showLogo: false,
   showDescription: true,
   faviconUrl: '',
+  appIconUrl: '',
   contentWidth: 672,
   postsPerPage: 10,
   relatedCount: 3,
@@ -144,6 +145,12 @@ export function resolveSiteUrl(s: SiteSettings): string {
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
   if (vercel) return `https://${vercel}`
   return 'http://localhost:3000'
+}
+
+// The effective PWA / home-screen icon: owner's app icon wins, else the favicon,
+// else the bundled default (`/app-icon.png`). Always returns a usable URL.
+export function resolveAppIcon(s: SiteSettings): string {
+  return s.appIconUrl || s.faviconUrl || '/app-icon.png'
 }
 
 // CSS for the theme: variables on :root (light) and .dark (dark mode).
@@ -177,6 +184,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       ...stored,
       logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
       faviconUrl: expandBlob(stored.faviconUrl ?? DEFAULT_SETTINGS.faviconUrl),
+      appIconUrl: expandBlob(stored.appIconUrl ?? DEFAULT_SETTINGS.appIconUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
       mediaBaseUrl,
       relatedCount: clampNumber(stored.relatedCount, 0, 12, DEFAULT_SETTINGS.relatedCount),
@@ -207,6 +215,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     showLogo: input.showLogo ?? current.showLogo,
     showDescription: input.showDescription ?? current.showDescription,
     faviconUrl: input.faviconUrl ?? current.faviconUrl,
+    appIconUrl: input.appIconUrl ?? current.appIconUrl,
     contentWidth: clampNumber(input.contentWidth, 360, 1600, current.contentWidth),
     postsPerPage: clampNumber(input.postsPerPage, 1, 100, current.postsPerPage),
     relatedCount: clampNumber(input.relatedCount, 0, 12, current.relatedCount),
@@ -223,6 +232,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     ...next,
     logoUrl: collapseBlob(next.logoUrl),
     faviconUrl: collapseBlob(next.faviconUrl),
+    appIconUrl: collapseBlob(next.appIconUrl),
     seo: { ...next.seo, ogFallbackImage: collapseBlob(next.seo.ogFallbackImage) },
   }
   await writeJson(SETTINGS_PATH, stored)

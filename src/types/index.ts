@@ -109,6 +109,7 @@ export type SiteSettings = {
   showLogo: boolean
   showDescription: boolean
   faviconUrl: string // browser-tab icon; '' = the bundled default favicon
+  appIconUrl: string // PWA / home-screen app icon (square); '' = favicon, else bundled default
   contentWidth: number // px, max width of the content column (desktop)
   postsPerPage: number // posts shown per page on home/category/tag lists
   relatedCount: number // related posts shown at the end of an article (0 = none)

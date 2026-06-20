@@ -177,6 +177,8 @@ const zh = {
   renamed: '已重命名',
   favicon: '网站图标',
   faviconHint: '显示在浏览器标签页的小图标。建议使用正方形图片（PNG/SVG）。',
+  appIcon: '应用图标（主屏幕）',
+  appIconHint: '安装到 iPhone/Android 后应用的图标。建议使用正方形 PNG（512×512 以上，留少许内边距）。未设置时回退到网站图标，再到内置默认图标。',
   excerptLength: '摘要长度（字数）',
   excerptLengthHint: '文章无摘要时自动截取的字数（10–100）。对更改后保存的文章生效。',
   relatedCount: '相关文章数量',

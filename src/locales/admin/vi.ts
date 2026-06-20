@@ -177,6 +177,8 @@ const vi = {
   renamed: 'Đã đổi tên',
   favicon: 'Favicon',
   faviconHint: 'Biểu tượng nhỏ trên tab trình duyệt. Nên dùng ảnh vuông (PNG/SVG).',
+  appIcon: 'Icon ứng dụng (màn hình chính)',
+  appIconHint: 'Biểu tượng của app khi cài trên iPhone/Android. Dùng ảnh PNG vuông, từ 512×512 trở lên, chừa lề một chút. Không có thì dùng favicon, rồi đến icon mặc định.',
   excerptLength: 'Độ dài tóm tắt (số chữ)',
   excerptLengthHint: 'Số chữ tự lấy làm tóm tắt khi bài không có mô tả riêng (10–100). Áp dụng cho bài lưu sau khi đổi.',
   relatedCount: 'Số bài liên quan',
