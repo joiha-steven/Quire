@@ -1,8 +1,8 @@
 # Architecture
 
 A fresh-reader map of vibeblog: the mental model, how a request flows, and the
-*why* behind the main decisions. Operational detail lives in [`CLAUDE.md`](./CLAUDE.md);
-traps + recovery in the private wiki (`vibeblog-private/06_Wiki/`).
+*why* behind the main decisions. Operational detail, traps, and recovery all live
+in [`CLAUDE.md`](./CLAUDE.md).
 
 ## Mental model
 
@@ -52,8 +52,8 @@ manifest. Posts + pages share one `/{slug}` URL namespace (`ensureSlugFree`).
 ## Design decisions (the *why*)
 
 - **No database** → zero ops, content portable as files, the repo stays free of
-  personal data (public + private repo split). Trade-off: no rich queries, so the
-  `_index.json` manifest is the single query layer.
+  personal data (secrets live only in the gitignored `.env.local` + Vercel).
+  Trade-off: no rich queries, so the `_index.json` manifest is the single query layer.
 - **Mutable Blob written with `cacheControlMaxAge: 0` + cache-busted reads** →
   Blob's default 1-year CDN cache once served a stale `_index.json` after a save and
   the read-modify-write **clobbered the index**. Mutable content must never be stale.

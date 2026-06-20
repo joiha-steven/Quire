@@ -22,6 +22,8 @@ export type EditorApi = {
   // Serialize the current document to Markdown on demand (used at save time, so
   // a save always captures the latest text even mid-debounce).
   getMarkdown: () => string
+  // Replace the whole document (used by the time machine to load a revision).
+  setMarkdown: (md: string) => void
 }
 
 // tiptap-markdown augments storage at runtime but ships no type for it.
@@ -240,6 +242,13 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
         editor.chain().focus().setImage({ src: url, alt: captionFromUrl(url) }).run(),
       // In raw mode the textarea is the source of truth; otherwise serialize live.
       getMarkdown: () => (rawRef.current ? rawTextRef.current : readMarkdown(editor)),
+      // Load a full document, leaving raw mode so the formatted view shows it.
+      setMarkdown: (md: string) => {
+        editor.commands.setContent(md)
+        videoUrlsToNodes(editor)
+        setRawText(md)
+        setRaw(false)
+      },
     }
   }, [editor, apiRef])
 

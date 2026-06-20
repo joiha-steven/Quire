@@ -3,7 +3,8 @@
 # vibeblog — operating notes
 
 Public, open-source blog platform. **Zero personal data in this repo.** Real
-credentials + personal notes live in a separate private repo (see README).
+credentials live only in the gitignored `.env.local` and on Vercel (`vercel env
+pull`); never commit them. Personal/instance facts are not tracked in git.
 
 ## Architecture
 - No database. All content is in Vercel Blob.
@@ -76,7 +77,8 @@ HTML) and regenerates on tag/path revalidation — instant reads, fresh on edit.
 | File | Key exports | Notes |
 |---|---|---|
 | `blob.ts` | `blobUrl`, `readJson`, `readText`, `writeJson`, `writeText`, `uploadFile`, `deleteByUrl`, `deleteByPathname`, `listBlobs` | All Blob I/O. Never call `list()` to find a URL — use `blobUrl()` |
-| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags` | `getPublicPosts` = `unstable_cache`; `getPost` = `React.cache()` |
+| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags` | `getPublicPosts` = `unstable_cache`; `getPost` = `React.cache()`. `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine) |
+| `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post at `revisions/{slug}.json` (newest first). Drives the editor "time machine". Moved on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; `getPublicPages` = `unstable_cache`; `getPage` = `React.cache()` |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `unstable_cache`; `themeToCss` converts ThemeSettings → CSS vars string |
 | `media.ts` | `getMedia`, `addMedia`, `deleteMedia` | Raster images auto-converted to WebP ≤1600px on upload; SVG/GIF pass through |
@@ -149,6 +151,22 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - Public reads degrade to fallback instead of 500: `blob.ts` `readJson`/`readText`
   return the fallback/null on any error (missing token, Blob down) rather than rethrow.
 
+## Editor (Admin → editor)
+- **Autosave**: `PostForm` saves every 60s while `dirty` (chained behind any in-flight
+  save so autosave + manual save never race). Also warns on unload with unsaved changes.
+- **Time machine**: each overwrite snapshots the prior version (`revisions.ts`, keeps 3).
+  Editor action bar → "Cỗ máy thời gian" lists them (`GET /api/posts/[slug]/revisions`);
+  "Khôi phục" loads a revision into the editor (slug + date stay current) and marks dirty —
+  non-destructive, the current version is snapshotted on the next save. `EditorApi.setMarkdown`
+  reloads the TipTap doc.
+
+## Settings (Admin → settings)
+- One page, no tabs: uniform-width cards in a balanced 2-column layout on desktop
+  (`lg:columns-2`), single column on mobile (`SettingsView.tsx`). The former Features tab
+  is merged into the "Cài đặt chung" card (`SettingsForm` edits `s.features`; it already
+  PUTs the whole settings object). Cards: Cài đặt chung, Giao diện, SEO — each saves
+  independently via `/api/settings`.
+
 ## Conventions
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
   Never use bespoke `border-t`/`border-b` rules as content dividers, and never ALL-CAPS
@@ -171,3 +189,27 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - `cacheComponents: true` bans `dynamic`, `dynamicParams`, `revalidate` route segment
   configs AND `Date.now()` / `new Date()` in server components without Suspense.
 - Before writing any unfamiliar API, read `node_modules/next/dist/docs/`.
+
+## Docs & releases — keep current (single repo)
+This is the only repo (the former `vibeblog-private` workspace was removed). When you
+change behavior, update the matching doc in the SAME change so they never drift:
+- `CLAUDE.md` (this file) — architecture, data layer, caching, gotchas/traps. The
+  living source of truth; update the relevant section whenever you add/alter a system.
+- `ARCHITECTURE.md` — fresh-reader overview + the *why* behind decisions.
+- `CHANGELOG.md` — one entry per user-facing change (Keep a Changelog style).
+- `CHECKLIST.md` — pre-deploy verification steps.
+- `README.md` — setup + feature summary for open-source users.
+
+Keep personal/instance values (real credentials, Vercel/Blob IDs, the live domain)
+OUT of every tracked file — they belong in the gitignored `.env.local` + Vercel only.
+
+### Maintenance scripts (`scripts/`)
+Load the Blob token from `.env.local`; all support `--dry`:
+`node --env-file=.env.local scripts/<name>.mjs [args] [--dry]`. Idempotent
+(merge by slug / skip done work). After bulk `.md` edits run `rebuild-index.mjs`.
+
+### Cutting a release
+1. Bump `package.json` version — semver: `0.x.0` feature batch, `0.x.y` fix/polish,
+   `1.0.0` first stable. `npm run build` + `npm run lint` must exit 0; push to `main`.
+2. `gh release create v<X.Y.Z> --title "v<X.Y.Z> - <tagline>" --notes "..."`. The admin
+   footer shows the `package.json` version so users can compare against the latest release.

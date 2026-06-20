@@ -1,9 +1,10 @@
-// Admin settings: site settings + appearance, tabbed.
+// Admin settings: general settings (incl. reader features), appearance, SEO —
+// uniform cards in a two-column layout.
 import { getSettings, DEFAULT_THEME } from '@/lib/settings'
-import { SettingsTabs } from '@/components/admin/SettingsTabs'
+import { SettingsView } from '@/components/admin/SettingsView'
 
 
 export default async function SettingsPage() {
   const settings = await getSettings()
-  return <SettingsTabs settings={settings} defaultTheme={DEFAULT_THEME} />
+  return <SettingsView settings={settings} defaultTheme={DEFAULT_THEME} />
 }
