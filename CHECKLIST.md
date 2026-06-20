@@ -45,6 +45,17 @@
 - [ ] Favicon / app icon upload accepts `.ico` and lands in `files/` (not the media grid)
 - [ ] Post publish works, appears on blog immediately
 
+## Layout / visual (owner is very sensitive here)
+- [ ] Header rows align on one line: every item (incl. the wordmark) is an `h-9`/`h-10`
+  `items-center` box; the row is `items-center` (never `items-baseline`)
+- [ ] Sibling controls share ONE class constant — admin bar `ADMIN_NAV`
+  (`components/admin/headerActions.ts`), public icon buttons `ICON_BTN`
+  (`components/ui/iconButton.ts`); grep the literal class string to catch a new hand-rolled copy
+- [ ] Public reading UI uses theme tokens only (`bg-bg`/`text-text`/`text-meta`/`border-rule`…),
+  no hardcoded `neutral-*`/hex/`white`/`black`
+- [ ] One `<hr>` divider style (global 50% left rule); no bespoke `border-t` dividers; no `uppercase`
+- [ ] Palette switch + light/dark/system/by-time both apply instantly with no FOUC on reload
+
 ## Verify auth quickly
 
 ```bash

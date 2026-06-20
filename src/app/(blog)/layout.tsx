@@ -6,6 +6,7 @@ import { t } from '@/lib/i18n'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { PaletteToggle } from '@/components/theme/PaletteToggle'
 import { HeaderMenu } from '@/components/blog/HeaderMenu'
+import { ICON_BTN } from '@/components/ui/iconButton'
 
 const REPO_URL = 'https://github.com/joiha-steven/vibeblog'
 
@@ -50,7 +51,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
               <Link
                 href="/search"
                 aria-label={t(settings.language).search}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule"
+                className={ICON_BTN}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <circle cx="11" cy="11" r="7" />
