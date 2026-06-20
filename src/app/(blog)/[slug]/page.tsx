@@ -111,8 +111,8 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
         </p>
 
-        {/* relative so the desktop ToC can anchor its top to the content body */}
-        <div className="relative mt-8">
+        {/* The desktop ToC is fixed to the viewport (see Toc.tsx), not anchored here. */}
+        <div className="mt-8">
           {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
           <PostContent markdown={post.content} readyOriginals={readyOriginals} />
         </div>
