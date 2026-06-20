@@ -25,13 +25,14 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 w-9 cursor-pointer rounded border border-neutral-300 bg-transparent dark:border-neutral-700"
+          aria-label={label}
+          className="h-9 w-14 rounded-lg border border-neutral-300 ring-1 ring-inset ring-black/5 dark:border-neutral-700"
         />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-24 rounded-lg border border-neutral-300 px-2 py-1 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className="w-24 rounded-lg border border-neutral-300 px-2 py-1 font-mono text-sm uppercase outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
         />
       </span>
     </label>

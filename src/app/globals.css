@@ -323,3 +323,24 @@ hr {
   height: 0;
   pointer-events: none;
 }
+
+/* Native colour picker (admin theme): strip the default inner padding/border so
+   the swatch is one clean, obviously-clickable colour chip — clicking it opens
+   the browser's full colour picker (2D area + hue + HEX). */
+input[type='color'] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  cursor: pointer;
+}
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color']::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.5rem;
+}
+input[type='color']::-moz-color-swatch {
+  border: none;
+  border-radius: 0.5rem;
+}

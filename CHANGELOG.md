@@ -107,7 +107,10 @@
 - fix(i18n): localize ~32 strings that were hardcoded Vietnamese (settings cards, reader-feature toggles, SEO fields, time machine, editor toasts) — they now translate in all 6 languages
 - feat(admin): "Clear cache" button in the header (purges every data-cache tag + reloads) for an immediate "see my changes now" escape hatch
 
-## 2026-06-21
+- feat(admin): clearer theme colour picker. The native `<input type="color">` swatch was tiny
+  with default chrome, so it didn't read as clickable — enlarged it and stripped the inner
+  padding/border so it's one clean colour chip. Clicking it opens the browser's full picker
+  (2D area + hue + HEX); the hex field is now monospace/uppercase alongside.
 - fix(editor): over-spaced bullet/numbered list items. TipTap wraps each item's content in a
   `<p>`, which inherited the 1.4em paragraph margin — items now sit tight + even (only genuine
   multi-paragraph items keep spacing). Shared `.prose` rule, so the editor matches the render.
