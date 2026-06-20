@@ -114,6 +114,11 @@
   New admin i18n keys `mediaDomain`/`mediaDomainHint` (all 6 locales). Data-layer reads
   (`posts`/`pages`/`media`) now prime `getSettings()` before `expandBlob`, so the field alone
   drives media URLs reliably (no cold-start ordering race) — the env var is no longer required
+- fix(header): render the logo with a plain `<img>` instead of `next/image`. The optimizer
+  only allows hosts whitelisted in `next.config` at build time, so a runtime-configurable media
+  domain (Settings → Media domain / a Cloudflare Worker) made the optimized logo 404. A plain
+  tag loads from whatever host the setting yields — no build coupling, no env, never breaks on a
+  domain change. Logos are small + CDN-cached, so the lost optimization is negligible
 - feat(seo): `/sitemaps.xml` 308-redirects to `/sitemap.xml` (alias for the plural form / old
   search-console submissions; no second sitemap to keep in sync)
 - feat(media): optional vanity domain for public media URLs via `BLOB_PUBLIC_BASE` (e.g. a
