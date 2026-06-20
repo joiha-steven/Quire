@@ -50,7 +50,7 @@ export type MediaItem = {
 }
 
 // Site-wide settings, stored at settings/site.json.
-export type SiteLang = 'vi' | 'en'
+export type SiteLang = 'vi' | 'en' | 'de' | 'ja' | 'zh' | 'ko'
 
 // One configurable header navigation link (page, category, or custom URL).
 export type MenuItem = {

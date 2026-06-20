@@ -5,6 +5,7 @@
 import { unstable_cache } from 'next/cache'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson } from '@/lib/blob'
+import { isSiteLang } from '@/locales/langs'
 
 // Keep only well-formed menu items (label + href both present).
 function sanitizeMenu(input: unknown, fallback: MenuItem[]): MenuItem[] {
@@ -124,7 +125,7 @@ export const DEFAULT_FEATURES: FeatureSettings = {
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
-  language: 'vi',
+  language: 'en',
   title: 'vibeblog',
   description: '',
   siteUrl: '',
@@ -193,7 +194,7 @@ export const getSettings = unstable_cache(
 export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSettings> {
   const current = await getSettings()
   const next: SiteSettings = {
-    language: input.language === 'en' || input.language === 'vi' ? input.language : current.language,
+    language: isSiteLang(input.language) ? input.language : current.language,
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
     description: input.description ?? current.description,
     siteUrl: input.siteUrl !== undefined ? sanitizeUrl(input.siteUrl) : current.siteUrl,
