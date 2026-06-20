@@ -66,13 +66,13 @@ export function SettingsView({ settings, defaultTheme }: { settings: SiteSetting
           two columns end up roughly the same length. */}
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <div className="space-y-6">
-          <Card title="Thông tin chung">
+          <Card title={t.cardGeneral}>
             <SiteFields s={s} update={update} />
           </Card>
-          <Card title="Bố cục & menu">
+          <Card title={t.cardLayout}>
             <LayoutMenuFields s={s} update={update} />
           </Card>
-          <Card title="Tính năng đọc">
+          <Card title={t.cardFeatures}>
             <FeatureFields features={s.features} onChange={(features) => update({ features })} />
           </Card>
         </div>

@@ -34,6 +34,9 @@ export type AdminStrings = {
   navSettings: string
   navViewBlog: string
   signOut: string
+  clearCache: string
+  cacheCleared: string
+  clearCacheFailed: string
   // dashboard
   dashboardTitle: string
   tabPosts: string
@@ -159,4 +162,39 @@ export type AdminStrings = {
   statCategories: string
   statTags: string
   statEmpty: string
+  // settings cards
+  cardGeneral: string
+  cardLayout: string
+  cardFeatures: string
+  // reader-feature toggles
+  featSearch: string
+  featSearchDesc: string
+  featToc: string
+  featTocDesc: string
+  featRelated: string
+  featRelatedDesc: string
+  featReadingTime: string
+  featReadingTimeDesc: string
+  featProgress: string
+  featProgressDesc: string
+  // SEO fields
+  seoCanonical: string
+  seoCanonicalHint: string
+  seoAutoSchema: string
+  seoAutoSchemaDesc: string
+  seoSitemapDesc: string
+  seoRssDesc: string
+  seoLlmsDesc: string
+  seoRobotsDesc: string
+  seoOgImage: string
+  seoOgImageDesc: string
+  seoFallbackLabel: string
+  // time machine
+  timeMachine: string
+  tmIntro: string
+  restore: string
+  tmLatest: string
+  tmEmpty: string
+  revisionLoaded: string
+  previewLinkCopied: string
 }

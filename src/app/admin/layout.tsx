@@ -7,6 +7,7 @@ import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
+import { CacheButton } from '@/components/admin/CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import pkg from '../../../package.json'
 
@@ -46,8 +47,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 {t.navViewBlog}
               </a>
             </nav>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <ThemeToggle lang={language} />
+              <CacheButton />
               <form
                 action={async () => {
                   'use server'

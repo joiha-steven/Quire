@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import type { PostRevision, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { formatDateTimeShort } from '@/lib/utils'
+import { useAdminT } from './I18nProvider'
 
 type Props = {
   slug: string
@@ -21,6 +22,7 @@ function preview(content: string): string {
 }
 
 export function TimeMachine({ slug, onRestore, onClose }: Props) {
+  const t = useAdminT()
   const [revisions, setRevisions] = useState<PostRevision[] | null>(null)
 
   useEffect(() => {
@@ -43,20 +45,16 @@ export function TimeMachine({ slug, onRestore, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Cỗ máy thời gian</h2>
-          <Button variant="ghost" onClick={onClose}>Đóng</Button>
+          <h2 className="text-lg font-bold">{t.timeMachine}</h2>
+          <Button variant="ghost" onClick={onClose}>{t.close}</Button>
         </div>
-        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-          Khôi phục một trong các phiên bản đã bị lưu đè gần đây. Bản hiện tại sẽ được giữ lại khi bạn lưu.
-        </p>
+        <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">{t.tmIntro}</p>
 
         <div className="overflow-y-auto">
           {revisions === null ? (
-            <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">Đang tải...</p>
+            <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.loading}</p>
           ) : revisions.length === 0 ? (
-            <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">
-              Chưa có phiên bản cũ nào. Các phiên bản sẽ xuất hiện sau khi bài viết được lưu đè.
-            </p>
+            <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.tmEmpty}</p>
           ) : (
             <ul className="space-y-3">
               {revisions.map((rev, i) => (
@@ -67,13 +65,13 @@ export function TimeMachine({ slug, onRestore, onClose }: Props) {
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="font-medium">
-                        {rev.title || '(không tiêu đề)'}
+                        {rev.title || t.untitled}
                       </div>
                       <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {i === 0 ? 'Mới nhất · ' : ''}{formatDateTimeShort(rev.savedAt)}
+                        {i === 0 ? `${t.tmLatest} · ` : ''}{formatDateTimeShort(rev.savedAt)}
                       </div>
                     </div>
-                    <Button variant="secondary" onClick={() => onRestore(rev)}>Khôi phục</Button>
+                    <Button variant="secondary" onClick={() => onRestore(rev)}>{t.restore}</Button>
                   </div>
                   {preview(rev.content) && (
                     <p className="mt-2 line-clamp-2 text-sm text-neutral-600 dark:text-neutral-300">

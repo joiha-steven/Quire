@@ -192,7 +192,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
     editorApi.current?.setMarkdown(rev.content)
     contentRef.current = rev.content
     setTimeMachine(false)
-    notify('Đã nạp phiên bản này vào trình soạn thảo. Nhấn Lưu để áp dụng.')
+    notify(t.revisionLoaded)
   }
 
   // Copy a shareable draft-preview URL (tokened, viewable without signing in).
@@ -204,7 +204,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
       const json = (await res.json()) as ApiResponse<{ token: string }>
       if (!json.success || !json.data) throw new Error()
       await navigator.clipboard.writeText(`${window.location.origin}/preview/${slug}?key=${json.data.token}`)
-      notify('Đã sao chép link xem nháp')
+      notify(t.previewLinkCopied)
     } catch {
       notify(t.saveFailed, 'error')
     }
