@@ -196,6 +196,7 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 | `backfill-reading-time.mjs` | Fill `readingMinutes` on existing `posts/_index.json` entries (new saves compute it automatically). Idempotent; `--dry` to preview |
 | `list-posts-with-images.mjs` | Read-only report of which posts reference images (to re-upload originals by hand) |
 | `check-image-links.mjs` | Read-only audit: HEAD-check every image ref (body media + featuredImage, Blob + external) across all posts; reports broken links |
+| `backfill-media-dimensions.mjs` | Fill `width`/`height` on `media/_index.json` entries that lack them by decoding each original with sharp (new uploads already store dims). Additive + idempotent; backs up the index, `--apply` to write |
 | `remap-original-images.mjs` | Recover broken `media/...` refs by fetching the ORIGINAL full-size files from the source WP site via the Rocket.net file API (`ROCKET_TOKEN`+`ROCKET_SITE` env, needs `/tmp/uploads-index.json`); strips `-WxH` suffixes, uploads to Blob, rewrites markdown. `--apply` to write |
 
 ## SEO (toggleable in Admin → Settings → SEO)

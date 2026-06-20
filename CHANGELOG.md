@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-21
+- **fix(admin): header wordmark/menu now share one h-9 box → perfectly aligned.** Removed the
+  `v0.x.y` badge from beside the logo; the running version (now a link to GitHub releases)
+  lives only on the Overview page. Alignment rule documented in CLAUDE.md (no more baseline drift)
+- **feat(admin): media library shows each image's resolution** (`w×h`). Uploads now capture
+  dimensions for svg/gif/webp too (not just jpg/png); `backfill-media-dimensions.mjs` filled the
+  existing library (45 images)
 - docs: corrected the changelog dates — entries had drifted into the future (up to 06-25);
   remapped to the real git timeline (work happened 06-19 → 06-21 only)
 - **docs: added `ROADMAP.md`** (Vercel-or-Docker from one codebase, publishing from Markdown
