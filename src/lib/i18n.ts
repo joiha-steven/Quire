@@ -17,6 +17,7 @@ export type Dict = {
   readingSuffix: string // after a number: "phút đọc" / "min read"
   search: string
   searchPlaceholder: string
+  searchHint: string
   searchEmpty: string
   tocTitle: string
   relatedTitle: string
@@ -42,6 +43,7 @@ const DICT: Record<SiteLang, Dict> = {
     readingSuffix: 'phút đọc',
     search: 'Tìm kiếm',
     searchPlaceholder: 'Tìm bài viết...',
+    searchHint: 'Nhập từ khoá để tìm bài viết.',
     searchEmpty: 'Không tìm thấy bài viết phù hợp.',
     tocTitle: 'Mục lục',
     relatedTitle: 'Bài viết liên quan',
@@ -65,6 +67,7 @@ const DICT: Record<SiteLang, Dict> = {
     readingSuffix: 'min read',
     search: 'Search',
     searchPlaceholder: 'Search posts...',
+    searchHint: 'Type to search posts.',
     searchEmpty: 'No matching posts found.',
     tocTitle: 'Contents',
     relatedTitle: 'Related posts',
