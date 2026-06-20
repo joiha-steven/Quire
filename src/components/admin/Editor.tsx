@@ -1,16 +1,20 @@
 'use client'
 
 // TipTap markdown editor with a compact toolbar.
-// Marks/nodes: bold, italic, underline, strike, H1-H3, list, quote, code block,
-// link, image (align + wide), GFM tables, and video (paste a YouTube/Vimeo/
-// TikTok URL). Drag an image file in -> auto-uploads -> inserts at cursor. A
-// Markdown/Review toggle swaps the formatted view for the raw Markdown source.
+// Marks/nodes: bold, italic, underline, strike, inline code, H1-H3, bullet +
+// numbered + task lists, quote, code block, horizontal rule, link, image
+// (align + wide), GFM tables, and video (paste a YouTube/Vimeo/TikTok URL).
+// Drag an image file in -> auto-uploads -> inserts at cursor. A Markdown/Review
+// toggle swaps the formatted view for the raw Markdown source.
 import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import LinkExt from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
+import { TaskList } from '@tiptap/extension-task-list'
+import { TaskItem } from '@tiptap/extension-task-item'
+import { Placeholder } from '@tiptap/extension-placeholder'
 import { Markdown } from 'tiptap-markdown'
 import { CaptionedImage } from './CaptionedImage'
 import { Video } from './VideoNode'
@@ -116,6 +120,9 @@ function Toolbar({
       <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={cls(editor.isActive('strike'))}>
         <s>S</s>
       </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}>
+        <code className="font-mono">{'`'}</code>
+      </button>
       {sep}
       <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cls(editor.isActive('heading', { level: 1 }))}>
         H1
@@ -130,11 +137,20 @@ function Toolbar({
       <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>
         • {t.tbList}
       </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cls(editor.isActive('orderedList'))}>
+        1.
+      </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleTaskList().run()} className={cls(editor.isActive('taskList'))}>
+        ☑
+      </button>
       <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cls(editor.isActive('blockquote'))}>
         ❝
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={cls(editor.isActive('codeBlock'))}>
         {'</>'}
+      </button>
+      <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={cls(false)}>
+        ―
       </button>
       {sep}
       <button
@@ -149,6 +165,14 @@ function Toolbar({
       </button>
       <button type="button" onClick={onPickImage} className={cls(false)}>
         {t.tbImage}
+      </button>
+      <button
+        type="button"
+       
+        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        className={cls(false)}
+      >
+        ▦
       </button>
       {toggle}
     </div>
@@ -189,13 +213,19 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
       TableRow,
       TableHeader,
       TableCell,
+      // GFM task lists (- [ ] / - [x]); marked renders them on the public side.
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      // Per-block placeholder (adds the is-editor-empty class + data-placeholder
+      // the CSS reads). The old root data-placeholder attribute rendered nothing.
+      Placeholder.configure({ placeholder: t.editorPlaceholder }),
       // html:false -> raw HTML in the source is treated as plain text, never
       // parsed into nodes. Keeps the blog 100% Markdown.
       Markdown.configure({ html: false }),
     ],
     content: initialContent,
     editorProps: {
-      attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4', 'data-placeholder': t.editorPlaceholder },
+      attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4' },
       handleDrop(view, event) {
         const files = Array.from(event.dataTransfer?.files ?? []).filter((f) => f.type.startsWith('image/'))
         if (files.length === 0) return false
