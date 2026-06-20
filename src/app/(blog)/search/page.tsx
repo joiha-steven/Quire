@@ -13,6 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(language).search }
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function SearchPage({ searchParams }: PageProps<'/search'>) {
   const [posts, settings] = await Promise.all([getPublicPosts(), getSettings()])
   if (!settings.features.search) notFound()

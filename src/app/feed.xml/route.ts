@@ -2,6 +2,8 @@
 import { getPublicPosts } from '@/lib/posts'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 
+export const dynamic = 'force-dynamic' // always reflect the latest posts
+
 const MAX_ITEMS = 50
 
 function esc(s: string): string {

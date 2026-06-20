@@ -50,16 +50,15 @@ blog content lives in Vercel Blob, not in git. Don't commit personal data here.
 
 ## Performance & caching
 
-Post detail pages (`/[slug]`) are statically generated (SSG); new slugs render
-on-demand on first visit. List pages (home, category, tag) are server-rendered per
-request with **path-based pagination** (`/page/2`, `/category/x/page/2` — no `?query`,
-SEO-friendly). Every Blob read is wrapped in
-`unstable_cache` with a tag, so reads serve from the Next Data Cache until a write
-calls `revalidateTag` + `revalidatePath` — so edits show immediately. Images keep a
-1-year CDN cache; mutable content (manifests + settings) is never cached stale.
-Uploaded photos keep the untouched original and serve responsive AVIF/WebP variants
-(`<picture>`); the variant encoding is deferred to save. Functions run in `sin1`
-(Singapore) via `vercel.json`.
+Reads are **always fresh** — there is no data cache. Every page is `force-dynamic`
+and reads straight from Blob each request (`React.cache()` only dedupes within one
+render), so an edit shows on the next load with no rebuild or revalidation. We
+removed `unstable_cache` deliberately: caching over Blob kept serving stale content.
+The Blob store is in Singapore beside the functions (`vercel.json` pins `sin1`), so
+reads are cheap; images keep a 1-year CDN cache. List pages use **path-based
+pagination** (`/page/2`, `/category/x/page/2` — no `?query`, SEO-friendly). Uploaded
+photos keep the untouched original and serve responsive AVIF/WebP variants
+(`<picture>`, emitted only once the variants exist); variant encoding is deferred to save.
 
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full design and the *why*.
 

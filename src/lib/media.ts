@@ -5,7 +5,7 @@
 // Variant URLs are derived by convention from the original's name.
 
 import sharp from 'sharp'
-import { unstable_cache } from 'next/cache'
+import { cache } from 'react'
 import type { MediaItem } from '@/types'
 import {
   readJson, writeJson, uploadFile, blobUrl, deleteByPathname, collapseBlob, expandBlob, listBlobs,
@@ -19,22 +19,19 @@ const PASSTHROUGH = /^image\/(svg\+xml|gif|webp)$/ // stored as-is, no variants
 const SIZES = [1024, 1600] as const // display widths (in-column / wider)
 const THUMB_WIDTH = 400
 
-// Read the media manifest, newest upload first. Cached across requests under
-// tag 'media'; upload/delete routes call revalidateTag('media') to refresh.
-export const getMedia = unstable_cache(
-  async (): Promise<MediaItem[]> => {
-    const items = await readJson<MediaItem[]>(INDEX_PATH, [])
-    return [...items]
-      .map((m) => ({
-        ...m,
-        url: expandBlob(m.url), // stored pathname -> absolute URL
-        thumb: m.thumb ? expandBlob(m.thumb) : undefined,
-      }))
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-  },
-  ['media-index-v2'],
-  { tags: ['media'] },
-)
+// Read the media manifest, newest upload first. No cross-request cache: a fresh
+// read every request means a deleted image is gone the moment you reopen the
+// library, and a new upload appears at once (`React.cache` dedupes per render).
+export const getMedia = cache(async (): Promise<MediaItem[]> => {
+  const items = await readJson<MediaItem[]>(INDEX_PATH, [])
+  return [...items]
+    .map((m) => ({
+      ...m,
+      url: expandBlob(m.url), // stored pathname -> absolute URL
+      thumb: m.thumb ? expandBlob(m.thumb) : undefined,
+    }))
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+})
 
 type Variant = { suffix: string; data: Buffer; contentType: string }
 

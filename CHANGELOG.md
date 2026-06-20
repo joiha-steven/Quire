@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-06-23
+- **refactor(cache): removed the data cache entirely — content is now always fresh.**
+  `unstable_cache` + tag revalidation kept fighting Blob's read-after-write and serving
+  stale content (new posts missing, **deleted media reappearing**, settings not applying,
+  cross-deploy Data Cache persistence). Replaced with: reads use `React.cache()` only
+  (request-scoped dedup), and every public page + SEO route is `force-dynamic`. An edit
+  now shows on the next plain reload — no rebuild, no "Clear cache" step
+- removed the admin "Clear cache" button and `/api/cache/clear` (no cache to clear); the
+  `/[slug]` page is no longer SSG (`generateStaticParams` dropped) — it renders fresh;
+  dropped all cache-key versioning. Blob store confirmed in Singapore beside the functions
+- fix(media): deleting an image in the library now sticks (it was the data cache re-serving
+  the old manifest after the delete) — addressed by the always-fresh reads above
+
 ## 2026-06-22
 - fix(media): inserted images that didn't show. A `<picture>` gives NO fallback when a
   chosen `<source>` 404s, but `PostContent` emitted AVIF/WebP sources for every jpg/png

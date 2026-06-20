@@ -2,7 +2,6 @@
 // _index.json holds metadata only; full content lives in pages/{slug}.md.
 
 import { cache } from 'react'
-import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Page, PageWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
@@ -12,18 +11,14 @@ import { ensureSlugFree } from '@/lib/slugs'
 const INDEX_PATH = 'pages/_index.json'
 const mdPath = (slug: string) => `pages/${slug}.md`
 
-// Raw manifest read, cached across requests under tag 'pages'. Invalidated by
-// revalidateTag('pages') on every page write/delete.
-const readIndex = unstable_cache(
-  async (): Promise<Page[]> => {
-    const pages = await readJson<Page[]>(INDEX_PATH, [])
-    return [...pages]
-      .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
-      .sort((a, b) => a.title.localeCompare(b.title))
-  },
-  ['pages-index-v2'],
-  { tags: ['pages'] },
-)
+// Raw manifest read. No cross-request cache (see posts.ts) — `React.cache` only
+// dedupes within one render; every request re-reads Blob, so edits show at once.
+const readIndex = cache(async (): Promise<Page[]> => {
+  const pages = await readJson<Page[]>(INDEX_PATH, [])
+  return [...pages]
+    .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
+    .sort((a, b) => a.title.localeCompare(b.title))
+})
 
 // Metadata manifest, ordered by title (admin list incl. drafts). Tag 'pages'.
 export async function getPageIndex(): Promise<Page[]> {
@@ -36,27 +31,20 @@ export async function getPublicPages(): Promise<Page[]> {
   return all.filter((p) => p.status === 'published')
 }
 
-// Read+parse one page's markdown, cached per slug under tag 'pages'.
-const readPage = unstable_cache(
-  async (slug: string): Promise<PageWithContent | null> => {
-    const raw = await readText(mdPath(slug))
-    if (!raw) return null
-    const { data, content } = matter(raw)
-    const meta = data as Partial<Page>
-    return {
-      title: meta.title ?? slug,
-      slug: meta.slug ?? slug,
-      status: meta.status === 'published' ? 'published' : 'draft',
-      featuredImage: meta.featuredImage ? expandBlob(meta.featuredImage) : undefined,
-      content: expandBlob(content.trim()),
-    }
-  },
-  ['page-v2'],
-  { tags: ['pages'] },
-)
-
-// React.cache() dedupes within a render; readPage caches across requests.
-export const getPage = cache((slug: string): Promise<PageWithContent | null> => readPage(slug))
+// Read+parse one page's markdown. `React.cache` dedupes within one request only.
+export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
+  const raw = await readText(mdPath(slug))
+  if (!raw) return null
+  const { data, content } = matter(raw)
+  const meta = data as Partial<Page>
+  return {
+    title: meta.title ?? slug,
+    slug: meta.slug ?? slug,
+    status: meta.status === 'published' ? 'published' : 'draft',
+    featuredImage: meta.featuredImage ? expandBlob(meta.featuredImage) : undefined,
+    content: expandBlob(content.trim()),
+  }
+})
 
 // Normalize incoming data into a complete Page + content pair.
 function normalize(input: Partial<PageWithContent>): PageWithContent {

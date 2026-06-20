@@ -2,7 +2,6 @@
 // full content lives in posts/{slug}.md as YAML frontmatter + markdown body.
 
 import { cache } from 'react'
-import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
@@ -13,19 +12,16 @@ import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
 const INDEX_PATH = 'posts/_index.json'
 const mdPath = (slug: string) => `posts/${slug}.md`
 
-// Raw manifest read, cached across requests under tag 'posts'. Every post
-// write/delete calls revalidateTag('posts'), so reads stay served from the Next
-// data cache (no Blob round-trip) until something actually changes.
-const readIndex = unstable_cache(
-  async (): Promise<Post[]> => {
-    const posts = await readJson<Post[]>(INDEX_PATH, [])
-    return [...posts]
-      .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  },
-  ['posts-index-v3'], // v3: entries carry readingMinutes (shown in lists)
-  { tags: ['posts'] },
-)
+// Raw manifest read. NO cross-request cache (that was the source of repeated
+// stale-content bugs vs Blob's read-after-write). `React.cache` only dedupes
+// within a single render pass; every fresh request re-reads Blob (cache-busted),
+// so an edit is visible on the next load with no revalidation dance.
+const readIndex = cache(async (): Promise<Post[]> => {
+  const posts = await readJson<Post[]>(INDEX_PATH, [])
+  return [...posts]
+    .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+})
 
 // Full metadata manifest, newest first (admin list incl. drafts). Tag 'posts'.
 export async function getIndex(): Promise<Post[]> {
@@ -55,21 +51,14 @@ function parsePost(raw: string, slug: string): PostWithContent {
   }
 }
 
-// Read+parse one post's markdown, cached per slug under tag 'posts' so detail
-// pages are served from the data cache instead of hitting Blob every request.
-const readPost = unstable_cache(
-  async (slug: string): Promise<PostWithContent | null> => {
-    const raw = await readText(mdPath(slug))
-    if (!raw) return null
-    return parsePost(raw, slug)
-  },
-  ['post-v2'],
-  { tags: ['posts'] },
-)
-
-// React.cache() deduplicates within a render tree (generateMetadata + page);
-// unstable_cache (readPost) caches across requests until revalidated.
-export const getPost = cache((slug: string): Promise<PostWithContent | null> => readPost(slug))
+// Read+parse one post's markdown. `React.cache` dedupes the read across
+// generateMetadata + the page render in ONE request; no cross-request cache, so
+// the content is always current.
+export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
+  const raw = await readText(mdPath(slug))
+  if (!raw) return null
+  return parsePost(raw, slug)
+})
 
 // Normalize incoming data into a complete Post + content pair.
 function normalize(input: Partial<PostWithContent>): PostWithContent {

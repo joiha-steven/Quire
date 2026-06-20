@@ -55,11 +55,9 @@ curl -s -X DELETE "localhost:3000/api/media/by?url=x"
 ```
 
 ## Caching gotchas
-- Do NOT add `cacheComponents: true` to `next.config.ts` — it enables PPR which
-  breaks `React.cache()`, `Date.now()`, `dynamicParams`, and route segment configs.
-- `revalidateTag(tag)` (1-arg) causes TS errors in Next.js 16.
-  Always use `revalidateTag(tag, { expire: 0 })` for immediate invalidation.
-- `unstable_cache` is deprecated but still works; do not replace with `'use cache'`
-  without also doing a full PPR migration.
-- In local dev, `unstable_cache` may behave differently from production (no persistent
-  cache between restarts). Test cache invalidation after `npm run build && npm start`.
+- There is **no data cache**: all public routes are `force-dynamic`, reads use
+  `React.cache()` only. After an edit, a plain reload must show the change — if it
+  doesn't, something reintroduced caching. Do NOT add `unstable_cache` back.
+- Do NOT add `cacheComponents: true` to `next.config.ts` — it enables PPR which is
+  incompatible with `force-dynamic`, `React.cache()`, `Date.now()`, and route configs.
+- All routes should show as `ƒ (Dynamic)` in the `npm run build` output — none `●`/`○`.

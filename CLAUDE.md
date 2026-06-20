@@ -40,71 +40,61 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
 - `vercel.json` pins serverless functions to **`sin1` (Singapore)** — closest Vercel
   region to the Vietnamese audience (~40ms vs ~200ms to the default `iad1` US-East).
   Requires the Pro plan. Static assets already serve from the global edge CDN.
-- The **Blob store is in `iad1`** (US-East), so a cold `unstable_cache` read crosses
-  regions (sin1→iad1). Most reads hit the regional Data Cache, so this only bites on
-  cache miss. For full co-location, create a Singapore Blob store and migrate.
+- The **Blob store is in Singapore** too (moved from `iad1`), so reads are co-located
+  with the functions — no cross-region hop.
 - The OG route is `runtime = 'edge'` and runs at the nearest PoP regardless.
 
-## Caching model — Previous model (no `cacheComponents`)
-`cacheComponents` is NOT enabled. Uses `unstable_cache` + `React.cache()`:
+## Caching model — NONE (always fresh) — read this
+There is **no data cache**. This is deliberate: `unstable_cache` + tag revalidation
+repeatedly fought Blob's read-after-write and served stale content (new posts missing,
+deleted images reappearing, settings not applying, cross-deploy Data Cache persistence).
+It was all removed in favor of dead-simple, always-correct reads.
 
-Every Blob read is wrapped in `unstable_cache` with a tag, so reads are served
-from the Next data cache (no Blob round-trip) until a mutation revalidates the
-tag. Images are the only long-cached layer (1 year, set in `uploadFile`).
+- Every public page and SEO route is **`export const dynamic = 'force-dynamic'`** →
+  server-rendered fresh on each request. There is NO SSG snapshot of content, so an edit
+  shows on the very next load with no rebuild/revalidation step.
+- Data-layer reads (`getPost`, `getPublicPosts`, `getPage`, `getSettings`, `getMedia`, …)
+  are wrapped in **`React.cache()` only** — that dedupes repeated reads **within a single
+  render pass** (e.g. `generateMetadata` + the page). It is request-scoped; it never
+  caches across requests, so it cannot go stale.
+- Blob reads stay cache-busted (`fresh(url)` adds `?ts=`) so the CDN never serves an
+  overwritten blob stale. Images are the only long-cached layer (1 year, in `uploadFile`).
+- Write routes still call `revalidateTag`/`revalidatePath`; with no `unstable_cache` and
+  `force-dynamic` pages these are **harmless no-ops** (kept as belt-and-suspenders / future
+  proofing — do not rely on them).
+- There is **no "Clear cache" button** and **no cache-key versioning** anymore — both
+  existed only to paper over the data cache. Adding a field to an index needs no key bump.
+- Client Router Cache stays off (`experimental.staleTimes: { dynamic: 0 }`).
+- **DO NOT** reintroduce `unstable_cache` or `cacheComponents: true`. If a page ever needs
+  caching for load, prefer a short `revalidate` on that one route — never a cross-request
+  data cache over Blob (that is exactly what broke).
 
-| Function | How cached | Tag |
-|---|---|---|
-| `getSettings()` | `unstable_cache` | `settings` |
-| `getIndex()` / `getPublicPosts()` | `unstable_cache` (shared `readIndex`) | `posts` |
-| `getPageIndex()` / `getPublicPages()` | `unstable_cache` (shared `readIndex`) | `pages` |
-| `getPost(slug)` | `unstable_cache` (per slug) + `React.cache()` | `posts` |
-| `getPage(slug)` | `unstable_cache` (per slug) + `React.cache()` | `pages` |
-| `getMedia()` | `unstable_cache` | `media` |
+Trade-off: every view does a few Blob reads (~tens of ms, co-located in Singapore). For a
+single-owner personal blog that is fine, and correctness beats shaving a Blob round-trip.
 
-Because `getPost`/`getPage` are now cached, `/[slug]` prerenders as **SSG** (static
-HTML) and regenerates on tag/path revalidation — instant reads, fresh on edit.
-
-- **After any post write/delete**: call `revalidateTag('posts', { expire: 0 })` +
-  `revalidatePath('/new-slug')` (and old slug if it changed).
-- **After settings save**: call `revalidateTag('settings', { expire: 0 })` +
-  `revalidatePath('/', 'layout')`.
-- **After page write/delete**: call `revalidateTag('pages', { expire: 0 })` +
-  `revalidatePath('/slug')` (and old slug if changed).
-- **After media upload/delete**: call `revalidateTag('media', { expire: 0 })`.
-- Client Router Cache is disabled (`experimental.staleTimes: { dynamic: 0, static: 0 }`
-  in `next.config.ts`) so a navigation after an edit never shows a stale RSC.
-- `{ expire: 0 }` = immediate expiration (correct for admin writes). Never use 1-arg
-  `revalidateTag(tag)` — TypeScript error in Next.js 16 (signature requires 2 args).
-- **DO NOT** add `cacheComponents: true` to `next.config.ts` — it enables PPR which
-  is incompatible with `React.cache()`, `Date.now()`, and route segment configs.
-
-## ISR — `src/app/(blog)/[slug]/page.tsx`
-- `generateStaticParams` + `dynamicParams = true`: all known slugs are prerendered as
-  static HTML (`●` SSG) at deploy; new slugs render on-demand (ISR). This works because
-  `getPost` is wrapped in `unstable_cache` (tag `posts`), so the underlying `no-store`
-  Blob fetch sits behind the data cache and the page output is cacheable. An edit
-  (`revalidateTag('posts')` + `revalidatePath('/slug')`) regenerates the static page.
+## Rendering — `src/app/(blog)/[slug]/page.tsx`
+- `force-dynamic`; **no** `generateStaticParams`/`dynamicParams`. Reads `getPost` +
+  `getPage` (shared `/{slug}` namespace) + `getMedia` (for the `<picture>` ready-set) and
+  renders fresh every request.
 - List pages (home, category, tag) are dynamic. Pagination is **path-based**: page 1 at
   the bare path, deeper pages at `/page/[n]` (and `/category/[slug]/page/[n]`,
   `/tag/[slug]/page/[n]`) — no `?query`, friendlier for SEO. `parsePathPage` returns the
   page only for `n >= 2` (else `null` → 404, so there is no duplicate URL for page 1 and
   no out-of-range pages). The shared `components/blog/BlogListing` renders all six routes.
 - Post list entries carry `readingMinutes` (computed from the body in `toMeta` at save;
-  `backfill-reading-time.mjs` filled existing posts) so lists can show read time without
-  loading bodies. Index cache key is `posts-index-v3` (bump on any index-shape change).
-- `unstable_cache` still provides cross-request caching for list data even though
-  detail pages are dynamic.
+  `backfill-reading-time.mjs` filled existing posts) so lists show read time without
+  loading bodies.
 
 ## Data layer reference — `src/lib/`
 
 | File | Key exports | Notes |
 |---|---|---|
 | `blob.ts` | `blobUrl`, `readJson`, `readText`, `writeJson`, `writeText`, `uploadFile`, `deleteByUrl`, `deleteByPathname`, `listBlobs` | All Blob I/O. Never call `list()` to find a URL — use `blobUrl()` |
-| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags` | `getPublicPosts` = `unstable_cache`; `getPost` = `React.cache()`. `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine) |
+| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post at `revisions/{slug}.json` (newest first). Drives the editor "time machine". Moved on slug change, removed on delete |
-| `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; `getPublicPages` = `unstable_cache`; `getPage` = `React.cache()` |
-| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `unstable_cache`; `themeToCss` converts ThemeSettings → CSS vars string |
-| `media.ts` | `getMedia`, `addMedia`, `deleteMedia`, `finalizeContentMedia` | jpg/png upload keeps ORIGINAL + cheap `-thumb.webp` (`variants:false`); heavy `-1024`/`-1600` AVIF+WebP are **deferred** — `finalizeContentMedia` (called by the post/page save routes) generates them only for images still in the saved content. svg/gif/webp stored as-is. `<picture>` built in `PostContent` by name convention. Delete removes all variants |
+| `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
+| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `React.cache()` only; `themeToCss` converts ThemeSettings → CSS vars string |
+| `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`, `finalizeContentMedia` | Upload is **batched** (`addMediaBatch` = one manifest read-modify-write for all files; collision names checked against the real store via `listBlobs`). jpg/png keeps ORIGINAL + cheap `-thumb.webp` (`variants:false`); heavy `-1024`/`-1600` AVIF+WebP are **deferred** — `finalizeContentMedia` (post/page save) generates them only for images kept in the content. svg/gif/webp stored as-is. Delete removes all variants. `PostContent` emits `<picture>` **only** for originals whose variants exist (the `readyOriginals` set from `getMedia`); others render a plain `<img>` so a missing variant never blanks the image |
 | `sweep.ts` | `sweepUnusedMedia` | Deletes media referenced by no post/page/settings (the "Clean unused" library button, `POST /api/media/sweep`). Clears orphans from dropped-then-discarded images |
 | `auth.ts` | `handlers`, `auth`, `signIn`, `signOut`, `isAuthorized`, `getAuthState` | Anyone can sign in; only `AUTHORIZED_EMAIL` is authorized; unauthorized = silently redirected |
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the same URL namespace; throws `SlugConflictError` (→ 409) on collision |
@@ -164,11 +154,8 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   post/page `generateMetadata` for `og:image`.
 - JSON-LD via `components/blog/JsonLd.tsx` (`websiteSchema` on home, `articleSchema`
   on posts), gated by `seo.autoSchema`.
-- robots/sitemap are static but tagged `settings`, so toggling a feature + saving
-  regenerates them (revalidateTag('settings')).
-- **Cache-key versioning**: `getSettings` uses key `site-settings-v4`. Vercel's Data
-  Cache persists across deploys, so when the settings SHAPE changes (new field) bump
-  this key, else the cached object keeps serving without the new key (e.g. rss 404).
+- robots/sitemap/feed/llms are all `force-dynamic`, so toggling an SEO feature + saving
+  reflects on the next request (no revalidation, no cache key to bump).
 
 ## Reading & discovery
 - All reader features are toggleable: `settings.features { search, toc, related,
@@ -239,12 +226,10 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 ## Next.js 16 reminders
 - `params` / `searchParams` are async (await them).
 - Use `PageProps<...>` / `RouteContext<...>` global type helpers.
-- `unstable_cache` still works (deprecated but not removed); `'use cache'` requires
-  `cacheComponents: true` which enables PPR — avoid unless the whole app is PPR-ready.
-- `revalidateTag(tag, profile)` requires 2 args. Use `{ expire: 0 }` for immediate
-  invalidation or `'max'` for stale-while-revalidate. `revalidateTag('tag')` = TS error.
-- `cacheComponents: true` bans `dynamic`, `dynamicParams`, `revalidate` route segment
-  configs AND `Date.now()` / `new Date()` in server components without Suspense.
+- Reads use `React.cache()` for request-scoped dedup; do NOT add `unstable_cache` back
+  (it caused the stale-content bugs — see "Caching model"). Public routes are `force-dynamic`.
+- `revalidateTag(tag, profile)` requires 2 args if ever used. `cacheComponents: true`
+  enables PPR — avoid (incompatible with `force-dynamic`, `Date.now()`, route configs).
 - Before writing any unfamiliar API, read `node_modules/next/dist/docs/`.
 
 ## Docs & releases — keep current (single repo)
