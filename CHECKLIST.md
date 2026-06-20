@@ -26,7 +26,11 @@
   `blobUrl()` will throw at runtime if the token is malformed or missing
 
 ## Media
-- [ ] Image upload works, appears in media library immediately
+- [ ] Image upload works, appears in media library immediately (original + thumb)
+- [ ] On save, jpg/png get `-1024`/`-1600` AVIF+WebP variants; post renders `<picture>`
+- [ ] Browser is served AVIF where supported (DevTools → Network on a post)
+- [ ] "Clean unused" deletes media referenced by no post/page/settings (keeps the logo)
+- [ ] Deleting an image removes the original + thumbnail + every variant
 - [ ] Post publish works, appears on blog immediately
 
 ## Verify auth quickly
