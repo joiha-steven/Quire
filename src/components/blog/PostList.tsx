@@ -15,7 +15,7 @@ export function PostList({
   showReadingTime?: boolean
 }) {
   if (posts.length === 0) {
-    return <p className="py-16 text-center text-neutral-500">{emptyText}</p>
+    return <p className="py-16 text-center text-meta">{emptyText}</p>
   }
   return (
     <div className="flex flex-col gap-8">

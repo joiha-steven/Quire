@@ -55,11 +55,11 @@ export function Pagination({
             …
           </span>
         ) : it === page ? (
-          <span key={it} aria-current="page" className={`${base} font-semibold text-[var(--c-heading)] ring-1 ring-[var(--c-rule)]`}>
+          <span key={it} aria-current="page" className={`${base} font-semibold text-heading ring-1 ring-rule`}>
             {it}
           </span>
         ) : (
-          <Link key={it} href={href(basePath, it)} aria-label={`${label} ${it}`} className={`${base} text-meta hover:text-[var(--c-heading)]`}>
+          <Link key={it} href={href(basePath, it)} aria-label={`${label} ${it}`} className={`${base} text-meta hover:text-heading`}>
             {it}
           </Link>
         ),

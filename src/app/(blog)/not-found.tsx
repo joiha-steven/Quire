@@ -8,10 +8,10 @@ export default async function NotFound() {
   const s = t(language)
   return (
     <div className="py-24 text-center">
-      <p className="text-6xl font-bold tracking-tight text-[var(--c-heading)]">404</p>
+      <p className="text-6xl font-bold tracking-tight text-heading">404</p>
       <h1 className="mt-4 text-xl font-semibold">{s.notFoundTitle}</h1>
       <p className="mt-2 text-meta">{s.notFoundText}</p>
-      <Link href="/" className="mt-8 inline-block text-sm font-medium text-[var(--c-link)] underline underline-offset-4">
+      <Link href="/" className="mt-8 inline-block text-sm font-medium text-link underline underline-offset-4">
         {s.backHome}
       </Link>
     </div>

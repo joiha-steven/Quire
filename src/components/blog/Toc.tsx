@@ -40,16 +40,16 @@ export function Toc({ headings, title }: { headings: Heading[]; title: string })
     // Vertically centred (top-1/2 + -translate-y-1/2) so it never collides with the
     // header or footer; `max-h`/scroll handles long lists. Title + items flush left.
     <div className="fixed top-1/2 left-[50px] z-10 hidden w-60 -translate-y-1/2 xl:block">
-      <nav aria-label={title} className="max-h-[80vh] overflow-y-auto rounded-xl border border-[var(--c-rule)] p-5 text-sm">
-        <p className="mb-2 font-semibold text-[var(--c-heading)]">{title}</p>
+      <nav aria-label={title} className="max-h-[80vh] overflow-y-auto rounded-xl border border-rule p-5 text-sm">
+        <p className="mb-2 font-semibold text-heading">{title}</p>
         <ul className="space-y-1.5">
           {headings.map((h) => (
             <li key={h.id}>
               <a
                 href={`#${h.id}`}
                 onClick={(e) => go(e, h.id)}
-                className={`block transition-colors hover:text-[var(--c-heading)] ${
-                  active === h.id ? 'font-medium text-[var(--c-heading)]' : 'text-meta'
+                className={`block transition-colors hover:text-heading ${
+                  active === h.id ? 'font-medium text-heading' : 'text-meta'
                 }`}
               >
                 {h.text}

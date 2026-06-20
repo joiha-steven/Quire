@@ -35,7 +35,7 @@ function taxoLinks(items: string[], make: (s: string) => string) {
   return items.map((it, i) => (
     <span key={it}>
       {i > 0 && ', '}
-      <Link href={make(it)} className="hover:text-[var(--c-heading)]">
+      <Link href={make(it)} className="hover:text-heading">
         {it}
       </Link>
     </span>

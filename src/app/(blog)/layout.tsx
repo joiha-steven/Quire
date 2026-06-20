@@ -46,7 +46,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
               <Link
                 href="/search"
                 aria-label={t(settings.language).search}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <circle cx="11" cy="11" r="7" />
@@ -59,13 +59,13 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           </div>
         </div>
         {settings.showDescription && settings.description && (
-          <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{settings.description}</p>
+          <p className="mt-3 text-sm text-meta">{settings.description}</p>
         )}
       </header>
       <main className="flex-1 py-4">{children}</main>
-      <footer className="py-12 text-center text-sm text-neutral-400 dark:text-neutral-500">
+      <footer className="py-12 text-center text-sm text-meta">
         © {new Date().getFullYear()} {settings.title} ·{' '}
-        <a href={REPO_URL} target="_blank" rel="noopener" className="hover:text-neutral-600 dark:hover:text-neutral-300">
+        <a href={REPO_URL} target="_blank" rel="noopener" className="hover:text-text">
           powered by vibeblog
         </a>
       </footer>

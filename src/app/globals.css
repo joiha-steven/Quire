@@ -5,6 +5,17 @@
 
 @theme inline {
   --font-sans: var(--font-inter);
+  /* Expose the reading-colour vars as Tailwind tokens so components use clean,
+     theme-driven utilities (text-heading, text-meta, text-link, bg-bg,
+     border-rule, hover:bg-rule, ...) instead of hardcoded neutrals. One source
+     of truth: change a colour in Admin → Giao diện and every surface follows.
+     --c-rule doubles as the faint-surface colour (code blocks, hovers, banners). */
+  --color-bg: var(--c-bg);
+  --color-text: var(--c-text);
+  --color-heading: var(--c-heading);
+  --color-meta: var(--c-meta);
+  --color-link: var(--c-link);
+  --color-rule: var(--c-rule);
 }
 
 /* ---------------------------------------------------------------------------
@@ -193,7 +204,7 @@ hr {
 /* Code block: one soft framed panel that fits the minimal palette (not a stark
    black box). Reuses the inline-code grey family. */
 .prose pre {
-  background: #f4f4f2;
+  background: var(--c-rule);
   color: var(--c-text);
   border: 1px solid var(--c-rule);
   padding: 0.9em 1.1em;
@@ -212,7 +223,7 @@ hr {
   font-size: 0.875em;
 }
 .prose :not(pre) > code {
-  background: #f4f4f2;
+  background: var(--c-rule);
   padding: 0.15em 0.38em;
   border-radius: 0.3rem;
 }
@@ -306,11 +317,8 @@ hr {
   border-radius: 0.625rem;
 }
 
-/* Dark mode: only chips/code need a manual swap; text/heading/link/rule colors
-   all come from the themed CSS variables above. */
-.dark .prose :not(pre) > code {
-  background: #232326;
-}
+/* No dark-mode code-chip override needed: code/pre backgrounds use var(--c-rule),
+   which is itself themed per mode. Everything tracks the reading-colour vars. */
 
 /* TipTap empty-state placeholder. */
 .ProseMirror:focus {
@@ -318,7 +326,7 @@ hr {
 }
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #a3a3a3;
+  color: var(--c-meta);
   float: left;
   height: 0;
   pointer-events: none;

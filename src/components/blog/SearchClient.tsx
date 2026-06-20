@@ -32,7 +32,7 @@ export function SearchClient({ docs, lang, initialQuery }: { docs: SearchDoc[]; 
         onChange={(e) => setQ(e.target.value)}
         placeholder={t(lang).searchPlaceholder}
         aria-label={t(lang).search}
-        className="mb-10 w-full border-b border-[var(--c-rule)] bg-transparent pb-3 text-2xl tracking-tight outline-none placeholder:text-meta"
+        className="mb-10 w-full border-b border-rule bg-transparent pb-3 text-2xl tracking-tight outline-none placeholder:text-meta"
       />
 
       {needle.length < 1 ? (
@@ -43,7 +43,7 @@ export function SearchClient({ docs, lang, initialQuery }: { docs: SearchDoc[]; 
         <ul className="space-y-5">
           {results.map((d) => (
             <li key={d.slug}>
-              <Link href={`/${d.slug}`} className="font-medium tracking-tight hover:text-[var(--c-heading)]">
+              <Link href={`/${d.slug}`} className="font-medium tracking-tight hover:text-heading">
                 {d.title}
               </Link>
               <p className="mt-0.5 text-sm text-meta">{formatDate(d.date, lang)}</p>

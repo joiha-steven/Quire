@@ -111,6 +111,12 @@
   with default chrome, so it didn't read as clickable — enlarged it and stripped the inner
   padding/border so it's one clean colour chip. Clicking it opens the browser's full picker
   (2D area + hue + HEX); the hex field is now monospace/uppercase alongside.
+- refactor(theme): every public-UI colour now comes from the theme tokens — no hardcoded
+  `neutral-*`/`white`/`black`. Exposed `--c-*` as Tailwind utilities (`bg-bg`, `text-text`,
+  `text-heading`, `text-meta`, `text-link`, `border-rule`) via `@theme inline`. **All lines +
+  faint surfaces (TOC border, dropdowns, header/footer, code blocks, hovers, preview banner) use
+  `--c-rule`**, so one colour in Admin → Giao diện drives them. Also fixes a dark-mode bug where
+  code blocks stayed light (hardcoded `#f4f4f2` had no dark override).
 - fix(editor): over-spaced bullet/numbered list items. TipTap wraps each item's content in a
   `<p>`, which inherited the 1.4em paragraph margin — items now sit tight + even (only genuine
   multi-paragraph items keep spacing). Shared `.prose` rule, so the editor matches the render.

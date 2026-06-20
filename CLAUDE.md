@@ -277,6 +277,13 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
   Never use bespoke `border-t`/`border-b` rules as content dividers, and never ALL-CAPS
   text (no `uppercase`) anywhere in shipped UI.
+- **Public UI colours come ONLY from the theme tokens — never hardcode `neutral-*`/`white`/
+  `black` or a hex.** The reading-colour vars (`--c-bg/text/heading/meta/link/rule`) are exposed
+  as Tailwind utilities via `@theme inline` in `globals.css`: `bg-bg`, `text-text`,
+  `text-heading`, `text-meta`, `text-link`, `border-rule`. **Every line/border + every faint
+  surface (code blocks, hovers, banners) uses `--c-rule`** (`border-rule` / `bg-rule` /
+  `hover:bg-rule` / `ring-rule`), so one colour in Admin → Giao diện drives them all. Admin
+  tooling may stay neutral; this rule is for the reader-facing `(blog)` UI.
 - UI text (labels, buttons, toasts, placeholders) → never hardcoded; go through
   `src/locales/` and keep every language in sync (see Localization above).
 - Code, comments, identifiers, filenames, commits → English.

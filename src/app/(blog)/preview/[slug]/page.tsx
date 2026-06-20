@@ -25,7 +25,7 @@ export default async function PreviewPage({ params, searchParams }: PageProps<'/
 
   return (
     <article>
-      <div className="mb-6 rounded-lg border border-[var(--c-rule)] bg-neutral-100 px-4 py-2 text-sm text-meta dark:bg-neutral-800/60">
+      <div className="mb-6 rounded-lg border border-rule bg-rule px-4 py-2 text-sm text-meta">
         Bản xem trước · trang này không công khai và không được lập chỉ mục.
       </div>
       <h1 className="text-3xl font-bold leading-tight tracking-tight">{entry.title}</h1>

@@ -15,7 +15,7 @@ export function PostCard({
   return (
     <article>
       <h2 className="text-[1.35rem] font-semibold tracking-tight">
-        <Link href={`/${post.slug}`} className="hover:text-neutral-600 dark:hover:text-neutral-300">
+        <Link href={`/${post.slug}`} className="hover:text-meta">
           {post.title}
         </Link>
       </h2>
@@ -26,7 +26,7 @@ export function PostCard({
           : ''}
       </p>
       {post.excerpt && (
-        <p className="mt-3 text-[1.0625rem] leading-relaxed text-[color:var(--c-text)]">
+        <p className="mt-3 text-[1.0625rem] leading-relaxed text-text">
           {post.excerpt}
         </p>
       )}
