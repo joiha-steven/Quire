@@ -33,13 +33,14 @@ export function Toc({ headings, title }: { headings: Heading[]; title: string })
   }
 
   return (
-    // Desktop only. The OUTER track is absolutely positioned in the left gutter
-    // (right-full = its right edge at the content column's left edge; mr-10 = gap)
-    // and spans the article body height (h-full). The INNER nav is `sticky`, so it
-    // starts level with the content top and follows the scroll within the track,
-    // then scrolls away once the body ends. Title + items all flush left.
-    <div className="absolute top-0 right-full mr-10 hidden h-full w-60 xl:block">
-      <nav aria-label={title} className="sticky top-8 rounded-xl border border-[var(--c-rule)] p-5 text-sm">
+    // Desktop only (xl+). Pinned to the LEFT EDGE OF THE VIEWPORT (50px in), not to
+    // the content column — the whole blog is a centered max-width box, so anchoring
+    // to the column left put the ToC in a narrow gutter where wide/full-bleed images
+    // overlapped it. `fixed` + viewport-left keeps it hard left, clear of content.
+    // Vertically centred (top-1/2 + -translate-y-1/2) so it never collides with the
+    // header or footer; `max-h`/scroll handles long lists. Title + items flush left.
+    <div className="fixed top-1/2 left-[50px] z-10 hidden w-60 -translate-y-1/2 xl:block">
+      <nav aria-label={title} className="max-h-[80vh] overflow-y-auto rounded-xl border border-[var(--c-rule)] p-5 text-sm">
         <p className="mb-2 font-semibold text-[var(--c-heading)]">{title}</p>
         <ul className="space-y-1.5">
           {headings.map((h) => (

@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **fix(blog): desktop table-of-contents pinned to the viewport's left edge (50px in).**
+  It was absolutely positioned against the centered content column's left edge, so wide /
+  full-bleed images broke out into the gutter and overlapped it. Now `fixed` to the viewport,
+  vertically centred (clears header/footer), with a max-height scroll for long lists
 - **fix(admin): even header action cluster.** The "Clear cache" button was missing `text-sm`
   (oversized text) and changed width while busy (the `…` suffix), making it look lopsided next
   to the nav. Clear-cache + sign-out now share one `HEADER_ACTION` class constant
