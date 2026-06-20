@@ -1,17 +1,24 @@
 'use client'
 
-// Settings screen: uniform-width cards in a balanced two-column layout on
-// desktop (single column on mobile). The former "Features" tab is merged into
-// the general settings card. Each card saves independently via /api/settings.
-import type { SiteSettings, ThemeSettings } from '@/types'
-import { SettingsForm } from './SettingsForm'
-import { AppearanceForm } from './AppearanceForm'
-import { SeoForm } from './SeoForm'
+// Settings screen: ONE form, ONE save button. All settings live in a single
+// state object and are saved together via PUT /api/settings (which merges).
+// Layout = two top-aligned, length-balanced columns of equal-width cards on
+// desktop; one column on mobile.
+import { useState } from 'react'
+import type { SiteSettings, ThemeSettings, ApiResponse } from '@/types'
+import { Button } from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
+import { formatTime } from '@/lib/utils'
 import { useAdminT } from './I18nProvider'
+import { SiteFields } from './SiteFields'
+import { ThemeFields } from './ThemeFields'
+import { LayoutMenuFields } from './LayoutMenuFields'
+import { FeatureFields } from './FeatureFields'
+import { SeoFields } from './SeoFields'
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mb-6 break-inside-avoid rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+    <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="mb-4 text-base font-bold tracking-tight">{title}</h2>
       {children}
     </section>
@@ -20,22 +27,71 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 export function SettingsView({ settings, defaultTheme }: { settings: SiteSettings; defaultTheme: ThemeSettings }) {
   const t = useAdminT()
+  const { notify } = useToast()
+  const [s, setS] = useState<SiteSettings>(settings)
+  const [saving, setSaving] = useState(false)
+  const [savedAt, setSavedAt] = useState<string | null>(null)
+
+  const update = (partial: Partial<SiteSettings>) => setS((prev) => ({ ...prev, ...partial }))
+
+  async function save() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(s),
+      })
+      const json = (await res.json()) as ApiResponse<SiteSettings>
+      if (!json.success) throw new Error(json.error)
+      setSavedAt(new Date().toISOString())
+      notify(t.savedSettings)
+    } catch {
+      notify(t.saveFailed, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
-    <div>
+    <div className="pb-24">
       <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.settingsTitle}</h1>
 
-      {/* Multi-column keeps every card the same width and flows the uneven
-          heights into two balanced columns on desktop. */}
-      <div className="gap-6 lg:columns-2">
-        <Card title="Cài đặt chung">
-          <SettingsForm initial={settings} />
-        </Card>
-        <Card title={t.navAppearance}>
-          <AppearanceForm initial={settings.theme} defaults={defaultTheme} />
-        </Card>
-        <Card title="SEO">
-          <SeoForm initial={settings} />
-        </Card>
+      {/* Two explicit columns: both start at the top, sections distributed so the
+          two columns end up roughly the same length. */}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <Card title="Thông tin chung">
+            <SiteFields s={s} update={update} />
+          </Card>
+          <Card title="Bố cục & menu">
+            <LayoutMenuFields s={s} update={update} />
+          </Card>
+          <Card title="Tính năng đọc">
+            <FeatureFields features={s.features} onChange={(features) => update({ features })} />
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card title={t.navAppearance}>
+            <ThemeFields theme={s.theme} defaults={defaultTheme} onChange={(theme) => update({ theme })} />
+          </Card>
+          <Card title="SEO">
+            <SeoFields s={s} update={update} />
+          </Card>
+        </div>
+      </div>
+
+      {/* Single, always-reachable save bar. */}
+      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/90">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+          <span className="text-sm text-neutral-400 dark:text-neutral-500">
+            {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
+          </span>
+          <Button onClick={save} disabled={saving}>
+            {saving ? t.saving : t.saveSettings}
+          </Button>
+        </div>
       </div>
     </div>
   )

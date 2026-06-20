@@ -161,11 +161,15 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   reloads the TipTap doc.
 
 ## Settings (Admin → settings)
-- One page, no tabs: uniform-width cards in a balanced 2-column layout on desktop
-  (`lg:columns-2`), single column on mobile (`SettingsView.tsx`). The former Features tab
-  is merged into the "Cài đặt chung" card (`SettingsForm` edits `s.features`; it already
-  PUTs the whole settings object). Cards: Cài đặt chung, Giao diện, SEO — each saves
-  independently via `/api/settings`.
+- **One form, one save button** (`SettingsView.tsx`): all settings live in a single
+  `useState<SiteSettings>`, saved together via one PUT `/api/settings` (sticky bottom
+  bar). Controlled field groups (no own state/save): `SiteFields`, `LayoutMenuFields`,
+  `FeatureFields`, `ThemeFields`, `SeoFields` — each takes the value + an `update`/`onChange`.
+- Layout = two **explicit** top-aligned columns (`grid lg:grid-cols-2 items-start`, NOT
+  CSS `columns` — multicol drops the 2nd column down and ragged). Cards distributed to
+  balance length: left = Thông tin chung + Bố cục & menu + Tính năng đọc; right = Giao diện
+  + SEO. Uniform card chrome; inner spacing `space-y-5`, hint `<p>` paired with its input in
+  a `space-y-1.5` wrapper (no negative-margin hacks).
 
 ## Conventions
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
