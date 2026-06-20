@@ -116,6 +116,8 @@ const de = {
   navAppearance: 'Darstellung',
   appearanceTitle: 'Darstellung',
   appearanceHint: 'Farben für hellen und dunklen Modus anpassen: Hintergrund, Text, Überschriften, Sekundärtext, Links, Trennlinie.',
+  themePreset: 'Farbschema',
+  themePresetHint: 'Wähle ein integriertes Farbschema als Ausgangspunkt und passe dann jede Farbe unten an. Zurücksetzen stellt das gewählte Schema wieder her.',
   modeLight: 'Heller Modus',
   modeDark: 'Dunkler Modus',
   colorBg: 'Hintergrund',

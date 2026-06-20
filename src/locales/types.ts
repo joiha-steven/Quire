@@ -169,6 +169,8 @@ export type AdminStrings = {
   navAppearance: string
   appearanceTitle: string
   appearanceHint: string
+  themePreset: string
+  themePresetHint: string
   modeLight: string
   modeDark: string
   colorBg: string

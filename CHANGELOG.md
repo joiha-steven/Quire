@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-21
+- **feat(settings): 6 built-in color presets** (Mono / Sepia / Forest / Ocean / Rosé / Amber),
+  each a full light+dark palette tuned for readable contrast in both modes (`lib/themes.ts`).
+  Appearance now opens with a palette picker (live light/dark preview swatches); selecting one
+  fills both modes, and `settings.themePreset` remembers the choice so each mode's "reset"
+  restores THAT preset's colors. Every color stays fully editable + savable after picking;
+  the public site still renders only `theme` via `themeToCss`, so nothing is hardcoded
 - **change(media): replaced the destructive "Clean unused" button with a read-only "Check
   unused" audit** (`GET /api/media/unused`, `lib/media-usage.ts`; removed `lib/sweep.ts` +
   `POST /api/media/sweep`). It badges media referenced by no post/page/settings in the grid

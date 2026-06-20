@@ -116,6 +116,8 @@ const ja = {
   navAppearance: '外観',
   appearanceTitle: '外観',
   appearanceHint: 'ライトモードとダークモードの色をカスタマイズ: 背景、文字、見出し、補助テキスト、リンク、区切り線。',
+  themePreset: 'カラープリセット',
+  themePresetHint: '組み込みのパレットを出発点として選び、下で各色を微調整できます。リセットで選択中のプリセットに戻します。',
   modeLight: 'ライトモード',
   modeDark: 'ダークモード',
   colorBg: '背景',

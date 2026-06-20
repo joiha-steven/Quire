@@ -116,6 +116,8 @@ const zh = {
   navAppearance: '外观',
   appearanceTitle: '外观',
   appearanceHint: '自定义浅色和深色模式的颜色：背景、文字、标题、次要文字、链接、分隔线。',
+  themePreset: '配色方案',
+  themePresetHint: '选择一个内置配色作为起点，然后在下方微调各个颜色。重置将恢复所选配色。',
   modeLight: '浅色模式',
   modeDark: '深色模式',
   colorBg: '背景',

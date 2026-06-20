@@ -6,6 +6,10 @@ import { cache } from 'react'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson, collapseBlob, expandBlob, setMediaBase } from '@/lib/blob'
 import { isSiteLang } from '@/locales/langs'
+import { DEFAULT_THEME, DEFAULT_PRESET_ID, isPresetId } from '@/lib/themes'
+
+// Re-export so existing importers (settings page) keep working.
+export { DEFAULT_THEME } from '@/lib/themes'
 
 // Keep only well-formed menu items (label + href both present).
 function sanitizeMenu(input: unknown, fallback: MenuItem[]): MenuItem[] {
@@ -92,27 +96,6 @@ function sanitizeUrl(value: unknown): string {
 
 const SETTINGS_PATH = 'settings/site.json'
 
-// Neutral, almost-hueless palette (vibeblog redesign). Mirrors the fallback
-// tokens in globals.css so a fresh install looks right without saving anything.
-export const DEFAULT_THEME: ThemeSettings = {
-  light: {
-    bg: '#fbfbfa',
-    text: '#26262b',
-    heading: '#14141a',
-    meta: '#8a8a90',
-    link: '#14141a',
-    rule: '#e9e9e4',
-  },
-  dark: {
-    bg: '#0e0e0f',
-    text: '#d4d4d8',
-    heading: '#f1f1f2',
-    meta: '#85858c',
-    link: '#f1f1f2',
-    rule: '#27272a',
-  },
-}
-
 export const DEFAULT_SEO: SeoSettings = {
   autoSchema: true,
   sitemap: true,
@@ -148,6 +131,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   excerptLength: 50,
   customCss: '',
   menu: [],
+  themePreset: DEFAULT_PRESET_ID,
   theme: DEFAULT_THEME,
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
@@ -198,6 +182,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       relatedCount: clampNumber(stored.relatedCount, 0, 12, DEFAULT_SETTINGS.relatedCount),
       excerptLength: clampNumber(stored.excerptLength, 10, 100, DEFAULT_SETTINGS.excerptLength),
       customCss: sanitizeCss(stored.customCss),
+      themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
       theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
@@ -228,6 +213,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     excerptLength: clampNumber(input.excerptLength, 10, 100, current.excerptLength),
     customCss: input.customCss !== undefined ? sanitizeCss(input.customCss) : current.customCss,
     menu: sanitizeMenu(input.menu, current.menu),
+    themePreset: isPresetId(input.themePreset) ? input.themePreset : current.themePreset,
     theme: sanitizeTheme(input.theme, current.theme),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
