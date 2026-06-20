@@ -169,6 +169,14 @@ const ja = {
   confirmDeleteTerm: 'この分類をすべての記事から削除しますか？記事自体は削除されません。',
   noTerms: 'カテゴリーやタグはまだありません。',
   renamed: '名前を変更しました',
+  favicon: 'ファビコン',
+  faviconHint: 'ブラウザのタブに表示される小さなアイコン。正方形の画像（PNG/SVG）推奨。',
+  excerptLength: '抜粋の長さ（語数）',
+  excerptLengthHint: '抜粋がない場合に自動使用する語数（10〜100）。変更後に保存した記事に適用。',
+  relatedCount: '関連記事の数',
+  relatedCountHint: '記事末尾に表示する関連記事の数（0〜12）。',
+  customCss: 'カスタムCSS',
+  customCssHint: '独自のCSSをサイト全体に挿入（公開ページのみ）。コードを触らずに見た目を調整。',
 } satisfies AdminStrings
 
 export default ja

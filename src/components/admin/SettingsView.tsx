@@ -73,13 +73,24 @@ export function SettingsView({ settings, defaultTheme }: { settings: SiteSetting
             <LayoutMenuFields s={s} update={update} />
           </Card>
           <Card title={t.cardFeatures}>
-            <FeatureFields features={s.features} onChange={(features) => update({ features })} />
+            <FeatureFields
+              features={s.features}
+              onChange={(features) => update({ features })}
+              relatedCount={s.relatedCount}
+              onRelatedCount={(relatedCount) => update({ relatedCount })}
+            />
           </Card>
         </div>
 
         <div className="space-y-6">
           <Card title={t.navAppearance}>
-            <ThemeFields theme={s.theme} defaults={defaultTheme} onChange={(theme) => update({ theme })} />
+            <ThemeFields
+              theme={s.theme}
+              defaults={defaultTheme}
+              onChange={(theme) => update({ theme })}
+              customCss={s.customCss}
+              onCustomCss={(customCss) => update({ customCss })}
+            />
           </Card>
           <Card title="SEO">
             <SeoFields s={s} update={update} />

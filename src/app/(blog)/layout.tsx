@@ -15,6 +15,8 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
       className="mx-auto flex min-h-screen w-full flex-col px-5"
       style={{ maxWidth: settings.contentWidth }}
     >
+      {/* Owner CSS, public pages only (admin is never touched). Sanitized in settings.ts. */}
+      {settings.customCss && <style dangerouslySetInnerHTML={{ __html: settings.customCss }} />}
       <header className="py-7">
         {/* Logo and the icon row share ONE flex line so the icons stay centered
             on the logo's vertical midline at any logo size. The description sits

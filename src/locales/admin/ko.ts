@@ -169,6 +169,14 @@ const ko = {
   confirmDeleteTerm: '이 분류를 모든 글에서 제거할까요? 글은 삭제되지 않습니다.',
   noTerms: '아직 분류나 태그가 없습니다.',
   renamed: '이름이 변경되었습니다',
+  favicon: '파비콘',
+  faviconHint: '브라우저 탭에 표시되는 작은 아이콘. 정사각형 이미지(PNG/SVG) 권장.',
+  excerptLength: '발췌 길이(단어)',
+  excerptLengthHint: '발췌가 없을 때 자동으로 사용할 단어 수(10–100). 변경 후 저장한 글에 적용.',
+  relatedCount: '관련 글 개수',
+  relatedCountHint: '글 끝에 표시할 추천 글 수(0–12).',
+  customCss: '사용자 CSS',
+  customCssHint: '사이트 전체에 사용자 CSS 삽입(공개 페이지만). 코드 수정 없이 디자인 조정.',
 } satisfies AdminStrings
 
 export default ko

@@ -26,6 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(resolveSiteUrl(settings)),
     title: { default: title, template: `%s · ${title}` },
     description: description || undefined,
+    // Owner-set favicon overrides the bundled app/favicon.ico when present.
+    icons: settings.faviconUrl ? { icon: settings.faviconUrl } : undefined,
     // Advertise the RSS feed so readers/aggregators can auto-discover it.
     alternates: settings.seo.rss ? { types: { 'application/rss+xml': '/feed.xml' } } : undefined,
   }

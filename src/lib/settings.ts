@@ -71,6 +71,13 @@ function sanitizeFeatures(input: unknown, fallback: FeatureSettings): FeatureSet
   }
 }
 
+// Owner-authored CSS, injected raw into a <style> on public pages. Owner-only, so
+// the only real hazard is an accidental `</style>` closing the tag early — strip
+// any such sequence; everything else is passed through untouched.
+function sanitizeCss(value: unknown): string {
+  return typeof value === 'string' ? value.replace(/<\/style/gi, '') : ''
+}
+
 // Accept only a valid http(s) URL with no trailing slash; '' otherwise.
 function sanitizeUrl(value: unknown): string {
   if (typeof value !== 'string' || !value.trim()) return ''
@@ -134,8 +141,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   logoWidth: 120,
   showLogo: false,
   showDescription: true,
+  faviconUrl: '',
   contentWidth: 672,
   postsPerPage: 10,
+  relatedCount: 3,
+  excerptLength: 50,
+  customCss: '',
   menu: [],
   theme: DEFAULT_THEME,
   seo: DEFAULT_SEO,
@@ -181,8 +192,12 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       ...DEFAULT_SETTINGS,
       ...stored,
       logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
+      faviconUrl: expandBlob(stored.faviconUrl ?? DEFAULT_SETTINGS.faviconUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
       mediaBaseUrl,
+      relatedCount: clampNumber(stored.relatedCount, 0, 12, DEFAULT_SETTINGS.relatedCount),
+      excerptLength: clampNumber(stored.excerptLength, 10, 100, DEFAULT_SETTINGS.excerptLength),
+      customCss: sanitizeCss(stored.customCss),
       theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
@@ -206,8 +221,12 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoWidth: clampNumber(input.logoWidth, 24, 600, current.logoWidth),
     showLogo: input.showLogo ?? current.showLogo,
     showDescription: input.showDescription ?? current.showDescription,
+    faviconUrl: input.faviconUrl ?? current.faviconUrl,
     contentWidth: clampNumber(input.contentWidth, 360, 1600, current.contentWidth),
     postsPerPage: clampNumber(input.postsPerPage, 1, 100, current.postsPerPage),
+    relatedCount: clampNumber(input.relatedCount, 0, 12, current.relatedCount),
+    excerptLength: clampNumber(input.excerptLength, 10, 100, current.excerptLength),
+    customCss: input.customCss !== undefined ? sanitizeCss(input.customCss) : current.customCss,
     menu: sanitizeMenu(input.menu, current.menu),
     theme: sanitizeTheme(input.theme, current.theme),
     seo: sanitizeSeo(input.seo, current.seo),
@@ -217,6 +236,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
   const stored: SiteSettings = {
     ...next,
     logoUrl: collapseBlob(next.logoUrl),
+    faviconUrl: collapseBlob(next.faviconUrl),
     seo: { ...next.seo, ogFallbackImage: collapseBlob(next.seo.ogFallbackImage) },
   }
   await writeJson(SETTINGS_PATH, stored)

@@ -169,6 +169,14 @@ const en = {
   confirmDeleteTerm: 'Remove this term from all posts? The posts are not deleted.',
   noTerms: 'No categories or tags yet.',
   renamed: 'Renamed',
+  favicon: 'Favicon',
+  faviconHint: 'Small icon shown on the browser tab. Use a square image (PNG/SVG).',
+  excerptLength: 'Excerpt length (words)',
+  excerptLengthHint: 'Words auto-used as the excerpt when a post has none (10–100). Applies to posts saved after the change.',
+  relatedCount: 'Related posts count',
+  relatedCountHint: 'How many suggestions to show at the end of a post (0–12).',
+  customCss: 'Custom CSS',
+  customCssHint: 'Inject your own CSS site-wide (public pages only). Tweak the look without touching code.',
 } satisfies AdminStrings
 
 export default en

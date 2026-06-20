@@ -108,8 +108,12 @@ export type SiteSettings = {
   logoWidth: number // px, horizontal width of the logo in the header
   showLogo: boolean
   showDescription: boolean
+  faviconUrl: string // browser-tab icon; '' = the bundled default favicon
   contentWidth: number // px, max width of the content column (desktop)
   postsPerPage: number // posts shown per page on home/category/tag lists
+  relatedCount: number // related posts shown at the end of an article (0 = none)
+  excerptLength: number // words auto-used as a post excerpt when none is set
+  customCss: string // owner CSS injected into PUBLIC pages only ('' = none)
   menu: MenuItem[] // header navigation links
   theme: ThemeSettings // per-mode reading colors
   seo: SeoSettings // SEO / crawler feature toggles

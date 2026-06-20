@@ -169,6 +169,14 @@ const de = {
   confirmDeleteTerm: 'Diesen Begriff aus allen Beiträgen entfernen? Die Beiträge werden nicht gelöscht.',
   noTerms: 'Noch keine Kategorien oder Tags.',
   renamed: 'Umbenannt',
+  favicon: 'Favicon',
+  faviconHint: 'Kleines Symbol im Browser-Tab. Quadratisches Bild verwenden (PNG/SVG).',
+  excerptLength: 'Auszugslänge (Wörter)',
+  excerptLengthHint: 'Wörter, die automatisch als Auszug dienen, wenn keiner gesetzt ist (10–100). Gilt für danach gespeicherte Beiträge.',
+  relatedCount: 'Anzahl ähnlicher Beiträge',
+  relatedCountHint: 'Wie viele Vorschläge am Ende eines Beitrags (0–12).',
+  customCss: 'Eigenes CSS',
+  customCssHint: 'Eigenes CSS für die ganze Website einfügen (nur öffentliche Seiten). Aussehen ohne Code anpassen.',
 } satisfies AdminStrings
 
 export default de

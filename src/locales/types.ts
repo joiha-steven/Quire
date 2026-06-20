@@ -146,6 +146,14 @@ export type AdminStrings = {
   siteWidthHint: string
   postsPerPage: string
   postsPerPageHint: string
+  favicon: string
+  faviconHint: string
+  excerptLength: string
+  excerptLengthHint: string
+  relatedCount: string
+  relatedCountHint: string
+  customCss: string
+  customCssHint: string
   saveSettings: string
   savedSettings: string
   menuTitle: string

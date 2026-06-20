@@ -87,7 +87,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const { features } = settings
     const headings = features.toc ? extractHeadings(post.content) : []
     const minutes = readingMinutes(post.content)
-    const related = features.related ? await getRelatedPosts(post.slug) : []
+    const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     return (
       <article>

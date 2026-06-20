@@ -169,6 +169,14 @@ const zh = {
   confirmDeleteTerm: '从所有文章中移除此分类？文章不会被删除。',
   noTerms: '还没有分类或标签。',
   renamed: '已重命名',
+  favicon: '网站图标',
+  faviconHint: '显示在浏览器标签页的小图标。建议使用正方形图片（PNG/SVG）。',
+  excerptLength: '摘要长度（字数）',
+  excerptLengthHint: '文章无摘要时自动截取的字数（10–100）。对更改后保存的文章生效。',
+  relatedCount: '相关文章数量',
+  relatedCountHint: '在文章末尾显示的推荐数量（0–12）。',
+  customCss: '自定义 CSS',
+  customCssHint: '为整个站点注入自定义 CSS（仅公开页面）。无需改代码即可微调外观。',
 } satisfies AdminStrings
 
 export default zh

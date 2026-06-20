@@ -67,9 +67,15 @@ function ModeBox({
   )
 }
 
-type Props = { theme: ThemeSettings; defaults: ThemeSettings; onChange: (t: ThemeSettings) => void }
+type Props = {
+  theme: ThemeSettings
+  defaults: ThemeSettings
+  onChange: (t: ThemeSettings) => void
+  customCss: string
+  onCustomCss: (v: string) => void
+}
 
-export function ThemeFields({ theme, defaults, onChange }: Props) {
+export function ThemeFields({ theme, defaults, onChange, customCss, onCustomCss }: Props) {
   const t = useAdminT()
   const setColor = (mode: keyof ThemeSettings, key: ColorKey, value: string) =>
     onChange({ ...theme, [mode]: { ...theme[mode], [key]: value } })
@@ -91,6 +97,18 @@ export function ThemeFields({ theme, defaults, onChange }: Props) {
         onReset={() => onChange({ ...theme, dark: defaults.dark })}
         t={t}
       />
+      <div className="space-y-1.5">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.customCss}</span>
+        <textarea
+          value={customCss}
+          onChange={(e) => onCustomCss(e.target.value)}
+          rows={6}
+          spellCheck={false}
+          placeholder={'.prose h2 { letter-spacing: -0.01em }'}
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+        />
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
+      </div>
     </div>
   )
 }

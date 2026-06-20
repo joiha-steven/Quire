@@ -63,13 +63,14 @@ export const getPost = cache(async (slug: string): Promise<PostWithContent | nul
   return parsePost(raw, slug)
 })
 
-// Normalize incoming data into a complete Post + content pair.
-function normalize(input: Partial<PostWithContent>): PostWithContent {
+// Normalize incoming data into a complete Post + content pair. `excerptWords`
+// (from settings) controls the auto-excerpt length when the author leaves it blank.
+function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWithContent {
   const content = (input.content ?? '').trim()
   const title = (input.title ?? '').trim()
   const slug = input.slug?.trim() ? slugify(input.slug) : slugify(title)
   // Author excerpt wins (but is length-capped); otherwise auto from the body.
-  const excerpt = input.excerpt?.trim() ? clampExcerpt(input.excerpt.trim()) : deriveExcerpt(content)
+  const excerpt = input.excerpt?.trim() ? clampExcerpt(input.excerpt.trim()) : deriveExcerpt(content, excerptWords)
   return {
     title,
     slug,
@@ -116,7 +117,8 @@ export async function savePost(
   input: Partial<PostWithContent>,
   previousSlug?: string,
 ): Promise<Post> {
-  const post = normalize(input)
+  const { excerptLength } = await getSettings()
+  const post = normalize(input, excerptLength)
   // Reject a slug already taken by another post or page (shared URL namespace).
   await ensureSlugFree(post.slug, 'post', previousSlug)
 

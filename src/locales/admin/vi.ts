@@ -169,6 +169,14 @@ const vi = {
   confirmDeleteTerm: 'Gỡ phân loại này khỏi tất cả bài viết? Bài viết không bị xóa.',
   noTerms: 'Chưa có danh mục hay thẻ nào.',
   renamed: 'Đã đổi tên',
+  favicon: 'Favicon',
+  faviconHint: 'Biểu tượng nhỏ trên tab trình duyệt. Nên dùng ảnh vuông (PNG/SVG).',
+  excerptLength: 'Độ dài tóm tắt (số chữ)',
+  excerptLengthHint: 'Số chữ tự lấy làm tóm tắt khi bài không có mô tả riêng (10–100). Áp dụng cho bài lưu sau khi đổi.',
+  relatedCount: 'Số bài liên quan',
+  relatedCountHint: 'Số bài gợi ý ở cuối mỗi bài viết (0–12).',
+  customCss: 'CSS tùy chỉnh',
+  customCssHint: 'Chèn CSS riêng vào toàn site (chỉ trang công khai). Tinh chỉnh giao diện mà không cần sửa code.',
 } satisfies AdminStrings
 
 export default vi

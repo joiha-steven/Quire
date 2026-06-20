@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 2026-06-21
+- **feat(settings): four owner-configurable settings to cut hardcoding** — Custom CSS (injected
+  into PUBLIC pages only, `</style>` stripped), related-posts count, auto-excerpt length, and a
+  favicon upload. New `SiteSettings` fields + sanitizers; `relatedCount`/`excerptLength` clamped.
 - **fix(admin): header wordmark/menu now share one h-9 box → perfectly aligned.** Removed the
   `v0.x.y` badge from beside the logo; the running version (now a link to GitHub releases)
   lives only on the Overview page. Alignment rule documented in CLAUDE.md (no more baseline drift)
