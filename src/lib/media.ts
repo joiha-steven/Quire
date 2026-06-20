@@ -44,6 +44,17 @@ async function imageSize(original: Buffer): Promise<{ width: number; height: num
   return { width: meta.width ?? 0, height: meta.height ?? 0 }
 }
 
+// Pixel dimensions for any image we can decode (raster + webp/gif, and most svg).
+// Returns {} when unknown so the field is simply omitted (never stored as 0).
+async function safeSize(buf: Buffer): Promise<{ width?: number; height?: number }> {
+  try {
+    const { width, height } = await imageSize(buf)
+    return width && height ? { width, height } : {}
+  } catch {
+    return {}
+  }
+}
+
 // Small library thumbnail — cheap, made on upload so the grid renders at once.
 async function makeThumb(original: Buffer): Promise<Buffer> {
   return sharp(original, { failOn: 'none' })
@@ -142,11 +153,13 @@ async function processFile(
   if (PASSTHROUGH.test(contentType)) {
     const ext = contentType === 'image/svg+xml' ? 'svg' : contentType === 'image/gif' ? 'gif' : 'webp'
     const path = freePathname(base, ext, taken)
-    const url = await uploadFile(path, Buffer.from(body), contentType)
+    const buf = Buffer.from(body)
+    const url = await uploadFile(path, buf, contentType)
     const common = {
       filename: path.replace(/^media\//, ''),
       size: body.byteLength,
       uploadedAt,
+      ...(await safeSize(buf)), // webp/gif/svg dimensions when decodable
       variants: false as const,
     }
     return {

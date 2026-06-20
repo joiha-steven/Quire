@@ -313,6 +313,12 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   uniform set of text links, nothing styled as a button. Adding an item = reuse it, do not
   copy a class list. (`CacheButton` accepts a `className`, default `ADMIN_NAV`; `ThemeToggle`
   has a `variant='text'` that renders the applied theme as a word styled by `triggerClassName`.)
+- **Header/menu alignment must be pixel-exact — the owner is very sensitive to it and it has
+  drifted repeatedly.** RULE: every item on a header row (incl. the differently-sized brand
+  wordmark) is a `inline-flex h-9 items-center` box, and the row is `items-center`. Same fixed
+  height + centred contents = every label sits on one line regardless of font size. NEVER align
+  a bigger wordmark to smaller links by `items-baseline` (that was the recurring bug) and never
+  leave an item without the shared `h-9` box. Verify the rendered result before shipping.
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
   Never use bespoke `border-t`/`border-b` rules as content dividers, and never ALL-CAPS
   text (no `uppercase`) anywhere in shipped UI.

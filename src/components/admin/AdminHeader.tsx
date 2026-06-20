@@ -13,15 +13,7 @@ import { ADMIN_NAV } from './headerActions'
 import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
-export function AdminHeader({
-  lang,
-  version,
-  signOut,
-}: {
-  lang: SiteLang
-  version: string
-  signOut: () => Promise<void>
-}) {
+export function AdminHeader({ lang, signOut }: { lang: SiteLang; signOut: () => Promise<void> }) {
   const t = useAdminT()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
@@ -61,21 +53,13 @@ export function AdminHeader({
   return (
     <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        {/* Left: brand wordmark (logo) + version → GitHub, then the nav menu */}
+        {/* Left: brand wordmark (logo) + nav menu. The wordmark is the SAME h-9
+            items-center box as every nav link, so its text sits on the exact same
+            line — see the "admin header alignment" rule in CLAUDE.md. */}
         <div className="flex items-center gap-5">
-          <span className="inline-flex h-9 items-center gap-2">
-            <Link href="/admin" className="text-xl leading-none tracking-tight" onClick={close}>
-              vibe<span className="font-bold">blog</span>
-            </Link>
-            <a
-              href="https://github.com/joiha-steven/vibeblog/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs leading-none text-neutral-400 transition-colors hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400"
-            >
-              v{version}
-            </a>
-          </span>
+          <Link href="/admin" className="inline-flex h-9 items-center text-xl leading-none tracking-tight" onClick={close}>
+            vibe<span className="font-bold">blog</span>
+          </Link>
           <nav className="hidden items-center gap-5 md:flex">{navItems}</nav>
         </div>
 
