@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Local media-wipe backup artifacts
 media-index-backup-*.json
+
+# Local env backups
+.env.local.bak*

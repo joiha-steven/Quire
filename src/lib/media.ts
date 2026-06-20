@@ -5,7 +5,7 @@
 import sharp from 'sharp'
 import { unstable_cache } from 'next/cache'
 import type { MediaItem } from '@/types'
-import { readJson, writeJson, uploadFile, deleteByUrl } from '@/lib/blob'
+import { readJson, writeJson, uploadFile, deleteByUrl, collapseBlob, expandBlob } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
 
 const INDEX_PATH = 'media/_index.json'
@@ -19,9 +19,9 @@ const OPTIMIZABLE = /^image\/(jpeg|png|webp|avif|tiff|bmp)$/
 export const getMedia = unstable_cache(
   async (): Promise<MediaItem[]> => {
     const items = await readJson<MediaItem[]>(INDEX_PATH, [])
-    return [...items].sort(
-      (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-    )
+    return [...items]
+      .map((m) => ({ ...m, url: expandBlob(m.url) })) // stored pathname -> absolute URL
+      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
   },
   ['media-index'],
   { tags: ['media'] },
@@ -49,6 +49,7 @@ async function optimize(
 function existingPathnames(items: MediaItem[]): Set<string> {
   const set = new Set<string>()
   for (const m of items) {
+    if (/^media\//.test(m.url)) { set.add(m.url); continue } // already a pathname
     try {
       set.add(new URL(m.url).pathname.replace(/^\//, ''))
     } catch {
@@ -87,12 +88,13 @@ export async function addMedia(
   const url = await uploadFile(pathname, data, type)
 
   const item: MediaItem = {
-    url,
+    url, // absolute, for the client/editor
     filename: pathname.replace(/^media\//, ''),
     size: data.byteLength,
     uploadedAt: new Date().toISOString(),
   }
-  await writeJson(INDEX_PATH, [item, ...current])
+  // Store the pathname; getMedia re-expands on read.
+  await writeJson(INDEX_PATH, [{ ...item, url: collapseBlob(url) }, ...current])
   return item
 }
 
@@ -100,8 +102,10 @@ export async function addMedia(
 export async function deleteMedia(url: string): Promise<void> {
   await deleteByUrl(url)
   const current = await readJson<MediaItem[]>(INDEX_PATH, [])
+  // Index entries are store-relative; compare on pathname so either form matches.
+  const target = collapseBlob(url)
   await writeJson(
     INDEX_PATH,
-    current.filter((m) => m.url !== url),
+    current.filter((m) => collapseBlob(m.url) !== target),
   )
 }
