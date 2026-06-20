@@ -56,9 +56,14 @@ export function Overview({ posts, pages, mediaCount, totalBytes, categories, tag
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t.overviewTitle}</h1>
-        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+        <a
+          href="https://github.com/joiha-steven/vibeblog/releases"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
+        >
           vibeblog v{version}
-        </span>
+        </a>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
