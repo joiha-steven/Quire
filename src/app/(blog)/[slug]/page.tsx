@@ -4,8 +4,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPost, getRelatedPosts } from '@/lib/posts'
-import { getPage } from '@/lib/pages'
+import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
+import { getPage, getPublicPages } from '@/lib/pages'
 import { getMedia } from '@/lib/media'
 import { collapseBlob } from '@/lib/blob'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
@@ -18,9 +18,17 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings } from '@/lib/utils'
 
-// Always render fresh from Blob (no build-time SSG snapshot, no data cache), so
-// an edit to a post/page is visible on the very next load — no rebuild needed.
-export const dynamic = 'force-dynamic'
+// ISR-cached for fast reads. An edit to this post/page purges it immediately via
+// revalidatePath('/', 'layout') in the save route; the 1h window is a safety net.
+export const revalidate = 3600
+export const dynamicParams = true // slugs not prebuilt below render on first visit
+
+// Prerender all known post/page slugs at build, then keep them fresh via ISR.
+export async function generateStaticParams() {
+  const [posts, pages] = await Promise.all([getPublicPosts(), getPublicPages()])
+  const slugs = new Set([...posts.map((p) => p.slug), ...pages.map((p) => p.slug)])
+  return [...slugs].map((slug) => ({ slug }))
+}
 
 // Render a taxonomy list as comma-separated links: "a, b, c".
 function taxoLinks(items: string[], make: (s: string) => string) {

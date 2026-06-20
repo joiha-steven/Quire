@@ -1,7 +1,7 @@
 // POST /api/media/sweep -> delete media referenced nowhere (owner only).
 
 import type { NextRequest } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { sweepUnusedMedia } from '@/lib/sweep'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('Unauthorized', 401)
     }
     const result = await sweepUnusedMedia()
-    revalidateTag('media', { expire: 0 })
+    revalidatePath('/', 'layout')
     logRequest(req, 200, start)
     return ok(result)
   } catch (error) {

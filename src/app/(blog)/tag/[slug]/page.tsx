@@ -4,7 +4,7 @@ import { getSettings } from '@/lib/settings'
 import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
 export default async function TagPage({ params }: PageProps<'/tag/[slug]'>) {
   const { slug } = await params

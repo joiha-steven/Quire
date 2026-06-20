@@ -2,7 +2,7 @@
 import { getPublicPosts } from '@/lib/posts'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 
-export const dynamic = 'force-dynamic' // always reflect the latest posts
+export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
 const MAX_ITEMS = 50
 

@@ -55,9 +55,11 @@ curl -s -X DELETE "localhost:3000/api/media/by?url=x"
 ```
 
 ## Caching gotchas
-- There is **no data cache**: all public routes are `force-dynamic`, reads use
-  `React.cache()` only. After an edit, a plain reload must show the change — if it
-  doesn't, something reintroduced caching. Do NOT add `unstable_cache` back.
-- Do NOT add `cacheComponents: true` to `next.config.ts` — it enables PPR which is
-  incompatible with `force-dynamic`, `React.cache()`, `Date.now()`, and route configs.
-- All routes should show as `ƒ (Dynamic)` in the `npm run build` output — none `●`/`○`.
+- Model = ISR pages + full purge on save. After an admin save, a plain reload of the
+  public page must show the change (the save calls `revalidatePath('/', 'layout')`).
+- `npm run build` should show `/` and `/[slug]` as `○`/`●` (ISR), admin as `ƒ` (dynamic).
+  If `/[slug]` is `ƒ`, the Blob reads got set to `no-store` again (that breaks ISR).
+- Do NOT add `unstable_cache` back or `cacheComponents: true`. Do NOT set `blob.ts` reads
+  to `cache: 'no-store'` — keep `{ next: { revalidate } }` so pages stay ISR-eligible.
+- The "Clear all cache" button must purge + warm (returns `{ warmed }`).
+- Change blog settings (e.g. background color) → reload public site shows it immediately.

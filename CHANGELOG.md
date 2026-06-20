@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-06-24
+- **refactor(cache): ISR pages + full purge on save (replaces yesterday's force-dynamic).**
+  Public pages are ISR-cached again for speed (`revalidate = 3600`; `/[slug]` prerendered via
+  `generateStaticParams`), but every admin write now calls a single `revalidatePath('/',
+  'layout')` that purges the WHOLE site — so an edit (content, theme/background, anything) is
+  live on the next request. Reliable this time because it's ONE cache layer (no
+  `unstable_cache`), the Full Route Cache is per-deployment (no cross-deploy stale), and Blob
+  reads are `?ts`-busted (fresh on every regeneration). `blob.ts` reads switched from
+  `cache: 'no-store'` to `{ next: { revalidate } }` so pages can be ISR-cached
+- fix(settings): changing site settings (e.g. background color) now applies immediately —
+  the save purges the cached layout/theme site-wide
+- feat(admin): "Clear all cache" button is back and actually works — purges everything
+  (`revalidatePath('/', 'layout')`) then warms the home + newest detail pages (`/api/cache/clear`)
+- admin is fully `force-dynamic` (uncached) so the editor/media/settings always reflect the
+  current Blob state; client Router Cache fully off (`staleTimes { dynamic: 0, static: 0 }`)
+
 ## 2026-06-23
 - **refactor(cache): removed the data cache entirely — content is now always fresh.**
   `unstable_cache` + tag revalidation kept fighting Blob's read-after-write and serving

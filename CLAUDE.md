@@ -44,39 +44,48 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
   with the functions — no cross-region hop.
 - The OG route is `runtime = 'edge'` and runs at the nearest PoP regardless.
 
-## Caching model — NONE (always fresh) — read this
-There is **no data cache**. This is deliberate: `unstable_cache` + tag revalidation
-repeatedly fought Blob's read-after-write and served stale content (new posts missing,
-deleted images reappearing, settings not applying, cross-deploy Data Cache persistence).
-It was all removed in favor of dead-simple, always-correct reads.
+## Caching model — ISR pages + full purge on save — read this
+ONE cache layer: the **page** (Next Full Route Cache / ISR). There is deliberately
+**no data cache** (`unstable_cache`) — stacking a tagged data cache over Blob was what
+repeatedly served stale content (missing posts, reappearing deleted images, settings not
+applying, cross-deploy Data Cache persistence). The model now:
 
-- Every public page and SEO route is **`export const dynamic = 'force-dynamic'`** →
-  server-rendered fresh on each request. There is NO SSG snapshot of content, so an edit
-  shows on the very next load with no rebuild/revalidation step.
-- Data-layer reads (`getPost`, `getPublicPosts`, `getPage`, `getSettings`, `getMedia`, …)
-  are wrapped in **`React.cache()` only** — that dedupes repeated reads **within a single
-  render pass** (e.g. `generateMetadata` + the page). It is request-scoped; it never
-  caches across requests, so it cannot go stale.
-- Blob reads stay cache-busted (`fresh(url)` adds `?ts=`) so the CDN never serves an
-  overwritten blob stale. Images are the only long-cached layer (1 year, in `uploadFile`).
-- Write routes still call `revalidateTag`/`revalidatePath`; with no `unstable_cache` and
-  `force-dynamic` pages these are **harmless no-ops** (kept as belt-and-suspenders / future
-  proofing — do not rely on them).
-- There is **no "Clear cache" button** and **no cache-key versioning** anymore — both
-  existed only to paper over the data cache. Adding a field to an index needs no key bump.
-- Client Router Cache stays off (`experimental.staleTimes: { dynamic: 0 }`).
-- **DO NOT** reintroduce `unstable_cache` or `cacheComponents: true`. If a page ever needs
-  caching for load, prefer a short `revalidate` on that one route — never a cross-request
-  data cache over Blob (that is exactly what broke).
-
-Trade-off: every view does a few Blob reads (~tens of ms, co-located in Singapore). For a
-single-owner personal blog that is fine, and correctness beats shaving a Blob round-trip.
+- **Pages are ISR-cached** with `export const revalidate = 3600` (`/`, `/[slug]`, the SEO
+  routes; `/[slug]` also has `generateStaticParams` → prerendered `●`). Visitors get fast
+  cached HTML; the 1h window is only a safety net.
+- **Every admin write calls `revalidatePath('/', 'layout')`** (posts/pages/settings, plus
+  media delete/sweep). That purges the WHOLE site's Full Route Cache, so an edit — content,
+  theme/background, anything — is live on the very next request. Simple and total; no
+  per-tag bookkeeping. (Media *upload* alone purges nothing — the file isn't on a public
+  page until a post referencing it is saved, which purges.)
+- **Data-layer reads use `React.cache()` only** (request-scoped dedup, never cross-request)
+  AND the Blob fetch is **cache-eligible but cache-busted**: `blob.ts` reads with
+  `{ next: { revalidate: 3600 } }` (NOT `no-store`, so pages can be ISR) while `fresh()`
+  adds a unique `?ts=`, so every actual fetch hits the Blob origin fresh. Net: pages cache,
+  but each (re)generation reads current data — no stale data cache, no read-after-write race
+  (the read-modify-write in `mutateIndex` is always fresh for the same reason).
+- **Why this is reliable now (vs the old `unstable_cache` model):** (1) one cache layer, not
+  two; (2) the Full Route Cache is **per-deployment** — a new deploy never serves another
+  deploy's stale pages (the old Data Cache persisted across deploys); (3) every save does a
+  **full** purge, so nothing is missed; (4) `?ts` guarantees fresh Blob on regeneration.
+- **"Clear all cache" button** (`CacheButton` → `POST /api/cache/clear`) =
+  `revalidatePath('/', 'layout')` + warms the home + newest detail pages. Use it after
+  editing Blob directly (outside admin) or to force a global refresh.
+- **No cache-key versioning** (adding an index field needs no bump). Client Router Cache is
+  fully off (`experimental.staleTimes: { dynamic: 0, static: 0 }`) so soft navigations
+  never show a stale RSC.
+- **DO NOT** reintroduce `unstable_cache` or `cacheComponents: true`, and **do not** set the
+  Blob reads back to `cache: 'no-store'` (that forces every page dynamic, killing the ISR
+  cache). Never add a cross-request data cache over Blob — that is exactly what broke before.
 
 ## Rendering — `src/app/(blog)/[slug]/page.tsx`
-- `force-dynamic`; **no** `generateStaticParams`/`dynamicParams`. Reads `getPost` +
-  `getPage` (shared `/{slug}` namespace) + `getMedia` (for the `<picture>` ready-set) and
-  renders fresh every request.
-- List pages (home, category, tag) are dynamic. Pagination is **path-based**: page 1 at
+- `revalidate = 3600` + `generateStaticParams` (all post/page slugs) + `dynamicParams = true`
+  → known slugs prerender (`●`), new ones render on first visit, all refresh via ISR and
+  purge instantly on save. Reads `getPost` + `getPage` (shared `/{slug}` namespace) +
+  `getMedia` (for the `<picture>` ready-set).
+- Admin (`/admin/*`) is `force-dynamic` (uncached) — the editor/media/settings always show
+  current Blob state. Search/preview/og are dynamic too.
+- List pages (home is ISR; category/tag/`page/[n]` are dynamic). Pagination is **path-based**: page 1 at
   the bare path, deeper pages at `/page/[n]` (and `/category/[slug]/page/[n]`,
   `/tag/[slug]/page/[n]`) — no `?query`, friendlier for SEO. `parsePathPage` returns the
   page only for `n >= 2` (else `null` → 404, so there is no duplicate URL for page 1 and
@@ -226,10 +235,10 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 ## Next.js 16 reminders
 - `params` / `searchParams` are async (await them).
 - Use `PageProps<...>` / `RouteContext<...>` global type helpers.
-- Reads use `React.cache()` for request-scoped dedup; do NOT add `unstable_cache` back
-  (it caused the stale-content bugs — see "Caching model"). Public routes are `force-dynamic`.
-- `revalidateTag(tag, profile)` requires 2 args if ever used. `cacheComponents: true`
-  enables PPR — avoid (incompatible with `force-dynamic`, `Date.now()`, route configs).
+- Reads use `React.cache()` for request-scoped dedup; do NOT add `unstable_cache` back, and
+  do NOT set Blob reads to `cache: 'no-store'` (forces every page dynamic). Public pages are
+  ISR (`revalidate`) + purged on save; admin is `force-dynamic`. See "Caching model".
+- `cacheComponents: true` enables PPR — avoid (incompatible with `Date.now()` + route configs).
 - Before writing any unfamiliar API, read `node_modules/next/dist/docs/`.
 
 ## Docs & releases — keep current (single repo)

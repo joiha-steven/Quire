@@ -5,7 +5,7 @@ import { getPublicPosts } from '@/lib/posts'
 import { getPublicPages } from '@/lib/pages'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 
-export const dynamic = 'force-dynamic' // always reflect the latest posts
+export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
 export async function GET(): Promise<Response> {
   const s = await getSettings()

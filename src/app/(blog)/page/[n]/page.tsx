@@ -6,7 +6,7 @@ import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
 import { parsePathPage } from '@/lib/paginate'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
 export default async function HomePaged({ params }: PageProps<'/page/[n]'>) {
   const { n } = await params

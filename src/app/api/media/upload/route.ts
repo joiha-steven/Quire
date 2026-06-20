@@ -2,7 +2,6 @@
 // Accepts multipart/form-data with one or more "file" fields.
 
 import type { NextRequest } from 'next/server'
-import { revalidateTag } from 'next/cache'
 import { addMediaBatch } from '@/lib/media'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -39,7 +38,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
       throw e
     }
-    revalidateTag('media', { expire: 0 })
+    // No revalidation needed: the admin media library is dynamic, and a new
+    // upload isn't on any public page until a post/page referencing it is saved.
     logRequest(req, 201, start)
     return ok(uploaded, 201)
   } catch (error) {

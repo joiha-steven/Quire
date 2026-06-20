@@ -88,9 +88,15 @@ export async function listBlobs(): Promise<{ pathname: string; size: number }[]>
 }
 
 // Read and parse a JSON blob; returns fallback when the blob is missing.
+// NOTE: `cache: 'no-store'` is intentionally avoided — it would force every page
+// that reads Blob to render dynamically, defeating the ISR page cache. Instead the
+// `fresh()` `?ts=` query makes each URL unique, so the fetch ALWAYS hits the Blob
+// origin (never a stale data-cache entry) even though the call is cache-eligible.
+// Net effect: pages can be ISR-cached, yet a read on (re)generation is always fresh.
+const READ_OPTS = { next: { revalidate: 3600 } } as const
 export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
   try {
-    const res = await fetch(fresh(blobUrl(pathname)), { cache: 'no-store' })
+    const res = await fetch(fresh(blobUrl(pathname)), READ_OPTS)
     if (!res.ok) return fallback
     return (await res.json()) as T
   } catch (error) {
@@ -104,7 +110,7 @@ export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
 // Read a text blob (e.g. markdown); returns null when missing.
 export async function readText(pathname: string): Promise<string | null> {
   try {
-    const res = await fetch(fresh(blobUrl(pathname)), { cache: 'no-store' })
+    const res = await fetch(fresh(blobUrl(pathname)), READ_OPTS)
     if (!res.ok) return null
     return await res.text()
   } catch (error) {

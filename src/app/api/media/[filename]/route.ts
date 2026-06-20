@@ -2,7 +2,7 @@
 // The blob URL is passed via the `url` search param (it is the manifest key).
 
 import type { NextRequest } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { deleteMedia } from '@/lib/media'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -19,7 +19,7 @@ export async function DELETE(req: NextRequest): Promise<Response> {
       return fail('Missing url', 400)
     }
     await deleteMedia(url)
-    revalidateTag('media', { expire: 0 })
+    revalidatePath('/', 'layout') // a deleted image may appear on a cached page
     logRequest(req, 200, start)
     return ok({ url })
   } catch (error) {

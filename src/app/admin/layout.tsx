@@ -8,7 +8,12 @@ import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { CacheButton } from '@/components/admin/CacheButton'
 import pkg from '../../../package.json'
+
+// The entire admin is uncached — every view reads the current Blob state, so the
+// editor/media library/settings never show a stale snapshot of your own edits.
+export const dynamic = 'force-dynamic'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { email, authorized } = await getAuthState()
@@ -48,6 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </nav>
             <div className="flex items-center gap-1">
               <ThemeToggle lang={language} />
+              <CacheButton />
               <form
                 className="flex"
                 action={async () => {

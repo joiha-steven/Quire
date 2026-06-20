@@ -33,13 +33,15 @@ can change without rewriting anything (see Design decisions).
 ## Request flow
 
 - **Public read**: server components call `src/lib` (`getPublicPosts`, `getPost`,
-  `getSettings`, …). There is **no data cache** — reads use `React.cache()` for
-  request-scoped dedup only, and every page is `force-dynamic`, so each request reads
-  fresh from Blob. `/[slug]` and the list pages all render on demand; pagination is
-  path-based (`/page/[n]`, `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1
-  at the bare path).
-- **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Blob
-  via `src/lib`. No revalidation needed (pages are always fresh); the next read sees it.
+  `getSettings`, …). Pages are **ISR-cached** (`revalidate = 3600`; `/[slug]` prerendered
+  via `generateStaticParams`), so visitors get fast cached HTML. There is **no data cache**:
+  reads use `React.cache()` for request-scoped dedup, and the Blob fetch is cache-eligible
+  but `?ts`-busted, so each (re)generation reads fresh. Pagination is path-based (`/page/[n]`,
+  `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1 at the bare path).
+- **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Blob via
+  `src/lib`, then `revalidatePath('/', 'layout')` — one call purges the whole site's page
+  cache, so the edit (content, theme, anything) is live on the next request. Admin is
+  `force-dynamic` (uncached). A manual "Clear all cache" button does the same purge + warms.
 - **Render**: Markdown → HTML via `marked` (raw HTML is escaped, never executed);
   images become `<figure>`, lone video URLs become embeds, H2/H3 get slug ids.
 
@@ -64,13 +66,15 @@ can change without rewriting anything (see Design decisions).
 - **Mutable Blob written with `cacheControlMaxAge: 0` + cache-busted reads** →
   Blob's default 1-year CDN cache once served a stale `_index.json` after a save and
   the read-modify-write **clobbered the index**. Mutable content must never be stale.
-- **No data cache; every public route is `force-dynamic`** → reads come straight from
-  Blob each request (`React.cache()` only dedupes within one render). We tried
-  `unstable_cache` + tag revalidation and it repeatedly served stale content (missing
-  new posts, reappearing deleted images, settings not applying, Data Cache persisting
-  across deploys). Correctness over a saved Blob round-trip; the Blob store is in
-  Singapore beside the functions, so reads are cheap. Never reintroduce a cross-request
-  cache over Blob.
+- **One cache layer (ISR pages) + full purge on save; no data cache** → pages are
+  ISR-cached for speed, every save calls `revalidatePath('/', 'layout')` to purge the whole
+  site, and Blob reads are `?ts`-busted so regeneration is always fresh. We first tried
+  `unstable_cache` + tag revalidation (two cache layers) and it repeatedly served stale
+  content — missing posts, reappearing deleted images, settings not applying, Data Cache
+  persisting across deploys. This model fixes that because: one layer not two; the Full
+  Route Cache is per-deployment (no cross-deploy stale); every save purges everything; and
+  `?ts` guarantees fresh Blob. Never reintroduce a cross-request data cache over Blob, and
+  never set the Blob reads to `no-store` (it would force every page dynamic).
 - **Store-relative image refs (`collapseBlob`/`expandBlob`)** → stored content holds
   pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
   store / region / provider needs only a token change, no content rewrite. (Used to

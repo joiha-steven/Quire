@@ -50,15 +50,17 @@ blog content lives in Vercel Blob, not in git. Don't commit personal data here.
 
 ## Performance & caching
 
-Reads are **always fresh** — there is no data cache. Every page is `force-dynamic`
-and reads straight from Blob each request (`React.cache()` only dedupes within one
-render), so an edit shows on the next load with no rebuild or revalidation. We
-removed `unstable_cache` deliberately: caching over Blob kept serving stale content.
-The Blob store is in Singapore beside the functions (`vercel.json` pins `sin1`), so
-reads are cheap; images keep a 1-year CDN cache. List pages use **path-based
-pagination** (`/page/2`, `/category/x/page/2` — no `?query`, SEO-friendly). Uploaded
-photos keep the untouched original and serve responsive AVIF/WebP variants
-(`<picture>`, emitted only once the variants exist); variant encoding is deferred to save.
+Public pages are **ISR-cached** (`revalidate`; `/[slug]` prerendered) so visitors get
+fast cached HTML, and **every admin save purges the whole site** via
+`revalidatePath('/', 'layout')` — so an edit (content, theme, anything) is live on the
+next request. There is no separate data cache (`unstable_cache` was removed; it kept
+serving stale content); Blob reads are `?ts`-busted so each regeneration is fresh, and
+the Full Route Cache is per-deployment so a new deploy never serves stale pages. Admin
+is fully dynamic (uncached); a "Clear all cache" button purges + warms on demand. The
+Blob store and functions are both in Singapore (`vercel.json` pins `sin1`); images keep
+a 1-year CDN cache. List pages use **path-based pagination** (`/page/2`,
+`/category/x/page/2` — no `?query`). Uploaded photos keep the untouched original and
+serve responsive AVIF/WebP variants (`<picture>`, only once the variants exist).
 
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full design and the *why*.
 

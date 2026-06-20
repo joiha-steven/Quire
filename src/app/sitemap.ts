@@ -5,7 +5,7 @@ import { getPublicPosts, getCategories, getTags } from '@/lib/posts'
 import { getPublicPages } from '@/lib/pages'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 
-export const dynamic = 'force-dynamic' // reflect new posts + SEO toggles immediately
+export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const s = await getSettings()

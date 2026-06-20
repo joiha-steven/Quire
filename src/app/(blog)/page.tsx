@@ -5,7 +5,9 @@ import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
 import { JsonLd, websiteSchema } from '@/components/blog/JsonLd'
 
-export const dynamic = 'force-dynamic' // always fresh from Blob; no stale list
+// ISR-cached for fast reads; admin saves purge it instantly via
+// revalidatePath('/', 'layout'). The 1h window is just a safety net.
+export const revalidate = 3600
 
 export default async function HomePage() {
   const [posts, settings] = await Promise.all([getPublicPosts(), getSettings()])

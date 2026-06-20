@@ -9,15 +9,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Client Router Cache tuning:
-  // - dynamic: 0  -> list pages (home/category/tag, which read searchParams) are
-  //   never reused stale, so an edit/delete shows immediately on navigation.
-  // - static: 180 -> post/page detail (prerendered SSG) is reused for 3 min, so
-  //   hover/viewport prefetch makes clicking a post open instantly. Server-side
-  //   edits still bust it via revalidatePath; the editor's "Xem bài viết" opens
-  //   a fresh tab, so the owner never sees a stale post.
+  // Client Router Cache fully OFF (both 0): every navigation reflects the current
+  // server state, so an edit is never hidden behind a stale client-side RSC. The
+  // server still serves fast — public pages are ISR-cached (revalidate), so TTFB
+  // stays low for visitors; this only forces the *client* to refetch that cached
+  // RSC instead of reusing an old copy. Reliability over a few KB of refetch.
   experimental: {
-    staleTimes: { dynamic: 0, static: 180 },
+    staleTimes: { dynamic: 0, static: 0 },
   },
 }
 

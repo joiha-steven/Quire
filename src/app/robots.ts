@@ -3,7 +3,7 @@
 import type { MetadataRoute } from 'next'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 
-export const dynamic = 'force-dynamic' // reflect SEO toggles immediately
+export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const s = await getSettings()

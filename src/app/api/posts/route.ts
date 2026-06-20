@@ -2,7 +2,7 @@
 // POST /api/posts  -> create a post (owner only)
 
 import type { NextRequest } from 'next/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getIndex, savePost } from '@/lib/posts'
 import { finalizeContentMedia } from '@/lib/media'
@@ -44,9 +44,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     const meta = await savePost(body)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
-    revalidateTag('posts', { expire: 0 })
-    revalidateTag('media', { expire: 0 }) // variants:true upgrade -> post page emits <picture>
-    revalidatePath(`/${meta.slug}`)
+    revalidatePath('/', 'layout') // purge whole site cache; next read is fresh
     logRequest(req, 201, start)
     return ok(meta, 201)
   } catch (error) {

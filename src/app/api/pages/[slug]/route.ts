@@ -3,7 +3,7 @@
 // DELETE /api/pages/[slug]  -> delete page (owner only)
 
 import type { NextRequest } from 'next/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import type { PageWithContent } from '@/types'
 import { getPage, savePage, deletePage } from '@/lib/pages'
 import { finalizeContentMedia } from '@/lib/media'
@@ -46,10 +46,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]
     const body = (await req.json()) as Partial<PageWithContent>
     const meta = await savePage(body, slug)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
-    revalidateTag('pages', { expire: 0 })
-    revalidateTag('media', { expire: 0 }) // variants:true upgrade -> page emits <picture>
-    revalidatePath(`/${meta.slug}`)
-    if (slug !== meta.slug) revalidatePath(`/${slug}`)
+    revalidatePath('/', 'layout') // purge whole site cache; next read is fresh
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -72,8 +69,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/pages/[sl
     }
     const { slug } = await ctx.params
     await deletePage(slug)
-    revalidateTag('pages', { expire: 0 })
-    revalidatePath(`/${slug}`)
+    revalidatePath('/', 'layout')
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {
