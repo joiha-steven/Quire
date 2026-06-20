@@ -21,7 +21,9 @@ export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url)
   const title = (searchParams.get('title') || '').slice(0, 160)
   const bg = searchParams.get('bg') || ''
-  const site = searchParams.get('site') || ''
+  // The bottom line is a site name, domain, or (on the home card) the site
+  // description — cap it so a long description can't overflow the card.
+  const site = (searchParams.get('site') || '').slice(0, 120)
 
   const [latin, latinExt, vietnamese] = await Promise.all([
     font('inter-latin.woff'),
