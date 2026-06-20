@@ -180,9 +180,13 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   via root metadata `alternates`.
 - `app/og/route.tsx` → dynamic OG image (1200×630, **edge runtime**, Be Vietnam Pro
   TTFs bundled beside it and loaded via `fetch(new URL('./x.ttf', import.meta.url))`).
-  Fully query-driven (`title`/`site`/`bg`), no Blob read. `lib/og.ts#ogImageUrl`
-  picks `bg` = post featured image → `seo.ogFallbackImage` → none, and is used in
-  post/page `generateMetadata` for `og:image`.
+  Fully query-driven (`title`/`site`/`bg`, both length-capped), no Blob read.
+  `lib/og.ts` builds the card URL for every surface (all honor the `seo.ogImage`
+  toggle; bg = the relevant image or `seo.ogFallbackImage` → gradient):
+  - `ogImageUrl` — posts/pages: top = title, bottom = site title; bg = featured image.
+  - `ogCardUrl` + `siteDomain` — list surfaces: **home** (top = domain, bottom =
+    description), **category/tag** (top = name, bottom = domain). Wired into each
+    route's `generateMetadata`.
 - JSON-LD via `components/blog/JsonLd.tsx` (`websiteSchema` on home, `articleSchema`
   on posts), gated by `seo.autoSchema`.
 - robots/sitemap/feed/llms are ISR (`revalidate = 3600`), not force-dynamic. Toggling an SEO

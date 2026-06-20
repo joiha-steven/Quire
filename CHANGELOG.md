@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **feat(seo): dynamic OG cards for the home, category and tag pages** (same card as
+  posts/pages). Home: top line = domain, bottom = site description. Category/tag: top line =
+  the name, bottom = domain. Honors the dynamic-OG toggle + fallback image like the rest;
+  new `ogCardUrl`/`siteDomain` helpers in `lib/og.ts`. The OG `site` line is now length-capped
 - **fix(blog): desktop table-of-contents pinned to the viewport's left edge (50px in).**
   It was absolutely positioned against the centered content column's left edge, so wide /
   full-bleed images broke out into the gutter and overlapped it. Now `fixed` to the viewport,
