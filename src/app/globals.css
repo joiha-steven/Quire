@@ -150,6 +150,39 @@ hr {
 .prose li::marker {
   color: var(--c-meta);
 }
+/* TipTap wraps each list item's content in a <p> (so does `marked` for "loose"
+   lists), and `.prose p` adds 1.4em — which made bullets look far apart in the
+   editor. Zero that inner-paragraph margin so items sit tight + even; keep
+   spacing only between genuine multi-paragraph items. */
+.prose li > p {
+  margin-top: 0;
+}
+.prose li > p + p {
+  margin-top: 0.7em;
+}
+/* Task lists (checkbox items): no bullet, checkbox aligned to the first line.
+   Covers both the TipTap editor structure and the published `marked` output. */
+.prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+}
+.prose ul[data-type='taskList'] li {
+  display: flex;
+  gap: 0.55em;
+}
+.prose ul[data-type='taskList'] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.36em;
+}
+.prose ul[data-type='taskList'] li > div {
+  flex: 1 1 auto;
+}
+.prose li:has(> input[type='checkbox']) {
+  list-style: none;
+}
+.prose li > input[type='checkbox'] {
+  margin-right: 0.55em;
+}
 .prose blockquote {
   border-left: 2px solid var(--c-rule);
   padding-left: 1.1em;

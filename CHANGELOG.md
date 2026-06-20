@@ -107,6 +107,16 @@
 - fix(i18n): localize ~32 strings that were hardcoded Vietnamese (settings cards, reader-feature toggles, SEO fields, time machine, editor toasts) — they now translate in all 6 languages
 - feat(admin): "Clear cache" button in the header (purges every data-cache tag + reloads) for an immediate "see my changes now" escape hatch
 
+## 2026-06-21
+- fix(editor): over-spaced bullet/numbered list items. TipTap wraps each item's content in a
+  `<p>`, which inherited the 1.4em paragraph margin — items now sit tight + even (only genuine
+  multi-paragraph items keep spacing). Shared `.prose` rule, so the editor matches the render.
+- feat(editor): rounded out the toolbar to match standard markdown editors — **numbered list**,
+  **task list** (GFM `- [ ]`, renders as checkboxes), **inline code**, **horizontal rule**, and
+  **insert table** (the Table extension had no way to create one from the UI). Added the TipTap
+  **Placeholder** extension so the empty-state hint actually shows (the old root `data-placeholder`
+  rendered nothing). New deps: `@tiptap/extension-task-list`, `-task-item`, `-placeholder`.
+
 ## 2026-06-20
 - feat(admin): **Media domain (CDN)** field in Settings → SEO (`mediaBaseUrl`) — set a vanity
   host for public media URLs from the UI instead of an env var. Owner setting wins, falls back

@@ -232,6 +232,12 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   return the fallback/null on any error (missing token, Blob down) rather than rethrow.
 
 ## Editor (Admin → editor)
+- **Nodes/marks** (`components/admin/Editor.tsx`): StarterKit + underline, inline code, bullet/
+  numbered/**task** lists (`@tiptap/extension-task-list`+`-task-item`; GFM `- [ ]`, `marked`
+  renders the checkboxes on the public side), quote, code block, hr, link, captioned image,
+  GFM tables, video. **Placeholder** ext drives the empty-state hint (the CSS reads its
+  `data-placeholder`/`is-editor-empty`). `tiptap-markdown` serializes it all (incl. task items).
+  List items: TipTap/`marked` wrap content in `<p>`; `.prose li > p{margin:0}` keeps them tight.
 - **Autosave**: `PostForm` saves every 60s while `dirty` (chained behind any in-flight
   save so autosave + manual save never race). Also warns on unload with unsaved changes.
 - **Time machine**: each overwrite snapshots the prior version (`revisions.ts`, keeps 3).
