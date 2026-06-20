@@ -26,7 +26,7 @@ export function PostCard({
           : ''}
       </p>
       {post.excerpt && (
-        <p className="mt-3 text-[1.0625rem] leading-relaxed text-neutral-600 dark:text-neutral-300">
+        <p className="mt-3 text-[1.0625rem] leading-relaxed text-[color:var(--c-text)]">
           {post.excerpt}
         </p>
       )}
