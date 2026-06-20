@@ -93,4 +93,15 @@ note apps (Obsidian, then Craft), and optional AI assist in the editor. See
 
 ## License
 
-MIT
+Two separate layers — keep them distinct:
+
+- **Code (this repository) — [MIT](./LICENSE).** Free and open source. Use, modify,
+  redistribute, or sell it freely, for any purpose, with **no obligation to credit**
+  the author (MIT only asks that the license text travels with copies of the source).
+  Fork it and run your own blog.
+- **Content — © all rights reserved.** The blog content published *with* vibeblog
+  (articles, images, and other writing on an operator's site, e.g. manhhung.me) is the
+  property of its author and is **not** covered by the MIT license. It does not live in
+  this repository and may not be reused without permission.
+
+In short: the **software** is open for anyone; the **author's writing** is not.

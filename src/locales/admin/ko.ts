@@ -130,6 +130,7 @@ const ko = {
   colorRule: '구분선',
   resetDefault: '기본값으로 재설정',
   overviewTitle: '개요',
+  licenseTitle: 'vibeblog은 오픈소스(MIT)입니다. 블로그 내용은 작성자 소유입니다(모든 권리 보유).',
   statPosts: '게시물',
   statPages: '페이지',
   statMedia: '첨부 파일',

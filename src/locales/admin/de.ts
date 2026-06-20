@@ -130,6 +130,7 @@ const de = {
   colorRule: 'Trennlinie',
   resetDefault: 'Auf Standard zurücksetzen',
   overviewTitle: 'Übersicht',
+  licenseTitle: 'vibeblog ist Open Source (MIT). Deine Blog-Inhalte bleiben dein (alle Rechte vorbehalten).',
   statPosts: 'Beiträge',
   statPages: 'Seiten',
   statMedia: 'Anhänge',

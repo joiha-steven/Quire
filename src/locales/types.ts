@@ -187,6 +187,7 @@ export type AdminStrings = {
   resetDefault: string
   // overview
   overviewTitle: string
+  licenseTitle: string
   statPosts: string
   statPages: string
   statMedia: string

@@ -6,6 +6,10 @@ import { useAdminT } from './I18nProvider'
 
 type Taxo = { name: string; count: number }
 
+// Shared style for the small header pills (version + license) so they stay identical.
+const PILL =
+  'rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200'
+
 type Props = {
   posts: number
   pages: number
@@ -56,14 +60,28 @@ export function Overview({ posts, pages, mediaCount, totalBytes, categories, tag
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t.overviewTitle}</h1>
-        <a
-          href="https://github.com/joiha-steven/vibeblog/releases"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
-        >
-          vibeblog v{version}
-        </a>
+        {/* Version + license pills share ONE class so they can't drift. The MIT
+            pill links to the LICENSE — the platform code is open source (the blog
+            content it publishes is the owner's, all rights reserved). */}
+        <div className="flex items-center gap-2">
+          <a
+            href="https://github.com/joiha-steven/vibeblog/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={PILL}
+          >
+            vibeblog v{version}
+          </a>
+          <a
+            href="https://github.com/joiha-steven/vibeblog/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t.licenseTitle}
+            className={PILL}
+          >
+            MIT
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

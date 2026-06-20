@@ -130,6 +130,7 @@ const en = {
   colorRule: 'Horizontal rule',
   resetDefault: 'Reset to default',
   overviewTitle: 'Overview',
+  licenseTitle: 'vibeblog is open source under MIT. Your blog content stays yours (all rights reserved).',
   statPosts: 'Posts',
   statPages: 'Pages',
   statMedia: 'Attachments',

@@ -130,6 +130,7 @@ const ja = {
   colorRule: '区切り線',
   resetDefault: 'デフォルトに戻す',
   overviewTitle: '概要',
+  licenseTitle: 'vibeblog はオープンソース（MIT）。ブログの内容はあなたのものです（無断転載禁止）。',
   statPosts: '投稿',
   statPages: 'ページ',
   statMedia: '添付ファイル',

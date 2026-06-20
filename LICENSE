@@ -19,3 +19,17 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+SCOPE — code vs. content
+
+This MIT license covers the vibeblog SOFTWARE (the source code in this
+repository) ONLY. You may use, modify, and redistribute the code freely, with
+no obligation to credit the original author.
+
+It does NOT cover the blog CONTENT created or published with the software —
+articles, images, and other writing on an operator's site (e.g. manhhung.me).
+That content is not part of this repository, is the property of its author, and
+is reserved (all rights reserved); it may not be reused without the author's
+permission. See the "License" section of README.md.

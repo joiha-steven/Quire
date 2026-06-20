@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **docs(license): make the code-vs-content split explicit.** The platform code stays
+  **MIT** — free to use/modify/redistribute with **no attribution required**. Clarified that
+  the blog **content** published with it (the author's writing/images, e.g. manhhung.me) is
+  **© all rights reserved** and not covered by MIT. Added a "Scope" note to `LICENSE`, a
+  two-layer README License section, `"license": "MIT"` in package.json, and an **MIT pill** on
+  the admin Overview (links to the LICENSE) so the open-source status shows in-app too
 - **chore(audit): add `audit/` log + repeatable audit procedure** (`audit/README.md`): an
   8-section pass (baseline → security → logic → perf → code quality → layout → i18n → docs)
   recorded as dated reports, so each comprehensive review starts from the last clean line.

@@ -130,6 +130,7 @@ const vi = {
   colorRule: 'Đường gạch ngang',
   resetDefault: 'Khôi phục mặc định',
   overviewTitle: 'Tổng quan',
+  licenseTitle: 'vibeblog là mã nguồn mở (MIT). Nội dung blog của bạn vẫn là của bạn (giữ toàn quyền).',
   statPosts: 'Bài viết',
   statPages: 'Trang',
   statMedia: 'File đính kèm',

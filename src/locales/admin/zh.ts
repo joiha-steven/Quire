@@ -130,6 +130,7 @@ const zh = {
   colorRule: '分隔线',
   resetDefault: '恢复默认',
   overviewTitle: '概览',
+  licenseTitle: 'vibeblog 是开源软件（MIT）。你的博客内容归你所有（保留所有权利）。',
   statPosts: '文章',
   statPages: '页面',
   statMedia: '附件',
