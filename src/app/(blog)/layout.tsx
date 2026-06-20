@@ -1,6 +1,5 @@
 // Public blog shell: header (from site settings) + content column + footer.
 import Link from 'next/link'
-import Image from 'next/image'
 import { getSettings } from '@/lib/settings'
 import { t } from '@/lib/i18n'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
@@ -23,17 +22,20 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="inline-flex items-center">
             {showLogo ? (
-              // next/image resizes the logo to its display width (the uploaded
-              // file can be up to 1600px). width/height 0 + sizes lets it work
-              // without knowing the logo's intrinsic ratio.
-              <Image
+              // Plain <img>, NOT next/image: the logo host is owner-configurable at
+              // runtime (Settings → Media domain), but next/image's optimizer only
+              // allows hosts whitelisted in next.config at BUILD time — a runtime
+              // vanity domain would 400. A plain tag loads from whatever host the
+              // setting yields, no build coupling. Logos are small + CDN-cached, so
+              // skipping optimization is negligible. height:auto keeps the ratio.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={settings.logoUrl}
                 alt={settings.title}
-                width={0}
-                height={0}
-                sizes={`${settings.logoWidth}px`}
+                width={settings.logoWidth}
                 style={{ width: settings.logoWidth, height: 'auto' }}
-                priority
+                fetchPriority="high"
+                decoding="async"
               />
             ) : (
               <span className="text-lg font-bold tracking-tight">{settings.title}</span>
