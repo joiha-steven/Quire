@@ -3,17 +3,13 @@
 // Controlled site-info fields (language, title, description, logo). No local
 // settings state and no save button — the parent SettingsView owns both.
 import { useState } from 'react'
-import type { SiteSettings, SiteLang } from '@/types'
+import type { SiteSettings } from '@/types'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { ToggleField } from '@/components/ui/Switch'
+import { SITE_LANGS } from '@/locales/langs'
 import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
-
-const LANGS: { value: SiteLang; label: string }[] = [
-  { value: 'vi', label: 'Tiếng Việt' },
-  { value: 'en', label: 'English' },
-]
 
 type Props = { s: SiteSettings; update: (p: Partial<SiteSettings>) => void }
 
@@ -25,13 +21,13 @@ export function SiteFields({ s, update }: Props) {
     <div className="space-y-5">
       <div className="space-y-1.5">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.siteLanguage}</span>
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
-          {LANGS.map((l) => (
+        <div className="flex flex-wrap gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+          {SITE_LANGS.map((l) => (
             <button
               key={l.value}
               type="button"
               onClick={() => update({ language: l.value })}
-              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
+              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
                 s.language === l.value ? 'bg-white shadow-sm dark:bg-neutral-700' : 'text-neutral-500'
               }`}
             >

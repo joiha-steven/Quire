@@ -86,10 +86,24 @@ HTML) and regenerates on tag/path revalidation — instant reads, fresh on edit.
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the same URL namespace; throws `SlugConflictError` (→ 409) on collision |
 | `video.ts` | `videoEmbed`, `isVideoUrl` | Recognizes YouTube / Vimeo / TikTok URLs; returns embed URL. Videos stored as plain URLs in Markdown |
 | `paginate.ts` | `paginate`, `parsePage` | Pure helper; `parsePage` converts `searchParams.page` → number |
-| `i18n.ts` | `t(lang)`, `formatDate` | Public-site strings (vi/en); admin UI always Vietnamese (`admin-i18n.ts`) |
+| `i18n.ts` | `t(lang)`, `formatDate` | Thin loader over `src/locales/`; `formatDate` uses Intl per-lang (vi custom) |
 | `utils.ts` | `slugify`, `deriveExcerpt`, `clampExcerpt`, `isPublicallyVisible`, `formatBytes`, `formatDateVi`, `formatDateTimeShort`, `formatTime` | `isPublicallyVisible` = `status === 'published'` AND date is past |
 | `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Shared API helpers. Every route must call `requireOwner()` first |
-| `admin-i18n.ts` | `adminT(lang)` | ~388 lines of admin string keys; near the 400-line cap — do not add |
+| `admin-i18n.ts` | `adminT(lang)` | Thin loader over `src/locales/admin/` |
+
+### Localization — `src/locales/`
+- `types.ts` = shapes (`Dict` public, `AdminStrings` admin). Add a key here → every
+  locale file must define it (`satisfies` makes TS error otherwise — that is the
+  "no missing keys" guarantee).
+- `langs.ts` = single source of truth: `SITE_LANGS` (picker), `isSiteLang` (validation).
+- Public strings: `src/locales/<code>.ts`. Admin strings: `src/locales/admin/<code>.ts`.
+- Supported: **en (default), vi, de, ja, zh, ko**. CJK renders via the `system-ui`
+  font fallback (Inter has no CJK glyphs) — intentional, keeps the bundle light.
+- **Add a language**: extend `SiteLang`, add a `SITE_LANGS` row, a `DATE_LOCALE` entry
+  in `i18n.ts`, and create both locale files. TS enforces completeness.
+- **Add/rename a string**: add the key to `types.ts`, then fill it in ALL locale files
+  (both public + admin where relevant). Build fails until every language has it. Keep
+  every locale in sync on any UI string change.
 
 ## Scripts — `scripts/`
 
@@ -186,7 +200,8 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
   Never use bespoke `border-t`/`border-b` rules as content dividers, and never ALL-CAPS
   text (no `uppercase`) anywhere in shipped UI.
-- UI text (labels, buttons, toasts, placeholders) → Vietnamese.
+- UI text (labels, buttons, toasts, placeholders) → never hardcoded; go through
+  `src/locales/` and keep every language in sync (see Localization above).
 - Code, comments, identifiers, filenames, commits → English.
 - Max 400 lines per file. No `any` (use `unknown` + narrowing).
 - No hardcoded Vietnamese strings in `lib/` or `api/` — components only.
