@@ -134,9 +134,11 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - `/search` — server ships a LEAN pre-folded index (`{ slug, title, date, terms }`,
   terms = folded title+tags+categories, no excerpt/image so it scales); `SearchClient`
   lists nothing until the reader types, filters in memory, caps at 50. Header search icon.
-- Post pages: `ReadingProgress` (top bar), `Toc` (>= 3 H2/H3; **desktop-only** `absolute`
-  frame in the left gutter, top aligned to the article body via a `relative` wrapper; the
-  `PostContent` renderer assigns slug ids to H2/H3), `RelatedPosts`
+- Post pages: `ReadingProgress` (top bar), `Toc` (>= 3 H2/H3; **desktop-only**, a `sticky`
+  nav inside an `absolute` full-height track in the left gutter so it starts level with the
+  body and follows the scroll; the `PostContent` renderer assigns slug ids to H2/H3),
+  `RelatedPosts`. NOTE: the global unlayered `hr { margin:0 }` beats Tailwind margin
+  utilities, so put divider spacing on a wrapper div, not on the `<hr>` itself.
   (`getRelatedPosts` — shared tags ×2 + categories), and `readingMinutes` in the meta.
 - **Draft preview**: `/preview/[slug]?key=<hmac>` (force-dynamic, noindex) renders any
   status when the key matches `previewToken(slug)` (HMAC of slug keyed by AUTH_SECRET).
