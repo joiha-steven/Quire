@@ -8,6 +8,7 @@ import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import pkg from '../../../package.json'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { email, authorized } = await getAuthState()
@@ -59,6 +60,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </header>
         <div className={`${shell} py-8`}>{children}</div>
+        <footer className={`${shell} py-4 text-xs text-neutral-400 dark:text-neutral-600`}>
+          vibeblog v{pkg.version} ·{' '}
+          <a
+            href="https://github.com/joiha-steven/vibeblog/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-neutral-600 dark:hover:text-neutral-400"
+          >
+            changelog
+          </a>
+        </footer>
       </div>
     </AdminI18nProvider>
   )
