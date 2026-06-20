@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **docs(deploy): expanded the "Deploy to Vercel" guide into two clear methods** — (A) manual
+  via the Vercel dashboard (fork → Blob store → env vars → OAuth callback → sign in), noting the
+  two `vercel.json` settings to adjust for yourself (the `sin1` region is just the author's
+  nearest region — change it; the 60s upload `maxDuration` can exceed the free plan); and (B) handing the whole
+  install to an AI agent with Vercel + GitHub access (generic — OpenClaw / Hermes / Claude / …)
 - **docs(license): make the code-vs-content split explicit.** The platform code stays
   **MIT** — free to use/modify/redistribute with **no attribution required**. Clarified that
   the blog **content** published with it (the author's writing/images, e.g. manhhung.me) is
