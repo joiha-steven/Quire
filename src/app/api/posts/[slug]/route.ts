@@ -3,10 +3,10 @@
 // DELETE /api/posts/[slug]  -> delete post (owner only)
 
 import type { NextRequest } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getPost, savePost, deletePost } from '@/lib/posts'
 import { finalizeContentMedia } from '@/lib/media'
+import { revalidatePost } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -47,9 +47,8 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]
     const body = (await req.json()) as Partial<PostWithContent>
     const meta = await savePost(body, slug)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
-    // Purge the whole site cache so the post, lists, taxonomy pages and any
-    // <picture> upgrade all reflect the save on the next request.
-    revalidatePath('/', 'layout')
+    // Refresh this post's page (old + new slug) and every list/taxonomy surface.
+    revalidatePost(meta.slug, slug)
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -72,7 +71,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/posts/[sl
     }
     const { slug } = await ctx.params
     await deletePost(slug)
-    revalidatePath('/', 'layout')
+    revalidatePost(slug) // drop its now-404 page + refresh every list surface
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {

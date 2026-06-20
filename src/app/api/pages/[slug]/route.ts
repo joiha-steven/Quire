@@ -3,10 +3,10 @@
 // DELETE /api/pages/[slug]  -> delete page (owner only)
 
 import type { NextRequest } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import type { PageWithContent } from '@/types'
 import { getPage, savePage, deletePage } from '@/lib/pages'
 import { finalizeContentMedia } from '@/lib/media'
+import { revalidatePage } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -46,7 +46,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]
     const body = (await req.json()) as Partial<PageWithContent>
     const meta = await savePage(body, slug)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
-    revalidatePath('/', 'layout') // purge whole site cache; next read is fresh
+    revalidatePage(meta.slug, slug) // its page (old + new slug) + sitemap/llms
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -69,7 +69,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/pages/[sl
     }
     const { slug } = await ctx.params
     await deletePage(slug)
-    revalidatePath('/', 'layout')
+    revalidatePage(slug) // drop its now-404 page + sitemap/llms
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {

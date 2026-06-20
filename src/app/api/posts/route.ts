@@ -2,10 +2,10 @@
 // POST /api/posts  -> create a post (owner only)
 
 import type { NextRequest } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getIndex, savePost } from '@/lib/posts'
 import { finalizeContentMedia } from '@/lib/media'
+import { revalidateNewPost } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     const meta = await savePost(body)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
-    revalidatePath('/', 'layout') // purge whole site cache; next read is fresh
+    revalidateNewPost() // refresh every list/taxonomy surface; other posts stay warm
     logRequest(req, 201, start)
     return ok(meta, 201)
   } catch (error) {

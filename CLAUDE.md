@@ -53,11 +53,30 @@ applying, cross-deploy Data Cache persistence). The model now:
 - **Pages are ISR-cached** with `export const revalidate = 3600` (`/`, `/[slug]`, the SEO
   routes; `/[slug]` also has `generateStaticParams` → prerendered `●`). Visitors get fast
   cached HTML; the 1h window is only a safety net.
-- **Every admin write calls `revalidatePath('/', 'layout')`** (posts/pages/settings, plus
-  media delete/sweep). That purges the WHOLE site's Full Route Cache, so an edit — content,
-  theme/background, anything — is live on the very next request. Simple and total; no
-  per-tag bookkeeping. (Media *upload* alone purges nothing — the file isn't on a public
-  page until a post referencing it is saved, which purges.)
+- **All cache invalidation goes through `src/lib/revalidate.ts`** (one place, always a
+  SUPERSET of the affected surfaces — never under-purges, which is what made old per-tag
+  bookkeeping go stale). Each admin write calls exactly one helper:
+  - **New post** → `revalidateNewPost()`: every list/taxonomy surface (home, `/page/[n]`,
+    `/category/[slug]`(+`/page/[n]`), `/tag/[slug]`(+`/page/[n]`), `feed.xml`, `sitemap.xml`,
+    `llms.txt`). The bracketed dynamic forms (`'page'` type) cover every slug + pagination
+    page in one call. Other posts' detail pages stay warm.
+  - **Edit/delete post** → `revalidatePost(slug, prevSlug?)`: the post's own page (old + new
+    slug) PLUS all the list surfaces above (its title/excerpt/date/taxonomy live there too).
+  - **New/edit/delete page** → `revalidatePage(slug, prevSlug?)`: just its own URL(s) +
+    `sitemap.xml`/`llms.txt` (a static page never appears on post lists/taxonomy).
+  - **Settings** → `revalidateEverything()` (`revalidatePath('/', 'layout')`) + `warmCache()`
+    — theme/menu/title/SEO touch every page, so purge the whole site then re-warm.
+  - **"Clear all cache" button** / media delete/sweep → `revalidateEverything()` (+ warm on
+    the button). Media *upload* alone purges nothing (not on a public page until a referencing
+    post is saved, which purges).
+  - **The one accepted staleness:** the "related posts" box on OTHER post detail pages — a new
+    post sharing tags with post Y won't show in Y's related list until Y's own ISR (≤1h) or
+    next save. Cosmetic, self-heals; the Clear button is the instant full-sync escape hatch.
+- **Admin forms call `router.refresh()` after a successful save** (PostForm, PageForm, and
+  SettingsView) so the client Router Cache is dropped — the admin lists and public site show
+  the save on the next navigation, not a stale RSC. The server purge above handles the Full
+  Route Cache; `router.refresh()` handles the client side. (This pairs with `staleTimes` in
+  `next.config.ts`; both were causes of the old "applies late" symptom.)
 - **Data-layer reads use `React.cache()` only** (request-scoped dedup, never cross-request)
   AND the Blob fetch is **cache-eligible but cache-busted**: `blob.ts` reads with
   `{ next: { revalidate: 3600 } }` (NOT `no-store`, so pages can be ISR) while `fresh()`
@@ -72,8 +91,10 @@ applying, cross-deploy Data Cache persistence). The model now:
   `revalidatePath('/', 'layout')` + warms the home + newest detail pages. Use it after
   editing Blob directly (outside admin) or to force a global refresh.
 - **No cache-key versioning** (adding an index field needs no bump). Client Router Cache is
-  fully off (`experimental.staleTimes: { dynamic: 0, static: 0 }`) so soft navigations
-  never show a stale RSC.
+  minimized (`experimental.staleTimes: { dynamic: 0, static: 30 }`) so soft navigations to
+  dynamic routes are always fresh. NOTE: Next 16 rejects `static: 0` (min 30) and silently
+  ignores it — 30 is the lowest accepted value, so static routes can hold a client RSC up to
+  30s on soft nav (ISR + the full purge-on-save still make a hard load fresh).
 - **DO NOT** reintroduce `unstable_cache` or `cacheComponents: true`, and **do not** set the
   Blob reads back to `cache: 'no-store'` (that forces every page dynamic, killing the ISR
   cache). Never add a cross-request data cache over Blob — that is exactly what broke before.
@@ -112,6 +133,7 @@ applying, cross-deploy Data Cache persistence). The model now:
 | `i18n.ts` | `t(lang)`, `formatDate` | Thin loader over `src/locales/`; `formatDate` uses Intl per-lang (vi custom) |
 | `utils.ts` | `slugify`, `deriveExcerpt`, `clampExcerpt`, `isPublicallyVisible`, `formatBytes`, `formatDateVi`, `formatDateTimeShort`, `formatTime` | `isPublicallyVisible` = `status === 'published'` AND date is past |
 | `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Shared API helpers. Every route must call `requireOwner()` first |
+| `revalidate.ts` | `revalidateNewPost`, `revalidatePost`, `revalidatePage`, `revalidateEverything`, `warmCache` | **Single source of truth for cache invalidation.** Every admin write calls exactly one helper; each is a superset of the affected surfaces (never under-purges). See "Caching model" |
 | `admin-i18n.ts` | `adminT(lang)` | Thin loader over `src/locales/admin/` |
 
 ### Localization — `src/locales/`
@@ -163,8 +185,9 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   post/page `generateMetadata` for `og:image`.
 - JSON-LD via `components/blog/JsonLd.tsx` (`websiteSchema` on home, `articleSchema`
   on posts), gated by `seo.autoSchema`.
-- robots/sitemap/feed/llms are all `force-dynamic`, so toggling an SEO feature + saving
-  reflects on the next request (no revalidation, no cache key to bump).
+- robots/sitemap/feed/llms are ISR (`revalidate = 3600`), not force-dynamic. Toggling an SEO
+  feature is a settings save → `revalidateEverything()` purges them; a post create/edit also
+  purges feed/sitemap/llms via `revalidate.ts` so new posts appear in them promptly.
 
 ## Reading & discovery
 - All reader features are toggleable: `settings.features { search, toc, related,
