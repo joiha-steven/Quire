@@ -13,7 +13,15 @@ import { ADMIN_NAV } from './headerActions'
 import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
-export function AdminHeader({ lang, signOut }: { lang: SiteLang; signOut: () => Promise<void> }) {
+export function AdminHeader({
+  lang,
+  version,
+  signOut,
+}: {
+  lang: SiteLang
+  version: string
+  signOut: () => Promise<void>
+}) {
   const t = useAdminT()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
@@ -53,11 +61,21 @@ export function AdminHeader({ lang, signOut }: { lang: SiteLang; signOut: () => 
   return (
     <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        {/* Left: brand wordmark + nav menu (menu hidden on mobile) */}
+        {/* Left: brand wordmark (logo) + version → GitHub, then the nav menu */}
         <div className="flex items-center gap-5">
-          <Link href="/admin" className="text-base tracking-tight" onClick={close}>
-            vibe<span className="font-bold">blog</span>
-          </Link>
+          <span className="inline-flex items-baseline gap-2">
+            <Link href="/admin" className="text-xl leading-none tracking-tight" onClick={close}>
+              vibe<span className="font-bold">blog</span>
+            </Link>
+            <a
+              href="https://github.com/joiha-steven/vibeblog/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-neutral-400 transition-colors hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400"
+            >
+              v{version}
+            </a>
+          </span>
           <nav className="hidden items-center gap-5 md:flex">{navItems}</nav>
         </div>
 

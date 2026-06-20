@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **fix(admin): header polish.** Wordmark enlarged to logo size (`text-xl`); the version
+  (`v0.7.5`) sits next to it and links to GitHub releases (replaces the removed footer link).
+  Every header item now shares a fixed-height (`h-9`) `ADMIN_NAV` box so the row stays
+  perfectly aligned on one line (fixes the recurring "menu not lined up" drift)
 - **feat(admin): cleaner, responsive header + no footer.** The admin top bar is now one
   uniform row of text links: a `vibeblog` wordmark (bold `blog`) replaces the old bold
   "Quản trị" brand; the first nav link is now **Trang chủ** (was "Quản trị"). The three
