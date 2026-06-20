@@ -1,17 +1,44 @@
 'use client'
 
 // Theme button + dropdown: Light / Dark / System / By time.
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import type { SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
 import { useTheme, type ThemeMode } from './ThemeProvider'
 
-// Half-filled circle (contrast) icon for the trigger.
-function ContrastIcon() {
+// Reflect the actually-applied theme by reading the <html> `dark` class (set by
+// the no-FOUC script + ThemeProvider). useSyncExternalStore gives a stable server
+// snapshot (light) so hydration matches, then tracks the real class on the client
+// — re-rendering whenever the class flips (mode change, OS change, clock).
+function subscribe(cb: () => void): () => void {
+  const obs = new MutationObserver(cb)
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  return () => obs.disconnect()
+}
+function useIsDark(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => document.documentElement.classList.contains('dark'),
+    () => false,
+  )
+}
+
+const ICON = 'h-5 w-5'
+const STROKE = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+
+function SunIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
+    <svg viewBox="0 0 24 24" className={ICON} {...STROKE} aria-hidden>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className={ICON} {...STROKE} aria-hidden>
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
     </svg>
   )
 }
@@ -19,6 +46,7 @@ function ContrastIcon() {
 export function ThemeToggle({ lang }: { lang: SiteLang }) {
   const { mode, setMode } = useTheme()
   const [open, setOpen] = useState(false)
+  const isDark = useIsDark()
   const s = t(lang)
 
   const items: { key: ThemeMode; label: string }[] = [
@@ -36,7 +64,7 @@ export function ThemeToggle({ lang }: { lang: SiteLang }) {
         aria-label={s.theme}
         className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
       >
-        <ContrastIcon />
+        {isDark ? <MoonIcon /> : <SunIcon />}
       </button>
       {open && (
         <>

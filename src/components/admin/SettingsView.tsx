@@ -5,6 +5,7 @@
 // Layout = two top-aligned, length-balanced columns of equal-width cards on
 // desktop; one column on mobile.
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { SiteSettings, ThemeSettings, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -27,6 +28,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 export function SettingsView({ settings, defaultTheme }: { settings: SiteSettings; defaultTheme: ThemeSettings }) {
   const t = useAdminT()
+  const router = useRouter()
   const { notify } = useToast()
   const [s, setS] = useState<SiteSettings>(settings)
   const [saving, setSaving] = useState(false)
@@ -46,6 +48,9 @@ export function SettingsView({ settings, defaultTheme }: { settings: SiteSetting
       if (!json.success) throw new Error(json.error)
       setSavedAt(new Date().toISOString())
       notify(t.savedSettings)
+      // Re-render server components (admin shell language/labels, public header)
+      // with the freshly-saved settings so the change shows immediately.
+      router.refresh()
     } catch {
       notify(t.saveFailed, 'error')
     } finally {

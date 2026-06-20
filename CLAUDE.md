@@ -170,6 +170,17 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   balance length: left = Thông tin chung + Bố cục & menu + Tính năng đọc; right = Giao diện
   + SEO. Uniform card chrome; inner spacing `space-y-5`, hint `<p>` paired with its input in
   a `space-y-1.5` wrapper (no negative-margin hacks).
+- **Save calls `router.refresh()`** after a successful PUT so the server-rendered admin
+  shell (nav labels, `adminT(language)`) and the public header reflect the change
+  immediately — without it, e.g. switching language looked like it did nothing until reload.
+
+## Header (public + theme)
+- Logo and the icon row (search, theme, menu) share ONE flex line (`items-center`) so the
+  icons stay on the logo's vertical midline at any logo size; the site description sits
+  below that row. Icons are one consistent set: 20px, viewBox 24, stroke 1.8, round caps.
+- Theme default is **system** (no-FOUC script + `ThemeProvider` both `|| 'system'`). The
+  toggle icon reflects the *applied* theme — `useSyncExternalStore` reads the `<html>.dark`
+  class (server snapshot = light, so no hydration mismatch), showing sun (light) / moon (dark).
 
 ## Conventions
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
