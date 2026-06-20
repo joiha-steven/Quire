@@ -144,6 +144,8 @@ const zh = {
   featProgressDesc: '页面顶部随滚动填充的细条。',
   seoCanonical: '站点地址（canonical）',
   seoCanonicalHint: '用于站点地图、RSS、schema、llms.txt、OG 图片和 canonical 标签。留空将自动使用 Vercel 域名。',
+  mediaDomain: '媒体域名（CDN）',
+  mediaDomainHint: '通过你自己的域名提供图片（在存储前架设的代理，例如 Cloudflare Worker）。留空将使用默认的存储主机。',
   seoAutoSchema: '自动 Schema（JSON-LD）',
   seoAutoSchemaDesc: '为 Google 添加结构化数据：首页用 WebSite，每篇文章用 BlogPosting。',
   seoSitemapDesc: '列出所有文章、页面、分类和标签，供搜索引擎完整抓取。',

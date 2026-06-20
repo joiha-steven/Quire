@@ -4,7 +4,7 @@
 
 import { cache } from 'react'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
-import { readJson, writeJson, collapseBlob, expandBlob } from '@/lib/blob'
+import { readJson, writeJson, collapseBlob, expandBlob, setMediaBase } from '@/lib/blob'
 import { isSiteLang } from '@/locales/langs'
 
 // Keep only well-formed menu items (label + href both present).
@@ -129,6 +129,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   title: 'vibeblog',
   description: '',
   siteUrl: '',
+  mediaBaseUrl: '',
   logoUrl: '',
   logoWidth: 120,
   showLogo: false,
@@ -171,12 +172,17 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
     const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
     // Deep-merge theme + seo so older/partial stored configs keep every key.
     const seo = sanitizeSeo(stored.seo, DEFAULT_SEO)
+    // Configure the vanity media host BEFORE expanding any image ref below, so
+    // logo/OG and all rendered media URLs use it. Owner setting wins, else env.
+    const mediaBaseUrl = sanitizeUrl(stored.mediaBaseUrl)
+    setMediaBase(mediaBaseUrl || process.env.BLOB_PUBLIC_BASE)
     // Image refs are stored store-relative; expand to absolute URLs for use.
     return {
       ...DEFAULT_SETTINGS,
       ...stored,
       logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
+      mediaBaseUrl,
       theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
@@ -195,6 +201,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
     description: input.description ?? current.description,
     siteUrl: input.siteUrl !== undefined ? sanitizeUrl(input.siteUrl) : current.siteUrl,
+    mediaBaseUrl: input.mediaBaseUrl !== undefined ? sanitizeUrl(input.mediaBaseUrl) : current.mediaBaseUrl,
     logoUrl: input.logoUrl ?? current.logoUrl,
     logoWidth: clampNumber(input.logoWidth, 24, 600, current.logoWidth),
     showLogo: input.showLogo ?? current.showLogo,

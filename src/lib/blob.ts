@@ -30,28 +30,62 @@ function blobBase(): string {
   return _blobBase
 }
 
+// Public-facing base for media URLs emitted into rendered HTML. Defaults to the
+// Blob store host, but set BLOB_PUBLIC_BASE (e.g. https://files.manhhung.me — a
+// Cloudflare Worker proxying the store) to serve media from a vanity domain.
+// ONLY affects URLs produced by expandBlob/blobOrigin; internal data reads
+// (readJson/readText via blobUrl) still hit the store directly — no proxy hop,
+// and the ?ts cache-bust on mutable .md/_index.json stays effective.
+// Owner-configurable vanity host (Settings → mediaBaseUrl), pushed in by
+// `getSettings` on each read. Module-scoped: for this single-site blog the value
+// is process-constant, and getSettings runs every request so it stays fresh.
+let _mediaBase: string | undefined
+export function setMediaBase(base: string | undefined): void {
+  _mediaBase = base ? base.replace(/\/$/, '') : undefined
+}
+
+function publicBase(): string {
+  if (_mediaBase) return _mediaBase
+  const custom = process.env.BLOB_PUBLIC_BASE
+  if (custom) return custom.replace(/\/$/, '')
+  return blobBase()
+}
+
 // Construct the deterministic public URL for a pathname without any API call.
+// Token-derived (store host) — used for the app's own server-side reads.
 export function blobUrl(pathname: string): string {
   return `${blobBase()}/${pathname}`
 }
 
-// Public Blob origin (for a <link rel="preconnect">), or '' when no token.
+// Public media origin (for a <link rel="preconnect">), or '' when unavailable.
 export function blobOrigin(): string {
   try {
-    return blobBase()
+    return publicBase()
   } catch {
     return ''
   }
 }
 
-// Matches any Blob store host so a value survives a store/region/provider change.
-const BLOB_HOST_RE = /https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//gi
+// Matches any Blob store host (so a value survives a store/region/provider change)
+// plus the configured vanity host, if any — both collapse to a store-relative path.
+function blobHostRe(): RegExp {
+  const hosts = ['[a-z0-9-]+\\.public\\.blob\\.vercel-storage\\.com']
+  for (const custom of [_mediaBase, process.env.BLOB_PUBLIC_BASE]) {
+    if (!custom) continue
+    try {
+      hosts.push(new URL(custom).host.replace(/[.\\]/g, '\\$&'))
+    } catch {
+      /* ignore a malformed value */
+    }
+  }
+  return new RegExp(`https?:\\/\\/(?:${hosts.join('|')})\\/`, 'gi')
+}
 
-// Persist form: strip the store host so only the store-relative pathname is
+// Persist form: strip the store/vanity host so only the store-relative pathname is
 // stored (e.g. `media/x.webp`). Idempotent; works on a bare value or a markdown
-// body. This is what decouples stored content from any specific Blob store.
+// body. This is what decouples stored content from any specific Blob store/domain.
 export function collapseBlob(s: string): string {
-  return s.replace(BLOB_HOST_RE, '')
+  return s.replace(blobHostRe(), '')
 }
 
 // Render form: turn a stored pathname back into an absolute URL via the current
@@ -60,7 +94,7 @@ export function collapseBlob(s: string): string {
 export function expandBlob(s: string): string {
   let base: string
   try {
-    base = blobBase()
+    base = publicBase()
   } catch {
     return s
   }

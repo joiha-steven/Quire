@@ -144,6 +144,8 @@ const ja = {
   featProgressDesc: 'スクロールに合わせて伸びる上部の細いバー。',
   seoCanonical: 'サイトアドレス（canonical）',
   seoCanonicalHint: 'サイトマップ、RSS、スキーマ、llms.txt、OG画像、canonicalタグに使用されます。空欄の場合はVercelのドメインを使用します。',
+  mediaDomain: 'メディアドメイン（CDN）',
+  mediaDomainHint: '独自ドメインから画像を配信します（ストレージの前段プロキシ、例: Cloudflare Worker）。空欄の場合は既定のストレージホストを使用します。',
   seoAutoSchema: '自動スキーマ（JSON-LD）',
   seoAutoSchemaDesc: 'Google向けの構造化データを追加: トップページにWebSite、各記事にBlogPosting。',
   seoSitemapDesc: 'すべての記事、ページ、カテゴリー、タグを列挙し、検索エンジンが完全にクロールできるようにします。',
