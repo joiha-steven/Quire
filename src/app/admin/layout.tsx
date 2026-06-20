@@ -1,16 +1,11 @@
 // Admin shell + auth guard. Only the owner reaches the children.
 // - Not signed in        -> sign-in.
 // - Signed in, not owner  -> silently sent home (no error shown).
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
-import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
-import { CacheButton } from '@/components/admin/CacheButton'
-import { HEADER_ACTION } from '@/components/admin/headerActions'
-import pkg from '../../../package.json'
+import { AdminHeader } from '@/components/admin/AdminHeader'
 
 // The entire admin is uncached — every view reads the current Blob state, so the
 // editor/media library/settings never show a stale snapshot of your own edits.
@@ -25,60 +20,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!authorized) redirect('/')
 
   const { language } = await getSettings()
-  const t = adminT(language)
-  // Wider admin shell so the editor's writing column can match the public
-  // single-post width with room to spare for the settings panel.
-  const shell = 'mx-auto max-w-7xl px-6'
+
+  // Server action passed to the client header (sign-out button / form).
+  async function signOutAction() {
+    'use server'
+    await signOut({ redirectTo: '/' })
+  }
 
   return (
     <AdminI18nProvider lang={language}>
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-        <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-          <div className={`${shell} flex items-center justify-between gap-4 py-3`}>
-            <nav className="flex items-center gap-5 text-sm">
-              <Link href="/admin" className="font-bold">
-                {t.navAdmin}
-              </Link>
-              <Link href="/admin/content" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.navDashboard}
-              </Link>
-              <Link href="/admin/media" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.navMedia}
-              </Link>
-              <Link href="/admin/settings" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.navSettings}
-              </Link>
-              <a href="/" target="_blank" rel="noopener" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.navViewBlog}
-              </a>
-            </nav>
-            <div className="flex items-center gap-1">
-              <ThemeToggle lang={language} />
-              <CacheButton />
-              <form
-                className="flex"
-                action={async () => {
-                  'use server'
-                  await signOut({ redirectTo: '/' })
-                }}
-              >
-                <button className={HEADER_ACTION}>{t.signOut}</button>
-              </form>
-            </div>
-          </div>
-        </header>
-        <div className={`${shell} py-8`}>{children}</div>
-        <footer className={`${shell} py-4 text-xs text-neutral-400 dark:text-neutral-600`}>
-          vibeblog v{pkg.version} ·{' '}
-          <a
-            href="https://github.com/joiha-steven/vibeblog/releases"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-neutral-600 dark:hover:text-neutral-400"
-          >
-            changelog
-          </a>
-        </footer>
+        <AdminHeader lang={language} signOut={signOutAction} />
+        {/* Wider admin shell so the editor's writing column can match the public
+            single-post width with room to spare for the settings panel. */}
+        <div className="mx-auto max-w-7xl px-6 py-8">{children}</div>
       </div>
     </AdminI18nProvider>
   )

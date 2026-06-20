@@ -28,7 +28,7 @@ export type Dict = {
 
 export type AdminStrings = {
   // nav
-  navAdmin: string
+  navHome: string
   navDashboard: string
   navMedia: string
   navSettings: string

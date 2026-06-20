@@ -1,7 +1,7 @@
 import type { AdminStrings } from '../types'
 
 const vi = {
-  navAdmin: 'Quản trị',
+  navHome: 'Trang chủ',
   navDashboard: 'Trang / Bài viết',
   navMedia: 'Thư viện ảnh',
   navSettings: 'Cài đặt',

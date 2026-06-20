@@ -1,7 +1,7 @@
 import type { AdminStrings } from '../types'
 
 const ja = {
-  navAdmin: '管理',
+  navHome: 'ホーム',
   navDashboard: 'ページ / 投稿',
   navMedia: 'メディア',
   navSettings: '設定',

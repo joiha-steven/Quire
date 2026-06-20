@@ -7,9 +7,9 @@ import { useState } from 'react'
 import type { ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { useAdminT } from './I18nProvider'
-import { HEADER_ACTION } from './headerActions'
+import { ADMIN_NAV } from './headerActions'
 
-export function CacheButton() {
+export function CacheButton({ className = ADMIN_NAV }: { className?: string }) {
   const t = useAdminT()
   const { notify } = useToast()
   const [busy, setBusy] = useState(false)
@@ -30,7 +30,7 @@ export function CacheButton() {
   }
 
   return (
-    <button type="button" onClick={clear} disabled={busy} className={HEADER_ACTION}>
+    <button type="button" onClick={clear} disabled={busy} className={className}>
       {t.clearCache}
     </button>
   )

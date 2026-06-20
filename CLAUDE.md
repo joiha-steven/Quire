@@ -291,10 +291,13 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 
 ## Conventions
 - **Repeated chrome shares ONE class constant — never hand-roll per element.** A set of
-  sibling controls (admin header actions, etc.) must import the same string so they cannot
-  drift in height/padding/text-size/colour. Header actions: `components/admin/headerActions.ts`
-  (`HEADER_ACTION`). Adding a 4th header button = reuse it, do not copy a class list. This
-  rule exists because copied-then-tweaked classes kept producing uneven/oversized buttons.
+  sibling controls (the admin header items, etc.) must import the same string so they cannot
+  drift in height/padding/text-size/colour. Admin header: `components/admin/headerActions.ts`
+  (`ADMIN_NAV`) — the SAME plain-text-link style for EVERY item: brand-adjacent nav links AND
+  the right-side controls (theme toggle, clear-cache, sign-out), so the bar reads as one
+  uniform set of text links, nothing styled as a button. Adding an item = reuse it, do not
+  copy a class list. (`CacheButton` accepts a `className`, default `ADMIN_NAV`; `ThemeToggle`
+  has a `variant='text'` that renders the applied theme as a word styled by `triggerClassName`.)
 - One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
   Never use bespoke `border-t`/`border-b` rules as content dividers, and never ALL-CAPS
   text (no `uppercase`) anywhere in shipped UI.

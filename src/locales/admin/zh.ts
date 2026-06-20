@@ -1,7 +1,7 @@
 import type { AdminStrings } from '../types'
 
 const zh = {
-  navAdmin: '管理',
+  navHome: '首页',
   navDashboard: '页面 / 文章',
   navMedia: '媒体',
   navSettings: '设置',

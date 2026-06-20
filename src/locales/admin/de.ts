@@ -1,7 +1,7 @@
 import type { AdminStrings } from '../types'
 
 const de = {
-  navAdmin: 'Verwaltung',
+  navHome: 'Startseite',
   navDashboard: 'Seiten / Beiträge',
   navMedia: 'Medien',
   navSettings: 'Einstellungen',

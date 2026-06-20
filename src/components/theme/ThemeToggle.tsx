@@ -43,7 +43,18 @@ function MoonIcon() {
   )
 }
 
-export function ThemeToggle({ lang }: { lang: SiteLang }) {
+// `variant` picks the trigger: 'icon' (public header — sun/moon) or 'text'
+// (admin header — the applied theme as a word, styled like the nav links via
+// `triggerClassName`). The dropdown is identical in both.
+export function ThemeToggle({
+  lang,
+  variant = 'icon',
+  triggerClassName = '',
+}: {
+  lang: SiteLang
+  variant?: 'icon' | 'text'
+  triggerClassName?: string
+}) {
   const { mode, setMode } = useTheme()
   const [open, setOpen] = useState(false)
   const isDark = useIsDark()
@@ -62,9 +73,13 @@ export function ThemeToggle({ lang }: { lang: SiteLang }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={s.theme}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule"
+        className={
+          variant === 'text'
+            ? triggerClassName
+            : 'flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule'
+        }
       >
-        {isDark ? <MoonIcon /> : <SunIcon />}
+        {variant === 'text' ? (isDark ? s.themeDark : s.themeLight) : isDark ? <MoonIcon /> : <SunIcon />}
       </button>
       {open && (
         <>

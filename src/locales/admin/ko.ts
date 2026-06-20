@@ -1,7 +1,7 @@
 import type { AdminStrings } from '../types'
 
 const ko = {
-  navAdmin: '관리',
+  navHome: '홈',
   navDashboard: '페이지 / 게시물',
   navMedia: '미디어',
   navSettings: '설정',

@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **feat(admin): cleaner, responsive header + no footer.** The admin top bar is now one
+  uniform row of text links: a `vibeblog` wordmark (bold `blog`) replaces the old bold
+  "Quản trị" brand; the first nav link is now **Trang chủ** (was "Quản trị"). The three
+  right-side controls (theme, clear-cache, sign-out) are styled as the SAME text links as the
+  menu — no longer button-shaped — and the theme control shows the applied theme as a **word**
+  instead of a sun/moon icon. On mobile the whole menu collapses behind a **hamburger** toggle
+  instead of spilling inline. Removed the `vibeblog vX · changelog` admin footer. New
+  `AdminHeader` client component; `ADMIN_NAV` shared style; `ThemeToggle` gains `variant='text'`;
+  `CacheButton` gains a `className`. Locale key `navAdmin` → `navHome` (all 6 languages)
 - **feat(seo): richer robots.txt policy.** Replaces the bare allow-all with three groups:
   major search engines + reputable AI assistants (Googlebot/Bingbot…, GPTBot/ClaudeBot/
   PerplexityBot/Google-Extended…, paired with `/llms.txt`) are explicitly allowed; aggressive
