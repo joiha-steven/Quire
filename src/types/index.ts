@@ -20,6 +20,13 @@ export type PostWithContent = Post & {
   content: string
 }
 
+// A snapshot of a post taken right before it was overwritten. Up to 3 are kept
+// per slug at revisions/{slug}.json so the editor's "time machine" can restore
+// recently-overwritten versions.
+export type PostRevision = PostWithContent & {
+  savedAt: string // ISO 8601, when the snapshot was taken
+}
+
 // A static page (About, Contact...). Like a post but with no taxonomy or date:
 // not part of the feed, only reachable directly at /page/{slug}.
 export type Page = {

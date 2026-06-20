@@ -51,7 +51,7 @@ export function SeoForm({ initial }: { initial: SiteSettings }) {
   }
 
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="w-full space-y-8">
       <div className="space-y-1.5">
         <Input
           label="Địa chỉ trang (canonical)"

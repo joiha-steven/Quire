@@ -38,18 +38,14 @@ OAuth callback URLs: `https://<your-domain>/api/auth/callback/google` and/or
 > URL at runtime — no extra env var needed. The token format
 > `vercel_blob_rw_<storeId>_<secret>` encodes the store ID directly.
 
-## Two-repo pattern
+## Secrets & personal data
 
 This repo (`vibeblog`) is the **public, open-source platform** — MIT licensed,
 zero personal data. Anyone can fork and self-host.
 
-Keep your personal stuff in a **separate private repo** (e.g. `vibeblog-private`),
-containing only:
-
-- `.env.local` with your real credentials
-- `CLAUDE.md` with your personal operating notes
-
-Your actual blog content lives in Vercel Blob, not in git.
+Keep secrets out of git: your real credentials live in `.env.local` (gitignored
+via `.env*`) and on Vercel (retrieve any time with `vercel env pull`). Your actual
+blog content lives in Vercel Blob, not in git. Don't commit personal data here.
 
 ## Performance & caching
 

@@ -2,16 +2,25 @@
 
 // Site settings form: title, description, logo (toggle + picker), show-description.
 import { useState } from 'react'
-import type { SiteSettings, SiteLang, ApiResponse } from '@/types'
+import type { SiteSettings, SiteLang, FeatureSettings, ApiResponse } from '@/types'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { ToggleField } from '@/components/ui/Switch'
+import { ToggleField, ToggleRow } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
 
 const MENU_FIELD =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-400'
+
+// Reader-facing feature toggles (merged in from the former Features tab).
+const FEATURES: { key: keyof FeatureSettings; label: string; desc: string }[] = [
+  { key: 'search', label: 'Tìm kiếm', desc: 'Icon tìm trên header và trang /search.' },
+  { key: 'toc', label: 'Mục lục', desc: 'Khung mục lục bên trái (desktop) cho bài có từ 3 đề mục.' },
+  { key: 'related', label: 'Bài viết liên quan', desc: 'Gợi ý bài cùng thẻ/danh mục ở cuối bài.' },
+  { key: 'readingTime', label: 'Thời gian đọc', desc: 'Ước tính "X phút đọc" ở dòng thông tin bài.' },
+  { key: 'progressBar', label: 'Thanh tiến độ đọc', desc: 'Thanh mảnh trên đầu trang chạy theo khi cuộn.' },
+]
 
 export function SettingsForm({ initial }: { initial: SiteSettings }) {
   const t = useAdminT()
@@ -21,6 +30,8 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
   const [picking, setPicking] = useState(false)
 
   const update = (partial: Partial<SiteSettings>) => setS((prev) => ({ ...prev, ...partial }))
+  const setFeature = (key: keyof FeatureSettings, v: boolean) =>
+    setS((prev) => ({ ...prev, features: { ...prev.features, [key]: v } }))
 
   async function save() {
     setSaving(true)
@@ -46,7 +57,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
   ]
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="w-full space-y-6">
       <div className="space-y-1.5">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.siteLanguage}</span>
         <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
@@ -188,6 +199,23 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
           {t.menuAdd}
         </Button>
         <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.menuHint}</p>
+      </div>
+
+      <hr />
+
+      <div className="space-y-3">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Tính năng đọc</span>
+        <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+          {FEATURES.map((f) => (
+            <ToggleRow
+              key={f.key}
+              label={f.label}
+              desc={f.desc}
+              checked={s.features[f.key]}
+              onChange={(v) => setFeature(f.key, v)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="pt-2">

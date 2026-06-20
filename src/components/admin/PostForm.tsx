@@ -3,13 +3,14 @@
 // Editor screen: left = TipTap editor, right = settings, bottom = action bar.
 // Handles auto-save, manual save (draft/publish) and the media picker modal.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { PostWithContent, MediaItem, ApiResponse } from '@/types'
+import type { PostWithContent, PostRevision, MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { slugify, formatTime } from '@/lib/utils'
 import { Editor, type EditorApi } from './Editor'
 import { PostSettings, type Draft } from './PostSettings'
 import { MediaLibrary } from './MediaLibrary'
+import { TimeMachine } from './TimeMachine'
 import { useAdminT } from './I18nProvider'
 
 type Props = {
@@ -50,6 +51,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [picker, setPicker] = useState<PickTarget | null>(null)
+  const [timeMachine, setTimeMachine] = useState(false)
   // Unsaved-changes flag: drives button states, autosave and the exit warning.
   const [dirty, setDirty] = useState(false)
   const [savedSlug, setSavedSlug] = useState<string | null>(initial?.slug ?? null)
@@ -177,6 +179,22 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
     setPicker(null)
   }
 
+  // Load an overwritten version back into the editor (slug + date stay current).
+  function restoreRevision(rev: PostRevision) {
+    update({
+      title: rev.title,
+      excerpt: rev.excerpt ?? '',
+      featuredImage: rev.featuredImage ?? '',
+      categories: rev.categories,
+      tags: rev.tags,
+      status: rev.status,
+    })
+    editorApi.current?.setMarkdown(rev.content)
+    contentRef.current = rev.content
+    setTimeMachine(false)
+    notify('Đã nạp phiên bản này vào trình soạn thảo. Nhấn Lưu để áp dụng.')
+  }
+
   // Copy a shareable draft-preview URL (tokened, viewable without signing in).
   async function copyPreviewLink() {
     const slug = currentSlug.current
@@ -241,6 +259,11 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
           </span>
           <div className="flex items-center gap-2">
             {savedSlug && (
+              <button type="button" onClick={() => setTimeMachine(true)} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                Cỗ máy thời gian
+              </button>
+            )}
+            {savedSlug && (
               <button type="button" onClick={copyPreviewLink} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 Link nháp
               </button>
@@ -258,6 +281,10 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
 
       {picker && (
         <MediaLibrary mode="picker" onSelect={onPicked} onClose={() => setPicker(null)} />
+      )}
+
+      {timeMachine && savedSlug && (
+        <TimeMachine slug={savedSlug} onRestore={restoreRevision} onClose={() => setTimeMachine(false)} />
       )}
     </div>
   )

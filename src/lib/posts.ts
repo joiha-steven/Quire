@@ -8,6 +8,7 @@ import type { Post, PostWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
+import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
 
 const INDEX_PATH = 'posts/_index.json'
 const mdPath = (slug: string) => `posts/${slug}.md`
@@ -35,25 +36,30 @@ export async function getPublicPosts(): Promise<Post[]> {
   return all.filter((p) => isPublicallyVisible(p.status, p.date))
 }
 
+// Parse a post's frontmatter + markdown body into a PostWithContent.
+function parsePost(raw: string, slug: string): PostWithContent {
+  const { data, content } = matter(raw)
+  const meta = data as Partial<Post>
+  return {
+    title: meta.title ?? slug,
+    slug: meta.slug ?? slug,
+    date: meta.date ?? new Date().toISOString(),
+    status: meta.status === 'published' ? 'published' : 'draft',
+    categories: meta.categories ?? [],
+    tags: meta.tags ?? [],
+    featuredImage: meta.featuredImage,
+    excerpt: meta.excerpt,
+    content: content.trim(),
+  }
+}
+
 // Read+parse one post's markdown, cached per slug under tag 'posts' so detail
 // pages are served from the data cache instead of hitting Blob every request.
 const readPost = unstable_cache(
   async (slug: string): Promise<PostWithContent | null> => {
     const raw = await readText(mdPath(slug))
     if (!raw) return null
-    const { data, content } = matter(raw)
-    const meta = data as Partial<Post>
-    return {
-      title: meta.title ?? slug,
-      slug: meta.slug ?? slug,
-      date: meta.date ?? new Date().toISOString(),
-      status: meta.status === 'published' ? 'published' : 'draft',
-      categories: meta.categories ?? [],
-      tags: meta.tags ?? [],
-      featuredImage: meta.featuredImage,
-      excerpt: meta.excerpt,
-      content: content.trim(),
-    }
+    return parsePost(raw, slug)
   },
   ['post'],
   { tags: ['posts'] },
@@ -114,11 +120,24 @@ export async function savePost(
   const post = normalize(input)
   // Reject a slug already taken by another post or page (shared URL namespace).
   await ensureSlugFree(post.slug, 'post', previousSlug)
+
+  // Time machine: before overwriting an existing post, snapshot the current
+  // version so the editor can restore it. Read fresh (not the cached getPost).
+  const overwriting = previousSlug ?? post.slug
+  const existingRaw = await readText(mdPath(overwriting))
+  if (existingRaw) {
+    const prev = parsePost(existingRaw, overwriting)
+    if (serialize(prev) !== serialize({ ...post, slug: prev.slug })) {
+      await pushRevision(prev)
+    }
+  }
+
   await writeText(mdPath(post.slug), serialize(post))
 
-  // If the slug changed, drop the old markdown file.
+  // If the slug changed, drop the old markdown file and move its revisions.
   if (previousSlug && previousSlug !== post.slug) {
     await deleteByPathname(mdPath(previousSlug))
+    await renameRevisions(previousSlug, post.slug)
   }
 
   const meta = toMeta(post)
@@ -132,6 +151,7 @@ export async function savePost(
 // Delete a post: remove {slug}.md and its manifest entry.
 export async function deletePost(slug: string): Promise<void> {
   await deleteByPathname(mdPath(slug))
+  await deleteRevisions(slug)
   await mutateIndex((posts) => posts.filter((p) => p.slug !== slug))
 }
 
