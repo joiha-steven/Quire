@@ -116,6 +116,8 @@ const vi = {
   navAppearance: 'Giao diện',
   appearanceTitle: 'Giao diện',
   appearanceHint: 'Tùy chỉnh màu cho chế độ sáng và tối: nền, chữ, tiêu đề, chữ phụ, liên kết, đường gạch ngang.',
+  themePreset: 'Bảng màu',
+  themePresetHint: 'Chọn một bảng màu dựng sẵn làm điểm bắt đầu, rồi tinh chỉnh từng màu bên dưới. Đặt lại sẽ khôi phục bảng màu đang chọn.',
   modeLight: 'Chế độ sáng',
   modeDark: 'Chế độ tối',
   colorBg: 'Nền',

@@ -116,6 +116,8 @@ const ko = {
   navAppearance: '디자인',
   appearanceTitle: '디자인',
   appearanceHint: '라이트 및 다크 모드의 색상 사용자 지정: 배경, 텍스트, 제목, 보조 텍스트, 링크, 구분선.',
+  themePreset: '색상 프리셋',
+  themePresetHint: '내장 팔레트를 시작점으로 선택한 뒤 아래에서 각 색상을 미세 조정하세요. 재설정하면 선택한 프리셋으로 되돌립니다.',
   modeLight: '라이트 모드',
   modeDark: '다크 모드',
   colorBg: '배경',

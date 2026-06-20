@@ -116,6 +116,8 @@ const en = {
   navAppearance: 'Appearance',
   appearanceTitle: 'Appearance',
   appearanceHint: 'Customize colors for light and dark mode: background, text, headings, secondary text, links, horizontal rule.',
+  themePreset: 'Color preset',
+  themePresetHint: 'Pick a built-in palette as a starting point, then fine-tune any color below. Reset restores the selected preset.',
   modeLight: 'Light mode',
   modeDark: 'Dark mode',
   colorBg: 'Background',

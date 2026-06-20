@@ -6,7 +6,8 @@
 // desktop; one column on mobile.
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { SiteSettings, ThemeSettings, ApiResponse } from '@/types'
+import type { SiteSettings, ApiResponse } from '@/types'
+import type { ThemePreset } from '@/lib/themes'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { formatTime } from '@/lib/utils'
@@ -26,7 +27,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   )
 }
 
-export function SettingsView({ settings, defaultTheme }: { settings: SiteSettings; defaultTheme: ThemeSettings }) {
+export function SettingsView({ settings, presets }: { settings: SiteSettings; presets: ThemePreset[] }) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -85,8 +86,10 @@ export function SettingsView({ settings, defaultTheme }: { settings: SiteSetting
         <div className="space-y-6">
           <Card title={t.navAppearance}>
             <ThemeFields
+              presets={presets}
+              selectedId={s.themePreset}
               theme={s.theme}
-              defaults={defaultTheme}
+              onSelectPreset={(themePreset, theme) => update({ themePreset, theme })}
               onChange={(theme) => update({ theme })}
               customCss={s.customCss}
               onCustomCss={(customCss) => update({ customCss })}
