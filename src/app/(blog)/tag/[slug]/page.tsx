@@ -8,10 +8,10 @@ import { BlogListing } from '@/components/blog/BlogListing'
 
 export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
-// OG card: top line = tag name, bottom line = domain.
+// OG card: top line = #tag (the # marks it as a tag), bottom line = domain.
 export async function generateMetadata({ params }: PageProps<'/tag/[slug]'>): Promise<Metadata> {
   const { slug } = await params
-  const name = decodeURIComponent(slug)
+  const name = `#${decodeURIComponent(slug)}`
   const settings = await getSettings()
   const base = resolveSiteUrl(settings)
   const og = ogCardUrl(settings, base, { title: name, site: siteDomain(base) })
