@@ -12,8 +12,19 @@ import { useAdminT } from './I18nProvider'
 import { ADMIN_NAV } from './headerActions'
 import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { PaletteToggle, type PaletteOption } from '@/components/theme/PaletteToggle'
 
-export function AdminHeader({ lang, signOut }: { lang: SiteLang; signOut: () => Promise<void> }) {
+export function AdminHeader({
+  lang,
+  signOut,
+  palettes,
+  defaultPalette,
+}: {
+  lang: SiteLang
+  signOut: () => Promise<void>
+  palettes: PaletteOption[]
+  defaultPalette: string
+}) {
   const t = useAdminT()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
@@ -42,6 +53,7 @@ export function AdminHeader({ lang, signOut }: { lang: SiteLang; signOut: () => 
   // Theme / cache / sign-out (shared by desktop row and mobile panel).
   const controls = (
     <>
+      <PaletteToggle lang={lang} palettes={palettes} defaultId={defaultPalette} variant="text" triggerClassName={ADMIN_NAV} />
       <ThemeToggle lang={lang} variant="text" triggerClassName={ADMIN_NAV} />
       <CacheButton />
       <form action={signOut} className="contents">

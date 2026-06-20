@@ -98,7 +98,8 @@ export function expandBlob(s: string): string {
   } catch {
     return s
   }
-  if (/^media\//.test(s)) return `${base}/${s}` // whole value is a blob pathname
+  // Whole value is a blob pathname: media (uploads) or files (favicon / app icon).
+  if (/^(media|files)\//.test(s)) return `${base}/${s}`
   return s // markdown body: only expand media refs in link / src / href positions
     .replace(/(\]\()(media\/[^)\s]+)/g, (_m, a, p) => `${a}${base}/${p}`)
     .replace(/((?:src|href)=["'])(media\/[^"']+)/g, (_m, a, p) => `${a}${base}/${p}`)

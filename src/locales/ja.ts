@@ -8,6 +8,7 @@ const ja = {
   tagLabel: 'タグ',
   pageLabel: 'ページ',
   menu: 'メニュー',
+  palette: 'パレット',
   theme: 'テーマ',
   themeLight: 'ライト',
   themeDark: 'ダーク',

@@ -8,6 +8,7 @@ const ko = {
   tagLabel: '태그',
   pageLabel: '페이지',
   menu: '메뉴',
+  palette: '색상',
   theme: '테마',
   themeLight: '라이트',
   themeDark: '다크',

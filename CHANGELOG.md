@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-06-22
+- **feat(theme): visitor palette switcher (6 palettes) on public + admin headers** — like the
+  dark/light toggle but for color palette. `PaletteToggle` writes `<html data-palette>` +
+  localStorage; `themesToCss` emits every palette's vars so switching is instant (no reload), and
+  a no-FOUC script applies the saved palette before paint. Mode (light/dark) × palette are now
+  orthogonal axes
+- **feat(settings): every palette is independently customizable** — admin color editor now edits
+  ANY of the 6 palettes (picker = which one you're editing), each saved under `settings.themes`;
+  "Set as default" picks the visitor default; per-mode reset restores that palette's built-in
+  colors. Replaces the old single `theme` (auto-migrated into the default palette on read)
+- **fix(settings): favicon / app icon upload moved out of the media library** to a dedicated
+  `files/` store (`POST /api/files/upload`, `lib/files.ts`, `IconUpload`). **Accepts `.ico`** (the
+  media library rejected it) plus PNG/SVG/JPG/WebP/GIF; site icons no longer clutter the grid
+
 ## 2026-06-21
 - **feat(pwa): installable app on iPhone + Android** — add to the home screen and launch
   standalone (full-screen, no browser chrome). Dynamic `app/manifest.ts` (name/theme/icon from

@@ -116,8 +116,8 @@ export type SiteSettings = {
   excerptLength: number // words auto-used as a post excerpt when none is set
   customCss: string // owner CSS injected into PUBLIC pages only ('' = none)
   menu: MenuItem[] // header navigation links
-  themePreset: string // id of the selected built-in palette; reset restores its colors
-  theme: ThemeSettings // per-mode reading colors
+  themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
+  themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
 }

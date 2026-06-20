@@ -4,12 +4,13 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { getSettings, themeToCss, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
+import { getSettings, themesToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
 import { blobOrigin } from '@/lib/blob'
 
-// Runs before paint: applies the saved theme (or system/time default) so there
-// is no light flash on dark.
-const NO_FOUC = `(function(){try{var m=localStorage.getItem('theme')||'system';var d=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(d)document.documentElement.classList.add('dark')}catch(e){}})();`
+// Runs before paint: applies the saved dark/light mode AND the saved palette
+// (data-palette) so there is no flash of the wrong colors. The default palette
+// is already baked into :root, so we only set data-palette when one is stored.
+const NO_FOUC = `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p)d.setAttribute('data-palette',p)}catch(e){}})();`
 
 // Single typeface site-wide: Inter, with full Vietnamese coverage.
 const inter = Inter({
@@ -45,7 +46,8 @@ export async function generateMetadata(): Promise<Metadata> {
 // Status-bar / toolbar color follows the chosen palette per light/dark, so the
 // installed app's chrome blends into the page in both modes.
 export async function generateViewport(): Promise<Viewport> {
-  const { theme } = await getSettings()
+  const { themes, themePreset } = await getSettings()
+  const theme = getDefaultTheme(themes, themePreset)
   return {
     themeColor: [
       { media: '(prefers-color-scheme: light)', color: theme.light.bg },
@@ -55,7 +57,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, theme } = await getSettings()
+  const { language, themes, themePreset } = await getSettings()
   // Content images in posts are raw Blob URLs; warm that connection early.
   const blob = blobOrigin()
   // No `antialiased` class on <html>: it forces grayscale font-smoothing on Mac,
@@ -69,8 +71,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <link rel="dns-prefetch" href={blob} />
           </>
         )}
-        {/* Owner-configured reading colors (light + dark) as CSS variables. */}
-        <style dangerouslySetInnerHTML={{ __html: themeToCss(theme) }} />
+        {/* All palettes' reading colors (light + dark) as CSS variables; the
+            client switcher swaps between them via <html data-palette>. */}
+        <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
         <script dangerouslySetInnerHTML={{ __html: NO_FOUC }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>

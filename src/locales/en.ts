@@ -8,6 +8,7 @@ const en = {
   tagLabel: 'Tag',
   pageLabel: 'Page',
   menu: 'Menu',
+  palette: 'Palette',
   theme: 'Theme',
   themeLight: 'Light',
   themeDark: 'Dark',
