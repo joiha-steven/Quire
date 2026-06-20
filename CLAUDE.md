@@ -150,7 +150,7 @@ applying, cross-deploy Data Cache persistence). The model now:
 | File | Key exports | Notes |
 |---|---|---|
 | `blob.ts` | `blobUrl`, `readJson`, `readText`, `writeJson`, `writeText`, `uploadFile`, `deleteByUrl`, `deleteByPathname`, `listBlobs` | All Blob I/O. Never call `list()` to find a URL — use `blobUrl()` |
-| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index |
+| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index. `updateTerm(kind, name, newName\|null)` renames (merges on collision) or removes a category/tag across EVERY post — rewrites each affected `.md` + the index in one pass, no revision snapshot; drives the Phân loại tab (`POST /api/taxonomy`, owner-only, → `revalidateEverything`) |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post at `revisions/{slug}.json` (newest first). Drives the editor "time machine". Moved on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `React.cache()` only; `themeToCss` converts ThemeSettings → CSS vars string |
@@ -266,6 +266,21 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   "Khôi phục" loads a revision into the editor (slug + date stay current) and marks dirty —
   non-destructive, the current version is snapshotted on the next save. `EditorApi.setMarkdown`
   reloads the TipTap doc.
+
+## Content dashboard (Admin → content)
+- `ContentDashboard` has three tabs: **Bài viết** (posts), **Trang** (pages), **Phân loại**
+  (taxonomy). The "new" button is hidden on the taxonomy tab. The tab row is `flex-wrap` for
+  mobile.
+- **Row actions** (`RowActions`, shared by both tables): open-in-new-tab (only for PUBLISHED
+  items → public `/{slug}`, drafts would 404) + edit + delete. Icons + `ICON_BTN` chrome are
+  exported there so other lists reuse the exact look. `StatusPill` never wraps.
+- **Tables are mobile-responsive by hiding secondary columns**, not horizontal scroll: posts
+  hide Date (`sm`) + Categories (`md`); pages hide the slug (`sm`). Title + Status + actions
+  always show, so the status pill never gets squeezed into wrapping on a phone.
+- **Phân loại tab** (`TaxonomyManager`): lists every category + tag with a usage count
+  (derived client-side from the post index already in props — no extra fetch), each with
+  rename (prompt; merges into an existing term) + remove (across all posts). Calls
+  `updateTerm` via `POST /api/taxonomy`, then `router.refresh()`.
 
 ## Settings (Admin → settings)
 - **One form, one save button** (`SettingsView.tsx`): all settings live in a single

@@ -162,6 +162,13 @@ const ko = {
   tmEmpty: '아직 이전 버전이 없습니다. 버전은 게시물을 덮어쓴 후에 표시됩니다.',
   revisionLoaded: '이 버전을 편집기에 불러왔습니다. 적용하려면 저장을 누르세요.',
   previewLinkCopied: '초안 미리보기 링크가 복사되었습니다',
+  openInNewTab: '새 탭에서 열기',
+  tabTaxonomy: '분류',
+  rename: '이름 변경',
+  renamePrompt: '새 이름:',
+  confirmDeleteTerm: '이 분류를 모든 글에서 제거할까요? 글은 삭제되지 않습니다.',
+  noTerms: '아직 분류나 태그가 없습니다.',
+  renamed: '이름이 변경되었습니다',
 } satisfies AdminStrings
 
 export default ko

@@ -33,6 +33,14 @@ export type AdminStrings = {
   navMedia: string
   navSettings: string
   navViewBlog: string
+  // content row actions + taxonomy manager
+  openInNewTab: string
+  tabTaxonomy: string
+  rename: string
+  renamePrompt: string
+  confirmDeleteTerm: string
+  noTerms: string
+  renamed: string
   signOut: string
   clearCache: string
   cacheCleared: string

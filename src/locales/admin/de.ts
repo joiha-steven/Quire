@@ -162,6 +162,13 @@ const de = {
   tmEmpty: 'Noch keine älteren Versionen. Versionen erscheinen, nachdem ein Beitrag überschrieben wurde.',
   revisionLoaded: 'Diese Version wurde in den Editor geladen. Zum Anwenden auf Speichern drücken.',
   previewLinkCopied: 'Entwurfs-Vorschaulink kopiert',
+  openInNewTab: 'In neuem Tab öffnen',
+  tabTaxonomy: 'Taxonomie',
+  rename: 'Umbenennen',
+  renamePrompt: 'Neuer Name:',
+  confirmDeleteTerm: 'Diesen Begriff aus allen Beiträgen entfernen? Die Beiträge werden nicht gelöscht.',
+  noTerms: 'Noch keine Kategorien oder Tags.',
+  renamed: 'Umbenannt',
 } satisfies AdminStrings
 
 export default de

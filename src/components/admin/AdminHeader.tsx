@@ -63,7 +63,7 @@ export function AdminHeader({
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
         {/* Left: brand wordmark (logo) + version → GitHub, then the nav menu */}
         <div className="flex items-center gap-5">
-          <span className="inline-flex items-baseline gap-2">
+          <span className="inline-flex h-9 items-center gap-2">
             <Link href="/admin" className="text-xl leading-none tracking-tight" onClick={close}>
               vibe<span className="font-bold">blog</span>
             </Link>
@@ -71,7 +71,7 @@ export function AdminHeader({
               href="https://github.com/joiha-steven/vibeblog/releases"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-neutral-400 transition-colors hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400"
+              className="text-xs leading-none text-neutral-400 transition-colors hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400"
             >
               v{version}
             </a>

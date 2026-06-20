@@ -42,8 +42,9 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
           <tr>
             <th className="px-4 py-3 font-medium">{t.colTitle}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
-            <th className="px-4 py-3 font-medium">{t.colDate}</th>
-            <th className="px-4 py-3 font-medium">{t.colCategories}</th>
+            {/* Date + categories are secondary — hidden on narrow screens */}
+            <th className="hidden px-4 py-3 font-medium sm:table-cell">{t.colDate}</th>
+            <th className="hidden px-4 py-3 font-medium md:table-cell">{t.colCategories}</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
@@ -58,10 +59,14 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
               <td className="px-4 py-3">
                 <StatusPill published={p.status === 'published'} label={p.status === 'published' ? t.statusPublished : t.statusDraft} />
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-neutral-500 dark:text-neutral-400">{formatDateTimeShort(p.date)}</td>
-              <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.categories.join(', ')}</td>
+              <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-500 sm:table-cell dark:text-neutral-400">{formatDateTimeShort(p.date)}</td>
+              <td className="hidden px-4 py-3 text-neutral-500 md:table-cell dark:text-neutral-400">{p.categories.join(', ')}</td>
               <td className="px-4 py-3">
-                <RowActions editHref={`/admin/editor/${p.slug}`} onDelete={() => handleDelete(p.slug)} />
+                <RowActions
+                  editHref={`/admin/editor/${p.slug}`}
+                  viewHref={p.status === 'published' ? `/${p.slug}` : undefined}
+                  onDelete={() => handleDelete(p.slug)}
+                />
               </td>
             </tr>
           ))}
