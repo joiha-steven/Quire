@@ -107,10 +107,14 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           <PostContent markdown={post.content} />
         </div>
 
+        {/* The global `hr` rule (unlayered) forces margin:0 and beats Tailwind
+            margin utilities, so spacing goes on wrapper divs, not the <hr>. */}
         {hasTaxo && (
           <>
-            <hr className="my-8" />
-            <footer className="space-y-1 text-sm text-meta">
+            <div className="mt-12">
+              <hr />
+            </div>
+            <footer className="mt-6 space-y-1 text-sm text-meta">
               {post.tags.length > 0 && (
                 <p>
                   {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${encodeURIComponent(s)}`)}
@@ -127,8 +131,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
 
         {related.length > 0 && (
           <>
-            <hr className="my-8" />
-            <RelatedPosts posts={related} lang={language} />
+            <div className="mt-12">
+              <hr />
+            </div>
+            <div className="mt-6">
+              <RelatedPosts posts={related} lang={language} />
+            </div>
           </>
         )}
       </article>

@@ -33,29 +33,30 @@ export function Toc({ headings, title }: { headings: Heading[]; title: string })
   }
 
   return (
-    // Desktop only: a frame in the left gutter, absolutely positioned so its top
-    // lines up with the article body. `right-full` puts its right edge at the
-    // content column's left edge; `mr-10` is the gap. Title + items all flush left.
-    <nav
-      aria-label={title}
-      className="absolute top-0 right-full mr-10 hidden w-60 rounded-xl border border-[var(--c-rule)] p-5 text-sm xl:block"
-    >
-      <p className="mb-2 font-semibold text-[var(--c-heading)]">{title}</p>
-      <ul className="space-y-1.5">
-        {headings.map((h) => (
-          <li key={h.id}>
-            <a
-              href={`#${h.id}`}
-              onClick={(e) => go(e, h.id)}
-              className={`block transition-colors hover:text-[var(--c-heading)] ${
-                active === h.id ? 'font-medium text-[var(--c-heading)]' : 'text-meta'
-              }`}
-            >
-              {h.text}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    // Desktop only. The OUTER track is absolutely positioned in the left gutter
+    // (right-full = its right edge at the content column's left edge; mr-10 = gap)
+    // and spans the article body height (h-full). The INNER nav is `sticky`, so it
+    // starts level with the content top and follows the scroll within the track,
+    // then scrolls away once the body ends. Title + items all flush left.
+    <div className="absolute top-0 right-full mr-10 hidden h-full w-60 xl:block">
+      <nav aria-label={title} className="sticky top-8 rounded-xl border border-[var(--c-rule)] p-5 text-sm">
+        <p className="mb-2 font-semibold text-[var(--c-heading)]">{title}</p>
+        <ul className="space-y-1.5">
+          {headings.map((h) => (
+            <li key={h.id}>
+              <a
+                href={`#${h.id}`}
+                onClick={(e) => go(e, h.id)}
+                className={`block transition-colors hover:text-[var(--c-heading)] ${
+                  active === h.id ? 'font-medium text-[var(--c-heading)]' : 'text-meta'
+                }`}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
   )
 }
