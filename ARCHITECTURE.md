@@ -17,13 +17,18 @@ is the public site, `src/app/admin` is the owner console. Content is **100% Mark
 posts/_index.json     array of post metadata  ← the query layer (no bodies)
 posts/{slug}.md       frontmatter + markdown body
 pages/{slug}.md       static pages (no taxonomy/date) + pages/_index.json
-media/{name}.{ext}    uploaded files (WebP-optimized) + media/_index.json
+media/{name}.{ext}    original upload + responsive variants + media/_index.json
 settings/site.json    SiteSettings (theme, menu, siteUrl, seo, features)
 ```
 
 The `_index.json` manifests are the only "query" mechanism: lists read the
 manifest, detail pages read one `.md`. Every write does a read-modify-write of the
 manifest. Posts + pages share one `/{slug}` URL namespace (`ensureSlugFree`).
+
+Stored content is **store-relative**: image refs are kept as pathnames
+(`media/x.jpg`), not absolute URLs. The data layer collapses on write / expands on
+read (`collapseBlob`/`expandBlob`), so content carries no storeId and the Blob store
+can change without rewriting anything (see Design decisions).
 
 ## Request flow
 
@@ -43,7 +48,8 @@ manifest. Posts + pages share one `/{slug}` URL namespace (`ensureSlugFree`).
 |---|---|
 | `src/lib/blob.ts` | All Blob I/O. URLs are deterministic from the token (no `list()` to read). Reads cache-bust + degrade to fallback on error. |
 | `src/lib/{posts,pages,media,settings}.ts` | Data layer; `unstable_cache` + tags. |
-| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api}.ts` | Pure helpers + shared route helpers. |
+| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,sweep}.ts` | Pure helpers + shared route helpers (`sweep` = unused-media cleanup). |
+| `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
 | `src/app/admin/` | Owner console (editor, media, settings). |
 | `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | SEO / feeds / dynamic share image. |
@@ -60,14 +66,22 @@ manifest. Posts + pages share one `/{slug}` URL namespace (`ensureSlugFree`).
 - **Every read in `unstable_cache` (tags) + revalidate on write** → fast reads from
   the Data Cache, `/[slug]` can be SSG, yet edits show instantly. `staleTimes`:
   `dynamic 0` (lists always fresh) / `static 180` (post prefetch reused on hover).
-- **`getSettings` cache key is versioned (`site-settings-v3`)** → the Vercel Data
-  Cache persists across deploys, so a new settings field would stay absent; bump the
-  key when the settings shape changes.
+- **Data-cache keys are versioned (`site-settings-v4`, `posts-index-v2`, …)** → the
+  Vercel Data Cache persists across deploys, so a new field — or a different backing
+  Blob store — would keep serving stale; bump the key to force a clean re-read.
+- **Store-relative image refs (`collapseBlob`/`expandBlob`)** → stored content holds
+  pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
+  store / region / provider needs only a token change, no content rewrite. (Used to
+  move the store to **Singapore (`sin1`)** — see `vercel.json`; functions run there too.)
 - **100% Markdown, raw HTML escaped** → safe, portable content; videos are bare URLs
   embedded at render, not stored iframes.
-- **Images via `next/image` + 1-year Blob cache** → resized/modern formats; images are
-  the one long-cached layer. Dynamic OG image (`/og`) runs on the **edge** runtime so
-  its bundled font loads (Node `fetch` can't read a `file://` URL).
+- **Responsive images, encoding deferred to save** → jpg/png uploads keep the
+  untouched **original** + a thumbnail immediately; the heavy AVIF/WebP @1024/1600 set
+  is generated on save (`finalizeContentMedia`) only for images kept in the content,
+  and `PostContent` emits a `<picture>` so the browser picks the lightest format/size.
+  Orphans (dropped-then-discarded) are cleared by the "Clean unused" sweeper. The
+  dynamic OG image (`/og`) runs on the **edge** runtime so its bundled font loads
+  (Node `fetch` can't read a `file://` URL).
 - **Draft preview = HMAC token** (`/preview/[slug]?key=`) on a separate route → share a
   draft without login while keeping `/[slug]` SSG and published-only.
 - **Reader features are toggleable** (`settings.features`) and **one divider style**
@@ -75,7 +89,8 @@ manifest. Posts + pages share one `/{slug}` URL namespace (`ensureSlugFree`).
 
 ## Conventions
 
-400-line cap per file · no `any` · UI text Vietnamese, code/comments English ·
-every API route logs + `requireOwner()` first. See [`CLAUDE.md`](./CLAUDE.md).
+400-line cap per file · no `any` · UI strings go through `src/locales/` (6 languages,
+never hardcoded), code/comments English · every API route logs + `requireOwner()`
+first. See [`CLAUDE.md`](./CLAUDE.md).
 Next.js 16 here differs from training data — read `node_modules/next/dist/docs/`
 (see [`AGENTS.md`](./AGENTS.md)).

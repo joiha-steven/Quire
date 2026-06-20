@@ -1,12 +1,13 @@
 # vibeblog
 
-An AI-operated personal blog platform. Write and publish from a Vietnamese admin
+An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI; everything (posts + media) is stored in **Vercel Blob** — no database.
 
 - **Framework:** Next.js (App Router) + TypeScript (strict)
-- **Storage:** Vercel Blob (`posts/`, `media/`, each with an `_index.json` manifest)
+- **Storage:** Vercel Blob (`posts/`, `media/`, each with an `_index.json` manifest); image refs stored store-relative (no vendor lock-in)
 - **Auth:** NextAuth v5, GitHub OAuth, single authorized owner
-- **Editor:** TipTap with markdown
+- **Editor:** TipTap with markdown; responsive images (original + AVIF/WebP variants, encoded on save)
+- **UI languages:** en (default), vi, de, ja, zh, ko
 - **Styles:** Tailwind CSS v4
 - **Deploy:** Vercel
 
@@ -55,6 +56,9 @@ request (pagination via `searchParams`). Every Blob read is wrapped in
 `unstable_cache` with a tag, so reads serve from the Next Data Cache until a write
 calls `revalidateTag` + `revalidatePath` — so edits show immediately. Images keep a
 1-year CDN cache; mutable content (manifests + settings) is never cached stale.
+Uploaded photos keep the untouched original and serve responsive AVIF/WebP variants
+(`<picture>`); the variant encoding is deferred to save. Functions run in `sin1`
+(Singapore) via `vercel.json`.
 
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full design and the *why*.
 
