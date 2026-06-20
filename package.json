@@ -1,6 +1,6 @@
 {
   "name": "vibeblog",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "private": true,
   "browserslist": [
     ">0.3%",

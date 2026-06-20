@@ -1,9 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-21
-- **feat(settings): four owner-configurable settings to cut hardcoding** — Custom CSS (injected
-  into PUBLIC pages only, `</style>` stripped), related-posts count, auto-excerpt length, and a
-  favicon upload. New `SiteSettings` fields + sanitizers; `relatedCount`/`excerptLength` clamped.
+- **change(media): replaced the destructive "Clean unused" button with a read-only "Check
+  unused" audit** (`GET /api/media/unused`, `lib/media-usage.ts`; removed `lib/sweep.ts` +
+  `POST /api/media/sweep`). It badges media referenced by no post/page/settings in the grid
+  and offers a "show unused only" filter — the owner deletes by hand. Now also scans **revision
+  snapshots**, so an image kept only in the time machine is no longer flagged (the old sweeper
+  ignored revisions and could permanently delete an image a restore still needed)
 - **fix(admin): header wordmark/menu now share one h-9 box → perfectly aligned.** Removed the
   `v0.x.y` badge from beside the logo; the running version (now a link to GitHub releases)
   lives only on the Overview page. Alignment rule documented in CLAUDE.md (no more baseline drift)

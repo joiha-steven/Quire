@@ -115,9 +115,13 @@ export type AdminStrings = {
   copyUrl: string
   downloadOriginal: string
   unsupportedType: string
-  cleanUnused: string
-  cleanUnusedConfirm: string
-  cleanUnusedNone: string
+  checkUnused: string
+  checkUnusedFailed: string
+  unusedFound: string
+  unusedNone: string
+  unusedBadge: string
+  showUnusedOnly: string
+  showAll: string
   close: string
   loading: string
   noMedia: string

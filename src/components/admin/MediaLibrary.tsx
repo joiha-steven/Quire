@@ -54,6 +54,12 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
       const json = (await res.json()) as ApiResponse
       if (!json.success) throw new Error(json.error)
       setItems((prev) => prev.filter((m) => m.url !== url))
+      setUnused((prev) => {
+        if (!prev?.has(url)) return prev
+        const next = new Set(prev)
+        next.delete(url)
+        return next
+      })
       notify(t.deleted)
     } catch {
       notify(t.deleteFailed, 'error')
@@ -65,41 +71,47 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     notify(t.copiedUrl)
   }
 
-  const [sweeping, setSweeping] = useState(false)
-  async function sweep() {
-    if (!confirm(t.cleanUnusedConfirm)) return
-    setSweeping(true)
+  // Non-destructive audit: flag media referenced by no post/page/setting/revision.
+  // `unused` is null until a check runs, then a Set of unused URLs to badge/filter.
+  const [checking, setChecking] = useState(false)
+  const [unused, setUnused] = useState<Set<string> | null>(null)
+  const [onlyUnused, setOnlyUnused] = useState(false)
+  async function checkUnused() {
+    setChecking(true)
     try {
-      const res = await fetch('/api/media/sweep', { method: 'POST' })
-      const json = (await res.json()) as ApiResponse<{ deleted: number }>
+      const res = await fetch('/api/media/unused')
+      const json = (await res.json()) as ApiResponse<string[]>
       if (!json.success || !json.data) throw new Error(json.error)
-      const n = json.data.deleted
-      notify(n > 0 ? `${t.deleted}: ${n}` : t.cleanUnusedNone)
-      if (n > 0) {
-        const r = await fetch('/api/media')
-        const j = (await r.json()) as ApiResponse<MediaItem[]>
-        setItems(j.data ?? [])
-      }
+      const set = new Set(json.data)
+      setUnused(set)
+      setOnlyUnused(set.size > 0)
+      notify(set.size > 0 ? `${t.unusedFound}: ${set.size}` : t.unusedNone)
     } catch {
-      notify(t.deleteFailed, 'error')
+      notify(t.checkUnusedFailed, 'error')
     } finally {
-      setSweeping(false)
+      setChecking(false)
     }
   }
 
+  const filtered = onlyUnused && unused ? items.filter((m) => unused.has(m.url)) : items
   const grid = (
     <>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-        {items.slice(0, visible).map((m) => (
+        {filtered.slice(0, visible).map((m) => (
           <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
             <button
               type="button"
               // Page mode: click to zoom. Picker mode: click to select.
               onClick={() => (mode === 'picker' ? onSelect?.(m.url) : setZoom(m))}
-              className="block aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800"
+              className="relative block aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.thumb ?? m.url} alt={m.filename} className="h-full w-full object-cover" />
+              {unused?.has(m.url) && (
+                <span className="absolute left-1.5 top-1.5 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  {t.unusedBadge}
+                </span>
+              )}
             </button>
             <figcaption className="space-y-1 p-2 text-xs">
               <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
@@ -126,7 +138,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
           </figure>
         ))}
       </div>
-      {visible < items.length && <div ref={sentinel} className="h-10" />}
+      {visible < filtered.length && <div ref={sentinel} className="h-10" />}
     </>
   )
 
@@ -134,14 +146,23 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <div className="space-y-5">
       <ImageUploader onUploaded={(uploaded) => setItems((prev) => [...uploaded, ...prev])} />
       {mode === 'page' && items.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          {unused && unused.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setOnlyUnused((v) => !v)}
+              className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+            >
+              {onlyUnused ? t.showAll : t.showUnusedOnly}
+            </button>
+          )}
           <button
             type="button"
-            onClick={sweep}
-            disabled={sweeping}
+            onClick={checkUnused}
+            disabled={checking}
             className="text-sm text-neutral-500 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-white"
           >
-            {t.cleanUnused}
+            {t.checkUnused}
           </button>
         </div>
       )}
