@@ -54,7 +54,7 @@ can change without rewriting anything (see Design decisions).
 |---|---|
 | `src/lib/blob.ts` | All Blob I/O. URLs are deterministic from the token (no `list()` to read). Reads cache-bust + degrade to fallback on error. |
 | `src/lib/{posts,pages,media,settings}.ts` | Data layer; `React.cache()` dedup only (no cross-request cache). |
-| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,sweep}.ts` | Pure helpers + shared route helpers (`sweep` = unused-media cleanup). |
+| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
 | `src/app/admin/` | Owner console (editor, media, settings). |
@@ -89,7 +89,9 @@ can change without rewriting anything (see Design decisions).
   untouched **original** + a thumbnail immediately; the heavy AVIF/WebP @1024/1600 set
   is generated on save (`finalizeContentMedia`) only for images kept in the content,
   and `PostContent` emits a `<picture>` so the browser picks the lightest format/size.
-  Orphans (dropped-then-discarded) are cleared by the "Clean unused" sweeper. The
+  Orphans (dropped-then-discarded) are surfaced by the read-only "Check unused"
+  audit, which badges media referenced nowhere (incl. revision snapshots) for
+  manual deletion — it never deletes on its own. The
   dynamic OG image (`/og`) runs on the **edge** runtime so its bundled font loads
   (Node `fetch` can't read a `file://` URL).
 - **Draft preview = HMAC token** (`/preview/[slug]?key=`) on a separate route → share a

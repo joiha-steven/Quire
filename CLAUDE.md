@@ -96,9 +96,9 @@ applying, cross-deploy Data Cache persistence). The model now:
     `sitemap.xml`/`llms.txt` (a static page never appears on post lists/taxonomy).
   - **Settings** → `revalidateEverything()` (`revalidatePath('/', 'layout')`) + `warmCache()`
     — theme/menu/title/SEO touch every page, so purge the whole site then re-warm.
-  - **"Clear all cache" button** / media delete/sweep → `revalidateEverything()` (+ warm on
+  - **"Clear all cache" button** / media delete → `revalidateEverything()` (+ warm on
     the button). Media *upload* alone purges nothing (not on a public page until a referencing
-    post is saved, which purges).
+    post is saved, which purges). The "Check unused" media audit is read-only — it purges nothing.
   - **The one accepted staleness:** the "related posts" box on OTHER post detail pages — a new
     post sharing tags with post Y won't show in Y's related list until Y's own ISR (≤1h) or
     next save. Cosmetic, self-heals; the Clear button is the instant full-sync escape hatch.
@@ -155,7 +155,7 @@ applying, cross-deploy Data Cache persistence). The model now:
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `React.cache()` only; `themeToCss` converts ThemeSettings → CSS vars string |
 | `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`, `finalizeContentMedia` | Upload is **batched** (`addMediaBatch` = one manifest read-modify-write for all files; collision names checked against the real store via `listBlobs`). jpg/png keeps ORIGINAL + cheap `-thumb.webp` (`variants:false`); heavy `-1024`/`-1600` AVIF+WebP are **deferred** — `finalizeContentMedia` (post/page save) generates them only for images kept in the content. svg/gif/webp stored as-is. Delete removes all variants. `PostContent` emits `<picture>` **only** for originals whose variants exist (the `readyOriginals` set from `getMedia`); others render a plain `<img>` so a missing variant never blanks the image |
-| `sweep.ts` | `sweepUnusedMedia` | Deletes media referenced by no post/page/settings (the "Clean unused" library button, `POST /api/media/sweep`). Clears orphans from dropped-then-discarded images |
+| `media-usage.ts` | `findUnusedMedia` | **Read-only audit** — returns URLs of media referenced by no post/page/settings **or revision snapshot** (the "Check unused" library button, `GET /api/media/unused`). Flags orphans in the grid for manual review; never deletes. Scans revisions on purpose so a time-machine restore's image is never reported as unused (the old destructive `sweep.ts` missed revisions and could delete a still-needed image) |
 | `auth.ts` | `handlers`, `auth`, `signIn`, `signOut`, `isAuthorized`, `getAuthState` | Anyone can sign in; only `AUTHORIZED_EMAIL` is authorized; unauthorized = silently redirected |
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the same URL namespace; throws `SlugConflictError` (→ 409) on collision |
 | `video.ts` | `videoEmbed`, `isVideoUrl` | Recognizes YouTube / Vimeo / TikTok URLs; returns embed URL. Videos stored as plain URLs in Markdown |
