@@ -6,8 +6,12 @@ import type { NextRequest } from 'next/server'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getPost, savePost, deletePost } from '@/lib/posts'
+import { finalizeContentMedia } from '@/lib/media'
 import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
+
+// Saving may generate deferred AVIF/WebP variants for newly-kept images.
+export const maxDuration = 60
 
 export async function GET(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]'>): Promise<Response> {
   const start = Date.now()
@@ -42,6 +46,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]
     const { slug } = await ctx.params
     const body = (await req.json()) as Partial<PostWithContent>
     const meta = await savePost(body, slug)
+    await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
     revalidateTag('posts', { expire: 0 })
     revalidatePath(`/${meta.slug}`)
     if (slug !== meta.slug) revalidatePath(`/${slug}`)

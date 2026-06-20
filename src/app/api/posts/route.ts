@@ -5,8 +5,12 @@ import type { NextRequest } from 'next/server'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import type { PostWithContent } from '@/types'
 import { getIndex, savePost } from '@/lib/posts'
+import { finalizeContentMedia } from '@/lib/media'
 import { SlugConflictError } from '@/lib/slugs'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
+
+// Saving may generate deferred AVIF/WebP variants for newly-kept images.
+export const maxDuration = 60
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
@@ -39,6 +43,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('Title or slug is required', 400)
     }
     const meta = await savePost(body)
+    await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
     revalidateTag('posts', { expire: 0 })
     revalidatePath(`/${meta.slug}`)
     logRequest(req, 201, start)
