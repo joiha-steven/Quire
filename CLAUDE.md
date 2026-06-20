@@ -126,6 +126,7 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 | `backfill-excerpts.mjs` | Auto-fill missing excerpts from body |
 | `rehost-images.mjs` | Re-upload external image URLs to Blob |
 | `rebuild-index.mjs` | Rebuild `posts/_index.json` + `media/_index.json` from Blob files (recovery tool) |
+| `wipe-media.mjs` | Delete every media blob except the in-use logo. Dry-run by default; `--apply` to delete (backs up the media index locally first) |
 
 ## SEO (toggleable in Admin → Settings → SEO)
 - `settings.seo` = `{ autoSchema, sitemap, llms, robots, rss, ogImage, ogFallbackImage }`
