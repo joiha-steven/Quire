@@ -4,8 +4,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
-import { getPage, getPublicPages } from '@/lib/pages'
+import { getPost, getRelatedPosts } from '@/lib/posts'
+import { getPage } from '@/lib/pages'
 import { getMedia } from '@/lib/media'
 import { collapseBlob } from '@/lib/blob'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
@@ -18,14 +18,9 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings } from '@/lib/utils'
 
-// Pre-build all public slugs at deploy time; new slugs render on first visit (ISR).
-export async function generateStaticParams() {
-  const [posts, pages] = await Promise.all([getPublicPosts(), getPublicPages()])
-  const slugs = new Set([...posts.map((p) => p.slug), ...pages.map((p) => p.slug)])
-  return [...slugs].map((slug) => ({ slug }))
-}
-
-export const dynamicParams = true
+// Always render fresh from Blob (no build-time SSG snapshot, no data cache), so
+// an edit to a post/page is visible on the very next load — no rebuild needed.
+export const dynamic = 'force-dynamic'
 
 // Render a taxonomy list as comma-separated links: "a, b, c".
 function taxoLinks(items: string[], make: (s: string) => string) {

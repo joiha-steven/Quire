@@ -4,6 +4,8 @@ import { getSettings } from '@/lib/settings'
 import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CategoryPage({ params }: PageProps<'/category/[slug]'>) {
   const { slug } = await params
   const name = decodeURIComponent(slug)

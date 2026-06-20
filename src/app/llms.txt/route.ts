@@ -5,6 +5,8 @@ import { getPublicPosts } from '@/lib/posts'
 import { getPublicPages } from '@/lib/pages'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 
+export const dynamic = 'force-dynamic' // always reflect the latest posts
+
 export async function GET(): Promise<Response> {
   const s = await getSettings()
   if (!s.seo.llms) return new Response('Not found', { status: 404 })

@@ -33,13 +33,13 @@ can change without rewriting anything (see Design decisions).
 ## Request flow
 
 - **Public read**: server components call `src/lib` (`getPublicPosts`, `getPost`,
-  `getSettings`, …). Each read is wrapped in `unstable_cache` with a tag, so it
-  serves from the Next Data Cache until invalidated. `/[slug]` prerenders as static
-  HTML (SSG); list pages are dynamic with path-based pagination (`/page/[n]`,
-  `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1 at the bare path).
+  `getSettings`, …). There is **no data cache** — reads use `React.cache()` for
+  request-scoped dedup only, and every page is `force-dynamic`, so each request reads
+  fresh from Blob. `/[slug]` and the list pages all render on demand; pagination is
+  path-based (`/page/[n]`, `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1
+  at the bare path).
 - **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Blob
-  via `src/lib`, then `revalidateTag(tag, { expire: 0 })` (+ `revalidatePath`) so the
-  next read is fresh immediately.
+  via `src/lib`. No revalidation needed (pages are always fresh); the next read sees it.
 - **Render**: Markdown → HTML via `marked` (raw HTML is escaped, never executed);
   images become `<figure>`, lone video URLs become embeds, H2/H3 get slug ids.
 
@@ -48,7 +48,7 @@ can change without rewriting anything (see Design decisions).
 | Path | What |
 |---|---|
 | `src/lib/blob.ts` | All Blob I/O. URLs are deterministic from the token (no `list()` to read). Reads cache-bust + degrade to fallback on error. |
-| `src/lib/{posts,pages,media,settings}.ts` | Data layer; `unstable_cache` + tags. |
+| `src/lib/{posts,pages,media,settings}.ts` | Data layer; `React.cache()` dedup only (no cross-request cache). |
 | `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,sweep}.ts` | Pure helpers + shared route helpers (`sweep` = unused-media cleanup). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
@@ -64,12 +64,13 @@ can change without rewriting anything (see Design decisions).
 - **Mutable Blob written with `cacheControlMaxAge: 0` + cache-busted reads** →
   Blob's default 1-year CDN cache once served a stale `_index.json` after a save and
   the read-modify-write **clobbered the index**. Mutable content must never be stale.
-- **Every read in `unstable_cache` (tags) + revalidate on write** → fast reads from
-  the Data Cache, `/[slug]` can be SSG, yet edits show instantly. `staleTimes`:
-  `dynamic 0` (lists always fresh) / `static 180` (post prefetch reused on hover).
-- **Data-cache keys are versioned (`site-settings-v4`, `posts-index-v2`, …)** → the
-  Vercel Data Cache persists across deploys, so a new field — or a different backing
-  Blob store — would keep serving stale; bump the key to force a clean re-read.
+- **No data cache; every public route is `force-dynamic`** → reads come straight from
+  Blob each request (`React.cache()` only dedupes within one render). We tried
+  `unstable_cache` + tag revalidation and it repeatedly served stale content (missing
+  new posts, reappearing deleted images, settings not applying, Data Cache persisting
+  across deploys). Correctness over a saved Blob round-trip; the Blob store is in
+  Singapore beside the functions, so reads are cheap. Never reintroduce a cross-request
+  cache over Blob.
 - **Store-relative image refs (`collapseBlob`/`expandBlob`)** → stored content holds
   pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
   store / region / provider needs only a token change, no content rewrite. (Used to
@@ -84,7 +85,7 @@ can change without rewriting anything (see Design decisions).
   dynamic OG image (`/og`) runs on the **edge** runtime so its bundled font loads
   (Node `fetch` can't read a `file://` URL).
 - **Draft preview = HMAC token** (`/preview/[slug]?key=`) on a separate route → share a
-  draft without login while keeping `/[slug]` SSG and published-only.
+  draft without login while keeping `/[slug]` published-only.
 - **Reader features are toggleable** (`settings.features`) and **one divider style**
   (the global 50%-width left `<hr>`; no all-caps, no bespoke `border-t` rules).
 

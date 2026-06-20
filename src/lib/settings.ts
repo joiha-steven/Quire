@@ -2,7 +2,7 @@
 // Reads are resilient: any failure (missing file, Blob down) falls back to
 // defaults so the public header and <title> never crash.
 
-import { unstable_cache } from 'next/cache'
+import { cache } from 'react'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson, collapseBlob, expandBlob } from '@/lib/blob'
 import { isSiteLang } from '@/locales/langs'
@@ -163,35 +163,29 @@ function clampNumber(value: unknown, min: number, max: number, fallback: number)
   return Math.min(max, Math.max(min, Math.round(value)))
 }
 
-// Read settings merged over defaults. Returns defaults on any error.
-// unstable_cache caches across requests; invalidated via revalidateTag('settings', ...) after saves.
-export const getSettings = unstable_cache(
-  async (): Promise<SiteSettings> => {
-    try {
-      const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
-      // Deep-merge theme + seo so older/partial stored configs keep every key.
-      const seo = sanitizeSeo(stored.seo, DEFAULT_SEO)
-      // Image refs are stored store-relative; expand to absolute URLs for use.
-      return {
-        ...DEFAULT_SETTINGS,
-        ...stored,
-        logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
-        siteUrl: sanitizeUrl(stored.siteUrl),
-        theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
-        seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
-        features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
-      }
-    } catch (error) {
-      console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
-      return DEFAULT_SETTINGS
+// Read settings merged over defaults. Returns defaults on any error. No
+// cross-request cache (`React.cache` dedupes within one render only), so a saved
+// setting is live on the next request — no cache-key versioning to maintain.
+export const getSettings = cache(async (): Promise<SiteSettings> => {
+  try {
+    const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
+    // Deep-merge theme + seo so older/partial stored configs keep every key.
+    const seo = sanitizeSeo(stored.seo, DEFAULT_SEO)
+    // Image refs are stored store-relative; expand to absolute URLs for use.
+    return {
+      ...DEFAULT_SETTINGS,
+      ...stored,
+      logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
+      siteUrl: sanitizeUrl(stored.siteUrl),
+      theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
+      seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
+      features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
     }
-  },
-  // Bump this key when the settings SHAPE changes: Vercel's Data Cache persists
-  // across deployments, so a new field (e.g. seo.rss) would otherwise stay
-  // absent from the cached object until the owner saved. v2 = seo + siteUrl; v3 = features.
-  ['site-settings-v4'],
-  { tags: ['settings'] },
-)
+  } catch (error) {
+    console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
+    return DEFAULT_SETTINGS
+  }
+})
 
 // Merge a partial update over current settings and persist. Returns the result.
 export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSettings> {

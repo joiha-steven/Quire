@@ -6,6 +6,8 @@ import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
 import { parsePathPage } from '@/lib/paginate'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CategoryPaged({ params }: PageProps<'/category/[slug]/page/[n]'>) {
   const { slug, n } = await params
   const page = parsePathPage(n)

@@ -7,7 +7,6 @@ import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
-import { CacheButton } from '@/components/admin/CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import pkg from '../../../package.json'
 
@@ -49,7 +48,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </nav>
             <div className="flex items-center gap-1">
               <ThemeToggle lang={language} />
-              <CacheButton />
               <form
                 className="flex"
                 action={async () => {
