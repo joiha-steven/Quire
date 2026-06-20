@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-06-22
+- fix(type): body text now renders at full weight — removed `-webkit-font-smoothing:
+  antialiased` (body + the `<html>` `antialiased` class) which thinned glyphs and made
+  reading look lighter than the old blog; dropped the negative body `letter-spacing`
+  (-0.011em) that cramped accented Vietnamese. Font stays Inter; heading tracking kept
 - fix(media): uploads were intermittently failing ("lúc ăn lúc không"). Root causes
   fixed: (1) the whole multi-file upload now does ONE read-modify-write of the manifest
   (`addMediaBatch`) instead of one per file, removing the lost-update race that dropped
