@@ -128,10 +128,12 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   this key, else the cached object keeps serving without the new key (e.g. rss 404).
 
 ## Reading & discovery
-- `/search` — server passes the published-post index to `SearchClient` which filters
-  in memory (accent-insensitive via `foldAccents`). No API/DB. Header has a search icon.
-- Post pages: `ReadingProgress` (top bar), `Toc` (renders when `extractHeadings` finds
-  >= 3 H2/H3; the `PostContent` renderer assigns slug ids to H2/H3), `RelatedPosts`
+- `/search` — server ships a LEAN pre-folded index (`{ slug, title, date, terms }`,
+  terms = folded title+tags+categories, no excerpt/image so it scales); `SearchClient`
+  lists nothing until the reader types, filters in memory, caps at 50. Header search icon.
+- Post pages: `ReadingProgress` (top bar), `Toc` (>= 3 H2/H3; inline on small screens,
+  a floating frame in the left gutter at xl+ via `contentWidth`; the `PostContent`
+  renderer assigns slug ids to H2/H3), `RelatedPosts`
   (`getRelatedPosts` — shared tags ×2 + categories), and `readingMinutes` in the meta.
 - **Draft preview**: `/preview/[slug]?key=<hmac>` (force-dynamic, noindex) renders any
   status when the key matches `previewToken(slug)` (HMAC of slug keyed by AUTH_SECRET).
