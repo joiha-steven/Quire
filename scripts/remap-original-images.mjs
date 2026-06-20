@@ -65,7 +65,6 @@ index.sort((a, b) => new Date(b.date) - new Date(a.date))
 
 const plan = [] // { slug, ref, orig, newPath }
 const unmatched = []
-const refToNew = new Map() // global ref -> new media path (dedupe across posts)
 
 for (const p of index) {
   const res = await get(`posts/${p.slug}.md`)

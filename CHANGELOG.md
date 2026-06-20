@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **docs(claude): document media portability / no vendor lock-in.** New "Portability"
+  section in CLAUDE.md: content is stored vendor-host-free (store-relative refs), the vanity
+  domain already fronts media, Vercel coupling is isolated to `src/lib/blob.ts`, and a
+  step-by-step path to migrate to an S3-compatible store (e.g. Cloudflare R2) without
+  rewriting content or breaking public URLs
+- chore(release): pre-release audit — `build`, `lint`, `tsc` all clean; verified every
+  write/delete API route is owner-gated; removed an unused var in `remap-original-images.mjs`
+
 - **feat(seo): dynamic OG cards for the home, category and tag pages** (same card as
   posts/pages). Home: top line = domain, bottom = site description. Category: top line = the
   name; tag: top line = `#name` (the # marks it as a tag); both bottom = domain. Honors the

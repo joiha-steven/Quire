@@ -49,6 +49,23 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
   rewrite (just the token/base). Both are idempotent; external URLs are untouched.
   Old absolute-URL content still renders (expand leaves it) and self-heals on next save.
 
+## Portability — no real vendor lock-in (migration path)
+Media is **pure Vercel Blob**, but the design keeps switching providers cheap:
+- **Content carries no vendor host.** Posts/pages/settings store image refs
+  **store-relative** (`media/x.webp`), via `collapseBlob` on write; the host is only
+   re-added at read (`expandBlob`). Changing store/region/provider needs **no content
+  rewrite** — just the token/base. Files are open formats (`.md`, `.json`, plain images),
+  no proprietary container.
+- **Your own domain already fronts media.** Public media serves from the vanity host
+  (`mediaBaseUrl`, a Cloudflare Worker proxy), not `*.blob.vercel-storage.com`. Readers +
+  Google only ever see your domain, so the backend can move without breaking live links.
+- **Vercel coupling is one small file.** Only `src/lib/blob.ts` calls `@vercel/blob`
+  (`put`/`list`/`del`). Everything else goes through its exported helpers.
+- **To migrate (e.g. → Cloudflare R2, S3-compatible):** (1) copy all objects to the new
+  bucket; (2) repoint the `files.*` Worker at it; (3) rewrite `blob.ts`'s ~6 I/O functions
+  to the S3 SDK (and `blobBase()`/`publicBase()` to the new host); swap the token env. App
+  logic, content, and public URLs are untouched — a few hours, not a rewrite.
+
 ## Region (latency)
 - `vercel.json` pins serverless functions to **`sin1` (Singapore)** — closest Vercel
   region to the Vietnamese audience (~40ms vs ~200ms to the default `iad1` US-East).
