@@ -1,6 +1,6 @@
 {
   "name": "vibeblog",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "browserslist": [
     ">0.3%",
@@ -13,6 +13,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
+  },
+  "engines": {
+    "node": ">=20.9"
   },
   "dependencies": {
     "@tiptap/extension-image": "^3.27.1",

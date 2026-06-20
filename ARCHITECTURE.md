@@ -39,9 +39,12 @@ can change without rewriting anything (see Design decisions).
   but `?ts`-busted, so each (re)generation reads fresh. Pagination is path-based (`/page/[n]`,
   `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1 at the bare path).
 - **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Blob via
-  `src/lib`, then `revalidatePath('/', 'layout')` — one call purges the whole site's page
-  cache, so the edit (content, theme, anything) is live on the next request. Admin is
-  `force-dynamic` (uncached). A manual "Clear all cache" button does the same purge + warms.
+  `src/lib`, then invalidate the cache through one place (`src/lib/revalidate.ts`): a new
+  post refreshes the list/taxonomy surfaces, editing a post also refreshes its own page,
+  a settings change purges the whole site. Each purge is a deliberate superset of what a
+  change touches, so the edit is live on the next request without under-purging. Admin is
+  `force-dynamic` (uncached); editor saves also `router.refresh()`. A "Clear all cache"
+  button purges everything + warms.
 - **Render**: Markdown → HTML via `marked` (raw HTML is escaped, never executed);
   images become `<figure>`, lone video URLs become embeds, H2/H3 get slug ids.
 
@@ -66,15 +69,16 @@ can change without rewriting anything (see Design decisions).
 - **Mutable Blob written with `cacheControlMaxAge: 0` + cache-busted reads** →
   Blob's default 1-year CDN cache once served a stale `_index.json` after a save and
   the read-modify-write **clobbered the index**. Mutable content must never be stale.
-- **One cache layer (ISR pages) + full purge on save; no data cache** → pages are
-  ISR-cached for speed, every save calls `revalidatePath('/', 'layout')` to purge the whole
-  site, and Blob reads are `?ts`-busted so regeneration is always fresh. We first tried
-  `unstable_cache` + tag revalidation (two cache layers) and it repeatedly served stale
-  content — missing posts, reappearing deleted images, settings not applying, Data Cache
-  persisting across deploys. This model fixes that because: one layer not two; the Full
-  Route Cache is per-deployment (no cross-deploy stale); every save purges everything; and
-  `?ts` guarantees fresh Blob. Never reintroduce a cross-request data cache over Blob, and
-  never set the Blob reads to `no-store` (it would force every page dynamic).
+- **One cache layer (ISR pages) + scoped purge on save; no data cache** → pages are
+  ISR-cached for speed; every save invalidates through `src/lib/revalidate.ts` (scoped per
+  change but always a superset of affected surfaces), and Blob reads are `?ts`-busted so
+  regeneration is always fresh. We first tried `unstable_cache` + tag revalidation (two
+  cache layers) and it repeatedly served stale content — missing posts, reappearing deleted
+  images, settings not applying, Data Cache persisting across deploys. This model fixes that
+  because: one layer not two; the Full Route Cache is per-deployment (no cross-deploy stale);
+  each save purges a superset of what changed (never under-purges); and `?ts` guarantees
+  fresh Blob. Never reintroduce a cross-request data cache over Blob, and never set the Blob
+  reads to `no-store` (it would force every page dynamic).
 - **Store-relative image refs (`collapseBlob`/`expandBlob`)** → stored content holds
   pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
   store / region / provider needs only a token change, no content rewrite. (Used to
