@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **feat(seo): richer robots.txt policy.** Replaces the bare allow-all with three groups:
+  major search engines + reputable AI assistants (Googlebot/Bingbot…, GPTBot/ClaudeBot/
+  PerplexityBot/Google-Extended…, paired with `/llms.txt`) are explicitly allowed; aggressive
+  SEO/data scrapers (`BAD_BOTS`: AhrefsBot, SemrushBot, MJ12bot, DotBot, PetalBot, Bytespider…)
+  get `Disallow: /` to save crawl budget/bandwidth; `*` stays welcoming so unknown good bots
+  (incl. new AI crawlers) keep working. Bot lists are editable consts atop `app/robots.ts`.
+  Still gated by `seo.robots`; `/admin` + `/api` always off-limits
 - **docs(claude): document media portability / no vendor lock-in.** New "Portability"
   section in CLAUDE.md: content is stored vendor-host-free (store-relative refs), the vanity
   domain already fronts media, Vercel coupling is isolated to `src/lib/blob.ts`, and a

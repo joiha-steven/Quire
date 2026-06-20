@@ -204,7 +204,11 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   '' → `VERCEL_PROJECT_PRODUCTION_URL` → localhost, via `resolveSiteUrl()`). Drives
   `metadataBase` and every absolute URL below.
 - `app/robots.ts` → robots.txt (always disallows `/admin` + `/api`; advertises the
-  sitemap when robots + sitemap are on).
+  sitemap when robots + sitemap are on). When robots is on it emits a 3-group policy:
+  major search engines + reputable AI bots (`SEARCH_BOTS`/`AI_BOTS`, paired with
+  `/llms.txt`) are allowed; aggressive SEO/data scrapers (`BAD_BOTS`: Ahrefs, Semrush,
+  MJ12, DotBot, PetalBot, Bytespider…) get `Disallow: /`; `*` stays welcoming so unknown
+  good bots work. Lists are consts at the top of the file — edit there to add/remove a bot.
 - `app/sitemap.ts` → sitemap.xml (home + posts + pages + categories + tags).
   `app/sitemaps.xml/route.ts` → 308 alias to `/sitemap.xml` (for the plural form / old submissions).
 - `app/llms.txt/route.ts` → /llms.txt, a Markdown content index for AI crawlers
