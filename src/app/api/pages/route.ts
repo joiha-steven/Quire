@@ -45,6 +45,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const meta = await savePage(body)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
     revalidateTag('pages', { expire: 0 })
+    revalidateTag('media', { expire: 0 }) // variants:true upgrade -> page emits <picture>
     revalidatePath(`/${meta.slug}`)
     logRequest(req, 201, start)
     return ok(meta, 201)

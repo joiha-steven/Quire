@@ -35,6 +35,8 @@
 - [ ] Re-uploading a same-named file creates `name-2`, never errors
 - [ ] Dragging image(s) into the editor inserts every one, in order
 - [ ] Image upload works, appears in media library immediately (original + thumb)
+- [ ] An inserted image ALWAYS shows on the post (even before variants exist — it falls
+  back to a plain `<img>` of the original; `<picture>` only appears once variants exist)
 - [ ] On save, jpg/png get `-1024`/`-1600` AVIF+WebP variants; post renders `<picture>`
 - [ ] Browser is served AVIF where supported (DevTools → Network on a post)
 - [ ] "Clean unused" deletes media referenced by no post/page/settings (keeps the logo)

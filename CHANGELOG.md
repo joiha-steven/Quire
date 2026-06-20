@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 2026-06-22
+- fix(media): inserted images that didn't show. A `<picture>` gives NO fallback when a
+  chosen `<source>` 404s, but `PostContent` emitted AVIF/WebP sources for every jpg/png
+  *by convention* — so any image whose deferred variants weren't generated rendered blank.
+  Now `<picture>` is emitted ONLY for originals whose variants are confirmed (media index
+  `variants:true`, passed to `PostContent`); everything else is a plain `<img>` of the
+  original, which always loads. Save routes also `revalidateTag('media')` so the
+  optimized `<picture>` appears once variants exist. Existing broken posts self-heal
 - fix(type): body text now renders at full weight — removed `-webkit-font-smoothing:
   antialiased` (body + the `<html>` `antialiased` class) which thinned glyphs and made
   reading look lighter than the old blog; dropped the negative body `letter-spacing`

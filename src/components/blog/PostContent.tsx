@@ -3,6 +3,7 @@
 // code. Only Markdown-generated elements (incl. GFM tables) are produced.
 import { marked, type Tokens } from 'marked'
 import { videoEmbed } from '@/lib/video'
+import { collapseBlob } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
 
 const escapeHtml = (s: string) =>
@@ -34,20 +35,24 @@ function imgClasses(frag: string): string {
   return /wide/.test(frag) ? `${align} img-wide` : align
 }
 
-// For an uploaded raster original (media/*.jpg|png), the AVIF/WebP @1024/1600
-// variants exist by convention -> emit a <picture> so the browser picks the
-// lightest format + best size. Other srcs (svg/webp/gif/external) stay plain.
+// Emit a <picture> (AVIF/WebP @1024/1600) ONLY for uploaded raster originals
+// whose variants are confirmed to exist (`ready` = the media index's
+// variants:true pathnames). A <picture> gives NO fallback when a chosen <source>
+// 404s, so guessing the variants exist (deferred encoding) left blank images
+// whenever generation had not happened yet. Anything not confirmed renders as a
+// plain <img> of the original, which always loads.
 const SIZES_ATTR = '(max-width: 768px) 100vw, 768px'
-function responsiveSources(cleanSrc: string): string | null {
+function responsiveSources(cleanSrc: string, ready: Set<string>): string | null {
   const m = cleanSrc.match(/^(.*\/media\/.+)\.(?:jpe?g|png)$/i)
   if (!m) return null
+  if (!ready.has(collapseBlob(cleanSrc))) return null // variants not generated -> plain <img>
   const set = (fmt: string) => `${m[1]}-1024.${fmt} 1024w, ${m[1]}-1600.${fmt} 1600w`
   return (
     `<source type="image/avif" srcset="${set('avif')}" sizes="${SIZES_ATTR}">` +
     `<source type="image/webp" srcset="${set('webp')}" sizes="${SIZES_ATTR}">`
   )
 }
-function buildFigures(html: string): string {
+function buildFigures(html: string, ready: Set<string>): string {
   return html
     .replace(/<p>\s*(<img\b[^>]*>)\s*<\/p>/g, '$1')
     .replace(/<img\b[^>]*>/g, (tag) => {
@@ -57,7 +62,7 @@ function buildFigures(html: string): string {
       const [cleanSrc, frag = ''] = src.split('#')
       const caption = alt ? `<figcaption>${alt}</figcaption>` : ''
       const img = `<img src="${cleanSrc}" alt="${alt}" loading="lazy">`
-      const sources = responsiveSources(cleanSrc)
+      const sources = responsiveSources(cleanSrc, ready)
       const media = sources ? `<picture>${sources}${img}</picture>` : img
       return `<figure class="${imgClasses(frag)}">${media}${caption}</figure>`
     })
@@ -76,7 +81,15 @@ function buildVideos(html: string): string {
   )
 }
 
-export async function PostContent({ markdown }: { markdown: string }) {
-  const html = buildVideos(buildFigures(await marked.parse(markdown)))
+export async function PostContent({
+  markdown,
+  readyOriginals = new Set(),
+}: {
+  markdown: string
+  // Collapsed pathnames (media/x.jpg) whose AVIF/WebP variants exist. Images not
+  // in this set render as a plain <img> of the original (no broken <picture>).
+  readyOriginals?: Set<string>
+}) {
+  const html = buildVideos(buildFigures(await marked.parse(markdown), readyOriginals))
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }

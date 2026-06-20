@@ -47,6 +47,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]
     const meta = await savePage(body, slug)
     await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
     revalidateTag('pages', { expire: 0 })
+    revalidateTag('media', { expire: 0 }) // variants:true upgrade -> page emits <picture>
     revalidatePath(`/${meta.slug}`)
     if (slug !== meta.slug) revalidatePath(`/${slug}`)
     logRequest(req, 200, start)

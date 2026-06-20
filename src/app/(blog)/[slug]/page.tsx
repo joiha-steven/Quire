@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
 import { getPage, getPublicPages } from '@/lib/pages'
+import { getMedia } from '@/lib/media'
+import { collapseBlob } from '@/lib/blob'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
@@ -65,12 +67,16 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
 
 export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   const { slug } = await params
-  const [post, page, settings] = await Promise.all([
+  const [post, page, settings, media] = await Promise.all([
     getPost(slug),
     getPage(slug),
     getSettings(),
+    getMedia(),
   ])
   const { language } = settings
+  // Originals whose AVIF/WebP variants exist — only these get a <picture>; the
+  // rest render as a plain <img> so a missing variant never blanks the image.
+  const readyOriginals = new Set(media.filter((m) => m.variants).map((m) => collapseBlob(m.url)))
 
   // Post wins if visible; otherwise fall back to a published page.
   if (post && isPublicallyVisible(post.status, post.date)) {
@@ -105,7 +111,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {/* relative so the desktop ToC can anchor its top to the content body */}
         <div className="relative mt-8">
           {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
-          <PostContent markdown={post.content} />
+          <PostContent markdown={post.content} readyOriginals={readyOriginals} />
         </div>
 
         {/* The global `hr` rule (unlayered) forces margin:0 and beats Tailwind
@@ -151,7 +157,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
       <article>
         <h1 className="text-[1.35rem] font-semibold tracking-tight">{page.title}</h1>
         <div className="mt-8">
-          <PostContent markdown={page.content} />
+          <PostContent markdown={page.content} readyOriginals={readyOriginals} />
         </div>
       </article>
     )
