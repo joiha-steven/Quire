@@ -8,6 +8,7 @@ const vi = {
   tagLabel: 'Thẻ',
   pageLabel: 'Trang',
   menu: 'Menu',
+  palette: 'Bảng màu',
   theme: 'Giao diện',
   themeLight: 'Sáng',
   themeDark: 'Tối',

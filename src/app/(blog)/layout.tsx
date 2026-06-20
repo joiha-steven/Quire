@@ -1,8 +1,10 @@
 // Public blog shell: header (from site settings) + content column + footer.
 import Link from 'next/link'
 import { getSettings } from '@/lib/settings'
+import { paletteOptions } from '@/lib/themes'
 import { t } from '@/lib/i18n'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { PaletteToggle } from '@/components/theme/PaletteToggle'
 import { HeaderMenu } from '@/components/blog/HeaderMenu'
 
 const REPO_URL = 'https://github.com/joiha-steven/vibeblog'
@@ -56,6 +58,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
                 </svg>
               </Link>
             )}
+            <PaletteToggle lang={settings.language} palettes={paletteOptions(settings.themes)} defaultId={settings.themePreset} />
             <ThemeToggle lang={settings.language} />
             <HeaderMenu items={settings.menu} lang={settings.language} />
           </div>

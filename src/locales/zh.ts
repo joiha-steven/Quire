@@ -8,6 +8,7 @@ const zh = {
   tagLabel: '标签',
   pageLabel: '页',
   menu: '菜单',
+  palette: '配色',
   theme: '主题',
   themeLight: '浅色',
   themeDark: '深色',

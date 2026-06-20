@@ -4,7 +4,7 @@
 // Installable + standalone only — no service worker (offline is intentionally
 // out of scope), so this stays a thin, always-fresh descriptor.
 import type { MetadataRoute } from 'next'
-import { getSettings, resolveAppIcon } from '@/lib/settings'
+import { getSettings, resolveAppIcon, getDefaultTheme } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +24,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const settings = await getSettings()
   const icon = resolveAppIcon(settings)
   const type = iconType(icon)
-  const bg = settings.theme.light.bg
+  const bg = getDefaultTheme(settings.themes, settings.themePreset).light.bg
 
   return {
     name: settings.title,

@@ -8,6 +8,7 @@ const de = {
   tagLabel: 'Schlagwort',
   pageLabel: 'Seite',
   menu: 'Menü',
+  palette: 'Farbschema',
   theme: 'Design',
   themeLight: 'Hell',
   themeDark: 'Dunkel',

@@ -4,6 +4,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
+import { paletteOptions } from '@/lib/themes'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 
@@ -19,7 +20,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Signed in but not the owner -> silently sent home (no error shown).
   if (!authorized) redirect('/')
 
-  const { language } = await getSettings()
+  const settings = await getSettings()
+  const { language } = settings
 
   // Server action passed to the client header (sign-out button / form).
   async function signOutAction() {
@@ -30,7 +32,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AdminI18nProvider lang={language}>
       <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-        <AdminHeader lang={language} signOut={signOutAction} />
+        <AdminHeader
+          lang={language}
+          signOut={signOutAction}
+          palettes={paletteOptions(settings.themes)}
+          defaultPalette={settings.themePreset}
+        />
         {/* Wider admin shell so the editor's writing column can match the public
             single-post width with room to spare for the settings panel. */}
         <div className="mx-auto max-w-7xl px-6 py-8">{children}</div>

@@ -6,10 +6,10 @@ import { cache } from 'react'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
 import { readJson, writeJson, collapseBlob, expandBlob, setMediaBase } from '@/lib/blob'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_THEME, DEFAULT_PRESET_ID, isPresetId } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS } from '@/lib/themes'
 
-// Re-export so existing importers (settings page) keep working.
-export { DEFAULT_THEME } from '@/lib/themes'
+// Re-export so existing importers keep working.
+export { DEFAULT_THEME, themesToCss, getDefaultTheme } from '@/lib/themes'
 
 // Keep only well-formed menu items (label + href both present).
 function sanitizeMenu(input: unknown, fallback: MenuItem[]): MenuItem[] {
@@ -46,6 +46,29 @@ function sanitizeTheme(input: unknown, fallback: ThemeSettings): ThemeSettings {
     light: sanitizeColors(o.light, fallback.light),
     dark: sanitizeColors(o.dark, fallback.dark),
   }
+}
+
+// Back-compat: older configs stored a single `theme`. Seed it into the (then-)
+// default palette so the owner's custom colors survive the move to per-palette.
+function migrateThemes(stored: Record<string, unknown>): Record<string, ThemeSettings> {
+  const base = defaultThemes()
+  const legacy = stored.theme
+  if (stored.themes == null && legacy) {
+    const def = isPresetId(stored.themePreset) ? (stored.themePreset as string) : DEFAULT_PRESET_ID
+    base[def] = sanitizeTheme(legacy, base[def])
+  }
+  return base
+}
+
+// Sanitize the per-palette map: for every known preset id, merge the stored
+// colors over `base` (current or built-in). Ids outside the presets are dropped.
+function sanitizeThemes(input: unknown, base: Record<string, ThemeSettings>): Record<string, ThemeSettings> {
+  const o = (input ?? {}) as Record<string, unknown>
+  const out: Record<string, ThemeSettings> = {}
+  for (const p of THEME_PRESETS) {
+    out[p.id] = sanitizeTheme(o[p.id], base[p.id] ?? p.theme)
+  }
+  return out
 }
 
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback)
@@ -133,7 +156,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   customCss: '',
   menu: [],
   themePreset: DEFAULT_PRESET_ID,
-  theme: DEFAULT_THEME,
+  themes: defaultThemes(),
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
 }
@@ -151,13 +174,6 @@ export function resolveSiteUrl(s: SiteSettings): string {
 // else the bundled default (`/app-icon.png`). Always returns a usable URL.
 export function resolveAppIcon(s: SiteSettings): string {
   return s.appIconUrl || s.faviconUrl || '/app-icon.png'
-}
-
-// CSS for the theme: variables on :root (light) and .dark (dark mode).
-export function themeToCss(theme: ThemeSettings): string {
-  const vars = (c: ThemeColors) =>
-    `--c-bg:${c.bg};--c-text:${c.text};--c-heading:${c.heading};--c-meta:${c.meta};--c-link:${c.link};--c-rule:${c.rule}`
-  return `:root{${vars(theme.light)}}.dark{${vars(theme.dark)}}`
 }
 
 // Clamp a possibly-invalid number into a range, falling back to a default.
@@ -191,7 +207,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       excerptLength: clampNumber(stored.excerptLength, 10, 100, DEFAULT_SETTINGS.excerptLength),
       customCss: sanitizeCss(stored.customCss),
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
-      theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
+      themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
     }
@@ -223,7 +239,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     customCss: input.customCss !== undefined ? sanitizeCss(input.customCss) : current.customCss,
     menu: sanitizeMenu(input.menu, current.menu),
     themePreset: isPresetId(input.themePreset) ? input.themePreset : current.themePreset,
-    theme: sanitizeTheme(input.theme, current.theme),
+    themes: sanitizeThemes(input.themes, current.themes),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
   }

@@ -87,10 +87,10 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
           <Card title={t.navAppearance}>
             <ThemeFields
               presets={presets}
-              selectedId={s.themePreset}
-              theme={s.theme}
-              onSelectPreset={(themePreset, theme) => update({ themePreset, theme })}
-              onChange={(theme) => update({ theme })}
+              themes={s.themes}
+              defaultId={s.themePreset}
+              onChangeThemes={(themes) => update({ themes })}
+              onSetDefault={(themePreset) => update({ themePreset })}
               customCss={s.customCss}
               onCustomCss={(customCss) => update({ customCss })}
             />

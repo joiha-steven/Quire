@@ -1,12 +1,14 @@
 'use client'
 
-// Controlled per-mode reading colors (light + dark) + a built-in palette picker.
-// Picking a preset fills both modes from that palette and remembers its id, so
-// the per-mode "reset" restores THAT preset's colors (not a single global default).
-// Parent owns state + save.
+// Per-palette color editor. The 6 built-in palettes are each independently
+// customizable: the picker chooses WHICH palette you're editing; its light+dark
+// colors are saved under settings.themes[id]; "reset" restores that palette's
+// built-in colors. One palette is marked the visitor default (settings.themePreset)
+// — switchable here with "Set as default". Parent owns state + save.
+import { useState } from 'react'
 import type { ThemeColors, ThemeSettings } from '@/types'
 import type { ThemePreset } from '@/lib/themes'
-import { cloneTheme } from '@/lib/themes'
+import { getPreset } from '@/lib/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/lib/admin-i18n'
 
@@ -33,23 +35,44 @@ function MiniMode({ c }: { c: ThemeColors }) {
   )
 }
 
-function PresetCard({ preset, selected, onPick }: { preset: ThemePreset; selected: boolean; onPick: () => void }) {
+function PresetCard({
+  name,
+  theme,
+  editing,
+  isDefault,
+  defaultLabel,
+  onPick,
+}: {
+  name: string
+  theme: ThemeSettings
+  editing: boolean
+  isDefault: boolean
+  defaultLabel: string
+  onPick: () => void
+}) {
   return (
     <button
       type="button"
       onClick={onPick}
-      aria-pressed={selected}
+      aria-pressed={editing}
       className={`group overflow-hidden rounded-xl border text-left transition ${
-        selected
+        editing
           ? 'border-neutral-900 ring-2 ring-neutral-900 dark:border-white dark:ring-white'
           : 'border-neutral-200 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600'
       }`}
     >
       <div className="flex h-10">
-        <MiniMode c={preset.theme.light} />
-        <MiniMode c={preset.theme.dark} />
+        <MiniMode c={theme.light} />
+        <MiniMode c={theme.dark} />
       </div>
-      <div className="border-t border-neutral-200 px-2 py-1 text-xs font-medium dark:border-neutral-800">{preset.name}</div>
+      <div className="flex items-center justify-between gap-1 border-t border-neutral-200 px-2 py-1 dark:border-neutral-800">
+        <span className="text-xs font-medium">{name}</span>
+        {isDefault && (
+          <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white dark:bg-white dark:text-neutral-900">
+            {defaultLabel}
+          </span>
+        )}
+      </div>
     </button>
   )
 }
@@ -107,20 +130,25 @@ function ModeBox({
 
 type Props = {
   presets: ThemePreset[]
-  selectedId: string
-  theme: ThemeSettings
-  onSelectPreset: (id: string, theme: ThemeSettings) => void
-  onChange: (t: ThemeSettings) => void
+  themes: Record<string, ThemeSettings>
+  defaultId: string
+  onChangeThemes: (themes: Record<string, ThemeSettings>) => void
+  onSetDefault: (id: string) => void
   customCss: string
   onCustomCss: (v: string) => void
 }
 
-export function ThemeFields({ presets, selectedId, theme, onSelectPreset, onChange, customCss, onCustomCss }: Props) {
+export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetDefault, customCss, onCustomCss }: Props) {
   const t = useAdminT()
-  // The palette the per-mode reset buttons restore to (the selected preset).
-  const active = presets.find((p) => p.id === selectedId) ?? presets[0]
+  // Which palette is being edited (local UI state — start at the visitor default).
+  const [editingId, setEditingId] = useState(defaultId)
+  const theme = themes[editingId] ?? getPreset(editingId).theme
+  const builtin = getPreset(editingId).theme
+
   const setColor = (mode: keyof ThemeSettings, key: ColorKey, value: string) =>
-    onChange({ ...theme, [mode]: { ...theme[mode], [key]: value } })
+    onChangeThemes({ ...themes, [editingId]: { ...theme, [mode]: { ...theme[mode], [key]: value } } })
+  const resetMode = (mode: keyof ThemeSettings) =>
+    onChangeThemes({ ...themes, [editingId]: { ...theme, [mode]: { ...builtin[mode] } } })
 
   return (
     <div className="space-y-4">
@@ -132,28 +160,41 @@ export function ThemeFields({ presets, selectedId, theme, onSelectPreset, onChan
           {presets.map((p) => (
             <PresetCard
               key={p.id}
-              preset={p}
-              selected={p.id === selectedId}
-              // Clone so later per-color edits never mutate the shared preset object.
-              onPick={() => onSelectPreset(p.id, cloneTheme(p.theme))}
+              name={p.name}
+              theme={themes[p.id] ?? p.theme}
+              editing={p.id === editingId}
+              isDefault={p.id === defaultId}
+              defaultLabel={t.themeDefault}
+              onPick={() => setEditingId(p.id)}
             />
           ))}
         </div>
-        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.themePresetHint}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.themePresetHint}</p>
+          {editingId !== defaultId && (
+            <button
+              type="button"
+              onClick={() => onSetDefault(editingId)}
+              className="shrink-0 text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+            >
+              {t.themeSetDefault}
+            </button>
+          )}
+        </div>
       </div>
 
       <ModeBox
         title={t.modeLight}
         colors={theme.light}
         onChange={(k, v) => setColor('light', k, v)}
-        onReset={() => onChange({ ...theme, light: { ...active.theme.light } })}
+        onReset={() => resetMode('light')}
         t={t}
       />
       <ModeBox
         title={t.modeDark}
         colors={theme.dark}
         onChange={(k, v) => setColor('dark', k, v)}
-        onReset={() => onChange({ ...theme, dark: { ...active.theme.dark } })}
+        onReset={() => resetMode('dark')}
         t={t}
       />
       <div className="space-y-1.5">

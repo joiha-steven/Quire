@@ -80,3 +80,41 @@ export function cloneTheme(t: ThemeSettings): ThemeSettings {
   const copy = (c: ThemeColors): ThemeColors => ({ ...c })
   return { light: copy(t.light), dark: copy(t.dark) }
 }
+
+// A fresh id -> palette map seeded from the built-ins (the owner can then
+// customize any of them). Cloned so edits never touch the preset constants.
+export function defaultThemes(): Record<string, ThemeSettings> {
+  const out: Record<string, ThemeSettings> = {}
+  for (const p of THEME_PRESETS) out[p.id] = cloneTheme(p.theme)
+  return out
+}
+
+// The palette a visitor sees by default (owner's `themePreset`), falling back to
+// the first preset. Always returns a usable ThemeSettings.
+export function getDefaultTheme(themes: Record<string, ThemeSettings>, defaultId: string): ThemeSettings {
+  return themes[defaultId] ?? themes[DEFAULT_PRESET_ID] ?? THEME_PRESETS[0].theme
+}
+
+// Compact palette list for the client switcher: preset order, display name, and
+// the (customized) light colors used to render the preview swatch.
+export function paletteOptions(themes: Record<string, ThemeSettings>): { id: string; name: string; light: ThemeColors }[] {
+  return THEME_PRESETS.map((p) => ({ id: p.id, name: p.name, light: (themes[p.id] ?? p.theme).light }))
+}
+
+function vars(c: ThemeColors): string {
+  return `--c-bg:${c.bg};--c-text:${c.text};--c-heading:${c.heading};--c-meta:${c.meta};--c-link:${c.link};--c-rule:${c.rule}`
+}
+
+// CSS for EVERY palette so the client switcher can swap instantly by setting
+// `<html data-palette="id">` — no server round-trip. The default palette also
+// lands on :root/.dark as the no-JS / no-selection baseline. Per-palette blocks
+// come after, and the mode-qualified `[data-palette].dark` (higher specificity)
+// always wins for dark, so a non-default palette in dark mode resolves correctly.
+export function themesToCss(themes: Record<string, ThemeSettings>, defaultId: string): string {
+  const base = getDefaultTheme(themes, defaultId)
+  let css = `:root{${vars(base.light)}}.dark{${vars(base.dark)}}`
+  for (const [id, t] of Object.entries(themes)) {
+    css += `[data-palette="${id}"]{${vars(t.light)}}[data-palette="${id}"].dark{${vars(t.dark)}}`
+  }
+  return css
+}

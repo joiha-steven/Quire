@@ -9,6 +9,7 @@ export type Dict = {
   tagLabel: string
   pageLabel: string
   menu: string
+  palette: string
   theme: string
   themeLight: string
   themeDark: string
@@ -173,6 +174,8 @@ export type AdminStrings = {
   appearanceHint: string
   themePreset: string
   themePresetHint: string
+  themeDefault: string
+  themeSetDefault: string
   modeLight: string
   modeDark: string
   colorBg: string
