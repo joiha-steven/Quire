@@ -127,6 +127,21 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   Cache persists across deploys, so when the settings SHAPE changes (new field) bump
   this key, else the cached object keeps serving without the new key (e.g. rss 404).
 
+## Reading & discovery
+- `/search` — server passes the published-post index to `SearchClient` which filters
+  in memory (accent-insensitive via `foldAccents`). No API/DB. Header has a search icon.
+- Post pages: `ReadingProgress` (top bar), `Toc` (renders when `extractHeadings` finds
+  >= 3 H2/H3; the `PostContent` renderer assigns slug ids to H2/H3), `RelatedPosts`
+  (`getRelatedPosts` — shared tags ×2 + categories), and `readingMinutes` in the meta.
+- **Draft preview**: `/preview/[slug]?key=<hmac>` (force-dynamic, noindex) renders any
+  status when the key matches `previewToken(slug)` (HMAC of slug keyed by AUTH_SECRET).
+  Owner route `GET /api/preview-link?slug=`; editor has a "Link nháp" copy button. Kept
+  separate from `/[slug]` so the public route stays SSG and only shows published posts.
+- `@vercel/analytics` `<Analytics/>` in the root layout (enable Web Analytics in the
+  Vercel project dashboard to collect data). `(blog)/not-found.tsx` = themed 404.
+- Public reads degrade to fallback instead of 500: `blob.ts` `readJson`/`readText`
+  return the fallback/null on any error (missing token, Blob down) rather than rethrow.
+
 ## Conventions
 - UI text (labels, buttons, toasts, placeholders) → Vietnamese.
 - Code, comments, identifiers, filenames, commits → English.
