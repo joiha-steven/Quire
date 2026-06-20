@@ -30,7 +30,7 @@ export function CacheButton() {
       type="button"
       onClick={clear}
       disabled={busy}
-      className="text-sm text-neutral-500 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-white"
+      className="flex h-10 items-center rounded-lg px-3 text-sm text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
     >
       {t.clearCache}
     </button>
