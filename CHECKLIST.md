@@ -25,7 +25,15 @@
 - [ ] `BLOB_READ_WRITE_TOKEN` format is `vercel_blob_rw_<storeId>_<secret>` —
   `blobUrl()` will throw at runtime if the token is malformed or missing
 
+## Pagination (path-based)
+- [ ] Home `/page/2` works; `/page/1` and out-of-range `/page/999` return 404
+- [ ] `/category/<x>/page/2` and `/tag/<x>/page/2` work; page links carry no `?query`
+- [ ] Blog list shows reading time when the readingTime feature is on
+
 ## Media
+- [ ] Uploading several images at once: ALL appear (no dropped entries)
+- [ ] Re-uploading a same-named file creates `name-2`, never errors
+- [ ] Dragging image(s) into the editor inserts every one, in order
 - [ ] Image upload works, appears in media library immediately (original + thumb)
 - [ ] On save, jpg/png get `-1024`/`-1600` AVIF+WebP variants; post renders `<picture>`
 - [ ] Browser is served AVIF where supported (DevTools → Network on a post)

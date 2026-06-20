@@ -1,18 +1,12 @@
-// Home: paginated list of published posts, newest first.
+// Home: first page of published posts, newest first. Deeper pages: /page/[n].
 import { getPublicPosts } from '@/lib/posts'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { t } from '@/lib/i18n'
-import { paginate, parsePage } from '@/lib/paginate'
-import { PostList } from '@/components/blog/PostList'
-import { Pagination } from '@/components/blog/Pagination'
+import { BlogListing } from '@/components/blog/BlogListing'
 import { JsonLd, websiteSchema } from '@/components/blog/JsonLd'
 
-
-export default async function HomePage({ searchParams }: PageProps<'/'>) {
+export default async function HomePage() {
   const [posts, settings] = await Promise.all([getPublicPosts(), getSettings()])
-  const { language, postsPerPage } = settings
-  const { page } = await searchParams
-  const { items, page: current, totalPages } = paginate(posts, parsePage(page), postsPerPage)
 
   return (
     <>
@@ -25,8 +19,7 @@ export default async function HomePage({ searchParams }: PageProps<'/'>) {
           })}
         />
       )}
-      <PostList posts={items} lang={language} emptyText={t(language).emptyPosts} />
-      <Pagination basePath="/" page={current} totalPages={totalPages} lang={language} />
+      <BlogListing posts={posts} page={1} basePath="/" emptyText={t(settings.language).emptyPosts} />
     </>
   )
 }

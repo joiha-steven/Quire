@@ -6,7 +6,7 @@ import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
-import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible } from '@/lib/utils'
+import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible, readingMinutes } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
 
@@ -23,7 +23,7 @@ const readIndex = unstable_cache(
       .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   },
-  ['posts-index-v2'],
+  ['posts-index-v3'], // v3: entries carry readingMinutes (shown in lists)
   { tags: ['posts'] },
 )
 
@@ -91,11 +91,11 @@ function normalize(input: Partial<PostWithContent>): PostWithContent {
   }
 }
 
-// Split a PostWithContent into its index metadata (no body).
+// Split a PostWithContent into its index metadata (no body). Reading time is
+// computed from the body here so lists (which read only the index) can show it.
 function toMeta(post: PostWithContent): Post {
-  const { content: _content, ...meta } = post
-  void _content
-  return meta
+  const { content, ...meta } = post
+  return { ...meta, readingMinutes: readingMinutes(content) }
 }
 
 // Store-relative copy of a post's metadata (Blob URLs -> pathnames).

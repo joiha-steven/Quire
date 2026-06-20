@@ -35,7 +35,8 @@ can change without rewriting anything (see Design decisions).
 - **Public read**: server components call `src/lib` (`getPublicPosts`, `getPost`,
   `getSettings`, …). Each read is wrapped in `unstable_cache` with a tag, so it
   serves from the Next Data Cache until invalidated. `/[slug]` prerenders as static
-  HTML (SSG); list pages are dynamic (they read `searchParams` for pagination).
+  HTML (SSG); list pages are dynamic with path-based pagination (`/page/[n]`,
+  `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1 at the bare path).
 - **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Blob
   via `src/lib`, then `revalidateTag(tag, { expire: 0 })` (+ `revalidatePath`) so the
   next read is fresh immediately.

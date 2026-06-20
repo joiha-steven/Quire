@@ -52,7 +52,8 @@ blog content lives in Vercel Blob, not in git. Don't commit personal data here.
 
 Post detail pages (`/[slug]`) are statically generated (SSG); new slugs render
 on-demand on first visit. List pages (home, category, tag) are server-rendered per
-request (pagination via `searchParams`). Every Blob read is wrapped in
+request with **path-based pagination** (`/page/2`, `/category/x/page/2` — no `?query`,
+SEO-friendly). Every Blob read is wrapped in
 `unstable_cache` with a tag, so reads serve from the Next Data Cache until a write
 calls `revalidateTag` + `revalidatePath` — so edits show immediately. Images keep a
 1-year CDN cache; mutable content (manifests + settings) is never cached stale.

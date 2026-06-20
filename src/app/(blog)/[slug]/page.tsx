@@ -95,7 +95,8 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             })}
           />
         )}
-        <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
+        {/* Same type scale as the blog-list title (PostCard) — one title format. */}
+        <h1 className="text-[1.35rem] font-semibold tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">
           {formatDate(post.date, language)}
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
@@ -148,7 +149,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   if (page && page.status === 'published') {
     return (
       <article>
-        <h1 className="text-3xl font-bold leading-tight tracking-tight">{page.title}</h1>
+        <h1 className="text-[1.35rem] font-semibold tracking-tight">{page.title}</h1>
         <div className="mt-8">
           <PostContent markdown={page.content} />
         </div>

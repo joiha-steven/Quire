@@ -1,11 +1,14 @@
 // Numbered pagination: 1 2 3 … last. Current page is highlighted, gaps show an
-// ellipsis. Page 1 links to the bare path (no query).
+// ellipsis. Page 1 links to the bare path; deeper pages use a clean `/page/N`
+// path segment (no `?query`) so the URLs stay SEO-friendly.
 import Link from 'next/link'
 import type { SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
 
 function href(basePath: string, page: number): string {
-  return page <= 1 ? basePath : `${basePath}?page=${page}`
+  if (page <= 1) return basePath
+  const base = basePath === '/' ? '' : basePath
+  return `${base}/page/${page}`
 }
 
 // A 3-wide window that always keeps page 1 and the last page in view, with
