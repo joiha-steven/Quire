@@ -8,6 +8,7 @@
 import { useState, useSyncExternalStore } from 'react'
 import type { SiteLang, ThemeColors } from '@/types'
 import { t } from '@/lib/i18n'
+import { ICON_BTN } from '@/components/ui/iconButton'
 
 export type PaletteOption = { id: string; name: string; light: ThemeColors }
 
@@ -86,11 +87,7 @@ export function PaletteToggle({
         onClick={() => setOpen((v) => !v)}
         aria-label={s.palette}
         title={s.palette}
-        className={
-          variant === 'text'
-            ? triggerClassName
-            : 'flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule'
-        }
+        className={variant === 'text' ? triggerClassName : ICON_BTN}
       >
         {variant === 'text' ? currentName || s.palette : <PaletteIcon />}
       </button>

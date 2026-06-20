@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { MenuItem, SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
+import { ICON_BTN } from '@/components/ui/iconButton'
 
 function MenuIcon() {
   return (
@@ -44,7 +45,7 @@ export function HeaderMenu({ items, lang }: { items: MenuItem[]; lang: SiteLang 
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={t(lang).menu}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule"
+        className={ICON_BTN}
       >
         <MenuIcon />
       </button>

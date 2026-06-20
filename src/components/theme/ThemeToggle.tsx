@@ -4,6 +4,7 @@
 import { useState, useSyncExternalStore } from 'react'
 import type { SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
+import { ICON_BTN } from '@/components/ui/iconButton'
 import { useTheme, type ThemeMode } from './ThemeProvider'
 
 // Reflect the actually-applied theme by reading the <html> `dark` class (set by
@@ -73,11 +74,7 @@ export function ThemeToggle({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={s.theme}
-        className={
-          variant === 'text'
-            ? triggerClassName
-            : 'flex h-10 w-10 items-center justify-center rounded-lg text-meta hover:bg-rule'
-        }
+        className={variant === 'text' ? triggerClassName : ICON_BTN}
       >
         {variant === 'text' ? (isDark ? s.themeDark : s.themeLight) : isDark ? <MoonIcon /> : <SunIcon />}
       </button>

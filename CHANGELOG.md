@@ -1,6 +1,15 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **chore(audit): add `audit/` log + repeatable audit procedure** (`audit/README.md`): an
+  8-section pass (baseline → security → logic → perf → code quality → layout → i18n → docs)
+  recorded as dated reports, so each comprehensive review starts from the last clean line.
+  First report `audit/2026-06-22-comprehensive.md`. CLAUDE.md points to it; CHECKLIST gains a
+  **Layout / visual** section (was missing despite the owner's alignment sensitivity)
+- **fix(layout): de-duplicate the public header icon-button class into `ICON_BTN`**
+  (`components/ui/iconButton.ts`). Search / palette / theme / menu each re-typed the same
+  `h-10 w-10 … text-meta hover:bg-rule` string — a drift risk the "one shared class" rule
+  forbids; now all four import the constant (same pattern as `ADMIN_NAV`)
 - **chore: full project audit (tech / security / perf / logic) — clean.** No vulnerabilities or
   logic bugs found: every write/delete route is owner-gated, palette colors are hex-validated
   before the `<style>` emit, custom CSS strips `</style`, raw HTML in markdown is escaped,

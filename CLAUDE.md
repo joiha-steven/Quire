@@ -338,6 +338,9 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   uniform set of text links, nothing styled as a button. Adding an item = reuse it, do not
   copy a class list. (`CacheButton` accepts a `className`, default `ADMIN_NAV`; `ThemeToggle`
   has a `variant='text'` that renders the applied theme as a word styled by `triggerClassName`.)
+  The PUBLIC header's 40px icon buttons (search, palette, theme, menu) share `ICON_BTN`
+  (`components/ui/iconButton.ts`) the same way — the toggles' `variant='icon'` uses it, and a
+  new icon button must reuse it, never re-type the `h-10 w-10 … text-meta hover:bg-rule` string.
 - **Header/menu alignment must be pixel-exact — the owner is very sensitive to it and it has
   drifted repeatedly.** RULE: every item on a header row (incl. the differently-sized brand
   wordmark) is a `inline-flex h-9 items-center` box, and the row is `items-center`. Same fixed
@@ -381,9 +384,16 @@ change behavior, update the matching doc in the SAME change so they never drift:
 - `CHANGELOG.md` — one entry per user-facing change (Keep a Changelog style).
 - `CHECKLIST.md` — pre-deploy verification steps.
 - `README.md` — setup + feature summary for open-source users.
+- `ROADMAP.md` — planned direction (Docker, ingest API, AI assist).
 
 Keep personal/instance values (real credentials, Vercel/Blob IDs, the live domain)
 OUT of every tracked file — they belong in the gitignored `.env.local` + Vercel only.
+
+### Comprehensive audits (`audit/`)
+A full project review (security / logic / performance / layout / docs) follows the
+procedure in [`audit/README.md`](./audit/README.md) and is recorded as a dated report
+`audit/YYYY-MM-DD-<scope>.md`. Run one before a release or after a feature batch; read the
+latest report first so a new pass starts from the last clean line, not from scratch.
 
 ### Maintenance scripts (`scripts/`)
 Load the Blob token from `.env.local`; all support `--dry`:
