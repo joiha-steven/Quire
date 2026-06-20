@@ -111,7 +111,9 @@
 - feat(admin): **Media domain (CDN)** field in Settings → SEO (`mediaBaseUrl`) — set a vanity
   host for public media URLs from the UI instead of an env var. Owner setting wins, falls back
   to `BLOB_PUBLIC_BASE`; pushed into the Blob layer via `setMediaBase()` on each settings read.
-  New admin i18n keys `mediaDomain`/`mediaDomainHint` (all 6 locales)
+  New admin i18n keys `mediaDomain`/`mediaDomainHint` (all 6 locales). Data-layer reads
+  (`posts`/`pages`/`media`) now prime `getSettings()` before `expandBlob`, so the field alone
+  drives media URLs reliably (no cold-start ordering race) — the env var is no longer required
 - feat(seo): `/sitemaps.xml` 308-redirects to `/sitemap.xml` (alias for the plural form / old
   search-console submissions; no second sitemap to keep in sync)
 - feat(media): optional vanity domain for public media URLs via `BLOB_PUBLIC_BASE` (e.g. a

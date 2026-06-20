@@ -8,6 +8,7 @@ import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlo
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible, readingMinutes } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
+import { getSettings } from '@/lib/settings'
 
 const INDEX_PATH = 'posts/_index.json'
 const mdPath = (slug: string) => `posts/${slug}.md`
@@ -17,6 +18,7 @@ const mdPath = (slug: string) => `posts/${slug}.md`
 // within a single render pass; every fresh request re-reads Blob (cache-busted),
 // so an edit is visible on the next load with no revalidation dance.
 const readIndex = cache(async (): Promise<Post[]> => {
+  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
   const posts = await readJson<Post[]>(INDEX_PATH, [])
   return [...posts]
     .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
@@ -55,6 +57,7 @@ function parsePost(raw: string, slug: string): PostWithContent {
 // generateMetadata + the page render in ONE request; no cross-request cache, so
 // the content is always current.
 export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
+  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
   const raw = await readText(mdPath(slug))
   if (!raw) return null
   return parsePost(raw, slug)

@@ -7,6 +7,7 @@ import type { Page, PageWithContent } from '@/types'
 import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
+import { getSettings } from '@/lib/settings'
 
 const INDEX_PATH = 'pages/_index.json'
 const mdPath = (slug: string) => `pages/${slug}.md`
@@ -14,6 +15,7 @@ const mdPath = (slug: string) => `pages/${slug}.md`
 // Raw manifest read. No cross-request cache (see posts.ts) — `React.cache` only
 // dedupes within one render; every request re-reads Blob, so edits show at once.
 const readIndex = cache(async (): Promise<Page[]> => {
+  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
   const pages = await readJson<Page[]>(INDEX_PATH, [])
   return [...pages]
     .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
@@ -33,6 +35,7 @@ export async function getPublicPages(): Promise<Page[]> {
 
 // Read+parse one page's markdown. `React.cache` dedupes within one request only.
 export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
+  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
   const raw = await readText(mdPath(slug))
   if (!raw) return null
   const { data, content } = matter(raw)
