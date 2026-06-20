@@ -9,6 +9,7 @@ import { adminT } from '@/lib/admin-i18n'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { CacheButton } from '@/components/admin/CacheButton'
+import { HEADER_ACTION } from '@/components/admin/headerActions'
 import pkg from '../../../package.json'
 
 // The entire admin is uncached — every view reads the current Blob state, so the
@@ -61,7 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                   await signOut({ redirectTo: '/' })
                 }}
               >
-                <button className="flex h-10 items-center rounded-lg px-3 text-sm text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white">{t.signOut}</button>
+                <button className={HEADER_ACTION}>{t.signOut}</button>
               </form>
             </div>
           </div>

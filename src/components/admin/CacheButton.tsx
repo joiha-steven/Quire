@@ -7,6 +7,7 @@ import { useState } from 'react'
 import type { ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { useAdminT } from './I18nProvider'
+import { HEADER_ACTION } from './headerActions'
 
 export function CacheButton() {
   const t = useAdminT()
@@ -29,13 +30,8 @@ export function CacheButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={clear}
-      disabled={busy}
-      className="flex h-10 items-center rounded-lg px-3 text-neutral-600 hover:bg-neutral-100 disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-800"
-    >
-      {busy ? `${t.clearCache}…` : t.clearCache}
+    <button type="button" onClick={clear} disabled={busy} className={HEADER_ACTION}>
+      {t.clearCache}
     </button>
   )
 }

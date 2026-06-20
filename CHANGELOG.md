@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **fix(admin): even header action cluster.** The "Clear cache" button was missing `text-sm`
+  (oversized text) and changed width while busy (the `…` suffix), making it look lopsided next
+  to the nav. Clear-cache + sign-out now share one `HEADER_ACTION` class constant
+  (`components/admin/headerActions.ts`) so they can't drift again; busy state is shown by
+  dimming, not a width-changing label. Convention added to CLAUDE.md
 - **refactor(cache): all invalidation centralized in `src/lib/revalidate.ts` + scoped purges.**
   Edits now apply reliably and without dumping the whole site each time: a new post refreshes
   only the list/taxonomy surfaces (home, pagination, every category/tag page, feed/sitemap/llms)
