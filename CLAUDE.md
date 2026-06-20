@@ -153,7 +153,7 @@ applying, cross-deploy Data Cache persistence). The model now:
 | `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index. `updateTerm(kind, name, newName\|null)` renames (merges on collision) or removes a category/tag across EVERY post — rewrites each affected `.md` + the index in one pass, no revision snapshot; drives the Phân loại tab (`POST /api/taxonomy`, owner-only, → `revalidateEverything`) |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post at `revisions/{slug}.json` (newest first). Drives the editor "time machine". Moved on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
-| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss` | `getSettings` = `React.cache()` only; `themeToCss` converts ThemeSettings → CSS vars string. `DEFAULT_THEME` re-exported from `themes.ts` |
+| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `DEFAULT_THEME`, `themeToCss`, `resolveAppIcon` | `getSettings` = `React.cache()` only; `themeToCss` converts ThemeSettings → CSS vars string. `DEFAULT_THEME` re-exported from `themes.ts`. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
 | `themes.ts` | `THEME_PRESETS`, `DEFAULT_THEME`, `DEFAULT_PRESET_ID`, `getPreset`, `isPresetId`, `cloneTheme` | The 6 built-in palettes (Mono/Sepia/Forest/Ocean/Rose/Amber), each a full light+dark `ThemeSettings`. `settings.themePreset` (an id) remembers the chosen one so the per-mode "reset" in `ThemeFields` restores THAT preset's colors. Picking a preset just fills `settings.theme` — the public site still renders only `theme` via `themeToCss`, so colors stay in sync. Add a palette by appending to `THEME_PRESETS` (names are constant proper nouns, not localized) |
 | `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`, `finalizeContentMedia` | Upload is **batched** (`addMediaBatch` = one manifest read-modify-write for all files; collision names checked against the real store via `listBlobs`). jpg/png keeps ORIGINAL + cheap `-thumb.webp` (`variants:false`); heavy `-1024`/`-1600` AVIF+WebP are **deferred** — `finalizeContentMedia` (post/page save) generates them only for images kept in the content. svg/gif/webp stored as-is. Delete removes all variants. `PostContent` emits `<picture>` **only** for originals whose variants exist (the `readyOriginals` set from `getMedia`); others render a plain `<img>` so a missing variant never blanks the image |
 | `media-usage.ts` | `findUnusedMedia` | **Read-only audit** — returns URLs of media referenced by no post/page/settings **or revision snapshot** (the "Check unused" library button, `GET /api/media/unused`). Flags orphans in the grid for manual review; never deletes. Scans revisions on purpose so a time-machine restore's image is never reported as unused (the old destructive `sweep.ts` missed revisions and could delete a still-needed image) |
@@ -305,6 +305,21 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - Theme default is **system** (no-FOUC script + `ThemeProvider` both `|| 'system'`). The
   toggle icon reflects the *applied* theme — `useSyncExternalStore` reads the `<html>.dark`
   class (server snapshot = light, so no hydration mismatch), showing sun (light) / moon (dark).
+
+## PWA (installable app)
+- The site installs to the iPhone/Android home screen and launches **standalone** (full-screen,
+  no browser chrome). **Installable + standalone only — no service worker (offline is out of
+  scope by design),** so there is nothing to register/unregister and admin/API are never cached.
+- `app/manifest.ts` (`force-dynamic`) builds the manifest from settings: `name`/`short_name` =
+  title, `theme_color`/`background_color` = the light palette bg, icons from `resolveAppIcon`.
+  Next auto-injects `<link rel="manifest">`; do not add it by hand.
+- iOS ignores the manifest for the home-screen **icon** — it uses the **apple-touch-icon** (from
+  `generateMetadata` in `app/layout.tsx`). For standalone launch, iOS 16.4+ honours the manifest's
+  `display:standalone`, so no legacy `apple-mobile-web-app-capable` meta is needed (Next manages
+  capability as the modern `mobile-web-app-capable` and strips the apple-prefixed variant anyway).
+  The status-bar colour follows the palette per light/dark via `generateViewport` → `themeColor`.
+- App icon source order: owner's `appIconUrl` → `faviconUrl` → bundled `public/app-icon.png`
+  (a `vb` monogram). Owner uploads a square icon in Admin → Settings (next to the favicon).
 
 ## Conventions
 - **Repeated chrome shares ONE class constant — never hand-roll per element.** A set of

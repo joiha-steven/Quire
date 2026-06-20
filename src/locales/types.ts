@@ -152,6 +152,8 @@ export type AdminStrings = {
   postsPerPageHint: string
   favicon: string
   faviconHint: string
+  appIcon: string
+  appIconHint: string
   excerptLength: string
   excerptLengthHint: string
   relatedCount: string

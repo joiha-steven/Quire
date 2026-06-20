@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-21
+- **feat(pwa): installable app on iPhone + Android** — add to the home screen and launch
+  standalone (full-screen, no browser chrome). Dynamic `app/manifest.ts` (name/theme/icon from
+  settings) + apple-touch-icon + `appleWebApp` + per-mode `theme-color` (`generateViewport`).
+  New **App icon** picker in Settings (next to the favicon); icon resolves appIcon → favicon →
+  bundled `public/app-icon.png`. **Installable + standalone only — no service worker / no
+  offline** (kept thin on purpose; admin & API are never cached). `resolveAppIcon` in settings.ts
 - **feat(settings): 6 built-in color presets** (Mono / Sepia / Forest / Ocean / Rosé / Amber),
   each a full light+dark palette tuned for readable contrast in both modes (`lib/themes.ts`).
   Appearance now opens with a palette picker (live light/dark preview swatches); selecting one

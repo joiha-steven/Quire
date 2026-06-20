@@ -177,6 +177,8 @@ const ja = {
   renamed: '名前を変更しました',
   favicon: 'ファビコン',
   faviconHint: 'ブラウザのタブに表示される小さなアイコン。正方形の画像（PNG/SVG）推奨。',
+  appIcon: 'アプリアイコン（ホーム画面）',
+  appIconHint: 'iPhone/Androidにインストールしたアプリのアイコン。正方形のPNG（512×512以上、少し余白を）を推奨。未設定ならファビコン、次に既定のアイコンを使用。',
   excerptLength: '抜粋の長さ（語数）',
   excerptLengthHint: '抜粋がない場合に自動使用する語数（10〜100）。変更後に保存した記事に適用。',
   relatedCount: '関連記事の数',

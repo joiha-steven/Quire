@@ -177,6 +177,8 @@ const de = {
   renamed: 'Umbenannt',
   favicon: 'Favicon',
   faviconHint: 'Kleines Symbol im Browser-Tab. Quadratisches Bild verwenden (PNG/SVG).',
+  appIcon: 'App-Symbol (Startbildschirm)',
+  appIconHint: 'Symbol der installierten App auf iPhone/Android. Quadratisches PNG, mind. 512×512, mit etwas Rand. Ersatzweise das Favicon, dann ein integriertes Standardsymbol.',
   excerptLength: 'Auszugslänge (Wörter)',
   excerptLengthHint: 'Wörter, die automatisch als Auszug dienen, wenn keiner gesetzt ist (10–100). Gilt für danach gespeicherte Beiträge.',
   relatedCount: 'Anzahl ähnlicher Beiträge',

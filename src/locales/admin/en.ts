@@ -177,6 +177,8 @@ const en = {
   renamed: 'Renamed',
   favicon: 'Favicon',
   faviconHint: 'Small icon shown on the browser tab. Use a square image (PNG/SVG).',
+  appIcon: 'App icon (home screen)',
+  appIconHint: 'Icon for the installed app on iPhone/Android. Use a square PNG, 512×512 or larger, with a little padding. Falls back to the favicon, then a bundled default.',
   excerptLength: 'Excerpt length (words)',
   excerptLengthHint: 'Words auto-used as the excerpt when a post has none (10–100). Applies to posts saved after the change.',
   relatedCount: 'Related posts count',

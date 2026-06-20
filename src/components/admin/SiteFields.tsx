@@ -18,6 +18,7 @@ export function SiteFields({ s, update }: Props) {
   const setLang = useSetAdminLang()
   const [picking, setPicking] = useState(false)
   const [pickingFav, setPickingFav] = useState(false)
+  const [pickingApp, setPickingApp] = useState(false)
 
   return (
     <div className="space-y-5">
@@ -102,6 +103,23 @@ export function SiteFields({ s, update }: Props) {
         <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.faviconHint}</p>
       </div>
 
+      <div className="space-y-2">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.appIcon}</span>
+        <div className="flex items-center gap-3">
+          {s.appIconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.appIconUrl} alt="App icon" className="h-12 w-12 rounded-xl bg-neutral-100 object-contain p-1" />
+          ) : (
+            <span className="text-xs text-neutral-400 dark:text-neutral-500">{t.noImageSelected}</span>
+          )}
+          <Button variant="secondary" type="button" onClick={() => setPickingApp(true)}>{t.chooseImage}</Button>
+          {s.appIconUrl && (
+            <Button variant="ghost" type="button" onClick={() => update({ appIconUrl: '' })}>{t.removeSelection}</Button>
+          )}
+        </div>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.appIconHint}</p>
+      </div>
+
       <div className="space-y-1.5">
         <Input
           label={t.excerptLength}
@@ -132,6 +150,16 @@ export function SiteFields({ s, update }: Props) {
             setPickingFav(false)
           }}
           onClose={() => setPickingFav(false)}
+        />
+      )}
+      {pickingApp && (
+        <MediaLibrary
+          mode="picker"
+          onSelect={(url) => {
+            update({ appIconUrl: url })
+            setPickingApp(false)
+          }}
+          onClose={() => setPickingApp(false)}
         />
       )}
     </div>
