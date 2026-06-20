@@ -3,8 +3,7 @@
 
 import type { NextRequest } from 'next/server'
 import { revalidateTag } from 'next/cache'
-import type { MediaItem } from '@/types'
-import { addMedia } from '@/lib/media'
+import { addMediaBatch } from '@/lib/media'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 // Generating AVIF + WebP at two sizes is CPU-heavy; allow more time (Pro plan).
@@ -23,18 +22,22 @@ export async function POST(req: NextRequest): Promise<Response> {
       logRequest(req, 400, start)
       return fail('No file provided', 400)
     }
-    const uploaded: MediaItem[] = []
-    for (const file of files) {
-      const buffer = await file.arrayBuffer()
-      try {
-        uploaded.push(await addMedia(file.name, buffer, file.type || 'application/octet-stream'))
-      } catch (e) {
-        if (e instanceof Error && e.message.startsWith('Unsupported')) {
-          logRequest(req, 415, start)
-          return fail('unsupported_type', 415)
-        }
-        throw e
+    const inputs = await Promise.all(
+      files.map(async (file) => ({
+        filename: file.name,
+        body: await file.arrayBuffer(),
+        contentType: file.type || 'application/octet-stream',
+      })),
+    )
+    let uploaded
+    try {
+      uploaded = await addMediaBatch(inputs)
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith('Unsupported')) {
+        logRequest(req, 415, start)
+        return fail('unsupported_type', 415)
       }
+      throw e
     }
     revalidateTag('media', { expire: 0 })
     logRequest(req, 201, start)

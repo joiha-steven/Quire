@@ -8,7 +8,7 @@ import sharp from 'sharp'
 import { unstable_cache } from 'next/cache'
 import type { MediaItem } from '@/types'
 import {
-  readJson, writeJson, uploadFile, blobUrl, deleteByPathname, collapseBlob, expandBlob,
+  readJson, writeJson, uploadFile, blobUrl, deleteByPathname, collapseBlob, expandBlob, listBlobs,
 } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
 
@@ -69,39 +69,51 @@ async function makeDisplay(original: Buffer): Promise<Variant[]> {
   return files
 }
 
-// Existing pathnames (e.g. "media/logo.webp") from the manifest, for dedupe.
-function existingPathnames(items: MediaItem[]): Set<string> {
+// All media pathnames already taken, for collision-free naming. Unions the
+// manifest with the ACTUAL store contents (listBlobs) so a stale manifest read
+// can never hand back a name that already exists in the store — that was the
+// cause of intermittent "blob already exists" upload errors. Also covers the
+// derived thumb/variant names (which are not separate manifest entries).
+async function takenPathnames(items: MediaItem[]): Promise<Set<string>> {
   const set = new Set<string>()
   for (const m of items) {
-    if (/^media\//.test(m.url)) { set.add(m.url); continue } // already a pathname
-    try {
-      set.add(new URL(m.url).pathname.replace(/^\//, ''))
-    } catch {
-      /* skip malformed url */
-    }
+    const p = collapseBlob(m.url)
+    if (/^media\//.test(p)) set.add(p)
+  }
+  for (const b of await listBlobs()) {
+    if (b.pathname.startsWith('media/')) set.add(b.pathname)
   }
   return set
 }
 
-// First free "media/{base}.{ext}", adding -2, -3... only on collision.
+// First free "media/{base}.{ext}", adding -2, -3... only on collision. Reserves
+// every name it returns plus the derived thumb/variant names in `taken`, so a
+// later file in the same batch can't pick the same stem.
 function freePathname(base: string, ext: string, taken: Set<string>): string {
   const make = (n: number) => `media/${n === 1 ? base : `${base}-${n}`}${ext ? `.${ext}` : ''}`
   let n = 1
   while (taken.has(make(n))) n++
-  return make(n)
+  const path = make(n)
+  taken.add(path)
+  if (/\.(jpe?g|png)$/i.test(path)) {
+    const stem = path.replace(/\.[^.]+$/, '')
+    taken.add(`${stem}-thumb.webp`)
+    for (const w of SIZES) { taken.add(`${stem}-${w}.webp`); taken.add(`${stem}-${w}.avif`) }
+  }
+  return path
 }
 
-// Upload one file. Raster -> original + variants; vector/anim -> as-is.
-// Index entries store pathnames (getMedia re-expands); returns absolute URLs.
-export async function addMedia(
+// Process one file against an in-memory `taken` set: upload its blob(s) and
+// return both the client item (absolute URLs) and the stored entry (pathnames).
+// Does NOT touch the manifest — the caller writes it once for the whole batch.
+async function processFile(
   filename: string,
   body: ArrayBuffer,
   contentType: string,
-): Promise<MediaItem> {
+  taken: Set<string>,
+): Promise<{ item: MediaItem; stored: MediaItem }> {
   const dot = filename.lastIndexOf('.')
   const base = slugify(dot >= 0 ? filename.slice(0, dot) : filename) || 'file'
-  const current = await readJson<MediaItem[]>(INDEX_PATH, [])
-  const taken = existingPathnames(current)
   const uploadedAt = new Date().toISOString()
 
   if (RASTER.test(contentType)) {
@@ -109,46 +121,72 @@ export async function addMedia(
     const origPath = freePathname(base, ext, taken)
     const stem = origPath.replace(/\.[^.]+$/, '')
     const original = Buffer.from(body)
-    // On upload: keep the ORIGINAL untouched + a cheap thumbnail only. The heavy
-    // display variants are generated later by finalizeVariants() on save, so an
-    // image dropped then discarded never pays the AVIF encode (variants: false).
+    // Keep the ORIGINAL untouched + a cheap thumbnail only. Heavy display
+    // variants are deferred to finalizeVariants() on save (variants: false).
     const { width, height } = await imageSize(original)
     await uploadFile(origPath, original, contentType)
     await uploadFile(`${stem}-thumb.webp`, await makeThumb(original), 'image/webp')
-    const item: MediaItem = {
-      url: blobUrl(origPath),
+    const common = {
       filename: origPath.replace(/^media\//, ''),
       size: original.byteLength,
       uploadedAt,
       width,
       height,
-      thumb: blobUrl(`${stem}-thumb.webp`),
-      variants: false,
+      variants: false as const,
     }
-    await writeJson(INDEX_PATH, [
-      { ...item, url: origPath, thumb: `${stem}-thumb.webp` },
-      ...current,
-    ])
-    return item
+    return {
+      item: { ...common, url: blobUrl(origPath), thumb: blobUrl(`${stem}-thumb.webp`) },
+      stored: { ...common, url: origPath, thumb: `${stem}-thumb.webp` },
+    }
   }
 
   if (PASSTHROUGH.test(contentType)) {
     const ext = contentType === 'image/svg+xml' ? 'svg' : contentType === 'image/gif' ? 'gif' : 'webp'
     const path = freePathname(base, ext, taken)
     const url = await uploadFile(path, Buffer.from(body), contentType)
-    const item: MediaItem = {
-      url,
+    const common = {
       filename: path.replace(/^media\//, ''),
       size: body.byteLength,
       uploadedAt,
-      thumb: url, // its own thumbnail
-      variants: false,
+      variants: false as const,
     }
-    await writeJson(INDEX_PATH, [{ ...item, url: path, thumb: path }, ...current])
-    return item
+    return {
+      item: { ...common, url, thumb: url },
+      stored: { ...common, url: path, thumb: path },
+    }
   }
 
   throw new Error(`Unsupported file type: ${contentType}`)
+}
+
+// Upload one or more files in a SINGLE read-modify-write of the manifest. Doing
+// the whole batch under one read + one write removes the lost-update race that
+// dropped entries when several images were uploaded at once ("lúc ăn lúc không").
+// Unsupported types throw before any manifest write (route maps to 415).
+export async function addMediaBatch(
+  files: { filename: string; body: ArrayBuffer; contentType: string }[],
+): Promise<MediaItem[]> {
+  const current = await readJson<MediaItem[]>(INDEX_PATH, [])
+  const taken = await takenPathnames(current)
+  const items: MediaItem[] = []
+  const stored: MediaItem[] = []
+  for (const f of files) {
+    const r = await processFile(f.filename, f.body, f.contentType, taken)
+    items.push(r.item)
+    stored.push(r.stored)
+  }
+  await writeJson(INDEX_PATH, [...stored, ...current])
+  return items
+}
+
+// Upload a single file (kept for convenience; delegates to the batch path).
+export async function addMedia(
+  filename: string,
+  body: ArrayBuffer,
+  contentType: string,
+): Promise<MediaItem> {
+  const [item] = await addMediaBatch([{ filename, body, contentType }])
+  return item
 }
 
 // Delete a media item: the original + thumbnail + every display variant + entry.

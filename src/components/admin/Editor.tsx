@@ -166,6 +166,12 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
   const rawRef = useRef(raw)
   const rawTextRef = useRef(rawText)
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // The editorProps closures below are created once (on the first useEditor call,
+  // when `editor` is still null). Reading the live instance through a ref instead
+  // of the captured `editor` const is what makes drag-drop insert reliably —
+  // otherwise the dropped image only appeared when the stale closure happened to
+  // hold a non-null editor ("lúc ăn lúc không").
+  const editorRef = useRef<TiptapEditor | null>(null)
   useEffect(() => { onChangeRef.current = onChange }, [onChange])
   useEffect(() => { onDirtyRef.current = onDirty }, [onDirty])
   useEffect(() => { rawRef.current = raw }, [raw])
@@ -194,20 +200,23 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
         const files = Array.from(event.dataTransfer?.files ?? []).filter((f) => f.type.startsWith('image/'))
         if (files.length === 0) return false
         event.preventDefault()
-        files.forEach(async (file) => {
-          const url = await onUploadFile(file)
-          if (url) {
-            const alt = file.name.replace(/\.[a-z0-9]+$/i, '')
-            editor?.chain().focus().setImage({ src: url, alt }).run()
+        // Upload sequentially so multiple dropped images insert in order.
+        ;(async () => {
+          for (const file of files) {
+            const url = await onUploadFile(file)
+            if (url) {
+              const alt = file.name.replace(/\.[a-z0-9]+$/i, '')
+              editorRef.current?.chain().focus().setImage({ src: url, alt }).run()
+            }
           }
-        })
+        })()
         return true
       },
       // Paste a lone video URL (YouTube/Vimeo/TikTok) -> insert a video embed.
       handlePaste(view, event) {
         const text = event.clipboardData?.getData('text/plain')?.trim() ?? ''
         if (text && !/\s/.test(text) && isVideoUrl(text)) {
-          editor?.chain().focus().setVideo(text).run()
+          editorRef.current?.chain().focus().setVideo(text).run()
           return true
         }
         return false
@@ -237,6 +246,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
 
   useEffect(() => {
     if (!editor) return
+    editorRef.current = editor // keep the drag-drop / paste closures on the live instance
     apiRef.current = {
       insertImage: (url: string) =>
         editor.chain().focus().setImage({ src: url, alt: captionFromUrl(url) }).run(),

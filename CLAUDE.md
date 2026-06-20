@@ -84,7 +84,14 @@ HTML) and regenerates on tag/path revalidation — instant reads, fresh on edit.
   `getPost` is wrapped in `unstable_cache` (tag `posts`), so the underlying `no-store`
   Blob fetch sits behind the data cache and the page output is cacheable. An edit
   (`revalidateTag('posts')` + `revalidatePath('/slug')`) regenerates the static page.
-- List pages (home, category, tag) are dynamic because they access `searchParams`.
+- List pages (home, category, tag) are dynamic. Pagination is **path-based**: page 1 at
+  the bare path, deeper pages at `/page/[n]` (and `/category/[slug]/page/[n]`,
+  `/tag/[slug]/page/[n]`) — no `?query`, friendlier for SEO. `parsePathPage` returns the
+  page only for `n >= 2` (else `null` → 404, so there is no duplicate URL for page 1 and
+  no out-of-range pages). The shared `components/blog/BlogListing` renders all six routes.
+- Post list entries carry `readingMinutes` (computed from the body in `toMeta` at save;
+  `backfill-reading-time.mjs` filled existing posts) so lists can show read time without
+  loading bodies. Index cache key is `posts-index-v3` (bump on any index-shape change).
 - `unstable_cache` still provides cross-request caching for list data even though
   detail pages are dynamic.
 
@@ -135,6 +142,8 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 | `rehost-images.mjs` | Re-upload external image URLs to Blob |
 | `rebuild-index.mjs` | Rebuild `posts/_index.json` + `media/_index.json` from Blob files (recovery tool) |
 | `wipe-media.mjs` | Delete every media blob except the in-use logo. Dry-run by default; `--apply` to delete (backs up the media index locally first) |
+| `backfill-reading-time.mjs` | Fill `readingMinutes` on existing `posts/_index.json` entries (new saves compute it automatically). Idempotent; `--dry` to preview |
+| `list-posts-with-images.mjs` | Read-only report of which posts reference images (to re-upload originals by hand) |
 
 ## SEO (toggleable in Admin → Settings → SEO)
 - `settings.seo` = `{ autoSchema, sitemap, llms, robots, rss, ogImage, ogFallbackImage }`

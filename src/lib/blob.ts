@@ -153,6 +153,11 @@ export async function uploadFile(
     const { url } = await put(pathname, body, {
       access: 'public',
       addRandomSuffix: false,
+      // Safety net: a derived name is made unique up-front (freePathname +
+      // listBlobs), so this never silently replaces a distinct image. It only
+      // prevents a hard "blob already exists" throw if a stale manifest read ever
+      // picks a name that already exists in the store.
+      allowOverwrite: true,
       contentType,
     })
     return url

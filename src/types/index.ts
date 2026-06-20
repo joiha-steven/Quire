@@ -13,6 +13,7 @@ export type Post = {
   tags: string[]
   featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
   excerpt?: string // auto-extracted from first paragraph if empty
+  readingMinutes?: number // estimated read time, computed from the body at save (for lists)
 }
 
 // Full post = metadata + markdown body.

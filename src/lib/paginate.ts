@@ -6,10 +6,13 @@ export type Paged<T> = {
   totalPages: number
 }
 
-// Parse a ?page= value into a positive integer (defaults to 1).
-export function parsePage(raw: string | string[] | undefined): number {
-  const n = Number(Array.isArray(raw) ? raw[0] : raw)
-  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1
+// Parse a `/page/[n]` path segment. Returns the integer page only when it is a
+// real deep page (>= 2); null for "1" or junk, so those URLs 404 (page 1 lives
+// at the bare base path — no duplicate-content URL for it).
+export function parsePathPage(raw: string): number | null {
+  if (!/^\d+$/.test(raw)) return null
+  const n = Number(raw)
+  return n >= 2 ? n : null
 }
 
 // Slice `all` into the requested page; clamps page into range.
