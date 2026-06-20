@@ -5,7 +5,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
-import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
+import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
@@ -19,7 +19,9 @@ const mdPath = (slug: string) => `posts/${slug}.md`
 const readIndex = unstable_cache(
   async (): Promise<Post[]> => {
     const posts = await readJson<Post[]>(INDEX_PATH, [])
-    return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...posts]
+      .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   },
   ['posts-index'],
   { tags: ['posts'] },
@@ -47,9 +49,9 @@ function parsePost(raw: string, slug: string): PostWithContent {
     status: meta.status === 'published' ? 'published' : 'draft',
     categories: meta.categories ?? [],
     tags: meta.tags ?? [],
-    featuredImage: meta.featuredImage,
+    featuredImage: meta.featuredImage ? expandBlob(meta.featuredImage) : undefined,
     excerpt: meta.excerpt,
-    content: content.trim(),
+    content: expandBlob(content.trim()),
   }
 }
 
@@ -96,14 +98,19 @@ function toMeta(post: PostWithContent): Post {
   return meta
 }
 
-// Serialize a post to frontmatter + markdown.
+// Store-relative copy of a post's metadata (Blob URLs -> pathnames).
+function collapseMeta(meta: Post): Post {
+  return { ...meta, featuredImage: meta.featuredImage ? collapseBlob(meta.featuredImage) : undefined }
+}
+
+// Serialize a post to frontmatter + markdown, storing Blob refs as pathnames.
 // Strip undefined fields first — js-yaml throws on undefined values.
 function serialize(post: PostWithContent): string {
-  const meta = toMeta(post)
+  const meta = collapseMeta(toMeta(post))
   const clean = Object.fromEntries(
     Object.entries(meta).filter(([, v]) => v !== undefined),
   )
-  return matter.stringify(post.content, clean)
+  return matter.stringify(collapseBlob(post.content), clean)
 }
 
 // Read index, apply an update in memory, write it back. Never partial-write.
@@ -143,9 +150,9 @@ export async function savePost(
   const meta = toMeta(post)
   await mutateIndex((posts) => {
     const without = posts.filter((p) => p.slug !== post.slug && p.slug !== previousSlug)
-    return [...without, meta]
+    return [...without, collapseMeta(meta)] // store pathname; reads re-expand
   })
-  return meta
+  return meta // full URLs for the client
 }
 
 // Delete a post: remove {slug}.md and its manifest entry.

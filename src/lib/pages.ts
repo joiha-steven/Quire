@@ -5,7 +5,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import matter from 'gray-matter'
 import type { Page, PageWithContent } from '@/types'
-import { readJson, writeJson, readText, writeText, deleteByPathname } from '@/lib/blob'
+import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 
@@ -17,7 +17,9 @@ const mdPath = (slug: string) => `pages/${slug}.md`
 const readIndex = unstable_cache(
   async (): Promise<Page[]> => {
     const pages = await readJson<Page[]>(INDEX_PATH, [])
-    return [...pages].sort((a, b) => a.title.localeCompare(b.title))
+    return [...pages]
+      .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
+      .sort((a, b) => a.title.localeCompare(b.title))
   },
   ['pages-index'],
   { tags: ['pages'] },
@@ -45,8 +47,8 @@ const readPage = unstable_cache(
       title: meta.title ?? slug,
       slug: meta.slug ?? slug,
       status: meta.status === 'published' ? 'published' : 'draft',
-      featuredImage: meta.featuredImage,
-      content: content.trim(),
+      featuredImage: meta.featuredImage ? expandBlob(meta.featuredImage) : undefined,
+      content: expandBlob(content.trim()),
     }
   },
   ['page'],
@@ -77,14 +79,19 @@ function toMeta(page: PageWithContent): Page {
   return meta
 }
 
-// Serialize a page to frontmatter + markdown.
+// Store-relative copy of a page's metadata (Blob URLs -> pathnames).
+function collapseMeta(meta: Page): Page {
+  return { ...meta, featuredImage: meta.featuredImage ? collapseBlob(meta.featuredImage) : undefined }
+}
+
+// Serialize a page to frontmatter + markdown, storing Blob refs as pathnames.
 // Strip undefined fields first — js-yaml throws on undefined values.
 function serialize(page: PageWithContent): string {
-  const meta = toMeta(page)
+  const meta = collapseMeta(toMeta(page))
   const clean = Object.fromEntries(
     Object.entries(meta).filter(([, v]) => v !== undefined),
   )
-  return matter.stringify(page.content, clean)
+  return matter.stringify(collapseBlob(page.content), clean)
 }
 
 // Read index, apply an update in memory, write it back. Never partial-write.
@@ -111,9 +118,9 @@ export async function savePage(
   const meta = toMeta(page)
   await mutateIndex((pages) => {
     const without = pages.filter((p) => p.slug !== page.slug && p.slug !== previousSlug)
-    return [...without, meta]
+    return [...without, collapseMeta(meta)] // store pathname; reads re-expand
   })
-  return meta
+  return meta // full URLs for the client
 }
 
 // Delete a page: remove {slug}.md and its manifest entry.

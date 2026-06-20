@@ -44,6 +44,32 @@ export function blobOrigin(): string {
   }
 }
 
+// Matches any Blob store host so a value survives a store/region/provider change.
+const BLOB_HOST_RE = /https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//gi
+
+// Persist form: strip the store host so only the store-relative pathname is
+// stored (e.g. `media/x.webp`). Idempotent; works on a bare value or a markdown
+// body. This is what decouples stored content from any specific Blob store.
+export function collapseBlob(s: string): string {
+  return s.replace(BLOB_HOST_RE, '')
+}
+
+// Render form: turn a stored pathname back into an absolute URL via the current
+// store. Idempotent — absolute URLs and external links are left untouched.
+// Handles a bare field value and `media/...` refs inside a markdown/HTML body.
+export function expandBlob(s: string): string {
+  let base: string
+  try {
+    base = blobBase()
+  } catch {
+    return s
+  }
+  if (/^media\//.test(s)) return `${base}/${s}` // whole value is a blob pathname
+  return s // markdown body: only expand media refs in link / src / href positions
+    .replace(/(\]\()(media\/[^)\s]+)/g, (_m, a, p) => `${a}${base}/${p}`)
+    .replace(/((?:src|href)=["'])(media\/[^"']+)/g, (_m, a, p) => `${a}${base}/${p}`)
+}
+
 // List every blob (pathname + size), following pagination. Used for site stats.
 export async function listBlobs(): Promise<{ pathname: string; size: number }[]> {
   const out: { pathname: string; size: number }[] = []

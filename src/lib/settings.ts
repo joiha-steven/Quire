@@ -4,7 +4,7 @@
 
 import { unstable_cache } from 'next/cache'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
-import { readJson, writeJson } from '@/lib/blob'
+import { readJson, writeJson, collapseBlob, expandBlob } from '@/lib/blob'
 import { isSiteLang } from '@/locales/langs'
 
 // Keep only well-formed menu items (label + href both present).
@@ -170,12 +170,15 @@ export const getSettings = unstable_cache(
     try {
       const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
       // Deep-merge theme + seo so older/partial stored configs keep every key.
+      const seo = sanitizeSeo(stored.seo, DEFAULT_SEO)
+      // Image refs are stored store-relative; expand to absolute URLs for use.
       return {
         ...DEFAULT_SETTINGS,
         ...stored,
+        logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
         siteUrl: sanitizeUrl(stored.siteUrl),
         theme: sanitizeTheme(stored.theme, DEFAULT_THEME),
-        seo: sanitizeSeo(stored.seo, DEFAULT_SEO),
+        seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
         features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
       }
     } catch (error) {
@@ -209,6 +212,12 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
   }
-  await writeJson(SETTINGS_PATH, next)
+  // Persist image refs store-relative (collapse); keep `next` absolute for the client.
+  const stored: SiteSettings = {
+    ...next,
+    logoUrl: collapseBlob(next.logoUrl),
+    seo: { ...next.seo, ogFallbackImage: collapseBlob(next.seo.ogFallbackImage) },
+  }
+  await writeJson(SETTINGS_PATH, stored)
   return next
 }

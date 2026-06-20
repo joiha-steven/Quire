@@ -28,6 +28,13 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
 - `readText(pathname)` — fetch markdown; returns null on 404/error.
 - `writeJson` / `writeText` — put with `allowOverwrite: true`, `cacheControlMaxAge: 0`.
 - Every read uses `fresh(url)` (adds `?ts=<now>`) to bust CDN cache on stale blobs.
+- **Stored content is store-relative, not absolute.** `collapseBlob(s)` strips any
+  Blob host → pathname (`media/x.webp`) on WRITE; `expandBlob(s)` re-adds the current
+  store base on READ. Applied in the data layer only (posts/pages/settings), so all
+  UI keeps working with absolute URLs while stored bytes carry no storeId. This
+  decouples content from the store — changing store/region/provider needs no content
+  rewrite (just the token/base). Both are idempotent; external URLs are untouched.
+  Old absolute-URL content still renders (expand leaves it) and self-heals on next save.
 
 ## Region (latency)
 - `vercel.json` pins serverless functions to **`sin1` (Singapore)** — closest Vercel
