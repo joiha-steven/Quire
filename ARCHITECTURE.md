@@ -18,7 +18,9 @@ posts/_index.json     array of post metadata  ← the query layer (no bodies)
 posts/{slug}.md       frontmatter + markdown body
 pages/{slug}.md       static pages (no taxonomy/date) + pages/_index.json
 media/{name}.{ext}    original upload + responsive variants + media/_index.json
-settings/site.json    SiteSettings (theme, menu, siteUrl, seo, features)
+revisions/{slug}.json last 3 overwritten versions of a post (editor time machine)
+files/{kind}-{ts}.ext site icons (favicon / app icon), kept out of the media grid
+settings/site.json    SiteSettings (6-palette themes map + default, menu, siteUrl, seo, features, customCss)
 ```
 
 The `_index.json` manifests are the only "query" mechanism: lists read the
@@ -54,7 +56,7 @@ can change without rewriting anything (see Design decisions).
 |---|---|
 | `src/lib/blob.ts` | All Blob I/O. URLs are deterministic from the token (no `list()` to read). Reads cache-bust + degrade to fallback on error. |
 | `src/lib/{posts,pages,media,settings}.ts` | Data layer; `React.cache()` dedup only (no cross-request cache). |
-| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit). |
+| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon store). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
 | `src/app/admin/` | Owner console (editor, media, settings). |
@@ -98,6 +100,16 @@ can change without rewriting anything (see Design decisions).
   draft without login while keeping `/[slug]` published-only.
 - **Reader features are toggleable** (`settings.features`) and **one divider style**
   (the global 50%-width left `<hr>`; no all-caps, no bespoke `border-t` rules).
+- **Theming = two orthogonal axes: mode × palette.** Light/dark/system/by-time is a
+  `.dark` class on `<html>`; the 6 color palettes are a `data-palette` attribute. The
+  layout emits every palette's CSS vars once (`themesToCss`), so a visitor's switch is
+  attribute-only (no server round-trip), and a no-FOUC inline script applies both before
+  paint. Every palette is owner-customizable; colors are validated as hex on save, so the
+  injected `<style>` can't be broken out of.
+- **Installable PWA, no service worker** → `app/manifest.ts` builds the manifest from
+  settings (title, palette color, uploaded icon); standalone launch only — offline is
+  intentionally out of scope, so there is nothing to register/cache and admin/API are
+  never served stale.
 
 ## Conventions
 

@@ -1,7 +1,8 @@
-// Built-in color presets. Each preset is a full light+dark reading palette
-// (the same 6 tokens the public site renders via themeToCss). Picking a preset
-// fills `settings.theme` with its colors; `settings.themePreset` remembers which
-// one so "reset" can restore THAT preset's defaults (not just the first one).
+// Built-in color palettes. Each is a full light+dark reading palette (the same 6
+// tokens the public site renders via `themesToCss`). All 6 live in `settings.themes`
+// (id -> ThemeSettings) and every one is independently owner-customizable;
+// `settings.themePreset` names the visitor default. A visitor can switch palette at
+// will (PaletteToggle), and per-mode "reset" restores THAT palette's built-in colors.
 //
 // Preset names are proper nouns (kept constant across locales, like "Solarized").
 // Every palette is tuned so both modes stay readable: comfortable body contrast,

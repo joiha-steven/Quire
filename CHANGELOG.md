@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **chore: full project audit (tech / security / perf / logic) — clean.** No vulnerabilities or
+  logic bugs found: every write/delete route is owner-gated, palette colors are hex-validated
+  before the `<style>` emit, custom CSS strips `</style`, raw HTML in markdown is escaped,
+  preview tokens use `timingSafeEqual`, RSS/sitemap output is escaped, icon upload is
+  type+kind-whitelisted. Fixed stale docs/comments only: corrected the `themes.ts` header to the
+  per-palette model, the CHECKLIST "Clean unused → Check unused" (read-only) line, README feature
+  list (palettes/PWA/time-machine/icons) + Blob prefixes, and the ARCHITECTURE data model
+  (`revisions/`, `files/`, per-palette settings) + theming/PWA design notes
 - **feat(theme): visitor palette switcher (6 palettes) on public + admin headers** — like the
   dark/light toggle but for color palette. `PaletteToggle` writes `<html data-palette>` +
   localStorage; `themesToCss` emits every palette's vars so switching is instant (no reload), and

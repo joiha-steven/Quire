@@ -4,9 +4,11 @@ An AI-operated personal blog platform. Write and publish from a multilingual adm
 UI; everything (posts + media) is stored in **Vercel Blob** — no database.
 
 - **Framework:** Next.js 16 (App Router) + React 19 + TypeScript (strict)
-- **Storage:** Vercel Blob (`posts/`, `media/`, each with an `_index.json` manifest); image refs stored store-relative (no vendor lock-in)
+- **Storage:** Vercel Blob (`posts/`, `pages/`, `media/`, `revisions/`, `files/`, `settings/`; each content kind has an `_index.json` manifest); image refs stored store-relative (no vendor lock-in)
 - **Auth:** NextAuth v5 (Google and/or GitHub OAuth), single authorized owner
-- **Editor:** TipTap 3 with Markdown; responsive images via `sharp` (original + AVIF/WebP variants, encoded on save)
+- **Editor:** TipTap 3 with Markdown; responsive images via `sharp` (original + AVIF/WebP variants, encoded on save); a 3-version time machine per post
+- **Theming:** 6 built-in light+dark color palettes, each fully customizable; visitors can switch palette and light/dark/system/by-time mode; optional custom CSS
+- **PWA:** installable to the iPhone/Android home screen, launches standalone (no service worker / no offline by design)
 - **UI languages:** en (default), vi, de, ja, zh, ko
 - **Styles:** Tailwind CSS v4
 - **Deploy:** Vercel (Docker self-host is on the [roadmap](./ROADMAP.md))

@@ -39,8 +39,10 @@
   back to a plain `<img>` of the original; `<picture>` only appears once variants exist)
 - [ ] On save, jpg/png get `-1024`/`-1600` AVIF+WebP variants; post renders `<picture>`
 - [ ] Browser is served AVIF where supported (DevTools → Network on a post)
-- [ ] "Clean unused" deletes media referenced by no post/page/settings (keeps the logo)
+- [ ] "Check unused" badges media referenced by no post/page/settings/revision (read-only,
+  deletes nothing); the "show unused only" filter appears when any are found
 - [ ] Deleting an image removes the original + thumbnail + every variant
+- [ ] Favicon / app icon upload accepts `.ico` and lands in `files/` (not the media grid)
 - [ ] Post publish works, appears on blog immediately
 
 ## Verify auth quickly
@@ -52,6 +54,8 @@ curl -s -X PUT    localhost:3000/api/posts/test       -d '{}'
 curl -s -X DELETE localhost:3000/api/posts/test
 curl -s -X POST   localhost:3000/api/media/upload
 curl -s -X DELETE "localhost:3000/api/media/by?url=x"
+curl -s -X POST   localhost:3000/api/files/upload
+curl -s            localhost:3000/api/media/unused   # GET, owner-only audit
 ```
 
 ## Caching gotchas
