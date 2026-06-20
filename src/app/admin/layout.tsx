@@ -47,16 +47,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 {t.navViewBlog}
               </a>
             </nav>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <ThemeToggle lang={language} />
               <CacheButton />
               <form
+                className="flex"
                 action={async () => {
                   'use server'
                   await signOut({ redirectTo: '/' })
                 }}
               >
-                <button className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">{t.signOut}</button>
+                <button className="flex h-10 items-center rounded-lg px-3 text-sm text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white">{t.signOut}</button>
               </form>
             </div>
           </div>
