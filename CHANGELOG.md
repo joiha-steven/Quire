@@ -1,6 +1,17 @@
 # CHANGELOG
 
 ## 2026-06-24
+- **feat(admin): manage categories & tags (new Phân loại tab).** A third tab on the content
+  dashboard lists every category and tag with its usage count and lets you **rename** (merges
+  into an existing term) or **remove** it across ALL posts in one action (`updateTerm` →
+  `POST /api/taxonomy`, owner-only; rewrites each affected `.md` + the index, then full purge)
+- **feat(admin): open-in-new-tab row action.** Each published post/page row gets an
+  open-in-new-tab icon (left of edit) → its public URL; drafts omit it (would 404)
+- **fix(admin): mobile-friendly content tables.** Secondary columns now hide on small screens
+  (posts: date `sm`, categories `md`; pages: slug `sm`) so Title + Status + actions always fit
+  and the status pill never wraps awkwardly. The tab + new-post row wraps on mobile too
+- **fix(admin): header alignment + bigger logo.** The `vibeblog` wordmark, its `v0.x.y` badge
+  and the menu now share one vertically-centred line (was baseline-misaligned)
 - **fix(admin): header polish.** Wordmark enlarged to logo size (`text-xl`); the version
   (`v0.7.5`) sits next to it and links to GitHub releases (replaces the removed footer link).
   Every header item now shares a fixed-height (`h-9`) `ADMIN_NAV` box so the row stays

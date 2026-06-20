@@ -8,9 +8,10 @@ import type { Post, Page } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { PostsTable } from './PostsTable'
 import { PagesTable } from './PagesTable'
+import { TaxonomyManager } from './TaxonomyManager'
 import { useAdminT } from './I18nProvider'
 
-type Tab = 'posts' | 'pages'
+type Tab = 'posts' | 'pages' | 'taxonomy'
 
 export function ContentDashboard({ posts, pages }: { posts: Post[]; pages: Page[] }) {
   const t = useAdminT()
@@ -19,13 +20,14 @@ export function ContentDashboard({ posts, pages }: { posts: Post[]; pages: Page[
   const tabs: { key: Tab; label: string }[] = [
     { key: 'posts', label: t.tabPosts },
     { key: 'pages', label: t.tabPages },
+    { key: 'taxonomy', label: t.tabTaxonomy },
   ]
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.dashboardTitle}</h1>
 
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
           {tabs.map((item) => (
             <button
@@ -41,12 +43,16 @@ export function ContentDashboard({ posts, pages }: { posts: Post[]; pages: Page[
             </button>
           ))}
         </div>
-        <Link href={tab === 'posts' ? '/admin/editor' : '/admin/page-editor'}>
-          <Button>{tab === 'posts' ? t.newPost : t.newPage}</Button>
-        </Link>
+        {tab !== 'taxonomy' && (
+          <Link href={tab === 'posts' ? '/admin/editor' : '/admin/page-editor'}>
+            <Button>{tab === 'posts' ? t.newPost : t.newPage}</Button>
+          </Link>
+        )}
       </div>
 
-      {tab === 'posts' ? <PostsTable initialPosts={posts} /> : <PagesTable initialPages={pages} />}
+      {tab === 'posts' && <PostsTable initialPosts={posts} />}
+      {tab === 'pages' && <PagesTable initialPages={pages} />}
+      {tab === 'taxonomy' && <TaxonomyManager posts={posts} />}
     </div>
   )
 }

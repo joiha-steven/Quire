@@ -174,6 +174,47 @@ export async function getRelatedPosts(slug: string, limit = 3): Promise<Post[]> 
     .map((x) => x.p)
 }
 
+export type TermKind = 'category' | 'tag'
+
+// Apply a rename (newName set) or removal (newName null) to one term list,
+// preserving order and de-duping (a rename that collides merges the two).
+function applyTerm(list: string[], name: string, newName: string | null): string[] {
+  if (!newName) return list.filter((x) => x !== name)
+  const out: string[] = []
+  for (const x of list) {
+    const v = x === name ? newName : x
+    if (!out.includes(v)) out.push(v)
+  }
+  return out
+}
+
+// Rename (newName set) or remove (newName null) a category/tag across EVERY post:
+// rewrites each affected post's .md AND the index in one pass. No revision is
+// snapshotted (a taxonomy edit is not a content change worth the time machine).
+// Returns how many posts were changed.
+export async function updateTerm(kind: TermKind, name: string, newName: string | null): Promise<number> {
+  const field = kind === 'category' ? 'categories' : 'tags'
+  const clean = newName?.trim() || null
+  const index = await readJson<Post[]>(INDEX_PATH, [])
+  let changed = 0
+  const next = await Promise.all(
+    index.map(async (meta) => {
+      const list = meta[field] ?? []
+      if (!list.includes(name)) return meta
+      changed++
+      // Frontmatter is the source of truth on the next parse — rewrite it too.
+      const raw = await readText(mdPath(meta.slug))
+      if (raw) {
+        const post = parsePost(raw, meta.slug)
+        await writeText(mdPath(meta.slug), serialize({ ...post, [field]: applyTerm(post[field], name, clean) }))
+      }
+      return { ...meta, [field]: applyTerm(list, name, clean) }
+    }),
+  )
+  if (changed > 0) await writeJson(INDEX_PATH, next)
+  return changed
+}
+
 // Distinct categories across the manifest.
 export async function getCategories(): Promise<string[]> {
   const posts = await getIndex()

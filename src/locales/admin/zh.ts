@@ -162,6 +162,13 @@ const zh = {
   tmEmpty: '还没有旧版本。版本将在文章被覆盖保存后出现。',
   revisionLoaded: '已将此版本载入编辑器。按"保存"以应用。',
   previewLinkCopied: '已复制草稿预览链接',
+  openInNewTab: '在新标签页打开',
+  tabTaxonomy: '分类',
+  rename: '重命名',
+  renamePrompt: '新名称：',
+  confirmDeleteTerm: '从所有文章中移除此分类？文章不会被删除。',
+  noTerms: '还没有分类或标签。',
+  renamed: '已重命名',
 } satisfies AdminStrings
 
 export default zh

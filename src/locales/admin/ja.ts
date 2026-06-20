@@ -162,6 +162,13 @@ const ja = {
   tmEmpty: '以前のバージョンはまだありません。バージョンは記事が上書き保存された後に表示されます。',
   revisionLoaded: 'このバージョンをエディターに読み込みました。「保存」を押して適用してください。',
   previewLinkCopied: '下書きプレビューリンクをコピーしました',
+  openInNewTab: '新しいタブで開く',
+  tabTaxonomy: '分類',
+  rename: '名前を変更',
+  renamePrompt: '新しい名前:',
+  confirmDeleteTerm: 'この分類をすべての記事から削除しますか？記事自体は削除されません。',
+  noTerms: 'カテゴリーやタグはまだありません。',
+  renamed: '名前を変更しました',
 } satisfies AdminStrings
 
 export default ja
