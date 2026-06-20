@@ -6,6 +6,7 @@ import { useState } from 'react'
 import type { SiteSettings, SeoSettings, ApiResponse } from '@/types'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { ToggleRow } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
@@ -20,20 +21,6 @@ const FEATURES: Feature[] = [
   { key: 'robots', label: 'robots.txt', desc: 'Cho phép thu thập, trỏ tới sitemap, và luôn chặn /admin với /api.', path: '/robots.txt' },
   { key: 'ogImage', label: 'Ảnh chia sẻ động (OG Image)', desc: 'Tự tạo ảnh chia sẻ cho mỗi bài: tiêu đề đặt trên ảnh nổi bật, hoặc trên ảnh dự phòng bên dưới.', path: '/og' },
 ]
-
-function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-700'}`}
-    >
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all dark:bg-neutral-900 ${checked ? 'left-[22px]' : 'left-0.5'}`} />
-    </button>
-  )
-}
 
 export function SeoForm({ initial }: { initial: SiteSettings }) {
   const t = useAdminT()
@@ -79,16 +66,14 @@ export function SeoForm({ initial }: { initial: SiteSettings }) {
 
       <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {FEATURES.map((f) => (
-          <div key={f.key} className="flex items-start justify-between gap-4 p-4">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                {f.label}
-                {f.path && <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">{f.path}</code>}
-              </div>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{f.desc}</p>
-            </div>
-            <Switch checked={Boolean(seo[f.key])} onChange={(v) => setFlag(f.key, v)} />
-          </div>
+          <ToggleRow
+            key={f.key}
+            label={f.label}
+            badge={f.path || undefined}
+            desc={f.desc}
+            checked={Boolean(seo[f.key])}
+            onChange={(v) => setFlag(f.key, v)}
+          />
         ))}
       </div>
 
