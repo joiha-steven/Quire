@@ -40,12 +40,24 @@ type Variant = { suffix: string; data: Buffer; contentType: string }
 
 // From the original bytes, build the responsive set (auto-oriented). Widths are
 // capped at the original (never upscaled) so files always exist for the renderer.
-async function makeVariants(
-  original: Buffer,
-): Promise<{ width: number; height: number; files: Variant[] }> {
+async function imageSize(original: Buffer): Promise<{ width: number; height: number }> {
   const meta = await sharp(original, { failOn: 'none' }).rotate().metadata()
-  const ow = meta.width ?? 0
-  const oh = meta.height ?? 0
+  return { width: meta.width ?? 0, height: meta.height ?? 0 }
+}
+
+// Small library thumbnail — cheap, made on upload so the grid renders at once.
+async function makeThumb(original: Buffer): Promise<Buffer> {
+  return sharp(original, { failOn: 'none' })
+    .rotate()
+    .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+    .webp({ quality: 70 })
+    .toBuffer()
+}
+
+// The heavy display set (AVIF + WebP @ each size) — deferred to save-time so
+// images discarded before saving never pay the AVIF encode.
+async function makeDisplay(original: Buffer): Promise<Variant[]> {
+  const { width: ow } = await imageSize(original)
   const files: Variant[] = []
   for (const w of SIZES) {
     const pipe = sharp(original, { failOn: 'none' })
@@ -54,13 +66,7 @@ async function makeVariants(
     files.push({ suffix: `-${w}.webp`, data: await pipe.clone().webp({ quality: 80 }).toBuffer(), contentType: 'image/webp' })
     files.push({ suffix: `-${w}.avif`, data: await pipe.clone().avif({ quality: 50 }).toBuffer(), contentType: 'image/avif' })
   }
-  const thumb = await sharp(original, { failOn: 'none' })
-    .rotate()
-    .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
-    .webp({ quality: 70 })
-    .toBuffer()
-  files.push({ suffix: '-thumb.webp', data: thumb, contentType: 'image/webp' })
-  return { width: ow, height: oh, files }
+  return files
 }
 
 // Existing pathnames (e.g. "media/logo.webp") from the manifest, for dedupe.
@@ -103,10 +109,12 @@ export async function addMedia(
     const origPath = freePathname(base, ext, taken)
     const stem = origPath.replace(/\.[^.]+$/, '')
     const original = Buffer.from(body)
-    // Keep the original untouched (uncompressed) + every generated variant.
+    // On upload: keep the ORIGINAL untouched + a cheap thumbnail only. The heavy
+    // display variants are generated later by finalizeVariants() on save, so an
+    // image dropped then discarded never pays the AVIF encode (variants: false).
+    const { width, height } = await imageSize(original)
     await uploadFile(origPath, original, contentType)
-    const { width, height, files } = await makeVariants(original)
-    await Promise.all(files.map((f) => uploadFile(`${stem}${f.suffix}`, f.data, f.contentType)))
+    await uploadFile(`${stem}-thumb.webp`, await makeThumb(original), 'image/webp')
     const item: MediaItem = {
       url: blobUrl(origPath),
       filename: origPath.replace(/^media\//, ''),
@@ -115,7 +123,7 @@ export async function addMedia(
       width,
       height,
       thumb: blobUrl(`${stem}-thumb.webp`),
-      variants: true,
+      variants: false,
     }
     await writeJson(INDEX_PATH, [
       { ...item, url: origPath, thumb: `${stem}-thumb.webp` },
@@ -143,17 +151,46 @@ export async function addMedia(
   throw new Error(`Unsupported file type: ${contentType}`)
 }
 
-// Delete a media item: the original + every derived variant + its manifest entry.
+// Delete a media item: the original + thumbnail + every display variant + entry.
 export async function deleteMedia(url: string): Promise<void> {
   const current = await readJson<MediaItem[]>(INDEX_PATH, [])
   const target = collapseBlob(url) // original pathname
   const item = current.find((m) => collapseBlob(m.url) === target)
-  const paths = [target]
+  const paths = new Set<string>([target])
+  if (item?.thumb) paths.add(collapseBlob(item.thumb))
   if (item?.variants) {
     const stem = target.replace(/\.[^.]+$/, '')
-    for (const w of SIZES) paths.push(`${stem}-${w}.webp`, `${stem}-${w}.avif`)
-    paths.push(`${stem}-thumb.webp`)
+    for (const w of SIZES) { paths.add(`${stem}-${w}.webp`); paths.add(`${stem}-${w}.avif`) }
   }
-  await Promise.all(paths.map((p) => deleteByPathname(p).catch(() => {})))
+  await Promise.all([...paths].map((p) => deleteByPathname(p).catch(() => {})))
   await writeJson(INDEX_PATH, current.filter((m) => collapseBlob(m.url) !== target))
+}
+
+// Generate the deferred display variants for the given raster originals that are
+// still pending (variants: false). Called on save for images kept in the content.
+export async function finalizeVariants(pathnames: string[]): Promise<void> {
+  const targets = [...new Set(pathnames)].filter((p) => /\.(jpe?g|png)$/i.test(p))
+  if (targets.length === 0) return
+  const current = await readJson<MediaItem[]>(INDEX_PATH, [])
+  let changed = false
+  for (const path of targets) {
+    const item = current.find((m) => collapseBlob(m.url) === path)
+    if (!item || item.variants) continue
+    const res = await fetch(`${blobUrl(path)}?ts=${Date.now()}`, { cache: 'no-store' })
+    if (!res.ok) continue
+    const original = Buffer.from(await res.arrayBuffer())
+    const stem = path.replace(/\.[^.]+$/, '')
+    const files = await makeDisplay(original)
+    await Promise.all(files.map((f) => uploadFile(`${stem}${f.suffix}`, f.data, f.contentType)))
+    item.variants = true
+    changed = true
+  }
+  if (changed) await writeJson(INDEX_PATH, current)
+}
+
+// Finalize every uploaded raster referenced by a piece of content (body + image).
+export async function finalizeContentMedia(content: string, featuredImage?: string): Promise<void> {
+  const text = `${collapseBlob(content)} ${featuredImage ? collapseBlob(featuredImage) : ''}`
+  const refs = [...text.matchAll(/media\/[^\s")'#]+\.(?:jpe?g|png)/gi)].map((m) => m[0])
+  await finalizeVariants(refs)
 }

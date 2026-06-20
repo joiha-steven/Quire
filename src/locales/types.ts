@@ -107,6 +107,9 @@ export type AdminStrings = {
   copyUrl: string
   downloadOriginal: string
   unsupportedType: string
+  cleanUnused: string
+  cleanUnusedConfirm: string
+  cleanUnusedNone: string
   close: string
   loading: string
   noMedia: string

@@ -65,6 +65,28 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     notify(t.copiedUrl)
   }
 
+  const [sweeping, setSweeping] = useState(false)
+  async function sweep() {
+    if (!confirm(t.cleanUnusedConfirm)) return
+    setSweeping(true)
+    try {
+      const res = await fetch('/api/media/sweep', { method: 'POST' })
+      const json = (await res.json()) as ApiResponse<{ deleted: number }>
+      if (!json.success || !json.data) throw new Error(json.error)
+      const n = json.data.deleted
+      notify(n > 0 ? `${t.deleted}: ${n}` : t.cleanUnusedNone)
+      if (n > 0) {
+        const r = await fetch('/api/media')
+        const j = (await r.json()) as ApiResponse<MediaItem[]>
+        setItems(j.data ?? [])
+      }
+    } catch {
+      notify(t.deleteFailed, 'error')
+    } finally {
+      setSweeping(false)
+    }
+  }
+
   const grid = (
     <>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
@@ -111,6 +133,18 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   const body = (
     <div className="space-y-5">
       <ImageUploader onUploaded={(uploaded) => setItems((prev) => [...uploaded, ...prev])} />
+      {mode === 'page' && items.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={sweep}
+            disabled={sweeping}
+            className="text-sm text-neutral-500 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-white"
+          >
+            {t.cleanUnused}
+          </button>
+        </div>
+      )}
       {loading ? (
         <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.loading}</p>
       ) : items.length === 0 ? (
