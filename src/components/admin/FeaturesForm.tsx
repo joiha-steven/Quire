@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import type { SiteSettings, FeatureSettings, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
+import { ToggleRow } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { useAdminT } from './I18nProvider'
 
@@ -15,20 +16,6 @@ const ITEMS: { key: keyof FeatureSettings; label: string; desc: string }[] = [
   { key: 'readingTime', label: 'Thời gian đọc', desc: 'Ước tính "X phút đọc" ở dòng thông tin bài.' },
   { key: 'progressBar', label: 'Thanh tiến độ đọc', desc: 'Thanh mảnh trên đầu trang chạy theo khi cuộn.' },
 ]
-
-function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-700'}`}
-    >
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all dark:bg-neutral-900 ${checked ? 'left-[22px]' : 'left-0.5'}`} />
-    </button>
-  )
-}
 
 export function FeaturesForm({ initial }: { initial: SiteSettings }) {
   const t = useAdminT()
@@ -58,13 +45,13 @@ export function FeaturesForm({ initial }: { initial: SiteSettings }) {
     <div className="max-w-2xl space-y-8">
       <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {ITEMS.map((f) => (
-          <div key={f.key} className="flex items-start justify-between gap-4 p-4">
-            <div>
-              <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{f.label}</div>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{f.desc}</p>
-            </div>
-            <Switch checked={features[f.key]} onChange={(v) => setFeatures((p) => ({ ...p, [f.key]: v }))} />
-          </div>
+          <ToggleRow
+            key={f.key}
+            label={f.label}
+            desc={f.desc}
+            checked={features[f.key]}
+            onChange={(v) => setFeatures((p) => ({ ...p, [f.key]: v }))}
+          />
         ))}
       </div>
 

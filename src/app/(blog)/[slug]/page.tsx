@@ -131,7 +131,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
 
         {related.length > 0 && (
           <>
-            <div className="mt-12">
+            {/* After tags: mt-6 so they sit evenly between both rules (1.5rem each
+                side). Without tags: mt-12 to separate from the body. */}
+            <div className={hasTaxo ? 'mt-6' : 'mt-12'}>
               <hr />
             </div>
             <div className="mt-6">

@@ -5,30 +5,13 @@ import { useState } from 'react'
 import type { SiteSettings, SiteLang, ApiResponse } from '@/types'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { ToggleField } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
 
 const MENU_FIELD =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-400'
-
-// A simple labeled on/off switch.
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between gap-4">
-      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? 'bg-neutral-900' : 'bg-neutral-300'}`}
-      >
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
-      </button>
-    </label>
-  )
-}
 
 export function SettingsForm({ initial }: { initial: SiteSettings }) {
   const t = useAdminT()
@@ -100,15 +83,15 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         placeholder={t.siteDescriptionPlaceholder}
       />
 
-      <Toggle
+      <ToggleField
         label={t.showDescription}
         checked={s.showDescription}
         onChange={(v) => update({ showDescription: v })}
       />
 
-      <hr className="border-neutral-200 dark:border-neutral-800" />
+      <hr />
 
-      <Toggle label={t.showLogo} checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
+      <ToggleField label={t.showLogo} checked={s.showLogo} onChange={(v) => update({ showLogo: v })} />
 
       {s.showLogo && (
         <div className="space-y-3">
@@ -143,7 +126,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         </div>
       )}
 
-      <hr className="border-neutral-200 dark:border-neutral-800" />
+      <hr />
 
       <Input
         label={t.siteWidth}
@@ -169,7 +152,7 @@ export function SettingsForm({ initial }: { initial: SiteSettings }) {
         {t.postsPerPageHint}
       </p>
 
-      <hr className="border-neutral-200 dark:border-neutral-800" />
+      <hr />
 
       <div className="space-y-3">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.menuTitle}</span>
