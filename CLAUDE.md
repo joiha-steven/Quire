@@ -29,6 +29,10 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
   setting wins: **Settings → `mediaBaseUrl`** (Admin UI, preferred) → else env
   `BLOB_PUBLIC_BASE`. `getSettings` pushes the resolved value into `blob.ts` via
   `setMediaBase()` each request (module-scoped; process-constant for this single site).
+  The data-layer reads that expand media (`posts`/`pages`/`media` `readIndex` + `getPost`/
+  `getPage`/`getMedia`) `await getSettings()` FIRST so `_mediaBase` is set before any
+  `expandBlob` runs — no ordering race even with the env unset (`getSettings` is `React.cache`d,
+  so it is free when the layout already read settings this request).
   `publicBase()` then drives `expandBlob` (rendered `<img>`/markdown src) + `blobOrigin`
   (preconnect) ONLY — internal reads (`blobUrl`/`readJson`/`readText`) stay token-derived so
   the app never proxies its own `.md`/`_index.json` fetches (no hop, `?ts` cache-bust intact).

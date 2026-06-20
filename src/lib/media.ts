@@ -11,6 +11,7 @@ import {
   readJson, writeJson, uploadFile, blobUrl, deleteByPathname, collapseBlob, expandBlob, listBlobs,
 } from '@/lib/blob'
 import { slugify } from '@/lib/utils'
+import { getSettings } from '@/lib/settings'
 
 const INDEX_PATH = 'media/_index.json'
 
@@ -23,6 +24,7 @@ const THUMB_WIDTH = 400
 // read every request means a deleted image is gone the moment you reopen the
 // library, and a new upload appears at once (`React.cache` dedupes per render).
 export const getMedia = cache(async (): Promise<MediaItem[]> => {
+  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
   const items = await readJson<MediaItem[]>(INDEX_PATH, [])
   return [...items]
     .map((m) => ({
