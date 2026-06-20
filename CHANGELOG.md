@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 2026-06-21
+- perf(region): `vercel.json` pins functions to `sin1` (Singapore) — was running in `iad1` (US-East), ~200ms from Vietnam; Singapore is ~40ms. Blob store still in `iad1` (cross-region only on cache miss)
+
 - feat(i18n): 4 new UI languages — German, Japanese, Simplified Chinese, Korean (now en/vi/de/ja/zh/ko); **English is the default**
 - refactor(i18n): strings moved to `src/locales/{<code>,admin/<code>}.ts`; `langs.ts` is the single source of truth (`SITE_LANGS` + `isSiteLang`); `satisfies` enforces every key in every language; `formatDate` is now Intl-per-locale (vi keeps custom form); language picker wraps
 - fix(admin): language switch is now instant (optimistic `I18nProvider` state), no longer waits for the save round-trip

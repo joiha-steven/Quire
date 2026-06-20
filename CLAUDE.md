@@ -29,6 +29,15 @@ pull`); never commit them. Personal/instance facts are not tracked in git.
 - `writeJson` / `writeText` — put with `allowOverwrite: true`, `cacheControlMaxAge: 0`.
 - Every read uses `fresh(url)` (adds `?ts=<now>`) to bust CDN cache on stale blobs.
 
+## Region (latency)
+- `vercel.json` pins serverless functions to **`sin1` (Singapore)** — closest Vercel
+  region to the Vietnamese audience (~40ms vs ~200ms to the default `iad1` US-East).
+  Requires the Pro plan. Static assets already serve from the global edge CDN.
+- The **Blob store is in `iad1`** (US-East), so a cold `unstable_cache` read crosses
+  regions (sin1→iad1). Most reads hit the regional Data Cache, so this only bites on
+  cache miss. For full co-location, create a Singapore Blob store and migrate.
+- The OG route is `runtime = 'edge'` and runs at the nearest PoP regardless.
+
 ## Caching model — Previous model (no `cacheComponents`)
 `cacheComponents` is NOT enabled. Uses `unstable_cache` + `React.cache()`:
 
