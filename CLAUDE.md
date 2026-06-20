@@ -123,17 +123,20 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   on posts), gated by `seo.autoSchema`.
 - robots/sitemap are static but tagged `settings`, so toggling a feature + saving
   regenerates them (revalidateTag('settings')).
-- **Cache-key versioning**: `getSettings` uses key `site-settings-v2`. Vercel's Data
+- **Cache-key versioning**: `getSettings` uses key `site-settings-v3`. Vercel's Data
   Cache persists across deploys, so when the settings SHAPE changes (new field) bump
   this key, else the cached object keeps serving without the new key (e.g. rss 404).
 
 ## Reading & discovery
+- All reader features are toggleable: `settings.features { search, toc, related,
+  readingTime, progressBar }` (default on, Admin → Settings → Tính năng). Gated in the
+  header (search icon), `/search` (notFound when off), and the post page.
 - `/search` — server ships a LEAN pre-folded index (`{ slug, title, date, terms }`,
   terms = folded title+tags+categories, no excerpt/image so it scales); `SearchClient`
   lists nothing until the reader types, filters in memory, caps at 50. Header search icon.
-- Post pages: `ReadingProgress` (top bar), `Toc` (>= 3 H2/H3; inline on small screens,
-  a floating frame in the left gutter at xl+ via `contentWidth`; the `PostContent`
-  renderer assigns slug ids to H2/H3), `RelatedPosts`
+- Post pages: `ReadingProgress` (top bar), `Toc` (>= 3 H2/H3; **desktop-only** `absolute`
+  frame in the left gutter, top aligned to the article body via a `relative` wrapper; the
+  `PostContent` renderer assigns slug ids to H2/H3), `RelatedPosts`
   (`getRelatedPosts` — shared tags ×2 + categories), and `readingMinutes` in the meta.
 - **Draft preview**: `/preview/[slug]?key=<hmac>` (force-dynamic, noindex) renders any
   status when the key matches `previewToken(slug)` (HMAC of slug keyed by AUTH_SECRET).
@@ -145,6 +148,9 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   return the fallback/null on any error (missing token, Blob down) rather than rethrow.
 
 ## Conventions
+- One divider style site-wide: the global `<hr>` (50% width, left-aligned, faint).
+  Never use bespoke `border-t`/`border-b` rules as content dividers, and never ALL-CAPS
+  text (no `uppercase`) anywhere in shipped UI.
 - UI text (labels, buttons, toasts, placeholders) → Vietnamese.
 - Code, comments, identifiers, filenames, commits → English.
 - Max 400 lines per file. No `any` (use `unknown` + narrowing).
