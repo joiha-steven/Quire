@@ -156,7 +156,7 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   on posts), gated by `seo.autoSchema`.
 - robots/sitemap are static but tagged `settings`, so toggling a feature + saving
   regenerates them (revalidateTag('settings')).
-- **Cache-key versioning**: `getSettings` uses key `site-settings-v3`. Vercel's Data
+- **Cache-key versioning**: `getSettings` uses key `site-settings-v4`. Vercel's Data
   Cache persists across deploys, so when the settings SHAPE changes (new field) bump
   this key, else the cached object keeps serving without the new key (e.g. rss 404).
 
