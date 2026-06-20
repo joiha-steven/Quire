@@ -108,6 +108,7 @@ hr {
   letter-spacing: -0.018em;
   margin-top: 1.85em;
   margin-bottom: -0.15em; /* tightens space to the paragraph it introduces */
+  scroll-margin-top: 2rem; /* anchor offset clear of the progress bar */
 }
 .prose h3 {
   font-size: 1.2rem;
@@ -115,6 +116,7 @@ hr {
   line-height: 1.32;
   letter-spacing: -0.014em;
   margin-top: 1.6em;
+  scroll-margin-top: 2rem;
 }
 .prose p {
   margin-top: 1.4em;

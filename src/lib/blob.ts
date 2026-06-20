@@ -68,8 +68,10 @@ export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
     if (!res.ok) return fallback
     return (await res.json()) as T
   } catch (error) {
+    // Degrade gracefully (e.g. missing token, Blob unreachable) so public pages
+    // render with empty data instead of 500ing.
     console.error(`[ERROR] blob.readJson(${pathname}): ${(error as Error).message}`)
-    throw error
+    return fallback
   }
 }
 
@@ -80,8 +82,9 @@ export async function readText(pathname: string): Promise<string | null> {
     if (!res.ok) return null
     return await res.text()
   } catch (error) {
+    // Degrade gracefully instead of 500ing the page.
     console.error(`[ERROR] blob.readText(${pathname}): ${(error as Error).message}`)
-    throw error
+    return null
   }
 }
 

@@ -4,14 +4,17 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPost, getPublicPosts } from '@/lib/posts'
+import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
 import { getPage, getPublicPages } from '@/lib/pages'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
+import { Toc } from '@/components/blog/Toc'
+import { ReadingProgress } from '@/components/blog/ReadingProgress'
+import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { ogImageUrl } from '@/lib/og'
-import { isPublicallyVisible } from '@/lib/utils'
+import { isPublicallyVisible, readingMinutes, extractHeadings } from '@/lib/utils'
 
 // Pre-build all public slugs at deploy time; new slugs render on first visit (ISR).
 export async function generateStaticParams() {
@@ -72,8 +75,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   // Post wins if visible; otherwise fall back to a published page.
   if (post && isPublicallyVisible(post.status, post.date)) {
     const base = resolveSiteUrl(settings)
+    const headings = extractHeadings(post.content)
+    const minutes = readingMinutes(post.content)
+    const related = await getRelatedPosts(post.slug)
     return (
       <article>
+        <ReadingProgress />
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({
@@ -87,9 +94,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           />
         )}
         <h1 className="text-3xl font-bold leading-tight tracking-tight">{post.title}</h1>
-        <p className="mt-3 text-sm text-meta">{formatDate(post.date, language)}</p>
+        <p className="mt-3 text-sm text-meta">
+          {formatDate(post.date, language)} · {minutes} {t(language).readingSuffix}
+        </p>
 
         <div className="mt-8">
+          {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
           <PostContent markdown={post.content} />
         </div>
 
@@ -107,6 +117,8 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             )}
           </footer>
         )}
+
+        <RelatedPosts posts={related} lang={language} />
       </article>
     )
   }

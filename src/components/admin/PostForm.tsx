@@ -177,6 +177,21 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
     setPicker(null)
   }
 
+  // Copy a shareable draft-preview URL (tokened, viewable without signing in).
+  async function copyPreviewLink() {
+    const slug = currentSlug.current
+    if (!slug) return
+    try {
+      const res = await fetch(`/api/preview-link?slug=${encodeURIComponent(slug)}`)
+      const json = (await res.json()) as ApiResponse<{ token: string }>
+      if (!json.success || !json.data) throw new Error()
+      await navigator.clipboard.writeText(`${window.location.origin}/preview/${slug}?key=${json.data.token}`)
+      notify('Đã sao chép link xem nháp')
+    } catch {
+      notify(t.saveFailed, 'error')
+    }
+  }
+
   async function uploadInline(file: File): Promise<string | null> {
     const form = new FormData()
     form.append('file', file)
@@ -225,6 +240,11 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>
           <div className="flex items-center gap-2">
+            {savedSlug && (
+              <button type="button" onClick={copyPreviewLink} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                Link nháp
+              </button>
+            )}
             {draft.status === 'published' && savedSlug && (
               <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                 {t.viewPost}

@@ -3,16 +3,23 @@
 // code. Only Markdown-generated elements (incl. GFM tables) are produced.
 import { marked, type Tokens } from 'marked'
 import { videoEmbed } from '@/lib/video'
+import { slugify } from '@/lib/utils'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 marked.setOptions({ gfm: true, breaks: true })
-// Raw HTML tokens (block + inline) -> shown as visible text, never executed.
 marked.use({
   renderer: {
+    // Raw HTML tokens (block + inline) -> shown as visible text, never executed.
     html(token: Tokens.HTML | Tokens.Tag) {
       return escapeHtml(token.raw)
+    },
+    // Give H2/H3 slug ids so the table of contents can anchor to them.
+    heading(token: Tokens.Heading) {
+      const inner = this.parser.parseInline(token.tokens)
+      const id = token.depth === 2 || token.depth === 3 ? ` id="${slugify(token.text)}"` : ''
+      return `<h${token.depth}${id}>${inner}</h${token.depth}>\n`
     },
   },
 })

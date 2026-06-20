@@ -14,6 +14,15 @@ export type Dict = {
   themeDark: string
   themeSystem: string
   themeTime: string
+  readingSuffix: string // after a number: "phút đọc" / "min read"
+  search: string
+  searchPlaceholder: string
+  searchEmpty: string
+  tocTitle: string
+  relatedTitle: string
+  notFoundTitle: string
+  notFoundText: string
+  backHome: string
 }
 
 const DICT: Record<SiteLang, Dict> = {
@@ -30,6 +39,15 @@ const DICT: Record<SiteLang, Dict> = {
     themeDark: 'Tối',
     themeSystem: 'Theo hệ thống',
     themeTime: 'Theo giờ',
+    readingSuffix: 'phút đọc',
+    search: 'Tìm kiếm',
+    searchPlaceholder: 'Tìm bài viết...',
+    searchEmpty: 'Không tìm thấy bài viết phù hợp.',
+    tocTitle: 'Mục lục',
+    relatedTitle: 'Bài viết liên quan',
+    notFoundTitle: 'Không tìm thấy trang',
+    notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',
+    backHome: 'Về trang chủ',
   },
   en: {
     emptyPosts: 'No posts yet.',
@@ -44,6 +62,15 @@ const DICT: Record<SiteLang, Dict> = {
     themeDark: 'Dark',
     themeSystem: 'System',
     themeTime: 'By time',
+    readingSuffix: 'min read',
+    search: 'Search',
+    searchPlaceholder: 'Search posts...',
+    searchEmpty: 'No matching posts found.',
+    tocTitle: 'Contents',
+    relatedTitle: 'Related posts',
+    notFoundTitle: 'Page not found',
+    notFoundText: 'The page you are looking for does not exist or has moved.',
+    backHome: 'Back home',
   },
 }
 

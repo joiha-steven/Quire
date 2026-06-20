@@ -64,6 +64,38 @@ export function deriveExcerpt(markdown: string, maxWords = 50): string {
   return `${words.slice(0, maxWords).join(' ')}...`
 }
 
+// Estimated reading time in whole minutes (>= 1), ~200 words per minute.
+export function readingMinutes(markdown: string): number {
+  const words = toPlainText(markdown).split(' ').filter(Boolean).length
+  return Math.max(1, Math.round(words / 200))
+}
+
+export type Heading = { id: string; text: string; level: 2 | 3 }
+
+// Pull H2/H3 headings (with slug ids) from markdown for a table of contents.
+// Mirrors the ids the renderer assigns, so anchors line up.
+export function extractHeadings(markdown: string): Heading[] {
+  const out: Heading[] = []
+  // Skip fenced code blocks so a "## x" inside code isn't treated as a heading.
+  const body = markdown.replace(/```[\s\S]*?```/g, '')
+  for (const line of body.split('\n')) {
+    const m = /^(#{2,3})\s+(.+?)\s*#*\s*$/.exec(line)
+    if (!m) continue
+    const text = m[2].replace(/[*_`]/g, '').trim()
+    if (text) out.push({ id: slugify(text), text, level: m[1].length as 2 | 3 })
+  }
+  return out
+}
+
+// Lowercase + strip diacritics, for accent-insensitive search matching.
+export function foldAccents(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+}
+
 // Clamp an author-provided excerpt to a character limit (cut on a word boundary).
 export function clampExcerpt(text: string, maxChars = EXCERPT_MAX_CHARS): string {
   const clean = text.replace(/\s+/g, ' ').trim()

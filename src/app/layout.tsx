@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/next'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themeToCss, resolveSiteUrl } from '@/lib/settings'
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

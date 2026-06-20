@@ -135,6 +135,26 @@ export async function deletePost(slug: string): Promise<void> {
   await mutateIndex((posts) => posts.filter((p) => p.slug !== slug))
 }
 
+// Up to `limit` other public posts sharing the most tags/categories with `slug`
+// (tags weighted higher), newest first as a tiebreak. Empty when nothing shares.
+export async function getRelatedPosts(slug: string, limit = 3): Promise<Post[]> {
+  const all = await getPublicPosts()
+  const current = all.find((p) => p.slug === slug)
+  if (!current) return []
+  const tags = new Set(current.tags)
+  const cats = new Set(current.categories)
+  return all
+    .filter((p) => p.slug !== slug)
+    .map((p) => ({
+      p,
+      score: p.tags.filter((t) => tags.has(t)).length * 2 + p.categories.filter((c) => cats.has(c)).length,
+    }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || new Date(b.p.date).getTime() - new Date(a.p.date).getTime())
+    .slice(0, limit)
+    .map((x) => x.p)
+}
+
 // Distinct categories across the manifest.
 export async function getCategories(): Promise<string[]> {
   const posts = await getIndex()
