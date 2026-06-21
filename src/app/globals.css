@@ -32,19 +32,21 @@
   --c-meta: #8a8a90;
   --c-link: #14141a;
   --c-rule: #e9e9e4;
-  /* Heading type scale (font-size, rem). One source of truth for every heading +
-     title — no per-element hardcoded sizes. These DEFAULTS match DEFAULT_TYPOGRAPHY
-     in lib/settings.ts; the owner's saved scale is injected after this file (a
-     :root override via typographyToCss) and wins. Reference body = 1.125rem. */
-  --fs-base: 1.125rem;
-  --fs-h1: 2.26rem;
-  --fs-h2: 1.74rem;
-  --fs-h3: 1.45rem;
-  --fs-h4: 1.24rem;
-  --fs-h5: 0.9rem;
-  /* Reading rhythm — body line-height + letter-spacing (owner-tunable). */
-  --lh-body: 1.75;
-  --ls-body: 0em;
+  /* Type system — one tunable set per role (size rem, line-height, letter-spacing
+     em). ONE source of truth for every text size on the public site; no per-element
+     hardcoded sizes. These DEFAULTS mirror DEFAULT_TYPOGRAPHY in lib/themes.ts; the
+     owner's saved values are injected after this file (a :root override via
+     typographyToCss) and win. Roles: h1-h5, body, small (meta/dates/UI),
+     caption (figures), code (mono). */
+  --fs-h1: 2.26rem;  --lh-h1: 1.15;  --ls-h1: -0.021em;
+  --fs-h2: 1.74rem;  --lh-h2: 1.25;  --ls-h2: -0.018em;
+  --fs-h3: 1.45rem;  --lh-h3: 1.3;   --ls-h3: -0.014em;
+  --fs-h4: 1.24rem;  --lh-h4: 1.4;   --ls-h4: -0.01em;
+  --fs-h5: 0.9rem;   --lh-h5: 1.5;   --ls-h5: 0em;
+  --fs-body: 1.125rem; --lh-body: 1.75; --ls-body: 0em;
+  --fs-small: 0.875rem; --lh-small: 1.5; --ls-small: 0em;
+  --fs-caption: 0.85rem; --lh-caption: 1.45; --ls-caption: 0.005em;
+  --fs-code: 0.875rem; --lh-code: 1.6; --ls-code: 0em;
 }
 :where(.dark) {
   --c-bg: #0e0e0f;
@@ -92,22 +94,21 @@ p, h1, h2, h3, h4, li, blockquote, a {
   overflow-wrap: break-word;
 }
 
-/* Greedy wrap (no balance/pretty): lines fill to the right edge instead of
-   breaking early and leaving a wide right gap. */
-h1, h2, h3 {
+/* Heading colour (size/tracking come from the role vars below). */
+h1, h2, h3, h4, h5 {
   color: var(--c-heading);
-  letter-spacing: -0.018em;
 }
 
-/* Heading-scale utilities — apply a level to titles OUTSIDE .prose (post/page/
-   list titles, list-page headings) so every title uses the H1..H5 scale instead
-   of a hardcoded font-size. Size + a fitting line-height only; callers add their
-   own weight/tracking/colour. */
-.fs-h1 { font-size: var(--fs-h1); line-height: 1.15; }
-.fs-h2 { font-size: var(--fs-h2); line-height: 1.25; }
-.fs-h3 { font-size: var(--fs-h3); line-height: 1.3; }
-.fs-h4 { font-size: var(--fs-h4); line-height: 1.4; }
-.fs-h5 { font-size: var(--fs-h5); line-height: 1.5; }
+/* Role utilities — apply a role to text OUTSIDE .prose so every size/line/spacing
+   flows from the owner's settings, never a hardcoded utility. `.fs-h*` for titles
+   (callers add weight/colour); `.t-small` for secondary UI text (dates, meta,
+   related, ToC, pagination, search results). */
+.fs-h1 { font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
+.fs-h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+.fs-h3 { font-size: var(--fs-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
+.fs-h4 { font-size: var(--fs-h4); line-height: var(--lh-h4); letter-spacing: var(--ls-h4); }
+.fs-h5 { font-size: var(--fs-h5); line-height: var(--lh-h5); letter-spacing: var(--ls-h5); }
+.t-small { font-size: var(--fs-small); line-height: var(--lh-small); letter-spacing: var(--ls-small); }
 
 /* One divider style for the whole site: faint, 50% wide, left-aligned. */
 hr {
@@ -125,8 +126,9 @@ hr {
 /* Rendered post body + TipTap editor share these typographic rules.
    Tuned for calm, long-form reading: 18px body, airy but even rhythm. */
 .prose {
-  font-size: var(--fs-base); /* normal/body text — owner-tunable (~18px default) */
+  font-size: var(--fs-body); /* normal/body text — owner-tunable (~18px default) */
   line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--c-text);
 }
 .prose > * + * {
@@ -135,18 +137,20 @@ hr {
 /* Body headings share the site type scale (--fs-h1..--fs-h5). Sizes are NOT
    hardcoded here — they follow the owner's setting; only weight/rhythm/anchors
    live in CSS. */
+/* Body headings follow the role vars (size/line/spacing); only weight + rhythm
+   margins + scroll anchors live here. */
 .prose h1 {
   font-size: var(--fs-h1);
   font-weight: 600;
-  line-height: 1.22;
-  letter-spacing: -0.02em;
+  line-height: var(--lh-h1);
+  letter-spacing: var(--ls-h1);
   margin-top: 1.9em;
 }
 .prose h2 {
   font-size: var(--fs-h2);
   font-weight: 600;
-  line-height: 1.28;
-  letter-spacing: -0.018em;
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
   margin-top: 1.85em;
   margin-bottom: -0.15em; /* tightens space to the paragraph it introduces */
   scroll-margin-top: 2rem; /* anchor offset clear of the progress bar */
@@ -154,25 +158,24 @@ hr {
 .prose h3 {
   font-size: var(--fs-h3);
   font-weight: 600;
-  line-height: 1.32;
-  letter-spacing: -0.014em;
+  line-height: var(--lh-h3);
+  letter-spacing: var(--ls-h3);
   margin-top: 1.6em;
   scroll-margin-top: 2rem;
 }
 .prose h4 {
   font-size: var(--fs-h4);
   font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
+  line-height: var(--lh-h4);
+  letter-spacing: var(--ls-h4);
   margin-top: 1.5em;
-  color: var(--c-heading);
 }
 .prose h5 {
   font-size: var(--fs-h5);
   font-weight: 600;
-  line-height: 1.5;
+  line-height: var(--lh-h5);
+  letter-spacing: var(--ls-h5);
   margin-top: 1.4em;
-  color: var(--c-heading);
 }
 .prose p {
   margin-top: 1.4em;
@@ -254,8 +257,9 @@ hr {
   padding: 0.9em 1.1em;
   border-radius: 0.625rem;
   overflow-x: auto;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: var(--fs-code);
+  line-height: var(--lh-code);
+  letter-spacing: var(--ls-code);
 }
 .prose pre code {
   background: none;
@@ -274,7 +278,7 @@ hr {
 }
 .prose code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.875em;
+  font-size: var(--fs-code);
 }
 .prose :not(pre) > code {
   background: var(--c-rule);
@@ -343,8 +347,9 @@ hr {
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {
   margin-top: 0.6em;
-  font-size: 0.85rem;
-  line-height: 1.45;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  letter-spacing: var(--ls-caption);
   text-align: center;
   color: var(--c-meta);
 }
@@ -352,7 +357,8 @@ hr {
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
   margin: 1.6em 0;
   display: block;
   overflow-x: auto;

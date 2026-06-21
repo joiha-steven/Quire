@@ -213,27 +213,38 @@ export type AdminStrings = {
   tabGeneral: string
   tabAppearance: string
   tabAdvanced: string
-  // typography (type scale)
+  // typography (per-role type system)
   cardTypography: string
   typographyHint: string
-  typoBase: string
+  typographyUnits: string
+  colSize: string
+  colLine: string
+  colSpacing: string
   typoH1: string
   typoH2: string
   typoH3: string
   typoH4: string
   typoH5: string
+  typoBody: string
+  typoSmall: string
+  typoCaption: string
+  typoCode: string
   typographyPreview: string
   typographyPreviewBody: string
-  // custom font
+  // custom font (per weight)
   cardFont: string
   fontHint: string
+  fontFamilyLabel: string
   fontDefault: string
+  fontUploaded: string
   fontChoose: string
-  // advanced (rhythm + smoothing)
-  cardRhythm: string
-  rhythmHint: string
-  lineHeight: string
-  letterSpacing: string
+  fontReplace: string
+  fontWeight400: string
+  fontWeight500: string
+  fontWeight600: string
+  fontWeight700: string
+  // advanced (text rendering)
+  cardRendering: string
   fontSmoothing: string
   fontSmoothingDesc: string
   // overview

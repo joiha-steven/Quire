@@ -19,14 +19,14 @@ export function PostCard({
           {post.title}
         </Link>
       </h2>
-      <p className="mt-1 text-sm text-meta">
+      <p className="mt-1 t-small text-meta">
         {formatDate(post.date, lang)}
         {showReadingTime && post.readingMinutes
           ? ` · ${post.readingMinutes} ${t(lang).readingSuffix}`
           : ''}
       </p>
       {post.excerpt && (
-        <p className="mt-3 text-[1.0625rem] leading-relaxed text-text">
+        <p className="mt-3 leading-relaxed text-text" style={{ fontSize: 'var(--fs-body)' }}>
           {post.excerpt}
         </p>
       )}

@@ -1,43 +1,50 @@
 'use client'
 
-// Heading-size editor. Five numeric inputs (rem) drive the site type scale
-// (--fs-h1..--fs-h5); a single "reset" restores the built-in defaults. Parent owns
-// the state + save (one form, one save button). A live preview reflects edits.
-import type { TypographySettings } from '@/types'
-import { DEFAULT_TYPOGRAPHY } from '@/lib/themes'
+// Per-role type editor: every text role (h1–h5, body, small, caption, code) has
+// its own size (rem), line-height, and letter-spacing (em) — the full set of CSS
+// vars the site renders from. One reset restores all roles to the tuned defaults.
+// Parent owns state + save.
+import type { TypographySettings, TypeRole, TypeStyle } from '@/types'
+import { DEFAULT_TYPOGRAPHY, TYPE_ROLES } from '@/lib/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/lib/admin-i18n'
 
-// Only the rem size fields are edited here (rhythm/smoothing live in Advanced).
-type SizeKey = 'base' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5'
+const ROLE_LABEL: Record<TypeRole, keyof AdminStrings> = {
+  h1: 'typoH1',
+  h2: 'typoH2',
+  h3: 'typoH3',
+  h4: 'typoH4',
+  h5: 'typoH5',
+  body: 'typoBody',
+  small: 'typoSmall',
+  caption: 'typoCaption',
+  code: 'typoCode',
+}
 
-const FIELDS: { key: SizeKey; label: keyof AdminStrings }[] = [
-  { key: 'h1', label: 'typoH1' },
-  { key: 'h2', label: 'typoH2' },
-  { key: 'h3', label: 'typoH3' },
-  { key: 'h4', label: 'typoH4' },
-  { key: 'h5', label: 'typoH5' },
-  { key: 'base', label: 'typoBase' },
-]
-
-function SizeRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+// One numeric cell. `dim` keys map to the TypeStyle fields with their own ranges.
+function Cell({
+  value,
+  step,
+  min,
+  max,
+  onChange,
+}: {
+  value: number
+  step: number
+  min: number
+  max: number
+  onChange: (v: number) => void
+}) {
   return (
-    <label className="flex items-center justify-between gap-3">
-      <span className="text-sm text-neutral-700 dark:text-neutral-300">{label}</span>
-      <span className="flex items-center gap-1.5">
-        <input
-          type="number"
-          min={0.5}
-          max={6}
-          step={0.01}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-label={label}
-          className="w-20 rounded-lg border border-neutral-300 px-2 py-1 text-right font-mono text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-        />
-        <span className="text-xs text-neutral-400 dark:text-neutral-500">rem</span>
-      </span>
-    </label>
+    <input
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="w-16 rounded-md border border-neutral-300 px-1.5 py-1 text-right font-mono text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+    />
   )
 }
 
@@ -48,19 +55,10 @@ type Props = {
 
 export function TypographyFields({ typography, onChange }: Props) {
   const t = useAdminT()
-  const set = (key: SizeKey, value: number) =>
-    onChange({ ...typography, [key]: Number.isFinite(value) ? value : typography[key] })
-  // Reset only the size fields; keep the owner's rhythm/smoothing choices intact.
-  const resetSizes = () =>
-    onChange({
-      ...typography,
-      base: DEFAULT_TYPOGRAPHY.base,
-      h1: DEFAULT_TYPOGRAPHY.h1,
-      h2: DEFAULT_TYPOGRAPHY.h2,
-      h3: DEFAULT_TYPOGRAPHY.h3,
-      h4: DEFAULT_TYPOGRAPHY.h4,
-      h5: DEFAULT_TYPOGRAPHY.h5,
-    })
+  const setStyle = (role: TypeRole, patch: Partial<TypeStyle>) =>
+    onChange({ ...typography, roles: { ...typography.roles, [role]: { ...typography.roles[role], ...patch } } })
+  // Reset every role's size/line/spacing; keep the smoothing toggle (Advanced tab).
+  const resetAll = () => onChange({ ...typography, roles: structuredClone(DEFAULT_TYPOGRAPHY.roles) })
 
   return (
     <div className="space-y-4">
@@ -68,32 +66,61 @@ export function TypographyFields({ typography, onChange }: Props) {
         <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.typographyHint}</p>
         <button
           type="button"
-          onClick={resetSizes}
+          onClick={resetAll}
           className="shrink-0 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
         >
           {t.resetDefault}
         </button>
       </div>
 
-      <div className="space-y-3">
-        {FIELDS.map((f) => (
-          <SizeRow key={f.key} label={t[f.label] as string} value={typography[f.key]} onChange={(v) => set(f.key, v)} />
-        ))}
+      <div className="overflow-x-auto">
+        <table className="w-full border-separate border-spacing-y-1 text-sm">
+          <thead>
+            <tr className="text-xs text-neutral-400 dark:text-neutral-500">
+              <th className="text-left font-medium" />
+              <th className="px-1 text-right font-medium">{t.colSize}</th>
+              <th className="px-1 text-right font-medium">{t.colLine}</th>
+              <th className="px-1 text-right font-medium">{t.colSpacing}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TYPE_ROLES.map((role) => {
+              const s = typography.roles[role]
+              return (
+                <tr key={role}>
+                  <td className="pr-2 text-neutral-700 dark:text-neutral-300">{t[ROLE_LABEL[role]] as string}</td>
+                  <td className="px-1 text-right">
+                    <Cell value={s.size} step={0.01} min={0.5} max={6} onChange={(v) => setStyle(role, { size: v })} />
+                  </td>
+                  <td className="px-1 text-right">
+                    <Cell value={s.line} step={0.05} min={0.8} max={3} onChange={(v) => setStyle(role, { line: v })} />
+                  </td>
+                  <td className="px-1 text-right">
+                    <Cell value={s.spacing} step={0.005} min={-0.2} max={0.5} onChange={(v) => setStyle(role, { spacing: v })} />
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
+      <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.typographyUnits}</p>
 
-      {/* Live preview: each line uses its size so edits show at a glance.
-          Inline style keeps it independent of the page's injected scale. */}
+      {/* Live preview of the heading roles + body, each at its own style. */}
       <div className="space-y-1.5 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
-        {(['h1', 'h2', 'h3', 'h4', 'h5'] as const).map((k) => (
+        {(['h1', 'h2', 'h3'] as const).map((k) => (
           <p
             key={k}
-            className="truncate font-semibold tracking-tight text-neutral-900 dark:text-white"
-            style={{ fontSize: `${typography[k]}rem`, lineHeight: 1.2 }}
+            className="truncate font-semibold text-neutral-900 dark:text-white"
+            style={{ fontSize: `${typography.roles[k].size}rem`, lineHeight: typography.roles[k].line, letterSpacing: `${typography.roles[k].spacing}em` }}
           >
             {k.toUpperCase()} · {t.typographyPreview}
           </p>
         ))}
-        <p className="text-neutral-500 dark:text-neutral-400" style={{ fontSize: `${typography.base}rem` }}>
+        <p
+          className="text-neutral-500 dark:text-neutral-400"
+          style={{ fontSize: `${typography.roles.body.size}rem`, lineHeight: typography.roles.body.line }}
+        >
           {t.typographyPreviewBody}
         </p>
       </div>

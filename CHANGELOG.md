@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-06-21 (full per-role typography + per-weight fonts)
+- **feat(typography): every text role fully tunable, zero hardcoded sizes.** Nine roles —
+  h1–h5, body, small (dates/meta/related/ToC/pagination/search), caption, code — each with its
+  own **size / line-height / letter-spacing**, emitted as CSS vars (`--fs-*`, `--lh-*`, `--ls-*`).
+  All public reading + secondary text now maps to a role (new `.t-small` utility replaced every
+  `text-sm`); only brand wordmark, search box, and the 404 numeral stay as deliberate one-offs.
+  Defaults are tuned to read well; reset restores them exactly.
+- **feat(typography): custom font per weight.** Four upload slots (Regular 400 / Medium 500 /
+  SemiBold 600 / Bold 700) sharing one family — one `@font-face` per weight, so headings/bold are
+  crisp (the site disables faux-bold). `POST /api/files/font` takes a `weight`; `settings.customFont`
+  is now `{ family, faces[] }`. Old single-file shape migrates to the 400 slot.
+- **change(admin): Settings tabs finalized** — Appearance holds colors + font (4 slots) + the
+  per-role text-size table; Advanced holds the font-smoothing toggle + custom CSS. `v0.9.24`.
+
 ## 2026-06-21 (fonts + typography controls + settings tabs)
 - **feat(typography): custom font upload.** Admin → Settings → Appearance can upload a typeface
   (`.woff2/.woff/.ttf/.otf`); it's stored on Blob under `files/` (separate from the media grid),

@@ -45,13 +45,13 @@ export function Pagination({
 }) {
   if (totalPages <= 1) return null
   const label = t(lang).pageLabel
-  const base = 'min-w-9 rounded-lg px-3 py-1.5 text-center text-sm'
+  const base = 'min-w-9 rounded-lg px-3 py-1.5 text-center t-small'
 
   return (
     <nav className="mt-12 flex flex-wrap items-center justify-center gap-1.5" aria-label="Pagination">
       {pageItems(page, totalPages).map((it, i) =>
         it === 'gap' ? (
-          <span key={`gap-${i}`} className="px-1 text-sm text-meta" aria-hidden>
+          <span key={`gap-${i}`} className="px-1 t-small text-meta" aria-hidden>
             …
           </span>
         ) : it === page ? (

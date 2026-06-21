@@ -104,9 +104,9 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
         />
         <div className="mt-4 max-h-[55vh] overflow-y-auto">
           {needle.length < 1 ? (
-            <p className="py-8 text-center text-sm text-meta">{t(lang).searchHint}</p>
+            <p className="py-8 text-center t-small text-meta">{t(lang).searchHint}</p>
           ) : results.length === 0 ? (
-            <p className="py-8 text-center text-sm text-meta">{t(lang).searchEmpty}</p>
+            <p className="py-8 text-center t-small text-meta">{t(lang).searchEmpty}</p>
           ) : (
             <ul className="space-y-4">
               {results.map((d) => (
@@ -118,7 +118,7 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
                   >
                     {d.title}
                   </Link>
-                  <p className="mt-0.5 text-sm text-meta">{formatDate(d.date, lang)}</p>
+                  <p className="mt-0.5 t-small text-meta">{formatDate(d.date, lang)}</p>
                 </li>
               ))}
             </ul>
