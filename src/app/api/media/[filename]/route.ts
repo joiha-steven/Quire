@@ -18,10 +18,10 @@ export async function DELETE(req: NextRequest): Promise<Response> {
       logRequest(req, 400, start)
       return fail('Missing url', 400)
     }
-    await deleteMedia(url)
+    const items = await deleteMedia(url) // authoritative post-delete list
     revalidatePath('/', 'layout') // a deleted image may appear on a cached page
     logRequest(req, 200, start)
-    return ok({ url })
+    return ok(items)
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)

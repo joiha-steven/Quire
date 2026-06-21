@@ -35,9 +35,9 @@ export function FileLibrary() {
     if (!confirm(t.confirmDeleteFile)) return
     try {
       const res = await fetch(`/api/files/by?url=${encodeURIComponent(url)}`, { method: 'DELETE' })
-      const json = (await res.json()) as ApiResponse
+      const json = (await res.json()) as ApiResponse<FileItem[]>
       if (!json.success) throw new Error(json.error)
-      setItems((prev) => prev.filter((f) => f.url !== url))
+      if (json.data) setItems(json.data) // adopt server's authoritative list
       notify(t.deleted)
     } catch {
       notify(t.deleteFailed, 'error')

@@ -47,12 +47,19 @@ const ICON_PREFIXES = ['favicon-', 'app-icon-'] // managed in Settings, hidden h
 
 // Read the file manifest, newest first. Fresh every request (React.cache dedupes
 // per render) so a deleted file is gone the moment the library reopens.
-export const getFiles = cache(async (): Promise<FileItem[]> => {
-  await getSettings() // prime the vanity media base before expandBlob
-  const items = await readJson<FileItem[]>(FILES_INDEX, [])
+// Expand stored entries into client items (absolute URLs, newest first) — the
+// exact shape getFiles returns, so callers can hand back the in-memory post-write
+// list without re-reading Blob.
+function toClientFiles(items: FileItem[]): FileItem[] {
   return [...items]
     .map((f) => ({ ...f, url: expandBlob(f.url) }))
     .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+}
+
+export const getFiles = cache(async (): Promise<FileItem[]> => {
+  await getSettings() // prime the vanity media base before expandBlob
+  const items = await readJson<FileItem[]>(FILES_INDEX, [])
+  return toClientFiles(items)
 })
 
 // All `files/` pathnames already taken (manifest ∪ actual store contents, incl.
@@ -107,12 +114,18 @@ export async function addFilesBatch(
 
 // Delete a file: its blob + manifest entry. Refuses to touch the site icons,
 // which are not manifest entries (defence in depth — they never reach here).
-export async function deleteFile(url: string): Promise<void> {
+// Returns the AUTHORITATIVE new list (from the in-memory manifest just written,
+// no Blob re-read) so the client adopts true post-delete state.
+export async function deleteFile(url: string): Promise<FileItem[]> {
   await getSettings() // prime the vanity media base so collapseBlob strips a custom host
-  const target = collapseBlob(url)
-  if (!target.startsWith('files/')) return
-  if (ICON_PREFIXES.some((p) => target.startsWith(`files/${p}`))) return
   const current = await readJson<FileItem[]>(FILES_INDEX, [])
+  const target = collapseBlob(url)
+  if (!target.startsWith('files/') || ICON_PREFIXES.some((p) => target.startsWith(`files/${p}`))) {
+    return toClientFiles(current)
+  }
+  const remaining = current.filter((f) => collapseBlob(f.url) !== target)
+  if (remaining.length === current.length) return toClientFiles(current) // no match: don't rewrite
   await deleteByPathname(target).catch(() => {})
-  await writeJson(FILES_INDEX, current.filter((f) => collapseBlob(f.url) !== target))
+  await writeJson(FILES_INDEX, remaining)
+  return toClientFiles(remaining)
 }

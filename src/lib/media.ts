@@ -26,13 +26,7 @@ const THUMB_WIDTH = 400
 export const getMedia = cache(async (): Promise<MediaItem[]> => {
   await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
   const items = await readJson<MediaItem[]>(INDEX_PATH, [])
-  return [...items]
-    .map((m) => ({
-      ...m,
-      url: expandBlob(m.url), // stored pathname -> absolute URL
-      thumb: m.thumb ? expandBlob(m.thumb) : undefined,
-    }))
-    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+  return toClientItems(items)
 })
 
 type Variant = { suffix: string; data: Buffer; contentType: string }
@@ -201,12 +195,25 @@ export async function addMedia(
   return item
 }
 
+// Expand a stored manifest list into client items (absolute URLs, newest first) —
+// the exact shape getMedia returns, so callers can hand the in-memory post-write
+// list straight back without re-reading Blob.
+function toClientItems(items: MediaItem[]): MediaItem[] {
+  return [...items]
+    .map((m) => ({ ...m, url: expandBlob(m.url), thumb: m.thumb ? expandBlob(m.thumb) : undefined }))
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+}
+
 // Delete a media item: the original + thumbnail + every display variant + entry.
 // Removes ALL versions of the image from Blob — derived names (thumb + the four
 // AVIF/WebP variants) are deleted unconditionally for any raster original, not
 // gated on the manifest `variants` flag, so a stale/false flag can't leave the
 // heavy variants orphaned in the store.
-export async function deleteMedia(url: string): Promise<void> {
+//
+// Returns the AUTHORITATIVE new list (built from the in-memory manifest we just
+// wrote — no re-read of Blob), so the caller/client adopts the true post-delete
+// state with no eventual-consistency gap.
+export async function deleteMedia(url: string): Promise<MediaItem[]> {
   // Prime the vanity media base (setMediaBase) so collapseBlob can strip a
   // configured custom host. Without this, a vanity URL passed from the client
   // would not collapse to its `media/...` pathname and NOTHING would match — the
@@ -214,19 +221,30 @@ export async function deleteMedia(url: string): Promise<void> {
   await getSettings()
   const current = await readJson<MediaItem[]>(INDEX_PATH, [])
   const target = collapseBlob(url) // original pathname
-  const item = current.find((m) => collapseBlob(m.url) === target)
-  const paths = new Set<string>([target])
-  if (item?.thumb) paths.add(collapseBlob(item.thumb))
-  // Raster originals always have a thumb + display variants under a derived stem,
-  // regardless of the stored `variants` flag — sweep them all (del is a no-op when
-  // a name is missing, so listing extras is harmless).
-  if (/\.(jpe?g|png)$/i.test(target)) {
-    const stem = target.replace(/\.[^.]+$/, '')
-    paths.add(`${stem}-thumb.webp`)
-    for (const w of SIZES) { paths.add(`${stem}-${w}.webp`); paths.add(`${stem}-${w}.avif`) }
+  const remaining = current.filter((m) => collapseBlob(m.url) !== target)
+
+  // Nothing matched (or the manifest read failed and came back empty): do NOT
+  // rewrite — a rewrite here would either be pointless or, on a transient read
+  // failure, wipe the whole manifest. Just return the current view.
+  if (remaining.length === current.length) return toClientItems(current)
+
+  // Collect every blob to remove for the matched item(s): original + thumb +
+  // (for rasters) the four display variants, derived from the stem.
+  const removed = current.filter((m) => collapseBlob(m.url) === target)
+  const paths = new Set<string>()
+  for (const item of removed) {
+    const p = collapseBlob(item.url)
+    paths.add(p)
+    if (item.thumb) paths.add(collapseBlob(item.thumb))
+    if (/\.(jpe?g|png)$/i.test(p)) {
+      const stem = p.replace(/\.[^.]+$/, '')
+      paths.add(`${stem}-thumb.webp`)
+      for (const w of SIZES) { paths.add(`${stem}-${w}.webp`); paths.add(`${stem}-${w}.avif`) }
+    }
   }
   await Promise.all([...paths].map((p) => deleteByPathname(p).catch(() => {})))
-  await writeJson(INDEX_PATH, current.filter((m) => collapseBlob(m.url) !== target))
+  await writeJson(INDEX_PATH, remaining)
+  return toClientItems(remaining)
 }
 
 // Generate the deferred display variants for the given raster originals that are

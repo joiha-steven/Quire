@@ -51,9 +51,11 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     if (!confirm(t.confirmDeleteMedia)) return
     try {
       const res = await fetch(`/api/media/by?url=${encodeURIComponent(url)}`, { method: 'DELETE' })
-      const json = (await res.json()) as ApiResponse
+      const json = (await res.json()) as ApiResponse<MediaItem[]>
       if (!json.success) throw new Error(json.error)
-      setItems((prev) => prev.filter((m) => m.url !== url))
+      // Adopt the server's authoritative post-delete list (built from the manifest
+      // it just wrote — no Blob re-read), so the grid reflects true server state.
+      if (json.data) setItems(json.data)
       setUnused((prev) => {
         if (!prev?.has(url)) return prev
         const next = new Set(prev)

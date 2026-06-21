@@ -18,9 +18,9 @@ export async function DELETE(req: NextRequest): Promise<Response> {
       logRequest(req, 400, start)
       return fail('Missing url', 400)
     }
-    await deleteFile(url)
+    const items = await deleteFile(url) // authoritative post-delete list
     logRequest(req, 200, start)
-    return ok({ url })
+    return ok(items)
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)
