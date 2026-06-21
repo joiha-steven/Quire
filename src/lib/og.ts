@@ -3,6 +3,16 @@
 // - Dynamic OG off -> the featured image, else the owner's fallback image, else none.
 import type { SiteSettings } from '@/types'
 
+// One typeface everywhere — incl. the OG image. When the owner uploaded a custom
+// font, pass its URL so the card renders in that face too (the route fetches it,
+// Inter stays the glyph fallback). Pick the weight nearest 600 (the card weight).
+function ogFontParam(settings: SiteSettings, p: URLSearchParams): void {
+  const faces = settings.customFont.faces
+  if (!faces.length) return
+  const pick = [...faces].sort((a, b) => Math.abs(a.weight - 600) - Math.abs(b.weight - 600))[0]
+  if (pick?.url) p.set('font', pick.url)
+}
+
 export function ogImageUrl(
   settings: SiteSettings,
   base: string,
@@ -13,6 +23,7 @@ export function ogImageUrl(
   if (ogImage) {
     const p = new URLSearchParams({ title: opts.title, site: settings.title })
     if (bg) p.set('bg', bg)
+    ogFontParam(settings, p)
     return `${base}/og?${p.toString()}`
   }
   return bg || undefined
@@ -44,6 +55,7 @@ export function ogCardUrl(
   if (ogImage) {
     const p = new URLSearchParams({ title: opts.title, site: opts.site })
     if (ogFallbackImage) p.set('bg', ogFallbackImage)
+    ogFontParam(settings, p)
     return `${base}/og?${p.toString()}`
   }
   return ogFallbackImage || undefined

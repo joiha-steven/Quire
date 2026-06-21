@@ -93,7 +93,7 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-24 rounded-lg border border-neutral-300 px-2 py-1 font-mono text-sm uppercase outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className="w-24 rounded-lg border border-neutral-300 px-2 py-1 text-sm uppercase outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
         />
       </span>
     </label>

@@ -43,7 +43,7 @@ function Cell({
       step={step}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-16 rounded-md border border-neutral-300 px-1.5 py-1 text-right font-mono text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+      className="w-16 rounded-md border border-neutral-300 px-1.5 py-1 text-right text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
     />
   )
 }

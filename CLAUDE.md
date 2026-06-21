@@ -218,11 +218,14 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   (llmstxt.org); 404 when off.
 - `app/feed.xml/route.ts` → RSS 2.0 (latest 50 posts); 404 when off; auto-discovered
   via root metadata `alternates`.
-- `app/og/route.tsx` → dynamic OG image (1200×630, **edge runtime**, Be Vietnam Pro
-  TTFs bundled beside it and loaded via `fetch(new URL('./x.ttf', import.meta.url))`).
-  Fully query-driven (`title`/`site`/`bg`, both length-capped), no Blob read.
-  `lib/og.ts` builds the card URL for every surface (all honor the `seo.ogImage`
-  toggle; bg = the relevant image or `seo.ogFallbackImage` → gradient):
+- `app/og/route.tsx` → dynamic OG image (1200×630, **edge runtime**, Inter `.woff`
+  subsets bundled beside it — latin/latin-ext/vietnamese — loaded via
+  `fetch(new URL('./x.woff', import.meta.url))`). Query-driven (`title`/`site`/`bg`, capped) plus
+  an optional `?font=<blobUrl>` for the owner's custom typeface (one-font rule): the route fetches
+  it from the Blob host only (SSRF guard) and renders the card in it, Inter staying the glyph
+  fallback. `lib/og.ts` builds the card URL for every surface (all honor the `seo.ogImage`
+  toggle, and append `font=` when a custom font is set; bg = the relevant image or
+  `seo.ogFallbackImage` → gradient):
   - `ogImageUrl` — posts/pages: top = title, bottom = site title; bg = featured image.
   - `ogCardUrl` + `siteDomain` — list surfaces: **home** (top = domain, bottom =
     description), **category/tag** (top = name, bottom = domain). Wired into each
@@ -367,10 +370,13 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   post/page titles (`[slug]/page.tsx`), category/tag list headings (`BlogListing` callers), draft
   preview; **list cards (`PostCard`) use H2**. The ONLY fixed public sizes left are the brand
   wordmark (`(blog)/layout`) and the 404 numeral — deliberate display, not content.
-- **One typeface for the whole reading site.** Body, headings AND code all use `--font-sans`
-  (Inter, or the uploaded face) — `.prose code` is `font-family: inherit`, no separate monospace
-  stack, and nothing auto-adds a second family. Admin chrome keeps functional monospace in two
-  tool spots only (hex colour inputs + the raw-Markdown source textarea); that is intentional.
+- **One typeface for EVERYTHING — hard rule, no exceptions** (incl. admin + the OG image). Body,
+  headings, code, admin inputs all use `--font-sans` (Inter, or the uploaded face): `.prose code`
+  is `font-family: inherit`, there is **no monospace anywhere** (grep `font-mono` must return
+  nothing), and nothing auto-adds a second family. The OG card (`/og`) renders Inter by default
+  and, when the owner set a custom font, that font too — `lib/og.ts` appends `?font=<blobUrl>` and
+  the route fetches it (Blob host only; Inter stays the glyph fallback for e.g. Vietnamese). If
+  the owner uploads a custom font, it governs the entire site + OG.
 - **Admin chrome does NOT follow the reader's type settings.** Forms/tables/nav use Tailwind's
   standard text utilities (a fixed design scale) so tuning the reader's content sizes never
   distorts the admin UI. The admin *editor* surface is `.prose`, so it DOES mirror the reader
@@ -432,6 +438,15 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   surface (code blocks, hovers, banners) uses `--c-rule`** (`border-rule` / `bg-rule` /
   `hover:bg-rule` / `ring-rule`), so one colour in Admin → Giao diện drives them all. Admin
   tooling may stay neutral; this rule is for the reader-facing `(blog)` UI.
+- **ONE font + NO hardcoded text sizes — hard rule, everywhere (incl. admin + OG).** Never set a
+  `font-family` (no `font-mono`, no second face) and never hardcode a size (`text-[..]`, or
+  `text-sm/lg/xl…` on reader content). Public text sizes come ONLY from the role system
+  (`.fs-h1…fs-h5`, `.t-small`, `.prose` → `--fs-*/--lh-*/--ls-*`); admin chrome uses Tailwind's
+  standard scale by design (NOT the reader vars, so tuning reader sizes never distorts admin) — the
+  admin editor `.prose` is the one place that follows the reader. Only fixed public sizes allowed:
+  the brand wordmark + the 404 numeral. A custom font, if uploaded, governs the whole site + OG.
+  See the Typography section. (`grep -rE "font-mono|text-\[" src` and public `text-(sm|lg|xl|…)`
+  should stay clean.)
 - UI text (labels, buttons, toasts, placeholders) → never hardcoded; go through
   `src/locales/` and keep every language in sync (see Localization above).
 - Code, comments, identifiers, filenames, commits → English.

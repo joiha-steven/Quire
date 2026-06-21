@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-22 (one-font rule — absolute, no exceptions)
+- **change(typography): one typeface for EVERYTHING, hard rule.** Removed the last monospace
+  spots in admin (hex inputs, raw-Markdown source editor, code-token button, activity badge) — the
+  whole app, public and admin, now renders in the single site font (`--font-sans`); `grep font-mono
+  src` is empty.
+- **feat(og): the OG image follows the custom font too.** When the owner uploads a font, `lib/og.ts`
+  appends `?font=<blobUrl>` and the `/og` route renders the card in it (Blob host only, SSRF-guarded;
+  Inter stays the glyph fallback). With no custom font it stays Inter — so the share image always
+  matches the site's one font.
+- **docs:** recorded the rule (one font + zero hardcoded font/size, everywhere incl. admin + OG; a
+  custom font governs the whole site) in CLAUDE.md conventions + the Typography/OG sections. `v0.9.26`.
+
 ## 2026-06-22 (type scale re-tuned + one font everywhere)
 - **change(typography): smaller, calmer default scale.** List-card titles (H2) were reading as
   banners — the whole scale was re-tuned down to a restrained ~1.18 ratio off an 18px body:

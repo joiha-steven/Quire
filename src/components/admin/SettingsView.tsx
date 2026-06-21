@@ -157,7 +157,7 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
                 rows={10}
                 spellCheck={false}
                 placeholder={'.prose h2 { letter-spacing: -0.01em }'}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
               />
               <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
             </div>

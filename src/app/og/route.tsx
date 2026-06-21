@@ -11,8 +11,9 @@ export const runtime = 'edge'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-// One typeface (Inter, matching the site) across latin + latin-ext + vietnamese
-// subsets so mixed Vietnamese/ASCII titles render fully.
+// Bundled Inter across latin + latin-ext + vietnamese subsets so mixed
+// Vietnamese/ASCII titles render fully. This is the default face AND the glyph
+// fallback when the owner uses a custom font (see `?font=` handling below).
 async function font(file: string): Promise<ArrayBuffer> {
   return fetch(new URL(`./${file}`, import.meta.url)).then((r) => r.arrayBuffer())
 }
@@ -31,6 +32,24 @@ export async function GET(req: Request): Promise<Response> {
     font('inter-vietnamese.woff'),
   ])
 
+  // One typeface everywhere: when the owner uploaded a custom font, render the
+  // card in it too (Inter stays the glyph fallback for anything it lacks, exactly
+  // like the site's --font-sans stack). Only fetch from the Blob store host so the
+  // public `?font=` param can't be used to fetch arbitrary/internal URLs (SSRF).
+  let custom: ArrayBuffer | null = null
+  const fontUrl = searchParams.get('font') || ''
+  if (fontUrl) {
+    try {
+      const u = new URL(fontUrl)
+      if (u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com')) {
+        custom = await fetch(u).then((r) => (r.ok ? r.arrayBuffer() : null))
+      }
+    } catch {
+      custom = null
+    }
+  }
+  const family = custom ? 'Site' : 'Inter'
+
   // Smaller title for longer text so it never overflows the card.
   const titleSize = title.length > 90 ? 52 : title.length > 55 ? 60 : 72
 
@@ -45,7 +64,7 @@ export async function GET(req: Request): Promise<Response> {
           justifyContent: 'flex-end',
           position: 'relative',
           background: 'linear-gradient(135deg, #2a2a2e 0%, #1c1c1f 100%)',
-          fontFamily: 'Inter',
+          fontFamily: family,
         }}
       >
         {bg ? (
@@ -87,10 +106,14 @@ export async function GET(req: Request): Promise<Response> {
     ),
     {
       ...size,
+      // Custom face first (rendered as 'Site'); Inter subsets always loaded so any
+      // glyph the custom font lacks (e.g. Vietnamese) still resolves — same idea as
+      // the site's --font-sans → Inter fallback.
       fonts: [
-        { name: 'Inter', data: latin, weight: 600, style: 'normal' },
-        { name: 'Inter', data: latinExt, weight: 600, style: 'normal' },
-        { name: 'Inter', data: vietnamese, weight: 600, style: 'normal' },
+        ...(custom ? [{ name: 'Site' as const, data: custom, weight: 600 as const, style: 'normal' as const }] : []),
+        { name: 'Inter' as const, data: latin, weight: 600 as const, style: 'normal' as const },
+        { name: 'Inter' as const, data: latinExt, weight: 600 as const, style: 'normal' as const },
+        { name: 'Inter' as const, data: vietnamese, weight: 600 as const, style: 'normal' as const },
       ],
     },
   )

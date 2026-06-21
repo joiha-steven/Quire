@@ -121,7 +121,7 @@ function Toolbar({
         <s>S</s>
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}>
-        <code className="font-mono">{'`'}</code>
+        <code className="">{'`'}</code>
       </button>
       {sep}
       <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cls(editor.isActive('heading', { level: 1 }))}>
@@ -334,7 +334,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
               onChange(e.target.value)
             }}
             spellCheck={false}
-            className="min-h-[60vh] w-full resize-none overflow-hidden bg-transparent px-4 py-4 font-mono text-sm leading-relaxed text-neutral-800 outline-none dark:text-neutral-200"
+            className="min-h-[60vh] w-full resize-none overflow-hidden bg-transparent px-4 py-4 text-sm leading-relaxed text-neutral-800 outline-none dark:text-neutral-200"
           />
         ) : (
           <EditorContent editor={editor} />
