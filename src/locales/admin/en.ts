@@ -93,6 +93,7 @@ const en = {
   loading: 'Loading...',
   noMedia: 'No media yet.',
   confirmDeleteMedia: 'Delete this image? This action cannot be undone.',
+  deleteNoMatch: 'Server matched no file to delete (the URL did not line up).',
   copiedUrl: 'URL copied',
   loadMediaFailed: 'Failed to load media',
   dropzone: 'Drag images here or click to choose',

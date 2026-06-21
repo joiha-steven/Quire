@@ -93,6 +93,7 @@ const ja = {
   loading: '読み込み中...',
   noMedia: 'まだメディアがありません。',
   confirmDeleteMedia: 'この画像を削除しますか？この操作は取り消せません。',
+  deleteNoMatch: '削除対象のファイルが見つかりませんでした（URLが一致しません）。',
   copiedUrl: 'URLをコピーしました',
   loadMediaFailed: 'メディアの読み込みに失敗しました',
   dropzone: '画像をここにドラッグするか、クリックして選択',

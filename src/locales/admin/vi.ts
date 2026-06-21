@@ -93,6 +93,7 @@ const vi = {
   loading: 'Đang tải...',
   noMedia: 'Chưa có ảnh nào.',
   confirmDeleteMedia: 'Xóa ảnh này? Hành động không thể hoàn tác.',
+  deleteNoMatch: 'Máy chủ không tìm thấy file để xoá (URL không khớp).',
   copiedUrl: 'Đã sao chép URL',
   loadMediaFailed: 'Không tải được thư viện',
   dropzone: 'Kéo thả ảnh vào đây hoặc bấm để chọn',

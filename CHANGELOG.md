@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **fix(media): surface a silent no-match delete + add an owner diagnostic.** If the delete
+  endpoint matched nothing (URL still present in the returned list), the library now shows an
+  explicit error toast instead of leaving the image silently in place. Added owner-only
+  `GET /api/media/debug?url=…` reporting the manifest size, the extracted match key, how many
+  entries matched, a sample of stored URLs, and the configured media base — ground truth for a
+  "stuck" delete. `v0.9.9`.
 - **fix(media): delete now matches host-independently + writes manifest first.** Root-caused the
   "deleted image stays / re-appears in unused check" once more: the match relied on
   `collapseBlob` stripping the URL host, which silently found nothing if the primed host didn't

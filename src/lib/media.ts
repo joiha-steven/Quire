@@ -253,6 +253,27 @@ export async function deleteMedia(url: string): Promise<MediaItem[]> {
   return toClientItems(remaining)
 }
 
+// Owner-only diagnostic: report what a delete of `url` would match against the
+// live manifest — the extracted key, how many entries match, the manifest size,
+// and a sample of stored URLs (their raw form). Lets us see, with ground truth,
+// whether a "stuck" delete is a no-match (data/URL shape) vs. something else.
+export async function debugDelete(url: string): Promise<{
+  manifestCount: number
+  targetKey: string | null
+  matched: number
+  sampleStored: string[]
+}> {
+  const current = await readJson<MediaItem[]>(INDEX_PATH, [])
+  const targetKey = mediaKey(url)
+  const matched = targetKey ? current.filter((m) => mediaKey(m.url) === targetKey) : []
+  return {
+    manifestCount: current.length,
+    targetKey,
+    matched: matched.length,
+    sampleStored: current.slice(0, 8).map((m) => m.url),
+  }
+}
+
 // Generate the deferred display variants for the given raster originals that are
 // still pending (variants: false). Called on save for images kept in the content.
 export async function finalizeVariants(pathnames: string[]): Promise<void> {
