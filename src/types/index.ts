@@ -54,6 +54,16 @@ export type MediaItem = {
   variants?: boolean // true if responsive -1024/-1600 (avif+webp) were generated
 }
 
+// A non-image file in the "Files" library (PDF, zip, docx, audio…). Stored under
+// `files/` on Blob with its own manifest, separate from the image media library.
+export type FileItem = {
+  url: string // store-relative, absolute on read
+  filename: string // display name (original upload name)
+  size: number // bytes
+  contentType: string // MIME type as uploaded
+  uploadedAt: string // ISO 8601
+}
+
 // Site-wide settings, stored at settings/site.json.
 export type SiteLang = 'vi' | 'en' | 'de' | 'ja' | 'zh' | 'ko'
 

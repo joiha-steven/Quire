@@ -1,0 +1,29 @@
+// DELETE /api/files/by?url=... -> delete one library file (owner only).
+// The blob URL is passed via the `url` search param (it is the manifest key).
+// Mirrors /api/media/by. Site icons (favicon/app-icon) are refused by deleteFile.
+
+import type { NextRequest } from 'next/server'
+import { deleteFile } from '@/lib/files'
+import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
+
+export async function DELETE(req: NextRequest): Promise<Response> {
+  const start = Date.now()
+  try {
+    if (!(await requireOwner())) {
+      logRequest(req, 401, start)
+      return fail('Unauthorized', 401)
+    }
+    const url = new URL(req.url).searchParams.get('url')
+    if (!url) {
+      logRequest(req, 400, start)
+      return fail('Missing url', 400)
+    }
+    await deleteFile(url)
+    logRequest(req, 200, start)
+    return ok({ url })
+  } catch (error) {
+    logError(req, error)
+    logRequest(req, 500, start)
+    return fail('Failed to delete file', 500)
+  }
+}

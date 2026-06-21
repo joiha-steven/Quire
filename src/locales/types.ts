@@ -112,9 +112,17 @@ export type AdminStrings = {
   multiPlaceholder: string
   removeAria: string
   // media
+  libraryTitle: string
+  tabImages: string
+  tabFiles: string
   mediaTitle: string
   copyUrl: string
+  download: string
   downloadOriginal: string
+  filesDropzone: string
+  noFiles: string
+  loadFilesFailed: string
+  confirmDeleteFile: string
   unsupportedType: string
   checkUnused: string
   checkUnusedFailed: string

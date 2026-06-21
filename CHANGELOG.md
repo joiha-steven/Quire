@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **feat(library): rename the media page to "Library" and split it into two tabs** — **Images**
+  (the existing media library, unchanged) and **Files**, a new catch-all store for non-image
+  attachments (PDF, zip, docx, audio…). Files upload to the `files/` Blob prefix with their own
+  manifest (`files/_index.json`), with upload / copy-URL / download / delete; the site icons
+  under `files/` (favicon, app icon) are excluded from the tab. New `GET/POST /api/files` +
+  `DELETE /api/files/by`; nav label + page title updated across all six locales. `v0.9.3`.
 - **fix(media): delete now removes ALL versions of an image from Blob and actually takes
   effect.** Two bugs in `deleteMedia`: (1) it didn't prime the vanity media base before
   `collapseBlob`, so when a custom media host was configured the deleted URL never collapsed to

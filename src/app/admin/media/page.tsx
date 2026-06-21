@@ -1,7 +1,7 @@
-// Media library page.
+// Library page: two tabs — Images (media library) and Files (attachments).
 import { getSettings } from '@/lib/settings'
 import { adminT } from '@/lib/admin-i18n'
-import { MediaLibrary } from '@/components/admin/MediaLibrary'
+import { LibraryTabs } from '@/components/admin/LibraryTabs'
 
 
 export default async function MediaPage() {
@@ -9,9 +9,9 @@ export default async function MediaPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">{adminT(language).mediaTitle}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{adminT(language).libraryTitle}</h1>
       </div>
-      <MediaLibrary mode="page" />
+      <LibraryTabs />
     </div>
   )
 }
