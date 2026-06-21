@@ -407,6 +407,8 @@ Load the Blob token from `.env.local`; all support `--dry`:
 - **Never raise the minor/major yourself** (`0.9` → `0.10`, or `→ 1.0.0`). Bump the
   `0.9` part ONLY when the owner explicitly asks. Until then, stay on `0.9.x`.
 - A change that touches code bumps `x`; pure-docs tweaks may skip it (as before).
+- When you bump `x`, also update the **README H1 title** `# vibeblog (v0.9.x)` to match
+  `package.json` (the title carries the version on purpose).
 
 ### Cutting a release
 1. `x` is already current in `package.json` (see Versioning above — never re-bump the

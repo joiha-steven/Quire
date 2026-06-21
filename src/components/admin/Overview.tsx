@@ -65,7 +65,7 @@ export function Overview({ posts, pages, mediaCount, totalBytes, categories, tag
             content it publishes is the owner's, all rights reserved). */}
         <div className="flex items-center gap-2">
           <a
-            href="https://github.com/joiha-steven/vibeblog/releases"
+            href="https://github.com/joiha-steven/vibeblog"
             target="_blank"
             rel="noopener noreferrer"
             className={PILL}

@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **chore: version in README title + repo link on the Overview pill.** The README H1 now
+  carries the version (`# vibeblog (v0.9.x)`, kept in sync on each bump), and the admin
+  Overview version pill links to the repo root (`/vibeblog`) instead of the releases page.
+  `v0.9.5`.
 - **feat(theme): polish the palette pickers + localize palette names.** Admin Settings →
   Appearance: the preset cards are more compact and spaced out, borderless — the selected
   palette reads via full opacity + a bold name while the rest sit dimmed (no rings/borders).
