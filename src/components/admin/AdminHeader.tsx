@@ -33,6 +33,7 @@ export function AdminHeader({
     { href: '/admin', label: t.navHome },
     { href: '/admin/content', label: t.navDashboard },
     { href: '/admin/media', label: t.navMedia },
+    { href: '/admin/analytics', label: t.navAnalytics },
     { href: '/admin/settings', label: t.navSettings },
     { href: '/admin/log', label: t.navLog },
   ]

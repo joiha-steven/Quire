@@ -26,6 +26,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   const [loading, setLoading] = useState(true)
   const [zoom, setZoom] = useState<MediaItem | null>(null)
   const [visible, setVisible] = useState(PAGE)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const sentinel = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,6 +80,35 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
   async function copyUrl(url: string) {
     await navigator.clipboard.writeText(url)
     notify(t.copiedUrl)
+  }
+
+  // Multi-select delete (page mode). Reuses the atomic batch endpoint so several
+  // images go in one manifest write (no per-image race).
+  function toggleSelect(url: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(url)) next.delete(url)
+      else next.add(url)
+      return next
+    })
+  }
+  async function deleteSelected() {
+    if (selected.size === 0) return
+    if (!confirm(t.confirmDeleteSelected)) return
+    try {
+      const res = await fetch('/api/media/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: [...selected] }),
+      })
+      const json = (await res.json()) as ApiResponse<MediaItem[]>
+      if (!json.success || !json.data) throw new Error(json.error)
+      setItems(json.data)
+      setSelected(new Set())
+      notify(t.deleted)
+    } catch {
+      notify(t.deleteFailed, 'error')
+    }
   }
 
   // Delete EVERY currently-flagged unused image in one atomic request (one
@@ -137,7 +167,16 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
         {filtered.slice(0, visible).map((m) => (
-          <figure key={m.url} className="overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+          <figure key={m.url} className="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+            {mode === 'page' && (
+              <input
+                type="checkbox"
+                checked={selected.has(m.url)}
+                onChange={() => toggleSelect(m.url)}
+                aria-label={m.filename}
+                className="absolute left-1.5 top-1.5 z-10 h-4 w-4 accent-neutral-700 dark:accent-neutral-300"
+              />
+            )}
             <button
               type="button"
               // Page mode: click to zoom. Picker mode: click to select.
@@ -147,7 +186,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.thumb ?? m.url} alt={m.filename} className="h-full w-full object-cover" />
               {unused?.has(m.url) && (
-                <span className="absolute left-1.5 top-1.5 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <span className="absolute right-1.5 top-1.5 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
                   {t.unusedBadge}
                 </span>
               )}
@@ -185,7 +224,25 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <div className="space-y-5">
       <ImageUploader onUploaded={(uploaded) => setItems((prev) => [...uploaded, ...prev])} />
       {mode === 'page' && items.length > 0 && (
-        <div className="flex justify-end gap-4">
+        <div className="flex flex-wrap justify-end gap-4">
+          {selected.size > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              >
+                {t.clearSelection}
+              </button>
+              <button
+                type="button"
+                onClick={deleteSelected}
+                className="text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                {t.deleteSelected} ({selected.size})
+              </button>
+            </>
+          )}
           {unused && unused.size > 0 && (
             <>
               <button

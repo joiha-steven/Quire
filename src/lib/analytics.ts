@@ -1,0 +1,98 @@
+// Privacy-light, self-hosted page-view analytics (Postgres `analytics_events`).
+//
+// WHY this design:
+// - No cookies, no localStorage, no third party. A visitor is identified only by
+//   a salted hash of (IP + user-agent), so NO raw IP / PII is ever stored — just
+//   an opaque token used to count uniques. The salt is the server `AUTH_SECRET`,
+//   so the token is stable enough for accurate unique counts but useless outside
+//   this instance.
+// - One row per view. Aggregation (totals / top pages / daily series) is done in
+//   Postgres via the `analytics_summary` RPC (see the migration), so the admin
+//   page is one round-trip regardless of volume.
+// - Bots are dropped by user-agent. Admin/API paths are never tracked.
+// - Retention: the hourly cron deletes rows older than a year (`purgeOldEvents`).
+
+import { createHash } from 'node:crypto'
+import { db } from '@/lib/db'
+
+export type TopPage = { path: string; views: number; visitors: number }
+export type DailyPoint = { day: string; views: number; visitors: number }
+export type AnalyticsSummary = {
+  totalViews: number
+  uniqueVisitors: number
+  topPages: TopPage[]
+  daily: DailyPoint[]
+}
+
+const EMPTY: AnalyticsSummary = { totalViews: 0, uniqueVisitors: 0, topPages: [], daily: [] }
+
+// Common crawlers / preview bots — don't count them as readers.
+const BOT_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|vkshare|whatsapp|telegram|discord|headless|lighthouse|pagespeed|gtmetrix|monitor|uptime|curl|wget|python-requests|axios|node-fetch/i
+
+export function isBot(ua: string): boolean {
+  return !ua || BOT_RE.test(ua)
+}
+
+// Stable per-visitor token: salted hash of IP + UA. The salt never leaves the
+// server, and the raw IP/UA are discarded — only this 16-byte hex is stored.
+function visitorHash(ip: string, ua: string): string {
+  const salt = process.env.AUTH_SECRET ?? 'vibeblog'
+  return createHash('sha256').update(`${salt}|${ip}|${ua}`).digest('hex').slice(0, 32)
+}
+
+// Normalize to a bare, bounded pathname (no query/hash). Returns null for paths
+// we never track (admin, api) so the caller can skip cheaply.
+function normalizePath(raw: string): string | null {
+  let p = (raw || '').split('?')[0].split('#')[0].trim()
+  if (!p.startsWith('/')) return null
+  if (p.startsWith('/admin') || p.startsWith('/api')) return null
+  if (p.length > 1) p = p.replace(/\/+$/, '') // strip trailing slash (keep "/")
+  return p.slice(0, 512) || '/'
+}
+
+// Record one page view. Never throws (analytics must not break a page load).
+export async function recordView(rawPath: string, ip: string, ua: string): Promise<void> {
+  try {
+    if (isBot(ua)) return
+    const path = normalizePath(rawPath)
+    if (!path) return
+    await db().from('analytics_events').insert({ path, visitor: visitorHash(ip, ua) })
+  } catch (error) {
+    console.error(`[ERROR] analytics.recordView: ${(error as Error).message}`)
+  }
+}
+
+// Aggregated stats for the last `days` days. One RPC round-trip; empty on failure.
+export async function getAnalytics(days: number): Promise<AnalyticsSummary> {
+  try {
+    const since = new Date(Date.now() - days * 86_400_000).toISOString()
+    const { data, error } = await db().rpc('analytics_summary', { since, top_n: 10 })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] analytics.getAnalytics: ${error.message}`)
+      return EMPTY
+    }
+    return data as AnalyticsSummary
+  } catch (error) {
+    console.error(`[ERROR] analytics.getAnalytics: ${(error as Error).message}`)
+    return EMPTY
+  }
+}
+
+// Retention: drop events older than `days` (default 1 year). Returns rows removed.
+export async function purgeOldEvents(days = 365): Promise<number> {
+  try {
+    const cutoff = new Date(Date.now() - days * 86_400_000).toISOString()
+    const { count, error } = await db()
+      .from('analytics_events')
+      .delete({ count: 'exact' })
+      .lt('created_at', cutoff)
+    if (error) {
+      console.error(`[ERROR] analytics.purgeOldEvents: ${error.message}`)
+      return 0
+    }
+    return count ?? 0
+  } catch (error) {
+    console.error(`[ERROR] analytics.purgeOldEvents: ${(error as Error).message}`)
+    return 0
+  }
+}

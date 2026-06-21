@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 2026-06-21 (admin + analytics batch)
+- **feat(analytics): self-hosted, cookieless page-view analytics.** New Postgres
+  `analytics_events` table + `analytics_summary` RPC, a fire-and-forget `<Track/>` beacon
+  (`POST /api/track`, runs after the response, never makes a page dynamic), and an
+  **Admin → Analytics** page: total views, unique visitors, a daily bar series, and top
+  pages over 7d / 30d / 1y. Visitors are counted by a salted IP+user-agent hash — no
+  cookies, no PII stored; bots and admin/api paths are dropped. The hourly cron purges
+  events older than a year. `v0.9.18`.
+- **feat(admin): multi-select delete in the library.** Checkboxes + "Delete selected" on
+  both the Images grid and the Files list (atomic batch delete; new `deleteFilesBatch` +
+  `POST /api/files/delete`). `v0.9.18`.
+- **feat(admin): Files tab lists the site icons.** The favicon / app icon uploaded in
+  Settings now appear in a read-only group (tagged "Settings", `getSiteIcons` +
+  `GET /api/files/icons`). An intro under the Library title explains image versions vs
+  files-as-is. `v0.9.18`.
+- **feat(admin): richer System panel.** The Overview system card now shows the live URL,
+  branch, framework + Node runtime, and deep-links to the Vercel dashboard, Blob stores,
+  the Supabase project, and the GitHub commit. `v0.9.18`.
+- **feat(public): search opens in an overlay.** The header search icon opens a modal
+  search-in-place (instant local title/tag + debounced body FTS) instead of navigating to
+  `/search` (which still exists for deep links / no-JS). New `GET /api/search/index` serves
+  the lean index. `v0.9.18`.
+
 ## 2026-06-21 (later)
 - **style(post): match the single-post title to the list card title.** The `/[slug]` post
   heading now uses the same size + weight as the home/list card title (`text-[1.35rem]

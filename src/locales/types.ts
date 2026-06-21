@@ -144,6 +144,12 @@ export type AdminStrings = {
   noMedia: string
   confirmDeleteMedia: string
   deleteNoMatch: string
+  libraryIntro: string
+  deleteSelected: string
+  clearSelection: string
+  confirmDeleteSelected: string
+  iconsGroupTitle: string
+  iconsManaged: string
   copiedUrl: string
   loadMediaFailed: string
   // uploader
@@ -247,6 +253,17 @@ export type AdminStrings = {
   tmEmpty: string
   revisionLoaded: string
   previewLinkCopied: string
+  // analytics (Admin → Analytics)
+  navAnalytics: string
+  analyticsTitle: string
+  analyticsViews: string
+  analyticsVisitors: string
+  analyticsTopPages: string
+  analyticsRange7: string
+  analyticsRange30: string
+  analyticsRange365: string
+  analyticsNoData: string
+  analyticsPrivacyNote: string
   // activity log (Admin → Log) + feature toggle
   navLog: string
   featActivityLog: string
@@ -271,4 +288,8 @@ export type AdminStrings = {
   sysStorage: string
   sysReachable: string
   sysUnreachable: string
+  sysSite: string
+  sysBranch: string
+  sysRuntime: string
+  sysFramework: string
 }

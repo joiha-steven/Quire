@@ -8,12 +8,21 @@ type Taxo = { name: string; count: number }
 
 export type SystemInfo = {
   hosting: string
+  hostingHref?: string
+  site: string
+  siteHref?: string
   env: string
   region: string
+  branch: string
   commit: string
+  commitHref?: string
   database: string
+  databaseHref?: string
   dbReachable: boolean
   storage: string
+  storageHref?: string
+  runtime: string
+  framework: string
 }
 
 // Shared style for the small header pills (version + license) so they stay identical.
@@ -67,14 +76,18 @@ function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty
 
 function SystemCard({ system }: { system: SystemInfo }) {
   const t = useAdminT()
-  const rows: { label: string; value: string; ok?: boolean }[] = [
-    { label: t.sysHosting, value: system.hosting },
-    { label: t.sysRegion, value: system.region },
+  const rows: { label: string; value: string; ok?: boolean; href?: string }[] = [
+    { label: t.sysHosting, value: system.hosting, href: system.hostingHref },
+    { label: t.sysSite, value: system.site, href: system.siteHref },
     { label: t.sysEnv, value: system.env },
-    { label: t.sysCommit, value: system.commit },
-    { label: t.sysDatabase, value: system.database },
+    { label: t.sysRegion, value: system.region },
+    { label: t.sysBranch, value: system.branch },
+    { label: t.sysCommit, value: system.commit, href: system.commitHref },
+    { label: t.sysFramework, value: system.framework },
+    { label: t.sysRuntime, value: system.runtime },
+    { label: t.sysDatabase, value: system.database, href: system.databaseHref },
     { label: t.sysDbStatus, value: system.dbReachable ? t.sysReachable : t.sysUnreachable, ok: system.dbReachable },
-    { label: t.sysStorage, value: system.storage },
+    { label: t.sysStorage, value: system.storage, href: system.storageHref },
   ]
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
@@ -82,13 +95,20 @@ function SystemCard({ system }: { system: SystemInfo }) {
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {rows.map((r) => (
           <div key={r.label} className="flex items-baseline justify-between gap-3 border-b border-neutral-100 py-1 dark:border-neutral-800/60">
-            <dt className="text-sm text-neutral-500 dark:text-neutral-400">{r.label}</dt>
+            <dt className="shrink-0 text-sm text-neutral-500 dark:text-neutral-400">{r.label}</dt>
             <dd
-              className={`text-right text-sm font-medium ${
+              className={`truncate text-right text-sm font-medium ${
                 r.ok === false ? 'text-red-600 dark:text-red-400' : r.ok === true ? 'text-green-600 dark:text-green-400' : 'text-neutral-800 dark:text-neutral-100'
               }`}
+              title={r.value}
             >
-              {r.value}
+              {r.href ? (
+                <a href={r.href} target="_blank" rel="noopener noreferrer" className="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-600 dark:decoration-neutral-600 dark:hover:decoration-neutral-300">
+                  {r.value}
+                </a>
+              ) : (
+                r.value
+              )}
             </dd>
           </div>
         ))}

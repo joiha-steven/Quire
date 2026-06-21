@@ -153,3 +153,48 @@ export async function deleteFile(url: string): Promise<FileItem[]> {
   await deleteByPathname(targetKey).catch(() => {})
   return listFiles()
 }
+
+// Delete MANY library files in one atomic row delete (then best-effort blob
+// cleanup) — the multi-select path. Site icons are skipped (managed in Settings).
+// Returns the authoritative post-delete list.
+export async function deleteFilesBatch(urls: string[]): Promise<FileItem[]> {
+  const keys = [...new Set(urls.map(fileKey).filter((k): k is string => k !== null))]
+    .filter((k) => !ICON_PREFIXES.some((p) => k.startsWith(`files/${p}`)))
+  if (keys.length === 0) return listFiles()
+  await db().from('files').delete().in('url', keys)
+  await Promise.all(keys.map((k) => deleteByPathname(k).catch(() => {})))
+  return listFiles()
+}
+
+// The site icons (favicon, app icon) uploaded in Settings. They live under
+// `files/` on Blob but are NOT `files` rows, so the Files tab lists them
+// separately (read-only, tagged "Settings") via this. Newest first.
+const ICON_EXT: Record<string, string> = {
+  ico: 'image/x-icon', png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml',
+  gif: 'image/gif', webp: 'image/webp',
+}
+export async function getSiteIcons(): Promise<FileItem[]> {
+  try {
+    const blobs = await listBlobs()
+    return blobs
+      .filter((b) => ICON_PREFIXES.some((p) => b.pathname.startsWith(`files/${p}`)))
+      .map((b) => {
+        const name = b.pathname.replace(/^files\//, '')
+        const ext = b.pathname.split('.').pop()?.toLowerCase() ?? ''
+        // Icon names are `<kind>-<Date.now()>.<ext>` (see uploadIcon) — recover the
+        // upload time from that millisecond stamp; fall back to epoch if absent.
+        const ms = Number(name.match(/-(\d{10,})\./)?.[1] ?? 0)
+        return {
+          url: expandBlob(b.pathname),
+          filename: name,
+          size: b.size,
+          contentType: ICON_EXT[ext] ?? 'application/octet-stream',
+          uploadedAt: new Date(ms).toISOString(),
+        }
+      })
+      .sort((a, b) => (a.uploadedAt < b.uploadedAt ? 1 : -1))
+  } catch (error) {
+    console.error(`[ERROR] files.getSiteIcons: ${(error as Error).message}`)
+    return []
+  }
+}
