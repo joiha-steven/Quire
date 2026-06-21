@@ -52,19 +52,26 @@ export function isAllowedFontType(filename: string): boolean {
   return FONT_EXT.has(fontExt(filename))
 }
 
+// Strip common weight/style tokens so the derived family is shared across the
+// weight slots (e.g. "Inter-Bold" / "Inter Regular" → "Inter").
+const WEIGHT_TOKENS = /\b(thin|extralight|ultralight|light|regular|normal|book|text|medium|semibold|demibold|bold|extrabold|ultrabold|black|heavy|italic|oblique|variable|vf)\b/gi
+
 export async function uploadFont(
   filename: string,
+  weight: number,
   body: ArrayBuffer | Buffer,
   contentType: string,
-): Promise<{ url: string; family: string }> {
+): Promise<{ url: string; family: string; weight: number }> {
   const ext = fontExt(filename)
   if (!FONT_EXT.has(ext)) throw new Error(`Unsupported font type: ${ext}`)
-  // CSS family from the base name (letters/digits/space/hyphen), else a stable default.
+  // CSS family from the base name (weight/style words + separators removed).
   const base = filename.slice(0, filename.length - ext.length - 1)
-  const family = base.replace(/[^A-Za-z0-9 _-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 64) || 'Custom Font'
-  const path = `files/font-${Date.now()}.${ext}`
+  const family =
+    base.replace(WEIGHT_TOKENS, ' ').replace(/[^A-Za-z0-9 _-]/g, ' ').replace(/[\s_-]+/g, ' ').trim().slice(0, 64) ||
+    'Custom Font'
+  const path = `files/font-${weight}-${Date.now()}.${ext}`
   const url = await uploadFile(path, body, contentType || 'font/' + (ext === 'ttf' ? 'ttf' : ext))
-  return { url, family }
+  return { url, family, weight }
 }
 
 // ----- General file library ("Files" tab) -------------------------------------

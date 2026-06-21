@@ -146,7 +146,7 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
 
       {tab === 'advanced' && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <Card title={t.cardRhythm}>
+          <Card title={t.cardRendering}>
             <AdvancedFields typography={s.typography} onTypography={(typography) => update({ typography })} />
           </Card>
           <Card title={t.customCss}>

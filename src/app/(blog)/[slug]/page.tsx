@@ -119,7 +119,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         )}
         {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
         <h1 className="fs-h1 font-semibold tracking-tight">{post.title}</h1>
-        <p className="mt-3 text-sm text-meta">
+        <p className="mt-3 t-small text-meta">
           {formatDate(post.date, language)}
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
         </p>
@@ -137,7 +137,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             <div className="mt-12">
               <hr />
             </div>
-            <footer className="mt-6 space-y-1 text-sm text-meta">
+            <footer className="mt-6 space-y-1 t-small text-meta">
               {post.tags.length > 0 && (
                 <p>
                   {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${encodeURIComponent(s)}`)}

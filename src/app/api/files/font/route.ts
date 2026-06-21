@@ -25,7 +25,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       logRequest(req, 415, start)
       return fail('unsupported_type', 415)
     }
-    const result = await uploadFont(file.name, await file.arrayBuffer(), file.type || '')
+    const weightRaw = Number(form.get('weight'))
+    const weight = [400, 500, 600, 700].includes(weightRaw) ? weightRaw : 400
+    const result = await uploadFont(file.name, weight, await file.arrayBuffer(), file.type || '')
     after(() => logActivity('font.upload', result.family))
     logRequest(req, 201, start)
     return ok(result, 201)

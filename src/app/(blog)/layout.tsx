@@ -54,12 +54,12 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           </div>
         </div>
         {settings.showDescription && settings.description && (
-          <p className="mt-3 text-sm text-meta">{settings.description}</p>
+          <p className="mt-3 t-small text-meta">{settings.description}</p>
         )}
       </header>
       <Track />
       <main className="flex-1 py-4">{children}</main>
-      <footer className="py-12 text-center text-sm text-meta">
+      <footer className="py-12 text-center t-small text-meta">
         © {new Date().getFullYear()} {settings.title} ·{' '}
         <a href={REPO_URL} target="_blank" rel="noopener" className="hover:text-text">
           powered by vibeblog

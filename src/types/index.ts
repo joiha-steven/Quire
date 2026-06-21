@@ -88,27 +88,46 @@ export type ThemeSettings = {
   dark: ThemeColors
 }
 
-// Type scale + reading rhythm, applied site-wide via CSS variables
-// (--fs-base, --fs-h1..--fs-h5, --lh-body, --ls-body). One source of truth for
-// every heading + body size; no per-element hardcoded font sizes. Owner-
-// customizable with a reset-to-default.
+// The tunable typographic roles. Every piece of text on the public site maps to
+// exactly one — no per-element hardcoded sizes. Each emits CSS vars
+// (--fs-<role>, --lh-<role>, --ls-<role>).
+export type TypeRole =
+  | 'h1' // page/post titles + body H1 — biggest
+  | 'h2' // list-card titles + body H2
+  | 'h3'
+  | 'h4'
+  | 'h5'
+  | 'body' // normal reading text (article body)
+  | 'small' // secondary UI text: dates, meta, related, ToC, pagination, search
+  | 'caption' // figure captions
+  | 'code' // code blocks + inline code (monospace)
+
+// One role's tuning: size (rem), line-height (unitless), letter-spacing (em).
+export type TypeStyle = {
+  size: number
+  line: number
+  spacing: number
+}
+
+// Full type system: a style per role + the global font-smoothing toggle. One
+// source of truth, injected as CSS vars; owner-customizable with reset-to-default.
 export type TypographySettings = {
-  base: number // normal/body text — the reference size (rem)
-  h1: number // page/post titles + body H1 — biggest (rem)
-  h2: number // list-card titles (rem)
-  h3: number
-  h4: number // slightly larger than body text
-  h5: number // slightly smaller than body text
-  lineHeight: number // reading-body line-height (unitless)
-  letterSpacing: number // body letter-spacing (em; 0 = none)
+  roles: Record<TypeRole, TypeStyle>
   smoothing: boolean // antialiased font-smoothing on body (off = browser default)
 }
 
-// Owner-uploaded custom typeface (stored on Blob under files/). '' on both = the
-// bundled Inter default. `family` is the CSS family name registered via @font-face.
+// One uploaded weight of the custom typeface.
+export type FontFace = {
+  weight: number // 400 | 500 | 600 | 700
+  url: string // Blob URL; store-relative at rest, absolute on read
+}
+
+// Owner-uploaded custom typeface (stored on Blob under files/). All faces share one
+// `family`, registered via @font-face per weight so bold/heading text is crisp (the
+// site disables faux-bold synthesis). Empty family / no faces = bundled Inter.
 export type FontSettings = {
-  url: string // Blob URL of the font file; store-relative at rest, absolute on read
   family: string // CSS font-family name; '' = no custom font
+  faces: FontFace[] // one per uploaded weight (400/500/600/700)
 }
 
 // Search-engine / AI-crawler features, each independently toggleable.

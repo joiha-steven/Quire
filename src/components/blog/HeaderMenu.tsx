@@ -36,7 +36,7 @@ export function HeaderMenu({ items, lang }: { items: MenuItem[]; lang: SiteLang 
   const [open, setOpen] = useState(false)
   if (items.length === 0) return null
 
-  const dropCls = 'block px-3 py-2 text-sm text-text hover:bg-rule'
+  const dropCls = 'block px-3 py-2 t-small text-text hover:bg-rule'
 
   // Hamburger -> dropdown, on every breakpoint.
   return (

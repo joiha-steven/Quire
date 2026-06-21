@@ -4,11 +4,11 @@
 // store-relative; binaries themselves stay on Vercel Blob.
 
 import { cache } from 'react'
-import type { FeatureSettings, FontSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypographySettings } from '@/types'
+import type { FeatureSettings, FontFace, FontSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
 import { collapseBlob, expandBlob } from '@/lib/blob'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES, FONT_WEIGHTS } from '@/lib/themes'
 
 // Re-export so existing importers keep working.
 export { DEFAULT_THEME, themesToCss, getDefaultTheme, DEFAULT_TYPOGRAPHY, DEFAULT_FONT } from '@/lib/themes'
@@ -145,19 +145,45 @@ function clampFloat(value: unknown, min: number, max: number, fallback: number):
   return Math.min(max, Math.max(min, Math.round(value * 100) / 100))
 }
 
-function sanitizeTypography(input: unknown, fallback: TypographySettings): TypographySettings {
-  const o = (input ?? {}) as Partial<TypographySettings>
+// One role's style, clamped. size rem [0.5,6]; line [0.8,3]; spacing em [-0.2,0.5].
+function sanitizeStyle(input: unknown, fallback: TypeStyle): TypeStyle {
+  const o = (input ?? {}) as Partial<TypeStyle>
   return {
-    base: clampFloat(o.base, 0.5, 6, fallback.base),
-    h1: clampFloat(o.h1, 0.5, 6, fallback.h1),
-    h2: clampFloat(o.h2, 0.5, 6, fallback.h2),
-    h3: clampFloat(o.h3, 0.5, 6, fallback.h3),
-    h4: clampFloat(o.h4, 0.5, 6, fallback.h4),
-    h5: clampFloat(o.h5, 0.5, 6, fallback.h5),
-    lineHeight: clampFloat(o.lineHeight, 1, 3, fallback.lineHeight),
-    letterSpacing: clampFloat(o.letterSpacing, -0.1, 0.5, fallback.letterSpacing),
-    smoothing: bool(o.smoothing, fallback.smoothing),
+    size: clampFloat(o.size, 0.5, 6, fallback.size),
+    line: clampFloat(o.line, 0.8, 3, fallback.line),
+    spacing: clampFloat(o.spacing, -0.2, 0.5, fallback.spacing),
   }
+}
+
+// Back-compat: the first typography shape was flat ({ base, h1..h5, lineHeight,
+// letterSpacing }). Lift any such values into the role map so an early save survives.
+function migrateTypography(o: Record<string, unknown>, base: TypographySettings): TypographySettings {
+  if (o.roles || typeof o.base !== 'number') return base
+  const num = (v: unknown, f: number) => (typeof v === 'number' && Number.isFinite(v) ? v : f)
+  const line = num(o.lineHeight, base.roles.body.line)
+  const sp = num(o.letterSpacing, base.roles.body.spacing)
+  const r = base.roles
+  return {
+    roles: {
+      ...r,
+      body: { size: num(o.base, r.body.size), line, spacing: sp },
+      h1: { ...r.h1, size: num(o.h1, r.h1.size) },
+      h2: { ...r.h2, size: num(o.h2, r.h2.size) },
+      h3: { ...r.h3, size: num(o.h3, r.h3.size) },
+      h4: { ...r.h4, size: num(o.h4, r.h4.size) },
+      h5: { ...r.h5, size: num(o.h5, r.h5.size) },
+    },
+    smoothing: bool(o.smoothing, base.smoothing),
+  }
+}
+
+function sanitizeTypography(input: unknown, fallback: TypographySettings): TypographySettings {
+  const o = (input ?? {}) as Record<string, unknown>
+  const base = migrateTypography(o, fallback)
+  const inRoles = (o.roles ?? {}) as Record<string, unknown>
+  const roles = {} as TypographySettings['roles']
+  for (const role of TYPE_ROLES) roles[role] = sanitizeStyle(inRoles[role], base.roles[role])
+  return { roles, smoothing: bool(o.smoothing, base.smoothing) }
 }
 
 // Family name -> safe CSS identifier (owner-only, but never trust raw into a
@@ -166,12 +192,31 @@ function sanitizeFamily(value: unknown): string {
   return typeof value === 'string' ? value.replace(/[^A-Za-z0-9 _-]/g, '').trim().slice(0, 64) : ''
 }
 
+// One uploaded weight: a known weight + a non-empty url. Maps the legacy single
+// `url` (no weight) to the 400 slot.
+function sanitizeFaces(input: unknown, legacyUrl: unknown): FontFace[] {
+  const raw = Array.isArray(input)
+    ? input
+    : typeof legacyUrl === 'string' && legacyUrl.trim()
+      ? [{ weight: 400, url: legacyUrl }]
+      : []
+  const byWeight = new Map<number, string>()
+  for (const f of raw) {
+    const o = (f ?? {}) as Partial<FontFace>
+    const w = typeof o.weight === 'number' ? o.weight : NaN
+    if (FONT_WEIGHTS.includes(w as (typeof FONT_WEIGHTS)[number]) && typeof o.url === 'string' && o.url.trim()) {
+      byWeight.set(w, o.url.trim())
+    }
+  }
+  return FONT_WEIGHTS.filter((w) => byWeight.has(w)).map((w) => ({ weight: w, url: byWeight.get(w)! }))
+}
+
 function sanitizeFont(input: unknown, fallback: FontSettings): FontSettings {
-  const o = (input ?? {}) as Partial<FontSettings>
+  const o = (input ?? {}) as Record<string, unknown>
   const family = o.family !== undefined ? sanitizeFamily(o.family) : fallback.family
-  const url = typeof o.url === 'string' ? o.url.trim() : fallback.url
-  // Both must be present to register a font; otherwise fall back to "no font".
-  return family && url ? { url, family } : DEFAULT_FONT
+  const faces = sanitizeFaces(o.faces, o.url)
+  // Need a family AND at least one face; otherwise "no custom font".
+  return family && faces.length ? { family, faces } : DEFAULT_FONT
 }
 
 // font URL -> @font-face `format(...)` hint, by extension. Unknown -> omit it.
@@ -180,27 +225,30 @@ function fontFormat(url: string): string {
   return ext === 'woff2' ? 'woff2' : ext === 'woff' ? 'woff' : ext === 'ttf' ? 'truetype' : ext === 'otf' ? 'opentype' : ''
 }
 
-// Emit the type-scale + rhythm CSS variables on :root (plus the optional
-// font-smoothing rule). Injected after globals.css (whose :root carries the same
-// defaults), so a saved scale wins while a fresh install still renders correctly.
+// Emit the per-role type CSS variables on :root (plus the optional font-smoothing
+// rule). Injected after globals.css (whose :root carries the same defaults), so a
+// saved scale wins while a fresh install still renders correctly with no row.
 export function typographyToCss(t: TypographySettings): string {
-  const vars =
-    `:root{--fs-base:${t.base}rem;--fs-h1:${t.h1}rem;--fs-h2:${t.h2}rem;--fs-h3:${t.h3}rem;` +
-    `--fs-h4:${t.h4}rem;--fs-h5:${t.h5}rem;--lh-body:${t.lineHeight};--ls-body:${t.letterSpacing}em}`
+  const vars = TYPE_ROLES.map((r) => {
+    const s = t.roles[r]
+    return `--fs-${r}:${s.size}rem;--lh-${r}:${s.line};--ls-${r}:${s.spacing}em`
+  }).join(';')
   const smooth = t.smoothing ? `body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}` : ''
-  return vars + smooth
+  return `:root{${vars}}${smooth}`
 }
 
-// Emit the @font-face for an owner-uploaded typeface and point --font-sans at it
-// (Inter stays the fallback). Empty when no font is set.
+// Emit one @font-face per uploaded weight for the owner typeface and point
+// --font-sans at it (Inter stays the fallback). Empty when no font is set.
 export function fontToCss(f: FontSettings): string {
-  if (!f.url || !f.family) return ''
-  const fmt = fontFormat(f.url)
-  const src = `url('${f.url}')${fmt ? ` format('${fmt}')` : ''}`
-  return (
-    `@font-face{font-family:'${f.family}';src:${src};font-display:swap}` +
-    `:root{--font-sans:'${f.family}', var(--font-inter)}`
-  )
+  if (!f.family || f.faces.length === 0) return ''
+  const faces = f.faces
+    .map((face) => {
+      const fmt = fontFormat(face.url)
+      const src = `url('${face.url}')${fmt ? ` format('${fmt}')` : ''}`
+      return `@font-face{font-family:'${f.family}';font-weight:${face.weight};font-style:normal;src:${src};font-display:swap}`
+    })
+    .join('')
+  return faces + `:root{--font-sans:'${f.family}', var(--font-inter)}`
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -274,7 +322,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
       customFont: (() => {
         const f = sanitizeFont(stored.customFont, DEFAULT_FONT)
-        return f.url ? { ...f, url: expandBlob(f.url) } : f
+        return { ...f, faces: f.faces.map((x) => ({ ...x, url: expandBlob(x.url) })) }
       })(),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
@@ -318,7 +366,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoUrl: collapseBlob(next.logoUrl),
     faviconUrl: collapseBlob(next.faviconUrl),
     appIconUrl: collapseBlob(next.appIconUrl),
-    customFont: next.customFont.url ? { ...next.customFont, url: collapseBlob(next.customFont.url) } : next.customFont,
+    customFont: { ...next.customFont, faces: next.customFont.faces.map((x) => ({ ...x, url: collapseBlob(x.url) })) },
     seo: { ...next.seo, ogFallbackImage: collapseBlob(next.seo.ogFallbackImage) },
   }
   await db().from('settings').upsert({ id: 1, data: stored })

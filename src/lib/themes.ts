@@ -9,7 +9,7 @@
 // Every palette is tuned so both modes stay readable: comfortable body contrast,
 // a distinct accent link, and a rule/surface that reads as a faint tint.
 
-import type { ThemeColors, ThemeSettings, TypographySettings, FontSettings } from '@/types'
+import type { ThemeColors, ThemeSettings, TypographySettings, TypeRole, FontSettings } from '@/types'
 
 export type ThemePreset = {
   id: string
@@ -17,28 +17,35 @@ export type ThemePreset = {
   theme: ThemeSettings
 }
 
-// Default type scale + reading rhythm. Lives here (a client-safe module) so the
-// settings UI can import it for its reset buttons without pulling in the server-
-// only data layer. Reference body = 1.125rem. Heading spec:
-//   h2 = old 1.45 × 1.20 → 1.74  (20% larger than before)
-//   h1 = h2 × 1.30       → 2.26  (~30% larger than h2)
-//   h3 = h2 / 1.20       → 1.45  (h2 is 20% larger than h3)
-//   h4 = 1.125 × 1.10    → 1.24  (10% larger than normal text)
-//   h5 = 1.125 × 0.80    → 0.90  (20% smaller than normal text)
+// Render order for the role editor + CSS emit. Each role is fully tunable
+// (size/line/spacing). Lives here (client-safe) so the settings UI imports it.
+export const TYPE_ROLES: TypeRole[] = ['h1', 'h2', 'h3', 'h4', 'h5', 'body', 'small', 'caption', 'code']
+
+// Custom-font weight slots (one upload each; all share the family).
+export const FONT_WEIGHTS = [400, 500, 600, 700] as const
+
+// Default type system. Lives here (a client-safe module) so the settings UI can
+// import it for its reset buttons without pulling in the server-only data layer.
+// Tuned to read well out of the box — reset returns to exactly this. Reference
+// body = 1.125rem (18px). Heading sizes: h2 = old 1.45 × 1.20 = 1.74; h1 = h2 ×
+// 1.30 = 2.26; h3 = h2 / 1.20 = 1.45; h4 = body × 1.10 = 1.24; h5 = body × 0.80.
 export const DEFAULT_TYPOGRAPHY: TypographySettings = {
-  base: 1.125,
-  h1: 2.26,
-  h2: 1.74,
-  h3: 1.45,
-  h4: 1.24,
-  h5: 0.9,
-  lineHeight: 1.75,
-  letterSpacing: 0,
+  roles: {
+    h1: { size: 2.26, line: 1.15, spacing: -0.021 },
+    h2: { size: 1.74, line: 1.25, spacing: -0.018 },
+    h3: { size: 1.45, line: 1.3, spacing: -0.014 },
+    h4: { size: 1.24, line: 1.4, spacing: -0.01 },
+    h5: { size: 0.9, line: 1.5, spacing: 0 },
+    body: { size: 1.125, line: 1.75, spacing: 0 },
+    small: { size: 0.875, line: 1.5, spacing: 0 },
+    caption: { size: 0.85, line: 1.45, spacing: 0.005 },
+    code: { size: 0.875, line: 1.6, spacing: 0 },
+  },
   smoothing: false,
 }
 
 // Default typeface: none uploaded → the bundled Inter.
-export const DEFAULT_FONT: FontSettings = { url: '', family: '' }
+export const DEFAULT_FONT: FontSettings = { family: '', faces: [] }
 
 // Neutral, almost-hueless grayscale — the vibeblog house style.
 const MONO: ThemeSettings = {

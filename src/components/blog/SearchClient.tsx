@@ -91,7 +91,7 @@ export function SearchClient({ docs, lang, initialQuery }: { docs: SearchDoc[]; 
               <Link href={`/${d.slug}`} className="font-medium tracking-tight hover:text-heading">
                 {d.title}
               </Link>
-              <p className="mt-0.5 text-sm text-meta">{formatDate(d.date, lang)}</p>
+              <p className="mt-0.5 t-small text-meta">{formatDate(d.date, lang)}</p>
             </li>
           ))}
         </ul>
