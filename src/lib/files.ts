@@ -112,20 +112,26 @@ export async function addFilesBatch(
   return items
 }
 
-// Delete a file: its blob + manifest entry. Refuses to touch the site icons,
+// Extract the store-relative `files/...` pathname from any URL form (absolute on
+// any host, or already collapsed) — host-independent matching, same rationale as
+// media's mediaKey.
+function fileKey(s: string): string | null {
+  return s.match(/files\/[^?#"')\s]+/)?.[0] ?? null
+}
+
+// Delete a file: its manifest entry + blob. Refuses to touch the site icons,
 // which are not manifest entries (defence in depth — they never reach here).
-// Returns the AUTHORITATIVE new list (from the in-memory manifest just written,
-// no Blob re-read) so the client adopts true post-delete state.
+// Manifest write first, then blob cleanup. Returns the AUTHORITATIVE new list
+// from the in-memory manifest (no Blob re-read).
 export async function deleteFile(url: string): Promise<FileItem[]> {
-  await getSettings() // prime the vanity media base so collapseBlob strips a custom host
   const current = await readJson<FileItem[]>(FILES_INDEX, [])
-  const target = collapseBlob(url)
-  if (!target.startsWith('files/') || ICON_PREFIXES.some((p) => target.startsWith(`files/${p}`))) {
+  const targetKey = fileKey(url)
+  if (!targetKey || ICON_PREFIXES.some((p) => targetKey.startsWith(`files/${p}`))) {
     return toClientFiles(current)
   }
-  const remaining = current.filter((f) => collapseBlob(f.url) !== target)
+  const remaining = current.filter((f) => fileKey(f.url) !== targetKey)
   if (remaining.length === current.length) return toClientFiles(current) // no match: don't rewrite
-  await deleteByPathname(target).catch(() => {})
   await writeJson(FILES_INDEX, remaining)
+  await deleteByPathname(targetKey).catch(() => {})
   return toClientFiles(remaining)
 }

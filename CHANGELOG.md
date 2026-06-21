@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **fix(media): delete now matches host-independently + writes manifest first.** Root-caused the
+  "deleted image stays / re-appears in unused check" once more: the match relied on
+  `collapseBlob` stripping the URL host, which silently found nothing if the primed host didn't
+  equal the URL's host — so the manifest was never rewritten. Now `deleteMedia`/`deleteFile`
+  match by the extracted `media/…` / `files/…` **pathname** (works for any host or a collapsed
+  path, no `getSettings` priming needed), and write the reduced manifest **before** the blob-file
+  cleanup so the removal sticks even if the (slower) file deletes stall. Dropped the per-delete
+  settings read too (faster). `v0.9.8`.
 - **style(theme): nicer public palette trigger icon** — replaced the swatch-grid glyph with
   three overlapping color circles (cleaner, clearly "color theme"). `v0.9.7`.
 - **fix(media)/perf(admin): authoritative-from-write deletes (approach A).** The image/file
