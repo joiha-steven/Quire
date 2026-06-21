@@ -14,6 +14,7 @@ import { formatTime } from '@/lib/utils'
 import { useAdminT } from './I18nProvider'
 import { SiteFields } from './SiteFields'
 import { ThemeFields } from './ThemeFields'
+import { TypographyFields } from './TypographyFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FeatureFields } from './FeatureFields'
 import { SeoFields } from './SeoFields'
@@ -80,6 +81,9 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
               relatedCount={s.relatedCount}
               onRelatedCount={(relatedCount) => update({ relatedCount })}
             />
+          </Card>
+          <Card title={t.cardTypography}>
+            <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
           </Card>
         </div>
 

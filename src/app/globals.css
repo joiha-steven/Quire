@@ -32,6 +32,15 @@
   --c-meta: #8a8a90;
   --c-link: #14141a;
   --c-rule: #e9e9e4;
+  /* Heading type scale (font-size, rem). One source of truth for every heading +
+     title — no per-element hardcoded sizes. These DEFAULTS match DEFAULT_TYPOGRAPHY
+     in lib/settings.ts; the owner's saved scale is injected after this file (a
+     :root override via typographyToCss) and wins. Reference body = 1.125rem. */
+  --fs-h1: 2.26rem;
+  --fs-h2: 1.74rem;
+  --fs-h3: 1.45rem;
+  --fs-h4: 1.24rem;
+  --fs-h5: 0.9rem;
 }
 :where(.dark) {
   --c-bg: #0e0e0f;
@@ -83,6 +92,16 @@ h1, h2, h3 {
   letter-spacing: -0.018em;
 }
 
+/* Heading-scale utilities — apply a level to titles OUTSIDE .prose (post/page/
+   list titles, list-page headings) so every title uses the H1..H5 scale instead
+   of a hardcoded font-size. Size + a fitting line-height only; callers add their
+   own weight/tracking/colour. */
+.fs-h1 { font-size: var(--fs-h1); line-height: 1.15; }
+.fs-h2 { font-size: var(--fs-h2); line-height: 1.25; }
+.fs-h3 { font-size: var(--fs-h3); line-height: 1.3; }
+.fs-h4 { font-size: var(--fs-h4); line-height: 1.4; }
+.fs-h5 { font-size: var(--fs-h5); line-height: 1.5; }
+
 /* One divider style for the whole site: faint, 50% wide, left-aligned. */
 hr {
   border: none;
@@ -106,15 +125,18 @@ hr {
 .prose > * + * {
   margin-top: 1.4em;
 }
+/* Body headings share the site type scale (--fs-h1..--fs-h5). Sizes are NOT
+   hardcoded here — they follow the owner's setting; only weight/rhythm/anchors
+   live in CSS. */
 .prose h1 {
-  font-size: 1.95rem;
+  font-size: var(--fs-h1);
   font-weight: 600;
   line-height: 1.22;
   letter-spacing: -0.02em;
   margin-top: 1.9em;
 }
 .prose h2 {
-  font-size: 1.45rem;
+  font-size: var(--fs-h2);
   font-weight: 600;
   line-height: 1.28;
   letter-spacing: -0.018em;
@@ -123,12 +145,27 @@ hr {
   scroll-margin-top: 2rem; /* anchor offset clear of the progress bar */
 }
 .prose h3 {
-  font-size: 1.2rem;
+  font-size: var(--fs-h3);
   font-weight: 600;
   line-height: 1.32;
   letter-spacing: -0.014em;
   margin-top: 1.6em;
   scroll-margin-top: 2rem;
+}
+.prose h4 {
+  font-size: var(--fs-h4);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin-top: 1.5em;
+  color: var(--c-heading);
+}
+.prose h5 {
+  font-size: var(--fs-h5);
+  font-weight: 600;
+  line-height: 1.5;
+  margin-top: 1.4em;
+  color: var(--c-heading);
 }
 .prose p {
   margin-top: 1.4em;

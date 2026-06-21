@@ -9,12 +9,28 @@
 // Every palette is tuned so both modes stay readable: comfortable body contrast,
 // a distinct accent link, and a rule/surface that reads as a faint tint.
 
-import type { ThemeColors, ThemeSettings } from '@/types'
+import type { ThemeColors, ThemeSettings, TypographySettings } from '@/types'
 
 export type ThemePreset = {
   id: string
   name: string
   theme: ThemeSettings
+}
+
+// Default heading scale (font-size, rem). Lives here (a client-safe module) so the
+// settings UI can import it for its reset button without pulling in the server-only
+// data layer. Reference body ("normal text") = 1.125rem (.prose). Owner's spec:
+//   h2 = old 1.45 × 1.20 → 1.74  (20% larger than before)
+//   h1 = h2 × 1.30       → 2.26  (~30% larger than h2)
+//   h3 = h2 / 1.20       → 1.45  (h2 is 20% larger than h3)
+//   h4 = 1.125 × 1.10    → 1.24  (10% larger than normal text)
+//   h5 = 1.125 × 0.80    → 0.90  (20% smaller than normal text)
+export const DEFAULT_TYPOGRAPHY: TypographySettings = {
+  h1: 2.26,
+  h2: 1.74,
+  h3: 1.45,
+  h4: 1.24,
+  h5: 0.9,
 }
 
 // Neutral, almost-hueless grayscale — the vibeblog house style.

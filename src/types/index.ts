@@ -88,6 +88,17 @@ export type ThemeSettings = {
   dark: ThemeColors
 }
 
+// Heading type scale (font-size in rem), applied site-wide via CSS variables
+// (--fs-h1..--fs-h5). One source of truth for every heading + title; no
+// per-element hardcoded font sizes. Owner-customizable with a reset-to-default.
+export type TypographySettings = {
+  h1: number // page/post/list titles + body H1 — biggest
+  h2: number
+  h3: number
+  h4: number // slightly larger than body text
+  h5: number // slightly smaller than body text
+}
+
 // Search-engine / AI-crawler features, each independently toggleable.
 export type SeoSettings = {
   autoSchema: boolean // inject JSON-LD structured data (WebSite + Article)
@@ -129,6 +140,7 @@ export type SiteSettings = {
   menu: MenuItem[] // header navigation links
   themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
+  typography: TypographySettings // heading sizes (rem) → CSS vars --fs-h1..--fs-h5
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
 }

@@ -4,14 +4,14 @@
 // store-relative; binaries themselves stay on Vercel Blob.
 
 import { cache } from 'react'
-import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
+import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypographySettings } from '@/types'
 import { collapseBlob, expandBlob } from '@/lib/blob'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_TYPOGRAPHY } from '@/lib/themes'
 
 // Re-export so existing importers keep working.
-export { DEFAULT_THEME, themesToCss, getDefaultTheme } from '@/lib/themes'
+export { DEFAULT_THEME, themesToCss, getDefaultTheme, DEFAULT_TYPOGRAPHY } from '@/lib/themes'
 
 // Keep only well-formed menu items (label + href both present).
 function sanitizeMenu(input: unknown, fallback: MenuItem[]): MenuItem[] {
@@ -139,6 +139,30 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   activityLog: true,
 }
 
+// Clamp one heading size (rem), keeping up to 2 decimals; fall back when invalid.
+function clampRem(value: unknown, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(6, Math.max(0.5, Math.round(value * 100) / 100))
+}
+
+function sanitizeTypography(input: unknown, fallback: TypographySettings): TypographySettings {
+  const o = (input ?? {}) as Partial<TypographySettings>
+  return {
+    h1: clampRem(o.h1, fallback.h1),
+    h2: clampRem(o.h2, fallback.h2),
+    h3: clampRem(o.h3, fallback.h3),
+    h4: clampRem(o.h4, fallback.h4),
+    h5: clampRem(o.h5, fallback.h5),
+  }
+}
+
+// Emit the heading-scale CSS variables on :root. Injected after globals.css (whose
+// :root carries the same defaults), so a saved scale wins while a fresh install
+// still renders correctly with no settings row.
+export function typographyToCss(t: TypographySettings): string {
+  return `:root{--fs-h1:${t.h1}rem;--fs-h2:${t.h2}rem;--fs-h3:${t.h3}rem;--fs-h4:${t.h4}rem;--fs-h5:${t.h5}rem}`
+}
+
 export const DEFAULT_SETTINGS: SiteSettings = {
   language: 'en',
   title: 'vibeblog',
@@ -158,6 +182,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   menu: [],
   themePreset: DEFAULT_PRESET_ID,
   themes: defaultThemes(),
+  typography: DEFAULT_TYPOGRAPHY,
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
 }
@@ -205,6 +230,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       customCss: sanitizeCss(stored.customCss),
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
       themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
+      typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
     }
@@ -236,6 +262,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     menu: sanitizeMenu(input.menu, current.menu),
     themePreset: isPresetId(input.themePreset) ? input.themePreset : current.themePreset,
     themes: sanitizeThemes(input.themes, current.themes),
+    typography: sanitizeTypography(input.typography, current.typography),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
   }
