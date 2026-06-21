@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/Toast'
 import { RowActions, StatusPill } from './RowActions'
 import { useAdminT } from './I18nProvider'
 
-export function PagesTable({ initialPages }: { initialPages: Page[] }) {
+export function PagesTable({ initialPages, views }: { initialPages: Page[]; views: Record<string, number> }) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -40,6 +40,7 @@ export function PagesTable({ initialPages }: { initialPages: Page[] }) {
           <tr>
             <th className="px-4 py-3 font-medium">{t.colTitle}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
+            <th className="hidden px-4 py-3 font-medium text-right sm:table-cell">{t.colViews}</th>
             <th className="hidden px-4 py-3 font-medium sm:table-cell">{t.slug}</th>
             <th className="px-4 py-3" />
           </tr>
@@ -55,6 +56,7 @@ export function PagesTable({ initialPages }: { initialPages: Page[] }) {
               <td className="px-4 py-3">
                 <StatusPill published={p.status === 'published'} label={p.status === 'published' ? t.statusPublished : t.statusDraft} />
               </td>
+              <td className="hidden px-4 py-3 text-right tabular-nums text-neutral-500 sm:table-cell dark:text-neutral-400">{(views[`/${p.slug}`] ?? 0).toLocaleString()}</td>
               <td className="hidden px-4 py-3 text-neutral-500 sm:table-cell dark:text-neutral-400">/{p.slug}</td>
               <td className="px-4 py-3">
                 <RowActions

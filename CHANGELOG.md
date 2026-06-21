@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-21 (analytics follow-up)
+- **feat(analytics): scroll-depth / average read %.** A `<ScrollDepth/>` beacon on posts sends
+  the max % of the page reached on leave (`analytics_scroll` table); the dashboard shows an
+  overall "avg. read depth" and a per-page % in Top pages. `v0.9.19`.
+- **feat(analytics): 24-hour range (hourly buckets).** New 24h option before 7d; the chart
+  buckets by hour for it (day otherwise), via a `bucket` arg on `analytics_summary`. `v0.9.19`.
+- **feat(admin): View column on the content tables.** Posts and Pages now show all-time total
+  views per item (`analytics_totals` RPC → `getViewTotals`). `v0.9.19`.
+- **change(analytics): keep events forever.** Dropped the 1-year cron purge — the full history
+  is retained. `v0.9.19`.
+- **change(admin): Analytics moved next to the home tab** in the admin nav. `v0.9.19`.
+
 ## 2026-06-21 (admin + analytics batch)
 - **feat(analytics): self-hosted, cookieless page-view analytics.** New Postgres
   `analytics_events` table + `analytics_summary` RPC, a fire-and-forget `<Track/>` beacon

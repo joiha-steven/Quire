@@ -8,7 +8,6 @@
 import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { finalizePendingVariants, finalizePendingThumbs } from '@/lib/media'
-import { purgeOldEvents } from '@/lib/analytics'
 import { ok, fail, logRequest, logError } from '@/lib/api'
 
 // Variant encoding can take a while if a batch is pending.
@@ -27,10 +26,8 @@ export async function GET(req: NextRequest): Promise<Response> {
     await db().from('settings').select('id').limit(1)
     const finalized = await finalizePendingVariants()
     const thumbs = await finalizePendingThumbs()
-    // Analytics retention: drop page-view events older than a year.
-    const purged = await purgeOldEvents(365)
     logRequest(req, 200, start)
-    return ok({ alive: true, finalized, thumbs, purged })
+    return ok({ alive: true, finalized, thumbs })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)
