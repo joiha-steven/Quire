@@ -2,33 +2,10 @@
 
 // Drag-drop + click upload zone with a progress bar. Multi-file.
 import { useRef, useState } from 'react'
-import type { MediaItem, ApiResponse } from '@/types'
+import type { MediaItem } from '@/types'
 import { useToast } from '@/components/ui/Toast'
+import { uploadImages } from '@/lib/upload-client'
 import { useAdminT } from './I18nProvider'
-
-// Upload via XHR so we can report progress.
-function uploadFiles(files: File[], onProgress: (pct: number) => void): Promise<MediaItem[]> {
-  return new Promise((resolve, reject) => {
-    const form = new FormData()
-    files.forEach((f) => form.append('file', f))
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/media/upload')
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
-    }
-    xhr.onload = () => {
-      try {
-        const json = JSON.parse(xhr.responseText) as ApiResponse<MediaItem[]>
-        if (json.success && json.data) resolve(json.data)
-        else reject(new Error(json.error ?? 'Upload failed'))
-      } catch (err) {
-        reject(err as Error)
-      }
-    }
-    xhr.onerror = () => reject(new Error('Network error'))
-    xhr.send(form)
-  })
-}
 
 export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[]) => void }) {
   const t = useAdminT()
@@ -42,7 +19,7 @@ export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[])
     if (images.length === 0) return
     setProgress(0)
     try {
-      const items = await uploadFiles(images, setProgress)
+      const items = await uploadImages(images, setProgress)
       onUploaded(items)
       notify(t.uploaded)
     } catch (err) {

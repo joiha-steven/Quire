@@ -133,6 +133,28 @@ export async function addFilesBatch(
   return rows.map(rowToItem)
 }
 
+// Register files the BROWSER already uploaded straight to Blob (client direct
+// upload — bypasses the serverless 4.5MB request-body limit, so large files no
+// longer fail). The binary is already on the store at `url`; we just insert the
+// metadata row. Returns the inserted items.
+export async function registerFilesBatch(
+  items: { url: string; filename: string; size: number; contentType: string }[],
+): Promise<FileItem[]> {
+  const rows: FileRow[] = items
+    .map((i) => ({
+      url: collapseBlob(i.url),
+      filename: i.filename,
+      size: i.size,
+      content_type: i.contentType || 'application/octet-stream',
+      uploaded_at: new Date().toISOString(),
+    }))
+    .filter((r) => /^files\//.test(r.url) && !ICON_PREFIXES.some((p) => r.url.startsWith(`files/${p}`)))
+  if (rows.length === 0) return []
+  const { error } = await db().from('files').insert(rows)
+  if (error) throw new Error(`registerFilesBatch: ${error.message}`)
+  return rows.map(rowToItem)
+}
+
 // Extract the store-relative `files/...` pathname from any URL form (absolute on
 // any host, or already collapsed) — host-independent matching.
 function fileKey(s: string): string | null {

@@ -3,33 +3,10 @@
 // Drag-drop + click upload zone for the Files tab. Accepts ANY file type
 // (it is the catch-all attachment store), multi-file, with a progress bar.
 import { useRef, useState } from 'react'
-import type { FileItem, ApiResponse } from '@/types'
+import type { FileItem } from '@/types'
 import { useToast } from '@/components/ui/Toast'
+import { uploadAttachments } from '@/lib/upload-client'
 import { useAdminT } from './I18nProvider'
-
-// Upload via XHR so we can report progress.
-function uploadFiles(files: File[], onProgress: (pct: number) => void): Promise<FileItem[]> {
-  return new Promise((resolve, reject) => {
-    const form = new FormData()
-    files.forEach((f) => form.append('file', f))
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/files')
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
-    }
-    xhr.onload = () => {
-      try {
-        const json = JSON.parse(xhr.responseText) as ApiResponse<FileItem[]>
-        if (json.success && json.data) resolve(json.data)
-        else reject(new Error(json.error ?? 'Upload failed'))
-      } catch (err) {
-        reject(err as Error)
-      }
-    }
-    xhr.onerror = () => reject(new Error('Network error'))
-    xhr.send(form)
-  })
-}
 
 export function FileUploader({ onUploaded }: { onUploaded: (items: FileItem[]) => void }) {
   const t = useAdminT()
@@ -42,7 +19,7 @@ export function FileUploader({ onUploaded }: { onUploaded: (items: FileItem[]) =
     if (files.length === 0) return
     setProgress(0)
     try {
-      const items = await uploadFiles(files, setProgress)
+      const items = await uploadAttachments(files, setProgress)
       onUploaded(items)
       notify(t.uploaded)
     } catch {

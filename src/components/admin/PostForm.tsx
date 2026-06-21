@@ -4,10 +4,11 @@
 // Handles auto-save, manual save (draft/publish) and the media picker modal.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { PostWithContent, PostRevision, MediaItem, ApiResponse } from '@/types'
+import type { PostWithContent, PostRevision, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { slugify, formatTime } from '@/lib/utils'
+import { uploadImages } from '@/lib/upload-client'
 import { Editor, type EditorApi } from './Editor'
 import { PostSettings, type Draft } from './PostSettings'
 import { MediaLibrary } from './MediaLibrary'
@@ -216,13 +217,9 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   }
 
   async function uploadInline(file: File): Promise<string | null> {
-    const form = new FormData()
-    form.append('file', file)
     try {
-      const res = await fetch('/api/media/upload', { method: 'POST', body: form })
-      const json = (await res.json()) as ApiResponse<MediaItem[]>
-      if (!json.success || !json.data?.[0]) throw new Error(json.error)
-      return json.data[0].url
+      const [item] = await uploadImages([file])
+      return item?.url ?? null
     } catch {
       notify(t.imageUploadFailed, 'error')
       return null
