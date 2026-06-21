@@ -38,15 +38,15 @@
      owner's saved values are injected after this file (a :root override via
      typographyToCss) and win. Roles: h1-h5, body, small (meta/dates/UI),
      caption (figures), code (mono). */
-  --fs-h1: 2.26rem;  --lh-h1: 1.15;  --ls-h1: -0.021em;
-  --fs-h2: 1.74rem;  --lh-h2: 1.25;  --ls-h2: -0.018em;
-  --fs-h3: 1.45rem;  --lh-h3: 1.3;   --ls-h3: -0.014em;
-  --fs-h4: 1.24rem;  --lh-h4: 1.4;   --ls-h4: -0.01em;
+  --fs-h1: 1.95rem;  --lh-h1: 1.2;   --ls-h1: -0.02em;
+  --fs-h2: 1.4rem;   --lh-h2: 1.28;  --ls-h2: -0.015em;
+  --fs-h3: 1.2rem;   --lh-h3: 1.35;  --ls-h3: -0.011em;
+  --fs-h4: 1.15rem;  --lh-h4: 1.45;  --ls-h4: -0.006em;
   --fs-h5: 0.9rem;   --lh-h5: 1.5;   --ls-h5: 0em;
   --fs-body: 1.125rem; --lh-body: 1.75; --ls-body: 0em;
-  --fs-small: 0.875rem; --lh-small: 1.5; --ls-small: 0em;
-  --fs-caption: 0.85rem; --lh-caption: 1.45; --ls-caption: 0.005em;
-  --fs-code: 0.875rem; --lh-code: 1.6; --ls-code: 0em;
+  --fs-small: 0.875rem; --lh-small: 1.55; --ls-small: 0em;
+  --fs-caption: 0.8125rem; --lh-caption: 1.5; --ls-caption: 0.003em;
+  --fs-code: 0.875rem; --lh-code: 1.65; --ls-code: 0em;
 }
 :where(.dark) {
   --c-bg: #0e0e0f;
@@ -277,7 +277,9 @@ hr {
   background-color: var(--shiki-dark-bg) !important;
 }
 .prose code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* One typeface site-wide: code reuses the site font (no separate monospace
+     family), only a touch smaller. Owner rule: a single font for everything. */
+  font-family: inherit;
   font-size: var(--fs-code);
 }
 .prose :not(pre) > code {

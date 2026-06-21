@@ -58,6 +58,19 @@
 - [ ] One `<hr>` divider style (global 50% left rule); no bespoke `border-t` dividers; no `uppercase`
 - [ ] Palette switch + light/dark/system/by-time both apply instantly with no FOUC on reload
 
+## Typography (per-role system)
+- [ ] No hardcoded font sizes on the PUBLIC site: `grep -rE "text-\[|text-(xs|sm|base|lg|xl|[2-6]xl)\b"
+  src/components/blog 'src/app/(blog)'` returns only the brand wordmark (`text-lg`) + 404 numeral
+  (`text-6xl`); everything else uses `.fs-h*` / `.t-small` / `.prose` role vars
+- [ ] `globals.css :root` `--fs-*/--lh-*/--ls-*` defaults EXACTLY mirror `DEFAULT_TYPOGRAPHY`
+  in `lib/themes.ts` (fresh install must match a saved-default site)
+- [ ] Settings → Appearance → text sizes: editing a role updates the public site after save +
+  reload; "reset to default" returns to the tuned scale
+- [ ] List-card titles (H2) read as headings, not banners; single-post/page/category titles (H1) step up
+- [ ] One typeface everywhere on the reading site — code blocks render in the site font, not monospace
+- [ ] Custom font: uploading per weight (400/500/600/700) registers `@font-face`; bold/headings render
+  with the real weight (faux-bold is disabled); removing all weights falls back to Inter
+
 ## Verify auth quickly
 
 ```bash

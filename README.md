@@ -1,4 +1,4 @@
-# vibe**blog** (v0.9.24)
+# vibe**blog** (v0.9.25)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
@@ -9,6 +9,7 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
 - **Auth:** NextAuth v5 (Google and/or GitHub OAuth), single authorized owner
 - **Editor:** TipTap 3 with Markdown; responsive images via `sharp` (original + AVIF/WebP variants, encoded in the background after save); a 3-version time machine per post
 - **Theming:** 6 built-in light+dark color palettes, each fully customizable; visitors can switch palette and light/dark/system/by-time mode; optional custom CSS
+- **Typography:** one tunable type system — every text role (h1–h5, body, small, caption, code) has its own size / line-height / letter-spacing, applied site-wide via CSS variables (no hardcoded sizes); upload a custom typeface per weight (Regular/Medium/SemiBold/Bold); one font for everything
 - **PWA:** installable to the iPhone/Android home screen, launches standalone (no service worker / no offline by design)
 - **Admin:** Overview with a System panel (hosting/region/env + database + storage); a toggleable activity log (Admin → Log) recording every save/upload/delete
 - **UI languages:** en (default), vi, de, ja, zh, ko
@@ -134,6 +135,23 @@ at `/admin`. The only step an agent can't do alone is the OAuth **provider** set
   `/admin/settings`. Built-in cookieless analytics (views / unique visitors / top pages, no PII)
 - SEO / feeds (toggleable in Settings → SEO): `/sitemap.xml`, `/robots.txt`,
   `/feed.xml` (RSS), `/llms.txt`, `/og` (dynamic share image)
+
+### Settings (`/admin/settings`)
+
+One form, one Save button, three tabs:
+
+- **General** — site title / description / language, logo + favicon + app icon, content width &
+  posts-per-page, header menu, reader features (search, ToC, related, reading time, progress bar,
+  activity log), and SEO toggles.
+- **Appearance** — colors (pick any of the 6 palettes and edit its light+dark colors; set the
+  visitor default), the custom **font** (upload one file per weight: Regular / Medium / SemiBold /
+  Bold — all share one family, Inter is the fallback), and the **text sizes** table (size /
+  line-height / letter-spacing for every role: h1–h5, body, small, caption, code). One "reset to
+  default" restores the tuned scale.
+- **Advanced** — font smoothing (anti-aliasing) toggle and custom CSS.
+
+Everything is stored in the single `settings` row and injected as CSS variables, so changes apply
+site-wide with no redeploy.
 
 ## Roadmap
 

@@ -358,12 +358,23 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   are emitted by `typographyToCss()` into a `:root` `<style>` in the **root** layout, injected
   AFTER `globals.css` so they win (also applies inside the admin editor `.prose`, WYSIWYG).
   `smoothing` adds the `-webkit-font-smoothing: antialiased` rule on `body`.
+- **Defaults are re-tuned for calm reading** (a restrained ~1.18 ratio off an 18px body):
+  `h1 1.95 / h2 1.4 / h3 1.2 / h4 1.15 / h5 0.9 rem`. H2 (list cards + article sections) was
+  deliberately brought down so list titles read as headings, not banners.
 - **Where applied:** `.prose` (+ `h1…h5`, `pre`/`code`, `figcaption`, `table`) read the role vars;
-  titles/UI OUTSIDE `.prose` use the utility classes `.fs-h1…fs-h5` (titles) and `.t-small`
-  (every secondary text — replaced all public `text-sm`). **H1** = single post/page titles
-  (`[slug]/page.tsx`), category/tag list headings (`BlogListing` callers), draft preview; **list
-  cards (`PostCard`) use H2**. Intentional one-offs left hardcoded: brand wordmark (`(blog)/layout`),
-  the search input box, and the 404 numeral — display chrome, not content.
+  titles/UI OUTSIDE `.prose` use the utility classes `.fs-h1…fs-h5` (titles, also the search
+  inputs) and `.t-small` (every secondary text — replaced all public `text-sm`). **H1** = single
+  post/page titles (`[slug]/page.tsx`), category/tag list headings (`BlogListing` callers), draft
+  preview; **list cards (`PostCard`) use H2**. The ONLY fixed public sizes left are the brand
+  wordmark (`(blog)/layout`) and the 404 numeral — deliberate display, not content.
+- **One typeface for the whole reading site.** Body, headings AND code all use `--font-sans`
+  (Inter, or the uploaded face) — `.prose code` is `font-family: inherit`, no separate monospace
+  stack, and nothing auto-adds a second family. Admin chrome keeps functional monospace in two
+  tool spots only (hex colour inputs + the raw-Markdown source textarea); that is intentional.
+- **Admin chrome does NOT follow the reader's type settings.** Forms/tables/nav use Tailwind's
+  standard text utilities (a fixed design scale) so tuning the reader's content sizes never
+  distorts the admin UI. The admin *editor* surface is `.prose`, so it DOES mirror the reader
+  sizes (WYSIWYG). Don't wire admin chrome to `--fs-*`.
 - **Custom font, per weight** (`settings.customFont = { family, faces[] }`, `faces` =
   `{ weight, url }[]` for 400/500/600/700): uploaded in Admin → Settings → Appearance via
   `FontUpload` → `POST /api/files/font?weight=` (`uploadFont` in `files.ts`), stored on Blob under

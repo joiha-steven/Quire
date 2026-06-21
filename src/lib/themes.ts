@@ -26,20 +26,23 @@ export const FONT_WEIGHTS = [400, 500, 600, 700] as const
 
 // Default type system. Lives here (a client-safe module) so the settings UI can
 // import it for its reset buttons without pulling in the server-only data layer.
-// Tuned to read well out of the box — reset returns to exactly this. Reference
-// body = 1.125rem (18px). Heading sizes: h2 = old 1.45 × 1.20 = 1.74; h1 = h2 ×
-// 1.30 = 2.26; h3 = h2 / 1.20 = 1.45; h4 = body × 1.10 = 1.24; h5 = body × 0.80.
+// Tuned for calm, readable long-form out of the box — reset returns to exactly
+// this. A restrained scale (~1.18 ratio off an 18px body) so list-card titles (H2)
+// read as headings, not banners; single-post/page/category titles step up to H1.
+//   body 1.125rem (18px) · h1 1.95 (31px) · h2 1.4 (22px) · h3 1.2 (19px)
+//   h4 1.15 (18.4px) · h5 0.9 (14.4px, eyebrow) · small 0.875 (14px, meta)
+//   caption 0.8125 (13px) · code 0.875 (14px)
 export const DEFAULT_TYPOGRAPHY: TypographySettings = {
   roles: {
-    h1: { size: 2.26, line: 1.15, spacing: -0.021 },
-    h2: { size: 1.74, line: 1.25, spacing: -0.018 },
-    h3: { size: 1.45, line: 1.3, spacing: -0.014 },
-    h4: { size: 1.24, line: 1.4, spacing: -0.01 },
+    h1: { size: 1.95, line: 1.2, spacing: -0.02 },
+    h2: { size: 1.4, line: 1.28, spacing: -0.015 },
+    h3: { size: 1.2, line: 1.35, spacing: -0.011 },
+    h4: { size: 1.15, line: 1.45, spacing: -0.006 },
     h5: { size: 0.9, line: 1.5, spacing: 0 },
     body: { size: 1.125, line: 1.75, spacing: 0 },
-    small: { size: 0.875, line: 1.5, spacing: 0 },
-    caption: { size: 0.85, line: 1.45, spacing: 0.005 },
-    code: { size: 0.875, line: 1.6, spacing: 0 },
+    small: { size: 0.875, line: 1.55, spacing: 0 },
+    caption: { size: 0.8125, line: 1.5, spacing: 0.003 },
+    code: { size: 0.875, line: 1.65, spacing: 0 },
   },
   smoothing: false,
 }

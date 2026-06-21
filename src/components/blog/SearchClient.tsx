@@ -77,7 +77,7 @@ export function SearchClient({ docs, lang, initialQuery }: { docs: SearchDoc[]; 
         onChange={(e) => setQ(e.target.value)}
         placeholder={t(lang).searchPlaceholder}
         aria-label={t(lang).search}
-        className="mb-10 w-full border-b border-rule bg-transparent pb-3 text-2xl tracking-tight outline-none placeholder:text-meta"
+        className="fs-h2 mb-10 w-full border-b border-rule bg-transparent pb-3 tracking-tight outline-none placeholder:text-meta"
       />
 
       {needle.length < 1 ? (
