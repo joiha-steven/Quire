@@ -88,11 +88,18 @@ export function extractHeadings(markdown: string): Heading[] {
   const out: Heading[] = []
   // Skip fenced code blocks so a "## x" inside code isn't treated as a heading.
   const body = markdown.replace(/```[\s\S]*?```/g, '')
+  // De-dupe collisions: 2nd "foo" -> "foo-2", 3rd -> "foo-3". MUST match
+  // dedupeHeadingIds in PostContent (both walk H2/H3 in order) or anchors break.
+  const counts = new Map<string, number>()
   for (const line of body.split('\n')) {
     const m = /^(#{2,3})\s+(.+?)\s*#*\s*$/.exec(line)
     if (!m) continue
     const text = m[2].replace(/[*_`]/g, '').trim()
-    if (text) out.push({ id: slugify(text), text, level: m[1].length as 2 | 3 })
+    if (!text) continue
+    const base = slugify(text)
+    const n = counts.get(base) ?? 0
+    counts.set(base, n + 1)
+    out.push({ id: n === 0 ? base : `${base}-${n + 1}`, text, level: m[1].length as 2 | 3 })
   }
   return out
 }

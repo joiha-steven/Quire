@@ -10,6 +10,18 @@ import { slugify } from '@/lib/utils'
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
+// Escape a string for use inside a double-quoted HTML attribute.
+const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+
+// Drop dangerous link schemes (javascript:/data:/vbscript:) — marked v5+ no longer
+// sanitizes URLs, so a `[x](javascript:…)` would otherwise become an executable href.
+// Whitespace/control chars are stripped first so `java\tscript:` can't slip through.
+// http(s)/mailto/relative/anchor links pass untouched.
+const safeHref = (href: string): string => {
+  const cleaned = href.trim().replace(/[\u0000-\u001F\u007F]/g, '')
+  return /^(?:javascript|data|vbscript):/i.test(cleaned) ? '#' : cleaned
+}
+
 // Reverse of escapeHtml — marked emits escaped source inside <code>; Shiki needs
 // the raw text back before re-highlighting it.
 const unescapeHtml = (s: string) =>
@@ -37,14 +49,34 @@ marked.use({
     html(token: Tokens.HTML | Tokens.Tag) {
       return escapeHtml(token.raw)
     },
-    // Give H2/H3 slug ids so the table of contents can anchor to them.
+    // Give H2/H3 slug ids so the table of contents can anchor to them. Duplicate
+    // ids are de-duped in a post-pass (dedupeHeadingIds) — kept in sync with
+    // extractHeadings so the ToC anchors match.
     heading(token: Tokens.Heading) {
       const inner = this.parser.parseInline(token.tokens)
       const id = token.depth === 2 || token.depth === 3 ? ` id="${slugify(token.text)}"` : ''
       return `<h${token.depth}${id}>${inner}</h${token.depth}>\n`
     },
+    // Sanitize link hrefs (drop javascript:/data:/vbscript:); marked no longer does.
+    link(token: Tokens.Link) {
+      const inner = this.parser.parseInline(token.tokens)
+      const title = token.title ? ` title="${escapeAttr(token.title)}"` : ''
+      return `<a href="${escapeAttr(safeHref(token.href))}"${title}>${inner}</a>`
+    },
   },
 })
+
+// Second occurrence of a heading slug becomes `slug-2`, third `slug-3`, … so two
+// identical headings don't emit the same id. MUST match extractHeadings' counter
+// (both walk H2/H3 in document order) or the ToC anchors break.
+function dedupeHeadingIds(html: string): string {
+  const counts = new Map<string, number>()
+  return html.replace(/(<h[23] id=")([^"]*)(")/g, (whole, pre, id, post) => {
+    const n = counts.get(id) ?? 0
+    counts.set(id, n + 1)
+    return n === 0 ? whole : `${pre}${id}-${n + 1}${post}`
+  })
+}
 
 // Intrinsic pixel dimensions of uploaded originals, keyed by collapsed pathname
 // (media/x.jpg). Emitting width/height on the <img> lets the browser reserve the
@@ -57,8 +89,11 @@ export type ImageDims = Map<string, { width: number; height: number }>
 // The caption is the image alt. Lone images sit in their own <p>, which we
 // unwrap first so the block-level <figure> is valid.
 function imgClasses(frag: string): string {
-  const align = /left/.test(frag) ? 'img-left' : /right/.test(frag) ? 'img-right' : 'img-center'
-  return /wide/.test(frag) ? `${align} img-wide` : align
+  // Parse exact hyphen-separated tokens so a stray fragment like `#bright` can't
+  // match `right`. Recognized: left | right | wide | left-wide | right-wide.
+  const tokens = frag.split('-')
+  const align = tokens.includes('left') ? 'img-left' : tokens.includes('right') ? 'img-right' : 'img-center'
+  return tokens.includes('wide') ? `${align} img-wide` : align
 }
 
 // Emit a <picture> (AVIF/WebP @1024/1600) ONLY for uploaded raster originals
@@ -127,7 +162,7 @@ export async function PostContent({
   // Intrinsic width/height per collapsed pathname (for CLS-free rendering).
   imageDims?: ImageDims
 }) {
-  const parsed = buildVideos(buildFigures(await marked.parse(markdown), readyOriginals, imageDims))
+  const parsed = dedupeHeadingIds(buildVideos(buildFigures(await marked.parse(markdown), readyOriginals, imageDims)))
   const html = await highlightBlocks(parsed)
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }

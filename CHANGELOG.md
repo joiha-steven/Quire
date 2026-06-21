@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-06-22 (audit fixes: self-hosted font, link hardening)
+- **fix(build): self-host Inter — no more Google Fonts dependency.** Replaced `next/font/google`
+  (which fetched Inter at build → broke offline / restricted-CI / Google-outage builds) with
+  self-hosted variable woff2 (`public/fonts/`, subsetted by `unicode-range` in `globals.css`). The
+  OG image already self-hosts the same Inter as `.woff`, so the whole app is now Google-free; one
+  typeface everywhere, fully local. The latin subset is preloaded.
+- **fix(security): sanitize link hrefs.** `PostContent` now drops `javascript:`/`data:`/`vbscript:`
+  link schemes (marked v5+ stopped sanitizing) — `[x](javascript:…)` no longer renders an
+  executable href. Raw HTML was already escaped, so this closes the remaining vector.
+- **fix(toc): de-dupe heading ids.** Two identical headings used to emit the same `id` (broken ToC
+  anchors); now 2nd → `foo-2`, 3rd → `foo-3`, with `PostContent` and `extractHeadings` sharing the
+  counter so anchors line up.
+- **fix(auth): normalize the owner email** (trim + lowercase both sides) so a provider returning a
+  different case / stray whitespace can't lock the owner out.
+- **fix(images): parse image-placement fragments as exact tokens** (`#left`/`#right`/`#wide`/
+  `#left-wide`) so a stray fragment like `#bright` no longer matches `right`.
+- **chore: add `typecheck` script** (`tsc --noEmit`). `v0.9.28`.
+
 ## 2026-06-22 (docs: slim CLAUDE.md)
 - **docs(claude): CLAUDE.md 560 → 358 lines (−36%) with zero rules lost.** Deduped the "why"
   (delegated to ARCHITECTURE.md via a header note), deleted the standalone Portability section
