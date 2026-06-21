@@ -204,38 +204,45 @@ function toClientItems(items: MediaItem[]): MediaItem[] {
     .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
 }
 
-// Delete a media item: the original + thumbnail + every display variant + entry.
-// Removes ALL versions of the image from Blob — derived names (thumb + the four
-// AVIF/WebP variants) are deleted unconditionally for any raster original, not
-// gated on the manifest `variants` flag, so a stale/false flag can't leave the
-// heavy variants orphaned in the store.
+// Extract the store-relative `media/...` pathname from any URL form — an absolute
+// URL on ANY host (default store host or a vanity media domain) or an already-
+// collapsed path. This matches WITHOUT depending on collapseBlob/getSettings host
+// priming, which was the fragile part: if the primed host didn't match the URL's
+// host, the old equality check silently found nothing and the delete no-op'd.
+function mediaKey(s: string): string | null {
+  return s.match(/media\/[^?#"')\s]+/)?.[0] ?? null
+}
+
+// Delete a media item: removes its manifest entry + every blob version (original
+// + thumbnail + the four AVIF/WebP display variants when present).
 //
-// Returns the AUTHORITATIVE new list (built from the in-memory manifest we just
-// wrote — no re-read of Blob), so the caller/client adopts the true post-delete
-// state with no eventual-consistency gap.
+// Order matters: the manifest is the library's source of truth, so we write the
+// reduced manifest FIRST (the image is gone from the library the instant that
+// succeeds), THEN best-effort delete the blob files. If the (slower) file cleanup
+// stalls or fails, the removal still stuck. Returns the AUTHORITATIVE new list
+// built from the in-memory manifest — no Blob re-read.
 export async function deleteMedia(url: string): Promise<MediaItem[]> {
-  // Prime the vanity media base (setMediaBase) so collapseBlob can strip a
-  // configured custom host. Without this, a vanity URL passed from the client
-  // would not collapse to its `media/...` pathname and NOTHING would match — the
-  // delete silently no-op'd (image stayed in the library).
-  await getSettings()
+  const targetKey = mediaKey(url)
   const current = await readJson<MediaItem[]>(INDEX_PATH, [])
-  const target = collapseBlob(url) // original pathname
-  const remaining = current.filter((m) => collapseBlob(m.url) !== target)
+  const removed = targetKey ? current.filter((m) => mediaKey(m.url) === targetKey) : []
+  const remaining = current.filter((m) => !removed.includes(m))
 
   // Nothing matched (or the manifest read failed and came back empty): do NOT
-  // rewrite — a rewrite here would either be pointless or, on a transient read
-  // failure, wipe the whole manifest. Just return the current view.
-  if (remaining.length === current.length) return toClientItems(current)
+  // rewrite — that would be pointless, or on a transient read failure would wipe
+  // the whole manifest. Just return the current view.
+  if (removed.length === 0) return toClientItems(current)
 
-  // Collect every blob to remove for the matched item(s): original + thumb +
-  // (for rasters) the four display variants, derived from the stem.
-  const removed = current.filter((m) => collapseBlob(m.url) === target)
+  // 1) Persist the removal first — this is what makes the image disappear.
+  await writeJson(INDEX_PATH, remaining)
+
+  // 2) Best-effort cleanup of the actual blob files (original + thumb + variants).
   const paths = new Set<string>()
   for (const item of removed) {
-    const p = collapseBlob(item.url)
+    const p = mediaKey(item.url)
+    if (!p) continue
     paths.add(p)
-    if (item.thumb) paths.add(collapseBlob(item.thumb))
+    const thumbKey = item.thumb ? mediaKey(item.thumb) : null
+    if (thumbKey) paths.add(thumbKey)
     if (/\.(jpe?g|png)$/i.test(p)) {
       const stem = p.replace(/\.[^.]+$/, '')
       paths.add(`${stem}-thumb.webp`)
@@ -243,7 +250,6 @@ export async function deleteMedia(url: string): Promise<MediaItem[]> {
     }
   }
   await Promise.all([...paths].map((p) => deleteByPathname(p).catch(() => {})))
-  await writeJson(INDEX_PATH, remaining)
   return toClientItems(remaining)
 }
 
