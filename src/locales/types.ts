@@ -209,9 +209,14 @@ export type AdminStrings = {
   colorLink: string
   colorRule: string
   resetDefault: string
-  // typography (heading scale)
+  // settings tabs
+  tabGeneral: string
+  tabAppearance: string
+  tabAdvanced: string
+  // typography (type scale)
   cardTypography: string
   typographyHint: string
+  typoBase: string
   typoH1: string
   typoH2: string
   typoH3: string
@@ -219,6 +224,18 @@ export type AdminStrings = {
   typoH5: string
   typographyPreview: string
   typographyPreviewBody: string
+  // custom font
+  cardFont: string
+  fontHint: string
+  fontDefault: string
+  fontChoose: string
+  // advanced (rhythm + smoothing)
+  cardRhythm: string
+  rhythmHint: string
+  lineHeight: string
+  letterSpacing: string
+  fontSmoothing: string
+  fontSmoothingDesc: string
   // overview
   overviewTitle: string
   licenseTitle: string

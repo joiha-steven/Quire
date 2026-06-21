@@ -4,14 +4,14 @@
 // store-relative; binaries themselves stay on Vercel Blob.
 
 import { cache } from 'react'
-import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypographySettings } from '@/types'
+import type { FeatureSettings, FontSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypographySettings } from '@/types'
 import { collapseBlob, expandBlob } from '@/lib/blob'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_TYPOGRAPHY } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT } from '@/lib/themes'
 
 // Re-export so existing importers keep working.
-export { DEFAULT_THEME, themesToCss, getDefaultTheme, DEFAULT_TYPOGRAPHY } from '@/lib/themes'
+export { DEFAULT_THEME, themesToCss, getDefaultTheme, DEFAULT_TYPOGRAPHY, DEFAULT_FONT } from '@/lib/themes'
 
 // Keep only well-formed menu items (label + href both present).
 function sanitizeMenu(input: unknown, fallback: MenuItem[]): MenuItem[] {
@@ -139,28 +139,68 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   activityLog: true,
 }
 
-// Clamp one heading size (rem), keeping up to 2 decimals; fall back when invalid.
-function clampRem(value: unknown, fallback: number): number {
+// Clamp a float into [min,max], keeping up to 2 decimals; fall back when invalid.
+function clampFloat(value: unknown, min: number, max: number, fallback: number): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
-  return Math.min(6, Math.max(0.5, Math.round(value * 100) / 100))
+  return Math.min(max, Math.max(min, Math.round(value * 100) / 100))
 }
 
 function sanitizeTypography(input: unknown, fallback: TypographySettings): TypographySettings {
   const o = (input ?? {}) as Partial<TypographySettings>
   return {
-    h1: clampRem(o.h1, fallback.h1),
-    h2: clampRem(o.h2, fallback.h2),
-    h3: clampRem(o.h3, fallback.h3),
-    h4: clampRem(o.h4, fallback.h4),
-    h5: clampRem(o.h5, fallback.h5),
+    base: clampFloat(o.base, 0.5, 6, fallback.base),
+    h1: clampFloat(o.h1, 0.5, 6, fallback.h1),
+    h2: clampFloat(o.h2, 0.5, 6, fallback.h2),
+    h3: clampFloat(o.h3, 0.5, 6, fallback.h3),
+    h4: clampFloat(o.h4, 0.5, 6, fallback.h4),
+    h5: clampFloat(o.h5, 0.5, 6, fallback.h5),
+    lineHeight: clampFloat(o.lineHeight, 1, 3, fallback.lineHeight),
+    letterSpacing: clampFloat(o.letterSpacing, -0.1, 0.5, fallback.letterSpacing),
+    smoothing: bool(o.smoothing, fallback.smoothing),
   }
 }
 
-// Emit the heading-scale CSS variables on :root. Injected after globals.css (whose
-// :root carries the same defaults), so a saved scale wins while a fresh install
-// still renders correctly with no settings row.
+// Family name -> safe CSS identifier (owner-only, but never trust raw into a
+// <style>): allow letters/digits/space/hyphen, collapse the rest.
+function sanitizeFamily(value: unknown): string {
+  return typeof value === 'string' ? value.replace(/[^A-Za-z0-9 _-]/g, '').trim().slice(0, 64) : ''
+}
+
+function sanitizeFont(input: unknown, fallback: FontSettings): FontSettings {
+  const o = (input ?? {}) as Partial<FontSettings>
+  const family = o.family !== undefined ? sanitizeFamily(o.family) : fallback.family
+  const url = typeof o.url === 'string' ? o.url.trim() : fallback.url
+  // Both must be present to register a font; otherwise fall back to "no font".
+  return family && url ? { url, family } : DEFAULT_FONT
+}
+
+// font URL -> @font-face `format(...)` hint, by extension. Unknown -> omit it.
+function fontFormat(url: string): string {
+  const ext = url.split(/[?#]/)[0].split('.').pop()?.toLowerCase()
+  return ext === 'woff2' ? 'woff2' : ext === 'woff' ? 'woff' : ext === 'ttf' ? 'truetype' : ext === 'otf' ? 'opentype' : ''
+}
+
+// Emit the type-scale + rhythm CSS variables on :root (plus the optional
+// font-smoothing rule). Injected after globals.css (whose :root carries the same
+// defaults), so a saved scale wins while a fresh install still renders correctly.
 export function typographyToCss(t: TypographySettings): string {
-  return `:root{--fs-h1:${t.h1}rem;--fs-h2:${t.h2}rem;--fs-h3:${t.h3}rem;--fs-h4:${t.h4}rem;--fs-h5:${t.h5}rem}`
+  const vars =
+    `:root{--fs-base:${t.base}rem;--fs-h1:${t.h1}rem;--fs-h2:${t.h2}rem;--fs-h3:${t.h3}rem;` +
+    `--fs-h4:${t.h4}rem;--fs-h5:${t.h5}rem;--lh-body:${t.lineHeight};--ls-body:${t.letterSpacing}em}`
+  const smooth = t.smoothing ? `body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}` : ''
+  return vars + smooth
+}
+
+// Emit the @font-face for an owner-uploaded typeface and point --font-sans at it
+// (Inter stays the fallback). Empty when no font is set.
+export function fontToCss(f: FontSettings): string {
+  if (!f.url || !f.family) return ''
+  const fmt = fontFormat(f.url)
+  const src = `url('${f.url}')${fmt ? ` format('${fmt}')` : ''}`
+  return (
+    `@font-face{font-family:'${f.family}';src:${src};font-display:swap}` +
+    `:root{--font-sans:'${f.family}', var(--font-inter)}`
+  )
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -183,6 +223,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   themePreset: DEFAULT_PRESET_ID,
   themes: defaultThemes(),
   typography: DEFAULT_TYPOGRAPHY,
+  customFont: DEFAULT_FONT,
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
 }
@@ -231,6 +272,10 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
       themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
       typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
+      customFont: (() => {
+        const f = sanitizeFont(stored.customFont, DEFAULT_FONT)
+        return f.url ? { ...f, url: expandBlob(f.url) } : f
+      })(),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
     }
@@ -263,6 +308,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     themePreset: isPresetId(input.themePreset) ? input.themePreset : current.themePreset,
     themes: sanitizeThemes(input.themes, current.themes),
     typography: sanitizeTypography(input.typography, current.typography),
+    customFont: sanitizeFont(input.customFont, current.customFont),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
   }
@@ -272,6 +318,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoUrl: collapseBlob(next.logoUrl),
     faviconUrl: collapseBlob(next.faviconUrl),
     appIconUrl: collapseBlob(next.appIconUrl),
+    customFont: next.customFont.url ? { ...next.customFont, url: collapseBlob(next.customFont.url) } : next.customFont,
     seo: { ...next.seo, ogFallbackImage: collapseBlob(next.seo.ogFallbackImage) },
   }
   await db().from('settings').upsert({ id: 1, data: stored })

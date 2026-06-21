@@ -134,11 +134,9 @@ type Props = {
   defaultId: string
   onChangeThemes: (themes: Record<string, ThemeSettings>) => void
   onSetDefault: (id: string) => void
-  customCss: string
-  onCustomCss: (v: string) => void
 }
 
-export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetDefault, customCss, onCustomCss }: Props) {
+export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetDefault }: Props) {
   const t = useAdminT()
   // Which palette is being edited (local UI state — start at the visitor default).
   const [editingId, setEditingId] = useState(defaultId)
@@ -197,18 +195,6 @@ export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetD
         onReset={() => resetMode('dark')}
         t={t}
       />
-      <div className="space-y-1.5">
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.customCss}</span>
-        <textarea
-          value={customCss}
-          onChange={(e) => onCustomCss(e.target.value)}
-          rows={6}
-          spellCheck={false}
-          placeholder={'.prose h2 { letter-spacing: -0.01em }'}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-        />
-        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
-      </div>
     </div>
   )
 }

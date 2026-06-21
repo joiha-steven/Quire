@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-21 (fonts + typography controls + settings tabs)
+- **feat(typography): custom font upload.** Admin → Settings → Appearance can upload a typeface
+  (`.woff2/.woff/.ttf/.otf`); it's stored on Blob under `files/` (separate from the media grid),
+  registered via `@font-face`, and applied site-wide (`--font-sans`, Inter stays the fallback).
+  `POST /api/files/font` → `{ url, family }`; `settings.customFont`. Remove restores Inter.
+- **feat(typography): body size + reading rhythm + smoothing.** The scale now also covers normal
+  body text (`--fs-base`); new controls for **line spacing** (`--lh-body`), **letter spacing**
+  (`--ls-body`), and a **font-smoothing (anti-alias)** toggle. Stored in `settings.typography`,
+  injected as a `:root` override; each group has its own reset-to-default.
+- **change(admin): Settings split into 3 tabs** — General, Appearance, Advanced. Colors + font +
+  text sizes live under Appearance; spacing/smoothing + custom CSS under Advanced. `v0.9.23`.
+
 ## 2026-06-21 (typography follow-up)
 - **change(typography): list cards use H2, not H1.** Single post/page titles (and category/tag
   list-page headings) stay H1; post titles inside listings step down to H2 so the listing reads

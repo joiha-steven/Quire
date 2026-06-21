@@ -88,15 +88,27 @@ export type ThemeSettings = {
   dark: ThemeColors
 }
 
-// Heading type scale (font-size in rem), applied site-wide via CSS variables
-// (--fs-h1..--fs-h5). One source of truth for every heading + title; no
-// per-element hardcoded font sizes. Owner-customizable with a reset-to-default.
+// Type scale + reading rhythm, applied site-wide via CSS variables
+// (--fs-base, --fs-h1..--fs-h5, --lh-body, --ls-body). One source of truth for
+// every heading + body size; no per-element hardcoded font sizes. Owner-
+// customizable with a reset-to-default.
 export type TypographySettings = {
-  h1: number // page/post/list titles + body H1 — biggest
-  h2: number
+  base: number // normal/body text — the reference size (rem)
+  h1: number // page/post titles + body H1 — biggest (rem)
+  h2: number // list-card titles (rem)
   h3: number
   h4: number // slightly larger than body text
   h5: number // slightly smaller than body text
+  lineHeight: number // reading-body line-height (unitless)
+  letterSpacing: number // body letter-spacing (em; 0 = none)
+  smoothing: boolean // antialiased font-smoothing on body (off = browser default)
+}
+
+// Owner-uploaded custom typeface (stored on Blob under files/). '' on both = the
+// bundled Inter default. `family` is the CSS family name registered via @font-face.
+export type FontSettings = {
+  url: string // Blob URL of the font file; store-relative at rest, absolute on read
+  family: string // CSS font-family name; '' = no custom font
 }
 
 // Search-engine / AI-crawler features, each independently toggleable.
@@ -140,7 +152,8 @@ export type SiteSettings = {
   menu: MenuItem[] // header navigation links
   themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
-  typography: TypographySettings // heading sizes (rem) → CSS vars --fs-h1..--fs-h5
+  typography: TypographySettings // type scale + reading rhythm → CSS vars (--fs-*, --lh-body, --ls-body)
+  customFont: FontSettings // owner-uploaded typeface (Blob files/); '' = bundled Inter
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
 }

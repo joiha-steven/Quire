@@ -144,9 +144,9 @@ Blob's CDN staleness, is what made the OLD no-DB `unstable_cache`+`?ts` model se
 | `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index. `updateTerm(kind, name, newName\|null)` renames (merges on collision) or removes a category/tag across EVERY post — updates each affected post's array column (no body rewrite), no revision snapshot; drives the Phân loại tab (`POST /api/taxonomy`, owner-only, → `revalidateEverything`) |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post in the `post_revisions` table (jsonb snapshot, store-relative; newest first). Drives the editor "time machine". Re-slugged on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
-| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`, `DEFAULT_TYPOGRAPHY`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map + the heading scale `typography` (see Typography below); migrates a legacy single `theme` into the default palette on read. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
+| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss`, `fontToCss` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`, `DEFAULT_TYPOGRAPHY`, `DEFAULT_FONT`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map, the type scale `typography`, and the uploaded `customFont` (see Typography below); migrates a legacy single `theme` into the default palette on read. `customFont.url` is store-relative at rest. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
 | `themes.ts` | `THEME_PRESETS`, `DEFAULT_THEME`, `DEFAULT_PRESET_ID`, `getPreset`, `isPresetId`, `cloneTheme`, `defaultThemes`, `getDefaultTheme`, `themesToCss`, `paletteOptions` | The 6 built-in palettes (Mono/Sepia/Forest/Ocean/Rose/Amber), each a full light+dark `ThemeSettings`. **Each is independently owner-customizable** — colors live in `settings.themes` (id→ThemeSettings); `settings.themePreset` = the visitor default. `themesToCss(themes, defaultId)` emits CSS for EVERY palette (default on `:root`/`.dark`, others under `[data-palette="id"]` + `[data-palette].dark`) so the client `PaletteToggle` swaps instantly via `<html data-palette>`. Add a palette by appending to `THEME_PRESETS` (names are constant proper nouns, not localized) |
-| `files.ts` | `uploadIcon`, `isAllowedIconType`, `getFiles`, `addFilesBatch`, `deleteFile`, `deleteFilesBatch`, `getSiteIcons` | Two things share the `files/` Blob prefix: (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile`/`deleteFilesBatch` refuse `favicon-`/`app-icon-`. `getSiteIcons` lists the icon blobs (uploadedAt parsed from the `<kind>-<ms>` filename) so the Files tab can show them read-only (tagged "Settings"). `registerFilesBatch` records metadata for files the browser uploaded straight to Blob. Routes: `GET /api/files`, `POST /api/files/blob-token` + `POST /api/files/register` (client direct upload), `DELETE /api/files/by?url=`, `POST /api/files/delete` (multi), `GET /api/files/icons`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`); both grids have multi-select delete. `expandBlob` round-trips `files/` like `media/` |
+| `files.ts` | `uploadIcon`, `isAllowedIconType`, `uploadFont`, `isAllowedFontType`, `getFiles`, `addFilesBatch`, `deleteFile`, `deleteFilesBatch`, `getSiteIcons` | Three things share the `files/` Blob prefix: (0) the **custom font** (`uploadFont` → `files/font-<ms>.<ext>`, `.woff2/.woff/.ttf/.otf`; NOT a table row, hidden from the grid; `POST /api/files/font`); (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile`/`deleteFilesBatch` refuse `favicon-`/`app-icon-`. `getSiteIcons` lists the icon blobs (uploadedAt parsed from the `<kind>-<ms>` filename) so the Files tab can show them read-only (tagged "Settings"). `registerFilesBatch` records metadata for files the browser uploaded straight to Blob. Routes: `GET /api/files`, `POST /api/files/blob-token` + `POST /api/files/register` (client direct upload), `DELETE /api/files/by?url=`, `POST /api/files/delete` (multi), `GET /api/files/icons`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`); both grids have multi-select delete. `expandBlob` round-trips `files/` like `media/` |
 | `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `registerMediaBatch`, `deleteMedia`/`deleteMediaBatch`, `finalizeContentMedia`, `finalizePendingVariants`, `finalizePendingThumbs` | Metadata in the `media` table; binaries on Blob. **Uploads go straight from the browser to Blob** (`POST /api/media/blob-token` issues an owner-gated client token → the file never passes through a function, so the serverless 4.5MB request-body limit can't fail large photos), then `POST /api/media/register` (`registerMediaBatch`) fetches the original back to read dimensions + make the `-thumb.webp` and inserts the row. Upload keeps the untouched ORIGINAL + a cheap `-thumb.webp`; heavy `-1024`/`-1600` AVIF+WebP are **deferred** off the save request (`finalizeContentMedia` via `after()`, swept by cron). Delete removes EVERY version (original + thumb + all variants), atomic row delete (no resurrection race). `finalizePendingThumbs` backfills thumbs for rows that lack one (migration imports). `PostContent` emits `<picture>` only for originals whose variants exist; others render a plain `<img>` so a missing variant never blanks the image. Body `<img>` carry intrinsic `width`/`height` from the row (CLS-free); the FIRST body image is eager + `fetchpriority=high` (LCP), the rest lazy |
 | `highlight.ts` | `highlightCode` | Server-side Shiki syntax highlighting (singleton highlighter, Vitesse light+dark dual-theme, curated lang set). Called by `PostContent.highlightBlocks` to replace marked's plain `<pre><code class="language-x">` blocks; returns null on failure → caller keeps the plain block. Dark tokens swap via `.dark .shiki` CSS (`!important`, beats Shiki's inline light colors). Zero client JS |
 | `media-usage.ts` | `findUnusedMedia` | **Read-only audit** — returns URLs of media referenced by no post/page/settings **or revision snapshot** (the "Check unused" library button, `GET /api/media/unused`). Flags orphans in the grid for manual review; never deletes. Scans revisions on purpose so a time-machine restore's image is never reported as unused (the old destructive `sweep.ts` missed revisions and could delete a still-needed image) |
@@ -303,7 +303,7 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - **Activity log** (`lib/activity.ts`, Postgres `activity_log`): every mutating route records
   one entry via `after(() => logActivity(action, detail))` AFTER the response (never slows the
   action, never throws). Actions: `post|page.{create,update,delete}`, `media.{upload,delete}`,
-  `file.{add,delete}`, `icon.upload`, `settings.save`, `taxonomy.update`, `cache.clear`.
+  `file.{add,delete}`, `icon.upload`, `font.upload`, `settings.save`, `taxonomy.update`, `cache.clear`.
   Gated by `settings.features.activityLog` (default on). Viewed at **Admin → Log**
   (`/admin/log`, force-dynamic) — newest first + a Clear button (`DELETE /api/activity`);
   `GET /api/activity` returns the latest 200. When adding a new mutating route, log it too.
@@ -318,15 +318,16 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   tables (`/admin/content`) shows each post/page's all-time total (`getViewTotals`).
 
 ## Settings (Admin → settings)
-- **One form, one save button** (`SettingsView.tsx`): all settings live in a single
-  `useState<SiteSettings>`, saved together via one PUT `/api/settings` (sticky bottom
-  bar). Controlled field groups (no own state/save): `SiteFields`, `LayoutMenuFields`,
-  `FeatureFields`, `ThemeFields`, `SeoFields` — each takes the value + an `update`/`onChange`.
-- Layout = two **explicit** top-aligned columns (`grid lg:grid-cols-2 items-start`, NOT
-  CSS `columns` — multicol drops the 2nd column down and ragged). Cards distributed to
-  balance length: left = Thông tin chung + Bố cục & menu + Tính năng đọc; right = Giao diện
-  + SEO. Uniform card chrome; inner spacing `space-y-5`, hint `<p>` paired with its input in
-  a `space-y-1.5` wrapper (no negative-margin hacks).
+- **One form, one save button, THREE tabs** (`SettingsView.tsx`): all settings live in a single
+  `useState<SiteSettings>`, saved together via one PUT `/api/settings` (sticky bottom bar). A
+  local `tab` state (`general | appearance | advanced`) switches which cards render — it is NOT
+  persisted. Controlled field groups (no own state/save): `SiteFields`, `LayoutMenuFields`,
+  `FeatureFields`, `SeoFields` (General); `ThemeFields`, `FontUpload`, `TypographyFields`
+  (Appearance); `AdvancedFields` + the custom-CSS textarea (Advanced) — each takes the value +
+  an `update`/`onChange`.
+- Each tab lays its cards in two **explicit** top-aligned columns (`grid lg:grid-cols-2
+  items-start`, NOT CSS `columns`). Uniform card chrome; hint `<p>` paired with its input in a
+  `space-y-1.5` wrapper (no negative-margin hacks).
 - **Save calls `router.refresh()`** after a successful PUT so the server-rendered admin
   shell (nav labels, `adminT(language)`) and the public header reflect the change
   immediately — without it, e.g. switching language looked like it did nothing until reload.
@@ -346,25 +347,34 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   `themesToCss`, so switching is attribute-only. Admin chrome stays neutral by design (mode
   affects it, palette mostly affects the public reading surface).
 
-## Typography (heading scale) — one source of truth
-- **No per-element heading font sizes.** Every heading + title size comes from five CSS
-  variables `--fs-h1 … --fs-h5`. Defaults are baked into `globals.css :root` (so a fresh
-  install renders correctly) and match `DEFAULT_TYPOGRAPHY` in `lib/themes.ts` (client-safe
-  module — the settings UI imports it for its reset button). The owner's saved scale
-  (`settings.typography`, rem) is emitted by `typographyToCss()` into a `:root` `<style>` in
-  the root layout, injected AFTER `globals.css` so it wins.
-- **Defaults (owner's spec):** `h1 2.26 / h2 1.74 / h3 1.45 / h4 1.24 / h5 0.9` rem against a
-  1.125rem body — H1 ≈30% > H2, H2 20% > before & 20% > H3, H4 10% > body, H5 20% < body.
-- **Where applied:** `.prose h1…h5` (article body, incl. the TipTap editor surface) use the
-  vars directly; titles OUTSIDE `.prose` use the `.fs-h1…fs-h5` utility classes
-  (`globals.css`). **H1** = single post/page titles (`[slug]/page.tsx`), category/tag list
-  headings (`BlogListing` callers), and the draft preview. **List cards (`PostCard`) use H2** —
-  a step down so the listing reads calmer than the article. The callers still add their own
-  `font-semibold`/`font-bold` + `tracking-tight`; the class only sets size + line-height.
-- **Editor** exposes H1–H5 (StarterKit headings); `marked` renders `####`/`#####` → `h4`/`h5`
-  on the public side.
-- **Customize:** Admin → Settings → "Heading sizes" (`TypographyFields`) — five rem inputs +
-  live preview + reset-to-default. Saved via the single settings PUT.
+## Typography (type scale + font) — one source of truth
+- **No per-element font sizes.** Every body + heading size comes from CSS variables
+  `--fs-base` + `--fs-h1 … --fs-h5`, plus reading rhythm `--lh-body` (line-height) and
+  `--ls-body` (letter-spacing, em). Defaults are baked into `globals.css :root` (fresh install
+  renders correctly) and match `DEFAULT_TYPOGRAPHY` in `lib/themes.ts` (client-safe module —
+  the settings UI imports it for its reset buttons). The owner's saved values
+  (`settings.typography`) are emitted by `typographyToCss()` into a `:root` `<style>` in the
+  root layout, injected AFTER `globals.css` so they win. `typographyToCss` also emits the
+  font-smoothing rule on `body` when `smoothing` is on.
+- **Defaults (owner's spec):** body `1.125`, `h1 2.26 / h2 1.74 / h3 1.45 / h4 1.24 / h5 0.9`
+  rem, line-height `1.75`, letter-spacing `0em`, smoothing off — H1 ≈30% > H2, H2 20% > before
+  & 20% > H3, H4 10% > body, H5 20% < body.
+- **Where applied:** `.prose` reads `--fs-base`/`--lh-body`; `.prose h1…h5` (article body, incl.
+  the TipTap editor surface) read the `--fs-h*` vars; `body` carries `--ls-body`. Titles OUTSIDE
+  `.prose` use the `.fs-h1…fs-h5` utility classes (`globals.css`). **H1** = single post/page
+  titles (`[slug]/page.tsx`), category/tag list headings (`BlogListing` callers), and the draft
+  preview. **List cards (`PostCard`) use H2** — a step down so the listing reads calmer. Callers
+  still add their own `font-semibold`/`font-bold` + `tracking-tight`.
+- **Custom font** (`settings.customFont` = `{ url, family }`): uploaded in Admin → Settings →
+  Appearance via `FontUpload` → `POST /api/files/font` (`uploadFont` in `files.ts`), stored on
+  Blob under `files/font-<ms>.<ext>` (NOT a `files` table row, so it stays out of the attachment
+  grid). `fontToCss()` emits the `@font-face` + overrides `--font-sans` (Inter stays the
+  fallback). Store-relative at rest (collapse/expand like other refs). Empty = bundled Inter.
+- **Editor** exposes H1–H5 (StarterKit headings); `marked` renders `####`/`#####` → `h4`/`h5`.
+- **Customize:** Admin → Settings is **three tabs** (General / Appearance / Advanced). Appearance:
+  colors (`ThemeFields`), font (`FontUpload`), text sizes (`TypographyFields` — base + H1–H5).
+  Advanced: spacing & smoothing (`AdvancedFields`) + custom CSS. Each group resets independently;
+  all saved via the single settings PUT.
 
 ## PWA (installable app)
 - The site installs to the iPhone/Android home screen and launches **standalone** (full-screen,

@@ -36,11 +36,15 @@
      title — no per-element hardcoded sizes. These DEFAULTS match DEFAULT_TYPOGRAPHY
      in lib/settings.ts; the owner's saved scale is injected after this file (a
      :root override via typographyToCss) and wins. Reference body = 1.125rem. */
+  --fs-base: 1.125rem;
   --fs-h1: 2.26rem;
   --fs-h2: 1.74rem;
   --fs-h3: 1.45rem;
   --fs-h4: 1.24rem;
   --fs-h5: 0.9rem;
+  /* Reading rhythm — body line-height + letter-spacing (owner-tunable). */
+  --lh-body: 1.75;
+  --ls-body: 0em;
 }
 :where(.dark) {
   --c-bg: #0e0e0f;
@@ -70,6 +74,9 @@ body {
      tracking cramped accented Vietnamese (stacked diacritics). Headings keep a
      small negative tracking (below) as a deliberate display choice. */
   line-height: 1.65;
+  /* Owner-tunable body letter-spacing (default 0em = no change). Headings set
+     their own tracking below, so this only affects running text. */
+  letter-spacing: var(--ls-body, 0em);
   background: var(--c-bg);
   color: var(--c-text);
 }
@@ -118,8 +125,8 @@ hr {
 /* Rendered post body + TipTap editor share these typographic rules.
    Tuned for calm, long-form reading: 18px body, airy but even rhythm. */
 .prose {
-  font-size: 1.125rem; /* ~18px */
-  line-height: 1.75;
+  font-size: var(--fs-base); /* normal/body text — owner-tunable (~18px default) */
+  line-height: var(--lh-body);
   color: var(--c-text);
 }
 .prose > * + * {
