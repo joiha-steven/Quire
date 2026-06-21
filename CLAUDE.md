@@ -146,7 +146,8 @@ Blob's CDN staleness, is what made the OLD no-DB `unstable_cache`+`?ts` model se
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map; migrates a legacy single `theme` into the default palette on read. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
 | `themes.ts` | `THEME_PRESETS`, `DEFAULT_THEME`, `DEFAULT_PRESET_ID`, `getPreset`, `isPresetId`, `cloneTheme`, `defaultThemes`, `getDefaultTheme`, `themesToCss`, `paletteOptions` | The 6 built-in palettes (Mono/Sepia/Forest/Ocean/Rose/Amber), each a full light+dark `ThemeSettings`. **Each is independently owner-customizable** — colors live in `settings.themes` (id→ThemeSettings); `settings.themePreset` = the visitor default. `themesToCss(themes, defaultId)` emits CSS for EVERY palette (default on `:root`/`.dark`, others under `[data-palette="id"]` + `[data-palette].dark`) so the client `PaletteToggle` swaps instantly via `<html data-palette>`. Add a palette by appending to `THEME_PRESETS` (names are constant proper nouns, not localized) |
 | `files.ts` | `uploadIcon`, `isAllowedIconType`, `getFiles`, `addFilesBatch`, `deleteFile` | Two things share the `files/` Blob prefix: (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile` refuses `favicon-`/`app-icon-`. Routes: `GET/POST /api/files`, `DELETE /api/files/by?url=`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`). `expandBlob` round-trips `files/` like `media/` |
-| `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`/`deleteMediaBatch`, `finalizeContentMedia`, `finalizePendingVariants`, `finalizePendingThumbs` | Metadata in the `media` table; binaries on Blob. Upload keeps the untouched ORIGINAL + a cheap `-thumb.webp`; heavy `-1024`/`-1600` AVIF+WebP are **deferred** off the save request (`finalizeContentMedia` via `after()`, swept by cron). Delete removes EVERY version (original + thumb + all variants), atomic row delete (no resurrection race). `finalizePendingThumbs` backfills thumbs for rows that lack one (migration imports). `PostContent` emits `<picture>` only for originals whose variants exist; others render a plain `<img>` so a missing variant never blanks the image |
+| `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`/`deleteMediaBatch`, `finalizeContentMedia`, `finalizePendingVariants`, `finalizePendingThumbs` | Metadata in the `media` table; binaries on Blob. Upload keeps the untouched ORIGINAL + a cheap `-thumb.webp`; heavy `-1024`/`-1600` AVIF+WebP are **deferred** off the save request (`finalizeContentMedia` via `after()`, swept by cron). Delete removes EVERY version (original + thumb + all variants), atomic row delete (no resurrection race). `finalizePendingThumbs` backfills thumbs for rows that lack one (migration imports). `PostContent` emits `<picture>` only for originals whose variants exist; others render a plain `<img>` so a missing variant never blanks the image. Body `<img>` carry intrinsic `width`/`height` from the row (CLS-free); the FIRST body image is eager + `fetchpriority=high` (LCP), the rest lazy |
+| `highlight.ts` | `highlightCode` | Server-side Shiki syntax highlighting (singleton highlighter, Vitesse light+dark dual-theme, curated lang set). Called by `PostContent.highlightBlocks` to replace marked's plain `<pre><code class="language-x">` blocks; returns null on failure → caller keeps the plain block. Dark tokens swap via `.dark .shiki` CSS (`!important`, beats Shiki's inline light colors). Zero client JS |
 | `media-usage.ts` | `findUnusedMedia` | **Read-only audit** — returns URLs of media referenced by no post/page/settings **or revision snapshot** (the "Check unused" library button, `GET /api/media/unused`). Flags orphans in the grid for manual review; never deletes. Scans revisions on purpose so a time-machine restore's image is never reported as unused (the old destructive `sweep.ts` missed revisions and could delete a still-needed image) |
 | `auth.ts` | `handlers`, `auth`, `signIn`, `signOut`, `isAuthorized`, `getAuthState` | Anyone can sign in; only `AUTHORIZED_EMAIL` is authorized; unauthorized = silently redirected |
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the same URL namespace; throws `SlugConflictError` (→ 409) on collision |
@@ -233,13 +234,20 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 
 ## Reading & discovery
 - All reader features are toggleable: `settings.features { search, toc, related,
-  readingTime, progressBar, activityLog }` (default on, Admin → Settings → Tính năng). Gated in the
-  header (search icon), `/search` (notFound when off), and the post page. `activityLog` is the
-  one admin-facing toggle in this bucket — it gates the activity log (see below), not a reader feature.
-- `/search` — server ships a LEAN pre-folded index (`{ slug, title, date, terms }`,
-  terms = folded title+tags+categories, no excerpt/image so it scales); `SearchClient`
-  lists nothing until the reader types, filters in memory, caps at 50. Header search icon.
-- Post pages: `ReadingProgress` (top bar), `Toc` (>= 3 H2/H3; **desktop-only**, a `sticky`
+  readingTime, progressBar, activityLog }` (default on, Admin → Settings → Tính năng). Gated in
+  the header (search icon), `/search` (notFound when off), and the post page. `activityLog` is
+  the one admin-facing toggle in this bucket — it gates the activity log, not a reader feature.
+- `/search` — **two layers merged.** The server ships a LEAN pre-folded index (`{ slug, title,
+  date, terms }`, terms = folded title+tags+categories, no excerpt/image so it scales);
+  `SearchClient` filters it in memory for instant, accent-insensitive title/tag hits. In
+  parallel it debounce-calls `GET /api/search?q=` which runs a Postgres full-text query over
+  title + BODY (`searchPosts` → `.textSearch('search', q, { type:'websearch', config:'simple' })`
+  on the generated `search` tsvector); body-only hits are appended after the local ones. Caps at
+  50. The API honours the same `features.search` gate. NOTE: `config:'simple'` is accent-
+  *sensitive* (no `unaccent` in the generated column) — accent-insensitivity comes from the local
+  layer only.
+- Post pages: `ReadingProgress` (top bar), `BackToTop` (scroll-to-top button, fades in past the
+  first viewport; aria-label `t().backToTop`), `Toc` (>= 3 H2/H3; **desktop-only**, a `sticky`
   nav inside an `absolute` full-height track in the left gutter so it starts level with the
   body and follows the scroll; the `PostContent` renderer assigns slug ids to H2/H3),
   `RelatedPosts`. NOTE: the global unlayered `hr { margin:0 }` beats Tailwind margin
@@ -279,6 +287,9 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 - **Tables are mobile-responsive by hiding secondary columns**, not horizontal scroll: posts
   hide Date (`sm`) + Categories (`md`); pages hide the slug (`sm`). Title + Status + actions
   always show, so the status pill never gets squeezed into wrapping on a phone.
+- **`PostsTable` has a filter bar**: a folded substring search box (title/tags/categories) + an
+  All/Published/Draft segmented control, both client-side over the props (no fetch). Empty filter
+  result shows `t.filterEmpty`. Helps find a post fast as the archive grows.
 - **Phân loại tab** (`TaxonomyManager`): lists every category + tag with a usage count
   (derived client-side from the post index already in props — no extra fetch), each with
   rename (prompt; merges into an existing term) + remove (across all posts). Calls

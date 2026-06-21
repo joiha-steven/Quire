@@ -25,6 +25,7 @@ const ko = {
   notFoundTitle: '페이지를 찾을 수 없습니다',
   notFoundText: '찾으시는 페이지가 존재하지 않거나 이동되었습니다.',
   backHome: '홈으로',
+  backToTop: '맨 위로',
 } satisfies Dict
 
 export default ko

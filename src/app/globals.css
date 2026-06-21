@@ -218,6 +218,16 @@ hr {
   padding: 0;
   font-size: inherit;
 }
+/* Shiki highlighted blocks ship dual-theme: light token colors inline + a
+   `--shiki-dark` var per token. Under .dark, swap every token (and the panel bg)
+   to its dark counterpart. The shared .prose pre padding/radius still applies. */
+.dark .prose pre.shiki,
+.dark .prose pre.shiki span {
+  /* !important is required: Shiki writes the light colors as inline styles, which
+     otherwise beat any selector. */
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
 .prose code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875em;
@@ -272,6 +282,19 @@ hr {
 .prose figure.img-wide.img-right {
   margin-left: -30%;
   margin-right: 0;
+}
+/* On phones a 130%-wide image would force horizontal scrolling — clamp every
+   wide variant back to the column so the page never overflows sideways. */
+@media (max-width: 767px) {
+  .prose figure.img-wide,
+  .prose figure.img-wide.img-center,
+  .prose figure.img-wide.img-left,
+  .prose figure.img-wide.img-right {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {

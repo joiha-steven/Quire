@@ -2,20 +2,24 @@
 
 // Posts list (no chrome): rows with per-row edit/delete. Tabs + heading +
 // "new" button live in ContentDashboard, which renders this.
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Post, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
-import { formatDateTimeShort } from '@/lib/utils'
+import { formatDateTimeShort, foldAccents } from '@/lib/utils'
 import { RowActions, StatusPill } from './RowActions'
 import { useAdminT } from './I18nProvider'
+
+type StatusFilter = 'all' | 'published' | 'draft'
 
 export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
   const [posts, setPosts] = useState(initialPosts)
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState<StatusFilter>('all')
 
   async function handleDelete(slug: string) {
     if (!confirm(t.confirmDeletePost)) return
@@ -31,11 +35,58 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
     }
   }
 
+  // Filter by status + a folded substring match over title/tags/categories.
+  const needle = foldAccents(query.trim())
+  const filtered = useMemo(() => {
+    return posts.filter((p) => {
+      if (status !== 'all' && p.status !== status) return false
+      if (!needle) return true
+      return foldAccents([p.title, p.tags.join(' '), p.categories.join(' ')].join(' ')).includes(needle)
+    })
+  }, [posts, status, needle])
+
   if (posts.length === 0) {
     return <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.noPosts}</p>
   }
 
+  const statusTabs: { key: StatusFilter; label: string }[] = [
+    { key: 'all', label: t.filterAll },
+    { key: 'published', label: t.statusPublished },
+    { key: 'draft', label: t.statusDraft },
+  ]
+
   return (
+    <>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t.filterPlaceholder}
+          aria-label={t.filterPlaceholder}
+          className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:placeholder:text-neutral-500"
+        />
+        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+          {statusTabs.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => setStatus(s.key)}
+              className={`rounded-md px-3 py-1 text-sm font-medium ${
+                status === s.key
+                  ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white'
+                  : 'text-neutral-500'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.filterEmpty}</p>
+      ) : (
     <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500">
@@ -49,7 +100,7 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
           </tr>
         </thead>
         <tbody>
-          {posts.map((p) => (
+          {filtered.map((p) => (
             <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
               <td className="px-4 py-3 font-medium">
                 <Link href={`/admin/editor/${p.slug}`} className="hover:underline">
@@ -73,5 +124,7 @@ export function PostsTable({ initialPosts }: { initialPosts: Post[] }) {
         </tbody>
       </table>
     </div>
+      )}
+    </>
   )
 }

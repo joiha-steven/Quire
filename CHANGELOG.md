@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-06-21
+- **perf(images): intrinsic width/height + eager LCP image.** Body images now render with their
+  stored pixel dimensions (from the `media` table) so the browser reserves the box before bytes
+  arrive — eliminates layout shift (CLS). The first body image loads eagerly with
+  `fetchpriority=high` (likely the LCP element) instead of lazily. `v0.9.16`.
+- **feat(reading): server-side syntax highlighting (Shiki).** Code blocks are highlighted at
+  render with Shiki (Vitesse light/dark, muted to fit the minimal surface) — zero client JS.
+  Dual-theme tokens swap with the site's dark mode via CSS. Unknown languages / failures fall
+  back to the plain escaped block. `v0.9.16`.
+- **feat(search): full-text search over the article body.** The public search now also queries
+  the Postgres `search` tsvector (`/api/search`, `websearch_to_tsquery('simple')`) so matches
+  inside post bodies surface, merged after the instant local title/tag results. `v0.9.16`.
+- **feat(admin): filter + status tabs on the posts table.** A folded title/tag search box and an
+  All/Published/Draft segmented control to find posts fast as the archive grows. `v0.9.16`.
+- **feat(reading): back-to-top button + wide-image mobile clamp.** A themed scroll-to-top button
+  appears past the first viewport on posts; `img-wide` figures clamp to the column on phones so
+  they never force horizontal scrolling. `v0.9.16`.
+
 ## 2026-06-22
 - **fix(cache): tag Supabase reads + `revalidateTag('db')` on every save.** GET reads now carry
   the `db` tag (cache-eligible, so pages stay ISR); each write helper in `revalidate.ts` calls

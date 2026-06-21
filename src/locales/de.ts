@@ -25,6 +25,7 @@ const de = {
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',
   backHome: 'Zur Startseite',
+  backToTop: 'Nach oben',
 } satisfies Dict
 
 export default de

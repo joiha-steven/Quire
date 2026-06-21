@@ -14,6 +14,7 @@ import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
+import { BackToTop } from '@/components/blog/BackToTop'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
@@ -80,6 +81,13 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   // Originals whose AVIF/WebP variants exist — only these get a <picture>; the
   // rest render as a plain <img> so a missing variant never blanks the image.
   const readyOriginals = new Set(media.filter((m) => m.variants).map((m) => collapseBlob(m.url)))
+  // Intrinsic dimensions per original (collapsed pathname) so body images render
+  // with a reserved box — no layout shift (CLS) as they load.
+  const imageDims = new Map(
+    media
+      .filter((m) => m.width && m.height)
+      .map((m) => [collapseBlob(m.url), { width: m.width!, height: m.height! }] as const),
+  )
 
   // Post wins if visible; otherwise fall back to a published page.
   if (post && isPublicallyVisible(post.status, post.date)) {
@@ -92,6 +100,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     return (
       <article>
         {features.progressBar && <ReadingProgress />}
+        <BackToTop label={t(language).backToTop} />
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({
@@ -117,7 +126,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {/* The desktop ToC is fixed to the viewport (see Toc.tsx), not anchored here. */}
         <div className="mt-8">
           {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
-          <PostContent markdown={post.content} readyOriginals={readyOriginals} />
+          <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 
         {/* The global `hr` rule (unlayered) forces margin:0 and beats Tailwind
@@ -163,7 +172,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
       <article>
         <h1 className="text-[1.35rem] font-semibold tracking-tight">{page.title}</h1>
         <div className="mt-8">
-          <PostContent markdown={page.content} readyOriginals={readyOriginals} />
+          <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
       </article>
     )
