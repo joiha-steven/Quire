@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-06-21 (typography scale)
+- **feat(typography): one site-wide heading scale (H1–H5), no hardcoded sizes.** Heading
+  sizes now flow from five CSS variables (`--fs-h1`…`--fs-h5`) instead of per-element
+  `text-[…]` values. Defaults follow the owner's spec — H1 ≈ 30% larger than H2, H2 20%
+  larger than before (and 20% larger than H3), H4 10% larger than body text, H5 20% smaller
+  (body = 1.125rem): `2.26 / 1.74 / 1.45 / 1.24 / 0.9 rem`. **Every title** (single post,
+  single page, list cards, category/tag list pages, draft preview) uses **H1**.
+- **feat(editor): H4 + H5 buttons** in the post/page editor toolbar (alongside H1–H3); the
+  public renderer + `.prose` now style `h4`/`h5`.
+- **feat(settings): "Heading sizes" card** (Admin → Settings) to customize each level (rem)
+  with a live preview and a **reset-to-default** button. Stored in `settings.typography`,
+  injected as a `:root` override after `globals.css`. `v0.9.21`.
+
 ## 2026-06-21 (uploads)
 - **fix(media/files): browser-direct uploads — large files no longer fail.** Images and
   attachments now upload straight from the browser to Vercel Blob (`/api/media/blob-token` +

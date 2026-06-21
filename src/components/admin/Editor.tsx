@@ -1,7 +1,7 @@
 'use client'
 
 // TipTap markdown editor with a compact toolbar.
-// Marks/nodes: bold, italic, underline, strike, inline code, H1-H3, bullet +
+// Marks/nodes: bold, italic, underline, strike, inline code, H1-H5, bullet +
 // numbered + task lists, quote, code block, horizontal rule, link, image
 // (align + wide), GFM tables, and video (paste a YouTube/Vimeo/TikTok URL).
 // Drag an image file in -> auto-uploads -> inserts at cursor. A Markdown/Review
@@ -132,6 +132,12 @@ function Toolbar({
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={cls(editor.isActive('heading', { level: 3 }))}>
         H3
+      </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} className={cls(editor.isActive('heading', { level: 4 }))}>
+        H4
+      </button>
+      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()} className={cls(editor.isActive('heading', { level: 5 }))}>
+        H5
       </button>
       {sep}
       <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>

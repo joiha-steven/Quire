@@ -4,7 +4,7 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { getSettings, themesToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
+import { getSettings, themesToCss, typographyToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
 import { blobOrigin } from '@/lib/blob'
 
 // Runs before paint: applies the saved dark/light mode AND the saved palette
@@ -57,7 +57,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset } = await getSettings()
+  const { language, themes, themePreset, typography } = await getSettings()
   // Content images in posts are raw Blob URLs; warm that connection early.
   const blob = blobOrigin()
   // No `antialiased` class on <html>: it forces grayscale font-smoothing on Mac,
@@ -74,6 +74,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* All palettes' reading colors (light + dark) as CSS variables; the
             client switcher swaps between them via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
+        {/* Owner heading scale → --fs-h1..--fs-h5 (overrides the globals.css defaults). */}
+        <style dangerouslySetInnerHTML={{ __html: typographyToCss(typography) }} />
         <script dangerouslySetInnerHTML={{ __html: NO_FOUC }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>

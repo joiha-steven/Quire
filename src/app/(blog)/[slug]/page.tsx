@@ -118,8 +118,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           />
         )}
         {/* The post title matches the home/list card title exactly (size + weight)
-            so a post reads consistently from the listing into the article. */}
-        <h1 className="text-[1.35rem] font-semibold tracking-tight">{post.title}</h1>
+            so a post reads consistently from the listing into the article. Both use
+            the H1 scale (--fs-h1). */}
+        <h1 className="fs-h1 font-semibold tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">
           {formatDate(post.date, language)}
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
@@ -172,7 +173,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   if (page && page.status === 'published') {
     return (
       <article>
-        <h1 className="text-[1.35rem] font-semibold tracking-tight">{page.title}</h1>
+        <h1 className="fs-h1 font-semibold tracking-tight">{page.title}</h1>
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>

@@ -209,6 +209,16 @@ export type AdminStrings = {
   colorLink: string
   colorRule: string
   resetDefault: string
+  // typography (heading scale)
+  cardTypography: string
+  typographyHint: string
+  typoH1: string
+  typoH2: string
+  typoH3: string
+  typoH4: string
+  typoH5: string
+  typographyPreview: string
+  typographyPreviewBody: string
   // overview
   overviewTitle: string
   licenseTitle: string

@@ -28,7 +28,7 @@ export default async function PreviewPage({ params, searchParams }: PageProps<'/
       <div className="mb-6 rounded-lg border border-rule bg-rule px-4 py-2 text-sm text-meta">
         Bản xem trước · trang này không công khai và không được lập chỉ mục.
       </div>
-      <h1 className="text-[2.15rem] font-bold leading-[1.15] tracking-tight">{entry.title}</h1>
+      <h1 className="fs-h1 font-bold tracking-tight">{entry.title}</h1>
       {post && <p className="mt-3 text-sm text-meta">{formatDate(post.date, language)}</p>}
       <div className="mt-8">
         <PostContent markdown={entry.content} />

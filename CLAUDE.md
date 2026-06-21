@@ -144,7 +144,7 @@ Blob's CDN staleness, is what made the OLD no-DB `unstable_cache`+`?ts` model se
 | `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index. `updateTerm(kind, name, newName\|null)` renames (merges on collision) or removes a category/tag across EVERY post — updates each affected post's array column (no body rewrite), no revision snapshot; drives the Phân loại tab (`POST /api/taxonomy`, owner-only, → `revalidateEverything`) |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post in the `post_revisions` table (jsonb snapshot, store-relative; newest first). Drives the editor "time machine". Re-slugged on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
-| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map; migrates a legacy single `theme` into the default palette on read. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
+| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`, `DEFAULT_TYPOGRAPHY`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map + the heading scale `typography` (see Typography below); migrates a legacy single `theme` into the default palette on read. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
 | `themes.ts` | `THEME_PRESETS`, `DEFAULT_THEME`, `DEFAULT_PRESET_ID`, `getPreset`, `isPresetId`, `cloneTheme`, `defaultThemes`, `getDefaultTheme`, `themesToCss`, `paletteOptions` | The 6 built-in palettes (Mono/Sepia/Forest/Ocean/Rose/Amber), each a full light+dark `ThemeSettings`. **Each is independently owner-customizable** — colors live in `settings.themes` (id→ThemeSettings); `settings.themePreset` = the visitor default. `themesToCss(themes, defaultId)` emits CSS for EVERY palette (default on `:root`/`.dark`, others under `[data-palette="id"]` + `[data-palette].dark`) so the client `PaletteToggle` swaps instantly via `<html data-palette>`. Add a palette by appending to `THEME_PRESETS` (names are constant proper nouns, not localized) |
 | `files.ts` | `uploadIcon`, `isAllowedIconType`, `getFiles`, `addFilesBatch`, `deleteFile`, `deleteFilesBatch`, `getSiteIcons` | Two things share the `files/` Blob prefix: (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile`/`deleteFilesBatch` refuse `favicon-`/`app-icon-`. `getSiteIcons` lists the icon blobs (uploadedAt parsed from the `<kind>-<ms>` filename) so the Files tab can show them read-only (tagged "Settings"). `registerFilesBatch` records metadata for files the browser uploaded straight to Blob. Routes: `GET /api/files`, `POST /api/files/blob-token` + `POST /api/files/register` (client direct upload), `DELETE /api/files/by?url=`, `POST /api/files/delete` (multi), `GET /api/files/icons`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`); both grids have multi-select delete. `expandBlob` round-trips `files/` like `media/` |
 | `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `registerMediaBatch`, `deleteMedia`/`deleteMediaBatch`, `finalizeContentMedia`, `finalizePendingVariants`, `finalizePendingThumbs` | Metadata in the `media` table; binaries on Blob. **Uploads go straight from the browser to Blob** (`POST /api/media/blob-token` issues an owner-gated client token → the file never passes through a function, so the serverless 4.5MB request-body limit can't fail large photos), then `POST /api/media/register` (`registerMediaBatch`) fetches the original back to read dimensions + make the `-thumb.webp` and inserts the row. Upload keeps the untouched ORIGINAL + a cheap `-thumb.webp`; heavy `-1024`/`-1600` AVIF+WebP are **deferred** off the save request (`finalizeContentMedia` via `after()`, swept by cron). Delete removes EVERY version (original + thumb + all variants), atomic row delete (no resurrection race). `finalizePendingThumbs` backfills thumbs for rows that lack one (migration imports). `PostContent` emits `<picture>` only for originals whose variants exist; others render a plain `<img>` so a missing variant never blanks the image. Body `<img>` carry intrinsic `width`/`height` from the row (CLS-free); the FIRST body image is eager + `fetchpriority=high` (LCP), the rest lazy |
@@ -345,6 +345,26 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   no-FOUC script applies the stored palette before paint. All palettes' vars are emitted once by
   `themesToCss`, so switching is attribute-only. Admin chrome stays neutral by design (mode
   affects it, palette mostly affects the public reading surface).
+
+## Typography (heading scale) — one source of truth
+- **No per-element heading font sizes.** Every heading + title size comes from five CSS
+  variables `--fs-h1 … --fs-h5`. Defaults are baked into `globals.css :root` (so a fresh
+  install renders correctly) and match `DEFAULT_TYPOGRAPHY` in `lib/themes.ts` (client-safe
+  module — the settings UI imports it for its reset button). The owner's saved scale
+  (`settings.typography`, rem) is emitted by `typographyToCss()` into a `:root` `<style>` in
+  the root layout, injected AFTER `globals.css` so it wins.
+- **Defaults (owner's spec):** `h1 2.26 / h2 1.74 / h3 1.45 / h4 1.24 / h5 0.9` rem against a
+  1.125rem body — H1 ≈30% > H2, H2 20% > before & 20% > H3, H4 10% > body, H5 20% < body.
+- **Where applied:** `.prose h1…h5` (article body, incl. the TipTap editor surface) use the
+  vars directly; titles OUTSIDE `.prose` use the `.fs-h1…fs-h5` utility classes
+  (`globals.css`). **All titles use `.fs-h1`**: single post/page (`[slug]/page.tsx`), list
+  cards (`PostCard`), category/tag list headings (`BlogListing` callers), draft preview. The
+  callers still add their own `font-semibold`/`font-bold` + `tracking-tight`; the class only
+  sets size + line-height.
+- **Editor** exposes H1–H5 (StarterKit headings); `marked` renders `####`/`#####` → `h4`/`h5`
+  on the public side.
+- **Customize:** Admin → Settings → "Heading sizes" (`TypographyFields`) — five rem inputs +
+  live preview + reset-to-default. Saved via the single settings PUT.
 
 ## PWA (installable app)
 - The site installs to the iPhone/Android home screen and launches **standalone** (full-screen,
