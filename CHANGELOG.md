@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2026-06-21 (typography follow-up)
+- **change(typography): list cards use H2, not H1.** Single post/page titles (and category/tag
+  list-page headings) stay H1; post titles inside listings step down to H2 so the listing reads
+  calmer. `v0.9.22`.
+
 ## 2026-06-21 (typography scale)
 - **feat(typography): one site-wide heading scale (H1–H5), no hardcoded sizes.** Heading
   sizes now flow from five CSS variables (`--fs-h1`…`--fs-h5`) instead of per-element

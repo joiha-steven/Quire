@@ -116,8 +116,9 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
 - **One heading type scale, no hardcoded sizes.** Every heading + title size flows from five
   CSS variables (`--fs-h1…--fs-h5`); the layout injects the owner's `settings.typography`
   (rem) as a `:root` override after the baked-in defaults. Body headings read the vars
-  directly; titles outside the article use `.fs-h1…fs-h5` utilities, and all titles use H1.
-  Customizable per level (with reset) in Admin → Settings.
+  directly; titles outside the article use `.fs-h1…fs-h5` utilities — single post/page
+  titles + list-page headings use H1, list cards use H2. Customizable per level (with reset)
+  in Admin → Settings.
 - **Installable PWA, no service worker** → `app/manifest.ts` builds the manifest from
   settings (title, palette color, uploaded icon); standalone launch only — offline is
   intentionally out of scope, so there is nothing to register/cache and admin/API are

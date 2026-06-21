@@ -14,7 +14,7 @@ export function PostCard({
 }) {
   return (
     <article>
-      <h2 className="fs-h1 font-semibold tracking-tight">
+      <h2 className="fs-h2 font-semibold tracking-tight">
         <Link href={`/${post.slug}`} className="hover:text-meta">
           {post.title}
         </Link>

@@ -357,10 +357,10 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   1.125rem body — H1 ≈30% > H2, H2 20% > before & 20% > H3, H4 10% > body, H5 20% < body.
 - **Where applied:** `.prose h1…h5` (article body, incl. the TipTap editor surface) use the
   vars directly; titles OUTSIDE `.prose` use the `.fs-h1…fs-h5` utility classes
-  (`globals.css`). **All titles use `.fs-h1`**: single post/page (`[slug]/page.tsx`), list
-  cards (`PostCard`), category/tag list headings (`BlogListing` callers), draft preview. The
-  callers still add their own `font-semibold`/`font-bold` + `tracking-tight`; the class only
-  sets size + line-height.
+  (`globals.css`). **H1** = single post/page titles (`[slug]/page.tsx`), category/tag list
+  headings (`BlogListing` callers), and the draft preview. **List cards (`PostCard`) use H2** —
+  a step down so the listing reads calmer than the article. The callers still add their own
+  `font-semibold`/`font-bold` + `tracking-tight`; the class only sets size + line-height.
 - **Editor** exposes H1–H5 (StarterKit headings); `marked` renders `####`/`#####` → `h4`/`h5`
   on the public side.
 - **Customize:** Admin → Settings → "Heading sizes" (`TypographyFields`) — five rem inputs +
