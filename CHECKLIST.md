@@ -14,7 +14,9 @@
 - [ ] Draft posts not visible on public blog
 - [ ] Future-dated posts hidden until the date is reached
 - [ ] Past-date posts show the correct date
-- [ ] `_index.json` stays consistent after every write/delete
+- [ ] Postgres rows stay consistent after every write/delete (posts/pages/media/files)
+- [ ] `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set in the target Vercel environment
+- [ ] Deleting a media item removes it for good (no resurrection on next save/autosave)
 
 ## Cache & ISR
 - [ ] After publishing a post: detail page at `/{slug}` shows the new post

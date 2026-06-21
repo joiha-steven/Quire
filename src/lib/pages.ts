@@ -1,28 +1,49 @@
 // Static page data access. Mirrors posts.ts but with no taxonomy or date.
-// _index.json holds metadata only; full content lives in pages/{slug}.md.
+// Stored in the Postgres `pages` table (metadata + markdown body in `content`).
 
 import { cache } from 'react'
-import matter from 'gray-matter'
 import type { Page, PageWithContent } from '@/types'
-import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
+import { collapseBlob, expandBlob } from '@/lib/blob'
+import { db } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
-import { getSettings } from '@/lib/settings'
 
-const INDEX_PATH = 'pages/_index.json'
-const mdPath = (slug: string) => `pages/${slug}.md`
+const META_COLS = 'slug,title,status,featured_image'
 
-// Raw manifest read. No cross-request cache (see posts.ts) — `React.cache` only
-// dedupes within one render; every request re-reads Blob, so edits show at once.
+type PageRow = {
+  slug: string
+  title: string
+  status: string
+  featured_image: string | null
+  content?: string | null
+}
+
+function rowToMeta(row: PageRow): Page {
+  return {
+    title: row.title,
+    slug: row.slug,
+    status: row.status === 'published' ? 'published' : 'draft',
+    featuredImage: row.featured_image ? expandBlob(row.featured_image) : undefined,
+  }
+}
+
+// Metadata list, ordered by title (admin list incl. drafts). `React.cache`
+// dedupes within one render; every request re-reads Postgres (always current).
 const readIndex = cache(async (): Promise<Page[]> => {
-  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
-  const pages = await readJson<Page[]>(INDEX_PATH, [])
-  return [...pages]
-    .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
-    .sort((a, b) => a.title.localeCompare(b.title))
+  try {
+    const { data, error } = await db().from('pages').select(META_COLS)
+    if (error || !data) {
+      if (error) console.error(`[ERROR] pages.readIndex: ${error.message}`)
+      return []
+    }
+    return (data as PageRow[]).map(rowToMeta).sort((a, b) => a.title.localeCompare(b.title))
+  } catch (error) {
+    console.error(`[ERROR] pages.readIndex: ${(error as Error).message}`)
+    return []
+  }
 })
 
-// Metadata manifest, ordered by title (admin list incl. drafts). Tag 'pages'.
+// Metadata manifest, ordered by title (admin list incl. drafts).
 export async function getPageIndex(): Promise<Page[]> {
   return readIndex()
 }
@@ -33,19 +54,16 @@ export async function getPublicPages(): Promise<Page[]> {
   return all.filter((p) => p.status === 'published')
 }
 
-// Read+parse one page's markdown. `React.cache` dedupes within one request only.
+// Read one full page. `React.cache` dedupes within one request only.
 export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
-  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
-  const raw = await readText(mdPath(slug))
-  if (!raw) return null
-  const { data, content } = matter(raw)
-  const meta = data as Partial<Page>
-  return {
-    title: meta.title ?? slug,
-    slug: meta.slug ?? slug,
-    status: meta.status === 'published' ? 'published' : 'draft',
-    featuredImage: meta.featuredImage ? expandBlob(meta.featuredImage) : undefined,
-    content: expandBlob(content.trim()),
+  try {
+    const { data, error } = await db().from('pages').select('*').eq('slug', slug).maybeSingle()
+    if (error || !data) return null
+    const row = data as PageRow
+    return { ...rowToMeta(row), content: expandBlob(row.content ?? '') }
+  } catch (error) {
+    console.error(`[ERROR] pages.getPage(${slug}): ${(error as Error).message}`)
+    return null
   }
 })
 
@@ -63,35 +81,24 @@ function normalize(input: Partial<PageWithContent>): PageWithContent {
   }
 }
 
-// Split a PageWithContent into its index metadata (no body).
 function toMeta(page: PageWithContent): Page {
   const { content: _content, ...meta } = page
   void _content
   return meta
 }
 
-// Store-relative copy of a page's metadata (Blob URLs -> pathnames).
-function collapseMeta(meta: Page): Page {
-  return { ...meta, featuredImage: meta.featuredImage ? collapseBlob(meta.featuredImage) : undefined }
+// PageWithContent -> row (store-relative image refs).
+function toRow(page: PageWithContent): PageRow {
+  return {
+    slug: page.slug,
+    title: page.title,
+    status: page.status,
+    featured_image: page.featuredImage ? collapseBlob(page.featuredImage) : null,
+    content: collapseBlob(page.content),
+  }
 }
 
-// Serialize a page to frontmatter + markdown, storing Blob refs as pathnames.
-// Strip undefined fields first — js-yaml throws on undefined values.
-function serialize(page: PageWithContent): string {
-  const meta = collapseMeta(toMeta(page))
-  const clean = Object.fromEntries(
-    Object.entries(meta).filter(([, v]) => v !== undefined),
-  )
-  return matter.stringify(collapseBlob(page.content), clean)
-}
-
-// Read index, apply an update in memory, write it back. Never partial-write.
-async function mutateIndex(fn: (pages: Page[]) => Page[]): Promise<void> {
-  const current = await readJson<Page[]>(INDEX_PATH, [])
-  await writeJson(INDEX_PATH, fn(current))
-}
-
-// Create or overwrite a page: write {slug}.md, then sync the manifest.
+// Create or overwrite a page.
 export async function savePage(
   input: Partial<PageWithContent>,
   previousSlug?: string,
@@ -99,23 +106,21 @@ export async function savePage(
   const page = normalize(input)
   // Reject a slug already taken by another page or post (shared URL namespace).
   await ensureSlugFree(page.slug, 'page', previousSlug)
-  await writeText(mdPath(page.slug), serialize(page))
 
-  // If the slug changed, drop the old markdown file.
+  const { error } = await db()
+    .from('pages')
+    .upsert({ ...toRow(page), updated_at: new Date().toISOString() })
+  if (error) throw new Error(`savePage: ${error.message}`)
+
+  // If the slug changed, drop the old row.
   if (previousSlug && previousSlug !== page.slug) {
-    await deleteByPathname(mdPath(previousSlug))
+    await db().from('pages').delete().eq('slug', previousSlug)
   }
 
-  const meta = toMeta(page)
-  await mutateIndex((pages) => {
-    const without = pages.filter((p) => p.slug !== page.slug && p.slug !== previousSlug)
-    return [...without, collapseMeta(meta)] // store pathname; reads re-expand
-  })
-  return meta // full URLs for the client
+  return toMeta(page) // full URLs for the client
 }
 
-// Delete a page: remove {slug}.md and its manifest entry.
+// Delete a page.
 export async function deletePage(slug: string): Promise<void> {
-  await deleteByPathname(mdPath(slug))
-  await mutateIndex((pages) => pages.filter((p) => p.slug !== slug))
+  await db().from('pages').delete().eq('slug', slug)
 }

@@ -1,15 +1,17 @@
 // GET  /api/posts  -> metadata array (public read)
 // POST /api/posts  -> create a post (owner only)
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { PostWithContent } from '@/types'
 import { getIndex, savePost } from '@/lib/posts'
 import { finalizeContentMedia } from '@/lib/media'
 import { revalidateNewPost } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
-// Saving may generate deferred AVIF/WebP variants for newly-kept images.
+// Display-variant encoding runs AFTER the response via after(); keep headroom.
 export const maxDuration = 60
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -43,8 +45,17 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('Title or slug is required', 400)
     }
     const meta = await savePost(body)
-    await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+    // Generate display variants AFTER the response is sent so save returns fast.
+    // The original always renders meanwhile; the cron sweep finalizes stragglers.
+    after(async () => {
+      try {
+        await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+      } catch (error) {
+        logError(req, error)
+      }
+    })
     revalidateNewPost() // refresh every list/taxonomy surface; other posts stay warm
+    after(() => logActivity('post.create', meta.title || meta.slug))
     logRequest(req, 201, start)
     return ok(meta, 201)
   } catch (error) {

@@ -14,9 +14,19 @@
 // next save. This is cosmetic, self-heals, and the admin "Clear all cache" button
 // (revalidateEverything + warm) is the instant full-sync escape hatch.
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { getPublicPosts } from '@/lib/posts'
 import { getPublicPages } from '@/lib/pages'
+import { DB_TAG } from '@/lib/db'
+
+// Invalidate every cache-eligible Supabase read so the NEXT render of any purged
+// page reads fresh from Postgres (never a stale Data Cache entry). One coarse tag,
+// revalidated on every write — no per-key bookkeeping to drift. Pages still only
+// re-render when their PATH is purged below; this just guarantees fresh data then.
+function freshenData(): void {
+  // Next 16 requires a second arg; 'max' purges the tag across all cache profiles.
+  revalidateTag(DB_TAG, 'max')
+}
 
 // Every route that lists or aggregates post metadata. A post's
 // title/excerpt/date/taxonomy shows on ALL of these, so any post create/edit/
@@ -38,12 +48,14 @@ function revalidatePostLists(): void {
 // A brand-new post: not on its own detail URL yet (renders on first visit), but
 // it appears on every list surface immediately.
 export function revalidateNewPost(): void {
+  freshenData()
   revalidatePostLists()
 }
 
 // An edited or deleted post: refresh its own detail page (old + new slug when the
 // slug changed) AND every list surface (its metadata lives there too).
 export function revalidatePost(slug: string, previousSlug?: string): void {
+  freshenData()
   revalidatePath(`/${slug}`)
   if (previousSlug && previousSlug !== slug) revalidatePath(`/${previousSlug}`)
   revalidatePostLists()
@@ -52,6 +64,7 @@ export function revalidatePost(slug: string, previousSlug?: string): void {
 // Static pages are standalone: a page appears only on its own URL (+ sitemap /
 // llms index), never on post lists or taxonomy. Purge just its path(s) and those.
 export function revalidatePage(slug: string, previousSlug?: string): void {
+  freshenData()
   revalidatePath(`/${slug}`)
   if (previousSlug && previousSlug !== slug) revalidatePath(`/${previousSlug}`)
   revalidatePath('/sitemap.xml')
@@ -61,6 +74,7 @@ export function revalidatePage(slug: string, previousSlug?: string): void {
 // Settings (theme, menu, title, SEO toggles, siteUrl) affect EVERY rendered page,
 // so this is the one case that still purges the whole site under the root layout.
 export function revalidateEverything(): void {
+  freshenData()
   revalidatePath('/', 'layout')
 }
 

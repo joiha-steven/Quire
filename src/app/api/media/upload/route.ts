@@ -1,11 +1,15 @@
 // POST /api/media/upload -> upload one or more files (owner only)
 // Accepts multipart/form-data with one or more "file" fields.
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { addMediaBatch } from '@/lib/media'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
-// Generating AVIF + WebP at two sizes is CPU-heavy; allow more time (Pro plan).
+// Upload keeps the untouched ORIGINAL + a cheap thumbnail only; the heavy AVIF/WebP
+// display variants are generated later, off the request (media.ts finalizeVariants,
+// driven by the save route's after() + the hourly cron). Headroom for big files.
 export const maxDuration = 60
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -40,6 +44,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     // No revalidation needed: the admin media library is dynamic, and a new
     // upload isn't on any public page until a post/page referencing it is saved.
+    after(() => logActivity('media.upload', `${uploaded.length} file(s)`))
     logRequest(req, 201, start)
     return ok(uploaded, 201)
   } catch (error) {

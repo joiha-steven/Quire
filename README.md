@@ -1,14 +1,16 @@
-# vibe**blog** (v0.9.10)
+# vibe**blog** (v0.9.15)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
-UI; everything (posts + media) is stored in **Vercel Blob** — no database.
+UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
+binaries (images, attachments, icons) live in **Vercel Blob**.
 
 - **Framework:** Next.js 16 (App Router) + React 19 + TypeScript (strict)
-- **Storage:** Vercel Blob (`posts/`, `pages/`, `media/`, `revisions/`, `files/`, `settings/`; each content kind has an `_index.json` manifest); image refs stored store-relative (no vendor lock-in)
+- **Storage:** Supabase Postgres for all text (`posts`/`pages`/`post_revisions`/`media`/`files`/`settings` tables; post bodies are Markdown in a text column); Vercel Blob for binaries only. Image refs stored store-relative (no vendor lock-in)
 - **Auth:** NextAuth v5 (Google and/or GitHub OAuth), single authorized owner
-- **Editor:** TipTap 3 with Markdown; responsive images via `sharp` (original + AVIF/WebP variants, encoded on save); a 3-version time machine per post
+- **Editor:** TipTap 3 with Markdown; responsive images via `sharp` (original + AVIF/WebP variants, encoded in the background after save); a 3-version time machine per post
 - **Theming:** 6 built-in light+dark color palettes, each fully customizable; visitors can switch palette and light/dark/system/by-time mode; optional custom CSS
 - **PWA:** installable to the iPhone/Android home screen, launches standalone (no service worker / no offline by design)
+- **Admin:** Overview with a System panel (hosting/region/env + database + storage); a toggleable activity log (Admin → Log) recording every save/upload/delete
 - **UI languages:** en (default), vi, de, ja, zh, ko
 - **Styles:** Tailwind CSS v4
 - **Deploy:** Vercel (Docker self-host is on the [roadmap](./ROADMAP.md))
@@ -33,6 +35,9 @@ See [`.env.example`](./.env.example). In short:
 | `AUTH_GITHUB_ID` / `_SECRET`      | GitHub OAuth app (optional provider)      |
 | `AUTHORIZED_EMAIL`                | The only email allowed into `/admin`      |
 | `BLOB_READ_WRITE_TOKEN`           | Vercel Blob read/write token              |
+| `SUPABASE_URL`                    | Supabase project API URL                  |
+| `SUPABASE_SERVICE_ROLE_KEY`       | Supabase service_role key (secret, server-only) |
+| `CRON_SECRET`                     | Protects `/api/cron` (optional)           |
 
 Enable at least one provider; each loads only when its credentials are set.
 OAuth callback URLs: `https://<your-domain>/api/auth/callback/google` and/or
@@ -49,7 +54,7 @@ zero personal data. Anyone can fork and self-host.
 
 Keep secrets out of git: your real credentials live in `.env.local` (gitignored
 via `.env*`) and on Vercel (retrieve any time with `vercel env pull`). Your actual
-blog content lives in Vercel Blob, not in git. Don't commit personal data here.
+blog content lives in Supabase Postgres + Vercel Blob, not in git. Don't commit personal data here.
 
 ## Performance & caching
 
@@ -58,13 +63,13 @@ fast cached HTML, and **every admin save purges the affected pages** through one
 (`src/lib/revalidate.ts`) — a new post refreshes the list/taxonomy surfaces, editing a
 post also refreshes its own page, and a settings change purges the whole site. Each
 purge is a deliberate superset of what a change can touch, so an edit (content, theme,
-anything) is live on the next request without ever under-purging. There is no separate
-data cache (`unstable_cache` was removed; it kept serving stale content); Blob reads are
-`?ts`-busted so each regeneration is fresh, and the Full Route Cache is per-deployment so
-a new deploy never serves stale pages. Admin is fully dynamic (uncached); editor saves
-also `router.refresh()`, and a "Clear all cache" button purges + warms on demand. The
-Blob store and functions are both in Singapore (`vercel.json` pins `sin1`); images keep
-a 1-year CDN cache. List pages use **path-based pagination** (`/page/2`,
+anything) is live on the next request without ever under-purging. The Supabase reads are
+tagged `db` and every save calls `revalidateTag('db')`, so a re-rendered page always reads
+fresh from Postgres (never a stale Data Cache entry). Admin is fully dynamic (uncached);
+editor saves also `router.refresh()`, and a "Clear all cache" button purges + warms on
+demand. Functions run in Singapore (`vercel.json` pins `sin1`), co-located with the
+Supabase project (ap-southeast-1); images keep a 1-year CDN cache on the Blob host. List
+pages use **path-based pagination** (`/page/2`,
 `/category/x/page/2` — no `?query`). Uploaded photos keep the untouched original and
 serve responsive AVIF/WebP variants (`<picture>`, only once the variants exist).
 

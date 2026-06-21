@@ -3,8 +3,10 @@
 // Multipart form with one or more "file" fields. Any content type is accepted —
 // this is the catch-all store for non-image files (PDF, zip, docx, audio…).
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getFiles, addFilesBatch } from '@/lib/files'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -45,6 +47,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       })),
     )
     const uploaded = await addFilesBatch(inputs)
+    after(() => logActivity('file.add', `${uploaded.length} file(s)`))
     logRequest(req, 201, start)
     return ok(uploaded, 201)
   } catch (error) {

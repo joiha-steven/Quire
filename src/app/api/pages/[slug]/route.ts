@@ -2,15 +2,17 @@
 // PUT    /api/pages/[slug]  -> overwrite page (owner only)
 // DELETE /api/pages/[slug]  -> delete page (owner only)
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { PageWithContent } from '@/types'
 import { getPage, savePage, deletePage } from '@/lib/pages'
 import { finalizeContentMedia } from '@/lib/media'
 import { revalidatePage } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
-// Saving may generate deferred AVIF/WebP variants for newly-kept images.
+// Display-variant encoding runs AFTER the response via after(); keep headroom.
 export const maxDuration = 60
 
 export async function GET(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]'>): Promise<Response> {
@@ -45,8 +47,15 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/pages/[slug]
     const { slug } = await ctx.params
     const body = (await req.json()) as Partial<PageWithContent>
     const meta = await savePage(body, slug)
-    await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+    after(async () => {
+      try {
+        await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+      } catch (error) {
+        logError(req, error)
+      }
+    })
     revalidatePage(meta.slug, slug) // its page (old + new slug) + sitemap/llms
+    after(() => logActivity('page.update', meta.title || meta.slug))
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -70,6 +79,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/pages/[sl
     const { slug } = await ctx.params
     await deletePage(slug)
     revalidatePage(slug) // drop its now-404 page + sitemap/llms
+    after(() => logActivity('page.delete', slug))
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {

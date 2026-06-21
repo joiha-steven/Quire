@@ -34,6 +34,7 @@ export function AdminHeader({
     { href: '/admin/content', label: t.navDashboard },
     { href: '/admin/media', label: t.navMedia },
     { href: '/admin/settings', label: t.navSettings },
+    { href: '/admin/log', label: t.navLog },
   ]
 
   // Nav links + "view blog" (shared by desktop row and mobile panel).

@@ -1,8 +1,10 @@
 // POST /api/taxonomy -> rename or remove a category/tag across all posts (owner only).
 // Body: { kind: 'category'|'tag', name: string, action: 'rename'|'delete', newName?: string }
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { updateTerm, type TermKind } from '@/lib/posts'
 import { revalidateEverything } from '@/lib/revalidate'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 // Rewriting many posts' markdown can take a while on a large blog.
@@ -29,6 +31,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     const changed = await updateTerm(kind, name, newName)
     revalidateEverything()
+    after(() => logActivity('taxonomy.update', `${kind} "${name}"${newName ? ` → "${newName}"` : ' (removed)'} · ${changed} post(s)`))
     logRequest(req, 200, start)
     return ok({ changed })
   } catch (error) {

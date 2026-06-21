@@ -2,8 +2,10 @@
 // Multipart form: "file" (the image) + "kind" (favicon | app-icon). Stored under
 // files/ on Blob, separate from the media library. Accepts .ico unlike media.
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { uploadIcon, isAllowedIconType } from '@/lib/files'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -32,6 +34,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     const url = await uploadIcon(kind, await file.arrayBuffer(), contentType)
+    after(() => logActivity('icon.upload', kind))
     logRequest(req, 201, start)
     return ok({ url }, 201)
   } catch (error) {

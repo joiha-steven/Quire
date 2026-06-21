@@ -1,21 +1,9 @@
-// Thin wrapper around @vercel/blob.
-// All content (posts + media) lives in Blob; _index.json files are the query layer.
+// Thin wrapper around @vercel/blob — BINARIES ONLY (images, attachments, icons).
+// All text content (posts/pages/settings/media metadata) lives in Postgres now
+// (see `db.ts`). Image refs are stored store-relative and re-expanded on read so
+// the binary store can change (e.g. -> Cloudflare R2) without rewriting content.
 
 import { put, del, list } from '@vercel/blob'
-
-const COMMON = {
-  access: 'public' as const,
-  addRandomSuffix: false,
-  allowOverwrite: true,
-  // Mutable content (the _index.json query layer + post/page .md) is overwritten
-  // in place. Blob's default 1-year cache made the CDN serve a STALE index after
-  // a save -> new posts 404'd / lists looked empty. 0 keeps reads fresh.
-  cacheControlMaxAge: 0,
-}
-
-// Bust the Blob CDN cache on reads of mutable content so an overwritten blob is
-// never served stale (belt-and-suspenders with cacheControlMaxAge above).
-const fresh = (url: string) => `${url}${url.includes('?') ? '&' : '?'}ts=${Date.now()}`
 
 // Token format: vercel_blob_rw_<storeId>_<secret>
 // Public URL format: https://<storeId>.public.blob.vercel-storage.com/<pathname>
@@ -26,33 +14,15 @@ function blobBase(): string {
   const token = process.env.BLOB_READ_WRITE_TOKEN ?? ''
   const m = token.match(/^vercel_blob_rw_([^_]+)_/)
   if (!m) throw new Error('Cannot derive Blob base URL from BLOB_READ_WRITE_TOKEN')
-  _blobBase = `https://${m[1]}.public.blob.vercel-storage.com`
+  // Lowercase: the store id in the token is mixed-case but the public host is
+  // lowercase; rendering the canonical lowercase host avoids duplicate-URL SEO.
+  _blobBase = `https://${m[1].toLowerCase()}.public.blob.vercel-storage.com`
   return _blobBase
 }
 
-// Public-facing base for media URLs emitted into rendered HTML. Defaults to the
-// Blob store host, but set BLOB_PUBLIC_BASE (e.g. https://files.manhhung.me — a
-// Cloudflare Worker proxying the store) to serve media from a vanity domain.
-// ONLY affects URLs produced by expandBlob/blobOrigin; internal data reads
-// (readJson/readText via blobUrl) still hit the store directly — no proxy hop,
-// and the ?ts cache-bust on mutable .md/_index.json stays effective.
-// Owner-configurable vanity host (Settings → mediaBaseUrl), pushed in by
-// `getSettings` on each read. Module-scoped: for this single-site blog the value
-// is process-constant, and getSettings runs every request so it stays fresh.
-let _mediaBase: string | undefined
-export function setMediaBase(base: string | undefined): void {
-  _mediaBase = base ? base.replace(/\/$/, '') : undefined
-}
-
-function publicBase(): string {
-  if (_mediaBase) return _mediaBase
-  const custom = process.env.BLOB_PUBLIC_BASE
-  if (custom) return custom.replace(/\/$/, '')
-  return blobBase()
-}
-
 // Construct the deterministic public URL for a pathname without any API call.
-// Token-derived (store host) — used for the app's own server-side reads.
+// Token-derived (store host) — this is THE public media URL too: images are served
+// straight from the Vercel Blob store host (no vanity domain / proxy).
 export function blobUrl(pathname: string): string {
   return `${blobBase()}/${pathname}`
 }
@@ -60,41 +30,34 @@ export function blobUrl(pathname: string): string {
 // Public media origin (for a <link rel="preconnect">), or '' when unavailable.
 export function blobOrigin(): string {
   try {
-    return publicBase()
+    return blobBase()
   } catch {
     return ''
   }
 }
 
-// Matches any Blob store host (so a value survives a store/region/provider change)
-// plus the configured vanity host, if any — both collapse to a store-relative path.
+// Matches any Vercel Blob store host so a stored URL collapses to a store-relative
+// path (e.g. `media/x.webp`). Region/store changes survive this; a provider change
+// needs only a new token. (Legacy vanity-domain URLs were already normalized to
+// store-relative during the Postgres migration, so only the store host is matched.)
 function blobHostRe(): RegExp {
-  const hosts = ['[a-z0-9-]+\\.public\\.blob\\.vercel-storage\\.com']
-  for (const custom of [_mediaBase, process.env.BLOB_PUBLIC_BASE]) {
-    if (!custom) continue
-    try {
-      hosts.push(new URL(custom).host.replace(/[.\\]/g, '\\$&'))
-    } catch {
-      /* ignore a malformed value */
-    }
-  }
-  return new RegExp(`https?:\\/\\/(?:${hosts.join('|')})\\/`, 'gi')
+  return /https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//gi
 }
 
-// Persist form: strip the store/vanity host so only the store-relative pathname is
-// stored (e.g. `media/x.webp`). Idempotent; works on a bare value or a markdown
-// body. This is what decouples stored content from any specific Blob store/domain.
+// Persist form: strip the store host so only the store-relative pathname is stored
+// (e.g. `media/x.webp`). Idempotent; works on a bare value or a markdown body. This
+// is what decouples stored content from any specific Blob store/domain.
 export function collapseBlob(s: string): string {
   return s.replace(blobHostRe(), '')
 }
 
-// Render form: turn a stored pathname back into an absolute URL via the current
-// store. Idempotent — absolute URLs and external links are left untouched.
-// Handles a bare field value and `media/...` refs inside a markdown/HTML body.
+// Render form: turn a stored pathname back into an absolute Blob URL. Idempotent —
+// absolute URLs and external links are left untouched. Handles a bare field value
+// and `media/...` refs inside a markdown/HTML body.
 export function expandBlob(s: string): string {
   let base: string
   try {
-    base = publicBase()
+    base = blobBase()
   } catch {
     return s
   }
@@ -119,68 +82,6 @@ export async function listBlobs(): Promise<{ pathname: string; size: number }[]>
   } catch (error) {
     console.error(`[ERROR] blob.listBlobs: ${(error as Error).message}`)
     return out
-  }
-}
-
-// Read and parse a JSON blob; returns fallback when the blob is missing.
-// NOTE: `cache: 'no-store'` is intentionally avoided — it would force every page
-// that reads Blob to render dynamically, defeating the ISR page cache. Instead the
-// `fresh()` `?ts=` query makes each URL unique, so the fetch ALWAYS hits the Blob
-// origin (never a stale data-cache entry) even though the call is cache-eligible.
-// Net effect: pages can be ISR-cached, yet a read on (re)generation is always fresh.
-const READ_OPTS = { next: { revalidate: 3600 } } as const
-export async function readJson<T>(pathname: string, fallback: T): Promise<T> {
-  try {
-    const res = await fetch(fresh(blobUrl(pathname)), READ_OPTS)
-    if (!res.ok) return fallback
-    return (await res.json()) as T
-  } catch (error) {
-    // Degrade gracefully (e.g. missing token, Blob unreachable) so public pages
-    // render with empty data instead of 500ing.
-    console.error(`[ERROR] blob.readJson(${pathname}): ${(error as Error).message}`)
-    return fallback
-  }
-}
-
-// Read a text blob (e.g. markdown); returns null when missing.
-export async function readText(pathname: string): Promise<string | null> {
-  try {
-    const res = await fetch(fresh(blobUrl(pathname)), READ_OPTS)
-    if (!res.ok) return null
-    return await res.text()
-  } catch (error) {
-    // Degrade gracefully instead of 500ing the page.
-    console.error(`[ERROR] blob.readText(${pathname}): ${(error as Error).message}`)
-    return null
-  }
-}
-
-// Write a JSON blob at a deterministic pathname.
-export async function writeJson(pathname: string, data: unknown): Promise<string> {
-  try {
-    const { url } = await put(pathname, JSON.stringify(data, null, 2), {
-      ...COMMON,
-      contentType: 'application/json',
-    })
-    return url
-  } catch (error) {
-    console.error(`[ERROR] blob.writeJson(${pathname}): ${(error as Error).message}`)
-    throw error
-  }
-}
-
-// Write a text blob (markdown) at a deterministic pathname.
-export async function writeText(
-  pathname: string,
-  body: string,
-  contentType = 'text/markdown',
-): Promise<string> {
-  try {
-    const { url } = await put(pathname, body, { ...COMMON, contentType })
-    return url
-  } catch (error) {
-    console.error(`[ERROR] blob.writeText(${pathname}): ${(error as Error).message}`)
-    throw error
   }
 }
 

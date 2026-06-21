@@ -7,41 +7,39 @@ credentials live only in the gitignored `.env.local` and on Vercel (`vercel env
 pull`); never commit them. Personal/instance facts are not tracked in git.
 
 ## Architecture
-- No database. All content is in Vercel Blob.
-  - `posts/_index.json` — array of post metadata (no body); the only query layer.
-  - `posts/{slug}.md` — YAML frontmatter + markdown body.
-  - `media/_index.json` — array of MediaItem.
-  - `media/{timestamp}-{name}` — uploaded files (original name preserved).
-  - `pages/_index.json` — static pages metadata.
-  - `pages/{slug}.md` — static page content.
-  - `settings/site.json` — site-wide settings (title, theme, menu…).
-- Every write/delete updates the relevant `_index.json` (read → modify → write).
-- `src/lib` is the data layer; `src/app/api` are thin route handlers; UI is in
-  `src/components`.
+- **Text content in Supabase Postgres; binaries in Vercel Blob.** (Migrated from the
+  old no-DB `_index.json`+`.md`-on-Blob model — "P1.5".)
+  - Postgres tables (project `vibeblog`, ap-southeast-1, schema `public`): `posts`
+    (metadata cols + markdown `content` + `search` tsvector), `pages`, `post_revisions`
+    (jsonb snapshot, last 3/slug), `media` (metadata), `files` (metadata), `settings`
+    (single row id=1, jsonb).
+  - Vercel Blob holds ONLY binaries: `media/{name}.{ext}` (original + variants + thumb)
+    and `files/{...}` (attachments + favicon/app-icon).
+- Writes are atomic upserts/deletes (no read-modify-write manifest → the "deleted image
+  comes back" race is gone). Reads are always fresh + transactional.
+- `src/lib` is the data layer: `db.ts` (server-only `service_role` Supabase client) +
+  `blob.ts` (binaries only). `src/app/api` are thin route handlers; UI in `src/components`.
+- **Env:** `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret, server-only) + the
+  Blob token; all in gitignored `.env.local` + Vercel.
 
 ## Blob access — `src/lib/blob.ts`
+> **P1.5 note:** `blob.ts` is now BINARIES-ONLY. `readJson/readText/writeJson/writeText`
+> and the `?ts` cache-bust were REMOVED — text content lives in Postgres (`db.ts`).
+> What remains: `uploadFile`, `deleteByUrl/deleteByPathname`, `blobUrl`, `blobOrigin`,
+> `listBlobs`, `collapseBlob`/`expandBlob`/`setMediaBase`. The store-relative
+> collapse/expand rules below still apply to image refs (now stored in DB columns).
 - **Never call `resolveUrl` / `list()` to find a URL before reading.** URLs are
   deterministic: `blobUrl(pathname)` constructs them directly from the token.
   Token format: `vercel_blob_rw_<storeId>_<secret>` →
   `https://<storeId>.public.blob.vercel-storage.com/<pathname>`.
-- **Vanity media domain** — serve PUBLIC media from your own host (e.g.
-  `https://files.manhhung.me`, a Cloudflare Worker proxying the store). Two sources, owner
-  setting wins: **Settings → `mediaBaseUrl`** (Admin UI, preferred) → else env
-  `BLOB_PUBLIC_BASE`. `getSettings` pushes the resolved value into `blob.ts` via
-  `setMediaBase()` each request (module-scoped; process-constant for this single site).
-  The data-layer reads that expand media (`posts`/`pages`/`media` `readIndex` + `getPost`/
-  `getPage`/`getMedia`) `await getSettings()` FIRST so `_mediaBase` is set before any
-  `expandBlob` runs — no ordering race even with the env unset (`getSettings` is `React.cache`d,
-  so it is free when the layout already read settings this request).
-  `publicBase()` then drives `expandBlob` (rendered `<img>`/markdown src) + `blobOrigin`
-  (preconnect) ONLY — internal reads (`blobUrl`/`readJson`/`readText`) stay token-derived so
-  the app never proxies its own `.md`/`_index.json` fetches (no hop, `?ts` cache-bust intact).
-  `collapseBlob` strips the vanity host too, so saved content stays store-relative.
-- `readJson(pathname, fallback)` — fetch JSON; returns fallback on 404/error.
-- `readText(pathname)` — fetch markdown; returns null on 404/error.
-- `writeJson` / `writeText` — put with `allowOverwrite: true`, `cacheControlMaxAge: 0`.
-- Every read uses `fresh(url)` (adds `?ts=<now>`) to bust CDN cache on stale blobs.
-- **Stored content is store-relative, not absolute.** `collapseBlob(s)` strips any
+- **No vanity media domain (removed v0.9.13).** PUBLIC media is served straight from the Blob
+  store host (`blobUrl`/`expandBlob`/`blobOrigin` all use `blobBase()`); there is NO
+  `mediaBaseUrl` setting or `BLOB_PUBLIC_BASE` env, and no `setMediaBase`/`publicBase`. The old
+  `files.manhhung.me` Cloudflare Worker proxy returned a restrictive CSP that broke library
+  thumbnails, so it was dropped. `collapseBlob`/`expandBlob` still keep stored content
+  store-relative, so moving the binary store (e.g. → R2) is still just a token/base swap.
+- `uploadFile(pathname, body, contentType)` — put a binary; `deleteByPathname` removes one.
+- **Stored content is store-relative, not absolute.** `collapseBlob(s)` strips the
   Blob host → pathname (`media/x.webp`) on WRITE; `expandBlob(s)` re-adds the current
   store base on READ. Applied in the data layer only (posts/pages/settings), so all
   UI keeps working with absolute URLs while stored bytes carry no storeId. This
@@ -56,14 +54,14 @@ Media is **pure Vercel Blob**, but the design keeps switching providers cheap:
    re-added at read (`expandBlob`). Changing store/region/provider needs **no content
   rewrite** — just the token/base. Files are open formats (`.md`, `.json`, plain images),
   no proprietary container.
-- **Your own domain already fronts media.** Public media serves from the vanity host
-  (`mediaBaseUrl`, a Cloudflare Worker proxy), not `*.blob.vercel-storage.com`. Readers +
-  Google only ever see your domain, so the backend can move without breaking live links.
+- **Media serves from the Blob store host** (`*.public.blob.vercel-storage.com`). Image SEO is
+  handled by associating images with their page (image sitemap + Article `image`), not by a
+  vanity domain — see SEO below. No proxy in the path.
 - **Vercel coupling is one small file.** Only `src/lib/blob.ts` calls `@vercel/blob`
   (`put`/`list`/`del`). Everything else goes through its exported helpers.
 - **To migrate (e.g. → Cloudflare R2, S3-compatible):** (1) copy all objects to the new
-  bucket; (2) repoint the `files.*` Worker at it; (3) rewrite `blob.ts`'s ~6 I/O functions
-  to the S3 SDK (and `blobBase()`/`publicBase()` to the new host); swap the token env. App
+  bucket; (2) rewrite `blob.ts`'s ~6 I/O functions to the S3 SDK (and `blobBase()` to the new
+  host); swap the token env. App
   logic, content, and public URLs are untouched — a few hours, not a rewrite.
 
 ## Region (latency)
@@ -74,60 +72,50 @@ Media is **pure Vercel Blob**, but the design keeps switching providers cheap:
   with the functions — no cross-region hop.
 - The OG route is `runtime = 'edge'` and runs at the nearest PoP regardless.
 
-## Caching model — ISR pages + full purge on save — read this
-ONE cache layer: the **page** (Next Full Route Cache / ISR). There is deliberately
-**no data cache** (`unstable_cache`) — stacking a tagged data cache over Blob was what
-repeatedly served stale content (missing posts, reappearing deleted images, settings not
-applying, cross-deploy Data Cache persistence). The model now:
+## Caching model — ISR pages + tagged DB reads, purge on save — read this
+TWO coordinated layers, both invalidated on every write so an edit is never served stale:
 
-- **Pages are ISR-cached** with `export const revalidate = 3600` (`/`, `/[slug]`, the SEO
-  routes; `/[slug]` also has `generateStaticParams` → prerendered `●`). Visitors get fast
-  cached HTML; the 1h window is only a safety net.
-- **All cache invalidation goes through `src/lib/revalidate.ts`** (one place, always a
-  SUPERSET of the affected surfaces — never under-purges, which is what made old per-tag
-  bookkeeping go stale). Each admin write calls exactly one helper:
+- **The page** (Next Full Route Cache / ISR): public pages export `revalidate = 3600`
+  (`/`, `/[slug]`, the SEO routes; `/[slug]` also has `generateStaticParams` → prerendered
+  `●`). Visitors get fast cached HTML; the 1h window is only a safety net.
+- **The Supabase reads** (Next Data Cache): `db.ts` gives the client a custom fetch — GET reads
+  are cache-eligible (`next: { revalidate: 3600, tags: ['db'] }`) so a page that reads them can
+  still be static/ISR (a `no-store` read would force the whole route dynamic, killing the page
+  cache). Every read carries the `'db'` tag (`DB_TAG`). Writes are `no-store`.
+
+On every admin write `src/lib/revalidate.ts` does BOTH: `revalidateTag('db')` (`freshenData()`)
+so the NEXT render reads CURRENT data from Postgres — never a stale Data Cache entry — AND a
+`revalidatePath` SUPERSET that decides WHICH pages re-render. The tag guarantees freshness; the
+paths decide what re-renders. One coarse tag = no per-key bookkeeping to drift (that drift, plus
+Blob's CDN staleness, is what made the OLD no-DB `unstable_cache`+`?ts` model serve stale content).
+
+- **All invalidation goes through `revalidate.ts`** — each admin write calls exactly one helper,
+  and each helper begins with `freshenData()`:
   - **New post** → `revalidateNewPost()`: every list/taxonomy surface (home, `/page/[n]`,
     `/category/[slug]`(+`/page/[n]`), `/tag/[slug]`(+`/page/[n]`), `feed.xml`, `sitemap.xml`,
-    `llms.txt`). The bracketed dynamic forms (`'page'` type) cover every slug + pagination
-    page in one call. Other posts' detail pages stay warm.
-  - **Edit/delete post** → `revalidatePost(slug, prevSlug?)`: the post's own page (old + new
-    slug) PLUS all the list surfaces above (its title/excerpt/date/taxonomy live there too).
+    `llms.txt`). Bracketed dynamic forms (`'page'` type) cover every slug + pagination page in
+    one call. Other posts' detail pages stay warm.
+  - **Edit/delete post** → `revalidatePost(slug, prevSlug?)`: its own page (old + new slug) PLUS
+    all the list surfaces above.
   - **New/edit/delete page** → `revalidatePage(slug, prevSlug?)`: just its own URL(s) +
-    `sitemap.xml`/`llms.txt` (a static page never appears on post lists/taxonomy).
-  - **Settings** → `revalidateEverything()` (`revalidatePath('/', 'layout')`) + `warmCache()`
-    — theme/menu/title/SEO touch every page, so purge the whole site then re-warm.
-  - **"Clear all cache" button** / media delete → `revalidateEverything()` (+ warm on
-    the button). Media *upload* alone purges nothing (not on a public page until a referencing
-    post is saved, which purges). The "Check unused" media audit is read-only — it purges nothing.
-  - **The one accepted staleness:** the "related posts" box on OTHER post detail pages — a new
-    post sharing tags with post Y won't show in Y's related list until Y's own ISR (≤1h) or
-    next save. Cosmetic, self-heals; the Clear button is the instant full-sync escape hatch.
-- **Admin forms call `router.refresh()` after a successful save** (PostForm, PageForm, and
-  SettingsView) so the client Router Cache is dropped — the admin lists and public site show
-  the save on the next navigation, not a stale RSC. The server purge above handles the Full
-  Route Cache; `router.refresh()` handles the client side. (This pairs with `staleTimes` in
-  `next.config.ts`; both were causes of the old "applies late" symptom.)
-- **Data-layer reads use `React.cache()` only** (request-scoped dedup, never cross-request)
-  AND the Blob fetch is **cache-eligible but cache-busted**: `blob.ts` reads with
-  `{ next: { revalidate: 3600 } }` (NOT `no-store`, so pages can be ISR) while `fresh()`
-  adds a unique `?ts=`, so every actual fetch hits the Blob origin fresh. Net: pages cache,
-  but each (re)generation reads current data — no stale data cache, no read-after-write race
-  (the read-modify-write in `mutateIndex` is always fresh for the same reason).
-- **Why this is reliable now (vs the old `unstable_cache` model):** (1) one cache layer, not
-  two; (2) the Full Route Cache is **per-deployment** — a new deploy never serves another
-  deploy's stale pages (the old Data Cache persisted across deploys); (3) every save does a
-  **full** purge, so nothing is missed; (4) `?ts` guarantees fresh Blob on regeneration.
-- **"Clear all cache" button** (`CacheButton` → `POST /api/cache/clear`) =
-  `revalidatePath('/', 'layout')` + warms the home + newest detail pages. Use it after
-  editing Blob directly (outside admin) or to force a global refresh.
-- **No cache-key versioning** (adding an index field needs no bump). Client Router Cache is
-  minimized (`experimental.staleTimes: { dynamic: 0, static: 30 }`) so soft navigations to
-  dynamic routes are always fresh. NOTE: Next 16 rejects `static: 0` (min 30) and silently
-  ignores it — 30 is the lowest accepted value, so static routes can hold a client RSC up to
-  30s on soft nav (ISR + the full purge-on-save still make a hard load fresh).
-- **DO NOT** reintroduce `unstable_cache` or `cacheComponents: true`, and **do not** set the
-  Blob reads back to `cache: 'no-store'` (that forces every page dynamic, killing the ISR
-  cache). Never add a cross-request data cache over Blob — that is exactly what broke before.
+    `sitemap.xml`/`llms.txt`.
+  - **Settings / taxonomy / media delete / "Clear all cache"** → `revalidateEverything()`
+    (`revalidatePath('/', 'layout')`); settings + the Clear button also `warmCache()`. Media
+    *upload* alone purges nothing (not on a public page until a referencing post is saved). The
+    "Check unused" media audit is read-only.
+  - **One accepted staleness:** the "related posts" box on OTHER posts' detail pages — won't
+    reflect a newly-shared tag until that post's own ISR (≤1h) or next save. Cosmetic, self-heals;
+    Clear-all is the instant full-sync escape hatch.
+- **Admin forms call `router.refresh()` after a successful save** (PostForm, PageForm,
+  SettingsView) so the client Router Cache is dropped. Admin routes are `force-dynamic`, so Next
+  overrides their DB reads to `no-store` → the editor/media/settings always show live data.
+- **Data-layer reads also use `React.cache()`** (request-scoped dedup) on top of the Data Cache.
+- **Client Router Cache minimized** (`experimental.staleTimes: { dynamic: 0, static: 30 }`).
+  Next 16 rejects `static: 0` (min 30), so a static route can hold a client RSC up to 30s on soft
+  nav (ISR + purge-on-save still make a hard load fresh).
+- **DO NOT** set the Supabase GET reads to `cache: 'no-store'` (forces every page dynamic, killing
+  ISR), and **do not** enable `cacheComponents: true`. The `'db'` tag + `revalidatePath` superset
+  IS the model — keep every write going through `revalidate.ts`.
 
 ## Rendering — `src/app/(blog)/[slug]/page.tsx`
 - `revalidate = 3600` + `generateStaticParams` (all post/page slugs) + `dynamicParams = true`
@@ -149,14 +137,16 @@ applying, cross-deploy Data Cache persistence). The model now:
 
 | File | Key exports | Notes |
 |---|---|---|
-| `blob.ts` | `blobUrl`, `readJson`, `readText`, `writeJson`, `writeText`, `uploadFile`, `deleteByUrl`, `deleteByPathname`, `listBlobs` | All Blob I/O. Never call `list()` to find a URL — use `blobUrl()` |
-| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index. `updateTerm(kind, name, newName\|null)` renames (merges on collision) or removes a category/tag across EVERY post — rewrites each affected `.md` + the index in one pass, no revision snapshot; drives the Phân loại tab (`POST /api/taxonomy`, owner-only, → `revalidateEverything`) |
-| `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post at `revisions/{slug}.json` (newest first). Drives the editor "time machine". Moved on slug change, removed on delete |
+| `db.ts` | `db()` | Server-only Supabase client (service_role). Custom fetch: GET reads cache-eligible (`next.revalidate`) for ISR, writes `no-store`. ALL text content access goes through here |
+| `blob.ts` | `blobUrl`, `uploadFile`, `deleteByUrl`, `deleteByPathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | BINARIES ONLY (images/files/icons). `blobUrl`/`expandBlob` use the lowercase Blob store host (no vanity domain). Never call `list()` to find a URL — use `blobUrl()`. (Text I/O moved to Postgres; `readJson/writeText/?ts/setMediaBase` removed) |
+| `activity.ts` | `logActivity`, `getActivity`, `clearActivity` | Activity log (Postgres `activity_log`). `logActivity` is gated by `settings.features.activityLog` and never throws. Called via `after()` from every mutating route |
+| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads are `React.cache()` only (request-scoped dedup, never cross-request). `savePost` snapshots the about-to-be-overwritten version via `revisions.ts` (time machine), and stores `readingMinutes` in the index. `updateTerm(kind, name, newName\|null)` renames (merges on collision) or removes a category/tag across EVERY post — updates each affected post's array column (no body rewrite), no revision snapshot; drives the Phân loại tab (`POST /api/taxonomy`, owner-only, → `revalidateEverything`) |
+| `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions per post in the `post_revisions` table (jsonb snapshot, store-relative; newest first). Drives the editor "time machine". Re-slugged on slug change, removed on delete |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map; migrates a legacy single `theme` into the default palette on read. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
 | `themes.ts` | `THEME_PRESETS`, `DEFAULT_THEME`, `DEFAULT_PRESET_ID`, `getPreset`, `isPresetId`, `cloneTheme`, `defaultThemes`, `getDefaultTheme`, `themesToCss`, `paletteOptions` | The 6 built-in palettes (Mono/Sepia/Forest/Ocean/Rose/Amber), each a full light+dark `ThemeSettings`. **Each is independently owner-customizable** — colors live in `settings.themes` (id→ThemeSettings); `settings.themePreset` = the visitor default. `themesToCss(themes, defaultId)` emits CSS for EVERY palette (default on `:root`/`.dark`, others under `[data-palette="id"]` + `[data-palette].dark`) so the client `PaletteToggle` swaps instantly via `<html data-palette>`. Add a palette by appending to `THEME_PRESETS` (names are constant proper nouns, not localized) |
-| `files.ts` | `uploadIcon`, `isAllowedIconType`, `getFiles`, `addFilesBatch`, `deleteFile` | Two things share the `files/` Blob prefix: (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid; (2) the **Files library** — a manifest-backed (`files/_index.json`) store of non-image attachments (PDF/zip/docx/audio…), any content type. `getFiles`/`addFilesBatch`/`deleteFile` mirror media's batched, lost-update-safe pattern; icons are NOT in the manifest so they never show in the Files tab (and `deleteFile` refuses `favicon-`/`app-icon-`). Routes: `GET/POST /api/files`, `DELETE /api/files/by?url=`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`). `expandBlob` round-trips `files/` like `media/` |
-| `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`, `finalizeContentMedia` | Upload is **batched** (`addMediaBatch` = one manifest read-modify-write for all files; collision names checked against the real store via `listBlobs`). jpg/png keeps ORIGINAL + cheap `-thumb.webp` (`variants:false`); heavy `-1024`/`-1600` AVIF+WebP are **deferred** — `finalizeContentMedia` (post/page save) generates them only for images kept in the content. svg/gif/webp stored as-is. Delete removes all variants. `PostContent` emits `<picture>` **only** for originals whose variants exist (the `readyOriginals` set from `getMedia`); others render a plain `<img>` so a missing variant never blanks the image |
+| `files.ts` | `uploadIcon`, `isAllowedIconType`, `getFiles`, `addFilesBatch`, `deleteFile` | Two things share the `files/` Blob prefix: (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile` refuses `favicon-`/`app-icon-`. Routes: `GET/POST /api/files`, `DELETE /api/files/by?url=`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`). `expandBlob` round-trips `files/` like `media/` |
+| `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `deleteMedia`/`deleteMediaBatch`, `finalizeContentMedia`, `finalizePendingVariants`, `finalizePendingThumbs` | Metadata in the `media` table; binaries on Blob. Upload keeps the untouched ORIGINAL + a cheap `-thumb.webp`; heavy `-1024`/`-1600` AVIF+WebP are **deferred** off the save request (`finalizeContentMedia` via `after()`, swept by cron). Delete removes EVERY version (original + thumb + all variants), atomic row delete (no resurrection race). `finalizePendingThumbs` backfills thumbs for rows that lack one (migration imports). `PostContent` emits `<picture>` only for originals whose variants exist; others render a plain `<img>` so a missing variant never blanks the image |
 | `media-usage.ts` | `findUnusedMedia` | **Read-only audit** — returns URLs of media referenced by no post/page/settings **or revision snapshot** (the "Check unused" library button, `GET /api/media/unused`). Flags orphans in the grid for manual review; never deletes. Scans revisions on purpose so a time-machine restore's image is never reported as unused (the old destructive `sweep.ts` missed revisions and could delete a still-needed image) |
 | `auth.ts` | `handlers`, `auth`, `signIn`, `signOut`, `isAuthorized`, `getAuthState` | Anyone can sign in; only `AUTHORIZED_EMAIL` is authorized; unauthorized = silently redirected |
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the same URL namespace; throws `SlugConflictError` (→ 409) on collision |
@@ -185,9 +175,13 @@ applying, cross-deploy Data Cache persistence). The model now:
 ## Scripts — `scripts/`
 
 One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
+> **Legacy (pre-Supabase):** every script below except `migrate-to-supabase.mjs` operates on the
+> retired Blob `_index.json` + `.md` model and no longer reflects the live data layer. Kept only
+> as historical reference / recovery for the old store; do NOT run them against the current site.
 
 | Script | Purpose |
 |---|---|
+| `migrate-to-supabase.mjs` | One-off P1.5 migration: read all Blob `_index.json` + `.md` + revisions → insert into Postgres (posts/pages/revisions/media/files/settings). Idempotent (upsert), `--dry` to preview. Already run; kept for reference/recovery |
 | `import-wordpress.mjs` | Import WP XML export → Blob posts |
 | `convert-html-to-markdown.mjs` | Convert WP HTML body → Markdown |
 | `fix-import-captions.mjs` | Fold `<figcaption>` into image `alt` |
@@ -212,7 +206,11 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   `/llms.txt`) are allowed; aggressive SEO/data scrapers (`BAD_BOTS`: Ahrefs, Semrush,
   MJ12, DotBot, PetalBot, Bytespider…) get `Disallow: /`; `*` stays welcoming so unknown
   good bots work. Lists are consts at the top of the file — edit there to add/remove a bot.
-- `app/sitemap.ts` → sitemap.xml (home + posts + pages + categories + tags).
+- `app/sitemap.ts` → sitemap.xml (home + posts + pages + categories + tags). Each post entry
+  also lists its images (`<image:image>`, via `images:` on the entry) — featured image + every
+  body image (`extractImageUrls`) — so search engines associate images with their manhhung.me
+  page even though the files are on the Blob host. (`BlogPosting` JSON-LD on the post carries an
+  `image` too: featured, else first body image.)
   `app/sitemaps.xml/route.ts` → 308 alias to `/sitemap.xml` (for the plural form / old submissions).
 - `app/llms.txt/route.ts` → /llms.txt, a Markdown content index for AI crawlers
   (llmstxt.org); 404 when off.
@@ -235,8 +233,9 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 
 ## Reading & discovery
 - All reader features are toggleable: `settings.features { search, toc, related,
-  readingTime, progressBar }` (default on, Admin → Settings → Tính năng). Gated in the
-  header (search icon), `/search` (notFound when off), and the post page.
+  readingTime, progressBar, activityLog }` (default on, Admin → Settings → Tính năng). Gated in the
+  header (search icon), `/search` (notFound when off), and the post page. `activityLog` is the
+  one admin-facing toggle in this bucket — it gates the activity log (see below), not a reader feature.
 - `/search` — server ships a LEAN pre-folded index (`{ slug, title, date, terms }`,
   terms = folded title+tags+categories, no excerpt/image so it scales); `SearchClient`
   lists nothing until the reader types, filters in memory, caps at 50. Header search icon.
@@ -284,6 +283,19 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
   (derived client-side from the post index already in props — no extra fetch), each with
   rename (prompt; merges into an existing term) + remove (across all posts). Calls
   `updateTerm` via `POST /api/taxonomy`, then `router.refresh()`.
+
+## Activity log + System panel (Admin)
+- **Activity log** (`lib/activity.ts`, Postgres `activity_log`): every mutating route records
+  one entry via `after(() => logActivity(action, detail))` AFTER the response (never slows the
+  action, never throws). Actions: `post|page.{create,update,delete}`, `media.{upload,delete}`,
+  `file.{add,delete}`, `icon.upload`, `settings.save`, `taxonomy.update`, `cache.clear`.
+  Gated by `settings.features.activityLog` (default on). Viewed at **Admin → Log**
+  (`/admin/log`, force-dynamic) — newest first + a Clear button (`DELETE /api/activity`);
+  `GET /api/activity` returns the latest 200. When adding a new mutating route, log it too.
+- **System panel** (admin Overview): `getSystemInfo()` in `app/admin/page.tsx` reports hosting
+  (Vercel) + `VERCEL_REGION`/`VERCEL_ENV`/`VERCEL_GIT_COMMIT_SHA`, the database
+  (Supabase · region · ref from `SUPABASE_URL`) with a live reachability check, and the media
+  storage host (`blobOrigin()`). Rendered by `SystemCard` in `Overview.tsx`.
 
 ## Settings (Admin → settings)
 - **One form, one save button** (`SettingsView.tsx`): all settings live in a single
@@ -369,9 +381,10 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 ## Next.js 16 reminders
 - `params` / `searchParams` are async (await them).
 - Use `PageProps<...>` / `RouteContext<...>` global type helpers.
-- Reads use `React.cache()` for request-scoped dedup; do NOT add `unstable_cache` back, and
-  do NOT set Blob reads to `cache: 'no-store'` (forces every page dynamic). Public pages are
-  ISR (`revalidate`) + purged on save; admin is `force-dynamic`. See "Caching model".
+- Reads use `React.cache()` for request-scoped dedup; the Supabase GET reads are tagged `'db'`
+  + cache-eligible. Do NOT set them to `cache: 'no-store'` (forces every page dynamic). Public
+  pages are ISR (`revalidate`) + purged on save (`revalidateTag('db')` + `revalidatePath`);
+  admin is `force-dynamic`. See "Caching model".
 - `cacheComponents: true` enables PPR — avoid (incompatible with `Date.now()` + route configs).
 - Before writing any unfamiliar API, read `node_modules/next/dist/docs/`.
 
