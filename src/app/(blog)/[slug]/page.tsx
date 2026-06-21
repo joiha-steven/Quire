@@ -15,6 +15,7 @@ import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
+import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
@@ -101,6 +102,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
       <article>
         {features.progressBar && <ReadingProgress />}
         <BackToTop label={t(language).backToTop} />
+        <ScrollDepth />
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({

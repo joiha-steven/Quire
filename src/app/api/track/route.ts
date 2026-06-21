@@ -5,7 +5,7 @@
 
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { recordView } from '@/lib/analytics'
+import { recordView, recordScroll } from '@/lib/analytics'
 import { requireOwner } from '@/lib/api'
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -13,12 +13,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Never count the owner's own visits to the public site — the beacon is
     // same-origin so it carries the session cookie; skip when it's the owner.
     if (await requireOwner()) return new Response(null, { status: 204 })
-    const body = (await req.json().catch(() => ({}))) as { path?: unknown }
+    const body = (await req.json().catch(() => ({}))) as { path?: unknown; depth?: unknown }
     const path = typeof body.path === 'string' ? body.path : ''
     if (path) {
       const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
       const ua = req.headers.get('user-agent') ?? ''
-      after(() => recordView(path, ip, ua))
+      // A `depth` payload is a scroll-depth sample (sent on leave); otherwise it
+      // is a page view (sent on load).
+      if (typeof body.depth === 'number') {
+        const depth = body.depth
+        after(() => recordScroll(path, depth, ip, ua))
+      } else {
+        after(() => recordView(path, ip, ua))
+      }
     }
   } catch {
     /* never surface analytics errors to the client */

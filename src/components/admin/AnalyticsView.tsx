@@ -8,12 +8,12 @@ import Link from 'next/link'
 import type { AnalyticsSummary } from '@/lib/analytics'
 import { useAdminT } from './I18nProvider'
 
-const RANGES = [7, 30, 365] as const
+const RANGES = [1, 7, 30, 365] as const
 export type Range = (typeof RANGES)[number]
 
 export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: Range }) {
   const t = useAdminT()
-  const rangeLabel: Record<Range, string> = { 7: t.analyticsRange7, 30: t.analyticsRange30, 365: t.analyticsRange365 }
+  const rangeLabel: Record<Range, string> = { 1: t.analyticsRange24h, 7: t.analyticsRange7, 30: t.analyticsRange30, 365: t.analyticsRange365 }
   const maxDay = data.daily.reduce((m, d) => Math.max(m, d.views), 0) || 1
   const hasData = data.totalViews > 0
 
@@ -38,7 +38,7 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
 
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.analyticsPrivacyNote}</p>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="text-3xl font-bold tracking-tight">{data.totalViews.toLocaleString()}</div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsViews}</div>
@@ -46,6 +46,10 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
         <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="text-3xl font-bold tracking-tight">{data.uniqueVisitors.toLocaleString()}</div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsVisitors}</div>
+        </div>
+        <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="text-3xl font-bold tracking-tight">{data.avgReadDepth}%</div>
+          <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsAvgDepth}</div>
         </div>
       </div>
 
@@ -77,7 +81,7 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
                     {p.path}
                   </a>
                   <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">
-                    {p.views.toLocaleString()} · {p.visitors.toLocaleString()}
+                    {p.views.toLocaleString()} · {p.visitors.toLocaleString()} · {p.avgDepth}%
                   </span>
                 </li>
               ))}

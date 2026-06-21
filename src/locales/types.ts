@@ -61,6 +61,7 @@ export type AdminStrings = {
   colStatus: string
   colDate: string
   colCategories: string
+  colViews: string
   untitled: string
   statusPublished: string
   statusDraft: string
@@ -259,6 +260,8 @@ export type AdminStrings = {
   analyticsViews: string
   analyticsVisitors: string
   analyticsTopPages: string
+  analyticsAvgDepth: string
+  analyticsRange24h: string
   analyticsRange7: string
   analyticsRange30: string
   analyticsRange365: string

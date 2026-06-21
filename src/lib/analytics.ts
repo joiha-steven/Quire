@@ -9,22 +9,27 @@
 // - One row per view. Aggregation (totals / top pages / daily series) is done in
 //   Postgres via the `analytics_summary` RPC (see the migration), so the admin
 //   page is one round-trip regardless of volume.
-// - Bots are dropped by user-agent. Admin/API paths are never tracked.
-// - Retention: the hourly cron deletes rows older than a year (`purgeOldEvents`).
+// - Bots are dropped by user-agent. Admin/API paths are never tracked, and the
+//   owner's own visits are excluded in the route (requireOwner).
+// - Retention: events are kept FOREVER (no purge) — the owner wants the full history.
+// - Scroll depth: a separate `analytics_scroll` table holds one "% of page reached
+//   before leaving" sample per post-leave, so a missed pagehide loses a depth
+//   sample but never a view. Averaged per page + overall in the summary.
 
 import { createHash } from 'node:crypto'
 import { db } from '@/lib/db'
 
-export type TopPage = { path: string; views: number; visitors: number }
+export type TopPage = { path: string; views: number; visitors: number; avgDepth: number }
 export type DailyPoint = { day: string; views: number; visitors: number }
 export type AnalyticsSummary = {
   totalViews: number
   uniqueVisitors: number
+  avgReadDepth: number
   topPages: TopPage[]
   daily: DailyPoint[]
 }
 
-const EMPTY: AnalyticsSummary = { totalViews: 0, uniqueVisitors: 0, topPages: [], daily: [] }
+const EMPTY: AnalyticsSummary = { totalViews: 0, uniqueVisitors: 0, avgReadDepth: 0, topPages: [], daily: [] }
 
 // Common crawlers / preview bots — don't count them as readers.
 const BOT_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|vkshare|whatsapp|telegram|discord|headless|lighthouse|pagespeed|gtmetrix|monitor|uptime|curl|wget|python-requests|axios|node-fetch/i
@@ -62,11 +67,25 @@ export async function recordView(rawPath: string, ip: string, ua: string): Promi
   }
 }
 
-// Aggregated stats for the last `days` days. One RPC round-trip; empty on failure.
-export async function getAnalytics(days: number): Promise<AnalyticsSummary> {
+// Record one scroll-depth sample (0–100, % of the page reached before leaving).
+export async function recordScroll(rawPath: string, depth: number, ip: string, ua: string): Promise<void> {
+  try {
+    if (isBot(ua)) return
+    const path = normalizePath(rawPath)
+    if (!path) return
+    const d = Math.max(0, Math.min(100, Math.round(depth)))
+    await db().from('analytics_scroll').insert({ path, depth: d, visitor: visitorHash(ip, ua) })
+  } catch (error) {
+    console.error(`[ERROR] analytics.recordScroll: ${(error as Error).message}`)
+  }
+}
+
+// Aggregated stats for the last `days` days. `bucket` controls the chart grain
+// ('hour' for the 24h view, 'day' otherwise). One RPC round-trip; empty on failure.
+export async function getAnalytics(days: number, bucket: 'hour' | 'day' = 'day'): Promise<AnalyticsSummary> {
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString()
-    const { data, error } = await db().rpc('analytics_summary', { since, top_n: 10 })
+    const { data, error } = await db().rpc('analytics_summary', { since, top_n: 10, bucket })
     if (error || !data) {
       if (error) console.error(`[ERROR] analytics.getAnalytics: ${error.message}`)
       return EMPTY
@@ -78,21 +97,17 @@ export async function getAnalytics(days: number): Promise<AnalyticsSummary> {
   }
 }
 
-// Retention: drop events older than `days` (default 1 year). Returns rows removed.
-export async function purgeOldEvents(days = 365): Promise<number> {
+// All-time total views per path (`{ "/slug": 12, … }`) for the content tables.
+export async function getViewTotals(): Promise<Record<string, number>> {
   try {
-    const cutoff = new Date(Date.now() - days * 86_400_000).toISOString()
-    const { count, error } = await db()
-      .from('analytics_events')
-      .delete({ count: 'exact' })
-      .lt('created_at', cutoff)
-    if (error) {
-      console.error(`[ERROR] analytics.purgeOldEvents: ${error.message}`)
-      return 0
+    const { data, error } = await db().rpc('analytics_totals')
+    if (error || !data) {
+      if (error) console.error(`[ERROR] analytics.getViewTotals: ${error.message}`)
+      return {}
     }
-    return count ?? 0
+    return data as Record<string, number>
   } catch (error) {
-    console.error(`[ERROR] analytics.purgeOldEvents: ${(error as Error).message}`)
-    return 0
+    console.error(`[ERROR] analytics.getViewTotals: ${(error as Error).message}`)
+    return {}
   }
 }
