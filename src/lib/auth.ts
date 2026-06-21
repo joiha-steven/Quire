@@ -10,7 +10,10 @@ import type { Provider } from 'next-auth/providers'
 import GitHub from 'next-auth/providers/github'
 import Google from 'next-auth/providers/google'
 
-const AUTHORIZED_EMAIL = process.env.AUTHORIZED_EMAIL ?? ''
+// Normalize for comparison: email is case-insensitive in practice and providers
+// may return a different case / stray whitespace than what's configured.
+const normalizeEmail = (e?: string | null): string => (e ?? '').trim().toLowerCase()
+const AUTHORIZED_EMAIL = normalizeEmail(process.env.AUTHORIZED_EMAIL)
 
 // Load only the providers that have credentials configured.
 const providers: Provider[] = []
@@ -36,7 +39,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 // True only for the configured owner. Safe to call with a null session.
 export function isAuthorized(email?: string | null): boolean {
-  return Boolean(email) && email === AUTHORIZED_EMAIL && AUTHORIZED_EMAIL !== ''
+  return AUTHORIZED_EMAIL !== '' && normalizeEmail(email) === AUTHORIZED_EMAIL
 }
 
 // Resolve the current session and whether it belongs to the owner.

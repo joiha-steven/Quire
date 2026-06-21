@@ -206,6 +206,12 @@ are called out elsewhere (Caching, Typography, Conventions).
   tags ×2 + categories).
 - **GOTCHA:** the global unlayered `hr { margin:0 }` beats Tailwind margin utilities — put
   divider spacing on a wrapper div, not on the `<hr>`.
+- **Heading ids are de-duped** (2nd `foo` → `foo-2`): `dedupeHeadingIds` (PostContent) and
+  `extractHeadings` (utils) run the SAME counter over H2/H3 in document order — change one, change
+  both or the ToC anchors break.
+- **Link hrefs are sanitized** (`safeHref` in PostContent drops `javascript:`/`data:`/`vbscript:`)
+  — marked v5+ no longer does. Raw HTML in markdown is already escaped (the `html` renderer →
+  `escapeHtml`), so `<script>`/`<img onerror>` render as visible text.
 - **Draft preview:** `/preview/[slug]?key=<hmac>` (force-dynamic, noindex);
   `previewToken` = HMAC(slug, `AUTH_SECRET`); editor "Link nháp" button. Separate route keeps
   `/[slug]` SSG + published-only.
@@ -281,6 +287,11 @@ are called out elsewhere (Caching, Typography, Conventions).
   OUTSIDE `.prose` use `.fs-h1…fs-h5` + `.t-small` (every secondary text). H1 = single
   post/page titles + category/tag headings + draft preview; list cards (`PostCard`) = H2. Only
   fixed public sizes allowed: the brand wordmark + the 404 numeral.
+- **Inter is self-hosted** (`public/fonts/inter-{latin,latin-ext,vietnamese}.woff2`,
+  variable, declared via `@font-face` + `unicode-range` in `globals.css`; `--font-inter:'Inter'`
+  there). **No `next/font/google`** — it fetched at build, which broke offline/CI builds. The OG
+  route self-hosts the same Inter separately as `.woff` (Satori can't decode woff2). To update
+  Inter, re-drop the woff2 files. The latin subset is `<link rel=preload>`-ed in the root layout.
 - **ONE typeface for EVERYTHING — hard rule, no exceptions (incl. admin + OG).** No
   `font-family`, no `font-mono`, no second family; `.prose code` is `inherit`;
   **`grep -rE "font-mono" src` must be empty.** A custom font (`settings.customFont` =

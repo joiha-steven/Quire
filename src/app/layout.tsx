@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastProvider } from '@/components/ui/Toast'
@@ -12,12 +11,6 @@ import { blobOrigin } from '@/lib/blob'
 // is already baked into :root, so we only set data-palette when one is stored.
 const NO_FOUC = `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p)d.setAttribute('data-palette',p)}catch(e){}})();`
 
-// Single typeface site-wide: Inter, with full Vietnamese coverage.
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin', 'latin-ext', 'vietnamese'],
-  display: 'swap',
-})
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
@@ -63,8 +56,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // No `antialiased` class on <html>: it forces grayscale font-smoothing on Mac,
   // which thins body text. Default smoothing keeps reading text at full weight.
   return (
-    <html lang={language} className={`${inter.variable} h-full`}>
+    <html lang={language} className="h-full">
       <body className="min-h-full">
+        {/* Preload the Latin Inter subset (the one almost every page needs) so the
+            self-hosted face paints without a swap flash on first load. */}
+        <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {blob && (
           <>
             <link rel="preconnect" href={blob} crossOrigin="anonymous" />

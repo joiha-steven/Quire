@@ -1,6 +1,6 @@
 {
   "name": "vibeblog",
-  "version": "0.9.27",
+  "version": "0.9.28",
   "private": true,
   "license": "MIT",
   "browserslist": [
@@ -13,7 +13,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=20.9"
