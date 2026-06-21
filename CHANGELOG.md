@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2026-06-21 (later)
+- **style(post): match the single-post title to the list card title.** The `/[slug]` post
+  heading now uses the same size + weight as the home/list card title (`text-[1.35rem]
+  font-semibold`) so a post reads consistently from the listing into the article. `v0.9.17`.
+
 ## 2026-06-21
 - **perf(images): intrinsic width/height + eager LCP image.** Body images now render with their
   stored pixel dimensions (from the `media` table) so the browser reserves the box before bytes
