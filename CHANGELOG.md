@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-06-22 (docs: slim CLAUDE.md)
+- **docs(claude): CLAUDE.md 560 → 358 lines (−36%) with zero rules lost.** Deduped the "why"
+  (delegated to ARCHITECTURE.md via a header note), deleted the standalone Portability section
+  (its rule lives in Blob; rationale in ARCHITECTURE), compressed the data-layer table + the
+  descriptive sections (SEO/Editor/Settings/PWA/etc.) to essentials, and collapsed the legacy
+  scripts table to a one-line list. Every HARD RULE and GOTCHA kept verbatim (caching DO-NOTs,
+  header `h-9`/no-`items-baseline`, one-font + grep checks, `hr{margin:0}`, i18n sync, versioning).
+- **docs(claude): fixed a stale contradiction** — removed the dangling "`blob.ts` readJson/readText
+  return fallback" line; those were already removed in P1.5 (the doc said so two sections earlier).
+
 ## 2026-06-22 (docs: DB schema + working principles)
 - **docs(setup): added `scripts/schema.sql`** — the full Postgres schema (all 9 tables,
   indexes, the `posts.search` generated tsvector, RLS, and the `analytics_summary`/
