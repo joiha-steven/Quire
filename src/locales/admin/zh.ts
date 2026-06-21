@@ -89,6 +89,8 @@ const zh = {
   unusedBadge: '未使用',
   showUnusedOnly: '仅显示未使用',
   showAll: '显示全部',
+  deleteAllUnused: '删除所有未使用',
+  confirmDeleteUnused: '删除所有未使用的图片？此操作无法撤销。',
   close: '关闭',
   loading: '加载中...',
   noMedia: '还没有媒体文件。',

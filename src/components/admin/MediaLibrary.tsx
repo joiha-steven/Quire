@@ -81,6 +81,35 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     notify(t.copiedUrl)
   }
 
+  // Delete EVERY currently-flagged unused image in one atomic request (one
+  // manifest write) — no per-image race, and far faster than clicking each.
+  const [deletingAll, setDeletingAll] = useState(false)
+  async function deleteAllUnused() {
+    if (!unused || unused.size === 0) return
+    if (!confirm(t.confirmDeleteUnused)) return
+    setDeletingAll(true)
+    try {
+      const res = await fetch('/api/media/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: [...unused] }),
+      })
+      const json = (await res.json()) as ApiResponse<MediaItem[]>
+      if (!json.success || !json.data) throw new Error(json.error)
+      setItems(json.data)
+      // Keep only the urls that genuinely survived (defensive — normally none).
+      const surviving = new Set(json.data.map((m) => m.url))
+      const left = [...unused].filter((u) => surviving.has(u))
+      setUnused(left.length ? new Set(left) : null)
+      if (left.length === 0) setOnlyUnused(false)
+      notify(t.deleted)
+    } catch {
+      notify(t.deleteFailed, 'error')
+    } finally {
+      setDeletingAll(false)
+    }
+  }
+
   // Non-destructive audit: flag media referenced by no post/page/setting/revision.
   // `unused` is null until a check runs, then a Set of unused URLs to badge/filter.
   const [checking, setChecking] = useState(false)
@@ -158,13 +187,23 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
       {mode === 'page' && items.length > 0 && (
         <div className="flex justify-end gap-4">
           {unused && unused.size > 0 && (
-            <button
-              type="button"
-              onClick={() => setOnlyUnused((v) => !v)}
-              className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-            >
-              {onlyUnused ? t.showAll : t.showUnusedOnly}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setOnlyUnused((v) => !v)}
+                className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              >
+                {onlyUnused ? t.showAll : t.showUnusedOnly}
+              </button>
+              <button
+                type="button"
+                onClick={deleteAllUnused}
+                disabled={deletingAll}
+                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+              >
+                {t.deleteAllUnused} ({unused.size})
+              </button>
+            </>
           )}
           <button
             type="button"

@@ -213,44 +213,58 @@ function mediaKey(s: string): string | null {
   return s.match(/media\/[^?#"')\s]+/)?.[0] ?? null
 }
 
-// Delete a media item: removes its manifest entry + every blob version (original
-// + thumbnail + the four AVIF/WebP display variants when present).
+// Delete one or MORE media items in a SINGLE manifest read-modify-write. Doing
+// the whole set under one read + one write removes the lost-update race that made
+// deleting several "unused" images at once silently bring them back: separate
+// per-image deletes each read the same manifest and wrote their own copy, so the
+// last write clobbered the earlier removals (a classic no-DB concurrency bug).
 //
 // Order matters: the manifest is the library's source of truth, so we write the
-// reduced manifest FIRST (the image is gone from the library the instant that
-// succeeds), THEN best-effort delete the blob files. If the (slower) file cleanup
-// stalls or fails, the removal still stuck. Returns the AUTHORITATIVE new list
-// built from the in-memory manifest — no Blob re-read.
-export async function deleteMedia(url: string): Promise<MediaItem[]> {
-  const targetKey = mediaKey(url)
+// reduced manifest FIRST (images gone from the library the instant that succeeds),
+// THEN best-effort delete the blob files. If the (slower) file cleanup stalls or
+// fails, the removal still stuck. Returns the AUTHORITATIVE new list built from
+// the in-memory manifest — no Blob re-read.
+export async function deleteMediaBatch(urls: string[]): Promise<MediaItem[]> {
+  const keys = new Set(urls.map(mediaKey).filter((k): k is string => k !== null))
   const current = await readJson<MediaItem[]>(INDEX_PATH, [])
-  const removed = targetKey ? current.filter((m) => mediaKey(m.url) === targetKey) : []
-  const remaining = current.filter((m) => !removed.includes(m))
+  if (keys.size === 0) return toClientItems(current)
+
+  const removedSet = new Set(current.filter((m) => {
+    const k = mediaKey(m.url)
+    return k !== null && keys.has(k)
+  }))
+  const remaining = current.filter((m) => !removedSet.has(m))
 
   // Nothing matched (or the manifest read failed and came back empty): do NOT
   // rewrite — that would be pointless, or on a transient read failure would wipe
   // the whole manifest. Just return the current view.
-  if (removed.length === 0) return toClientItems(current)
+  if (removedSet.size === 0) return toClientItems(current)
 
-  // 1) Persist the removal first — this is what makes the image disappear.
+  // 1) Persist the removals first — this is what makes the images disappear.
   await writeJson(INDEX_PATH, remaining)
 
-  // 2) Best-effort cleanup of the actual blob files (original + thumb + variants).
+  // 2) Best-effort cleanup of the actual blob files. Original always; the thumb
+  // when recorded; the four display variants only when they were generated
+  // (variants flag) — avoids a burst of deletes for files that never existed.
   const paths = new Set<string>()
-  for (const item of removed) {
+  for (const item of removedSet) {
     const p = mediaKey(item.url)
     if (!p) continue
     paths.add(p)
     const thumbKey = item.thumb ? mediaKey(item.thumb) : null
-    if (thumbKey) paths.add(thumbKey)
-    if (/\.(jpe?g|png)$/i.test(p)) {
+    if (thumbKey && thumbKey !== p) paths.add(thumbKey)
+    if (item.variants && /\.(jpe?g|png)$/i.test(p)) {
       const stem = p.replace(/\.[^.]+$/, '')
-      paths.add(`${stem}-thumb.webp`)
       for (const w of SIZES) { paths.add(`${stem}-${w}.webp`); paths.add(`${stem}-${w}.avif`) }
     }
   }
   await Promise.all([...paths].map((p) => deleteByPathname(p).catch(() => {})))
   return toClientItems(remaining)
+}
+
+// Delete a single media item (delegates to the batch path).
+export async function deleteMedia(url: string): Promise<MediaItem[]> {
+  return deleteMediaBatch([url])
 }
 
 // Owner-only diagnostic: report what a delete of `url` would match against the

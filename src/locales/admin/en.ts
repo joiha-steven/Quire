@@ -89,6 +89,8 @@ const en = {
   unusedBadge: 'unused',
   showUnusedOnly: 'Show unused only',
   showAll: 'Show all',
+  deleteAllUnused: 'Delete all unused',
+  confirmDeleteUnused: 'Delete ALL unused images? This cannot be undone.',
   close: 'Close',
   loading: 'Loading...',
   noMedia: 'No media yet.',
