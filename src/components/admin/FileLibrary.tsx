@@ -83,7 +83,7 @@ export function FileLibrary() {
           aria-label={f.filename}
         />
       )}
-      <span className="flex h-9 w-12 shrink-0 items-center justify-center rounded bg-neutral-100 text-[10px] font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+      <span className="flex h-9 w-12 shrink-0 items-center justify-center rounded bg-neutral-100 text-xs font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
         {ext(f)}
       </span>
       <div className="min-w-0 flex-1">
@@ -96,7 +96,7 @@ export function FileLibrary() {
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-3 text-xs">
         {managed ? (
-          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
             {t.iconsManaged}
           </span>
         ) : (

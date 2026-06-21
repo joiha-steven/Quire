@@ -120,8 +120,9 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
   `@font-face` set (`settings.customFont` = family + faces, stored on Blob under `files/`, one file
   per weight) overrides `--font-sans` (Inter fallback) — per-weight because the site disables
   faux-bold. Titles use `.fs-h*` utilities, secondary text `.t-small`; single post/page titles +
-  list-page headings are H1, list cards H2. Customizable (with reset) in Admin → Settings, split
-  into General / Appearance / Advanced tabs.
+  list-page headings are H1, list cards H2. **One typeface for the whole reading site** — body,
+  headings, and code all use `--font-sans` (no separate monospace family). Customizable (with
+  reset) in Admin → Settings, split into General / Appearance / Advanced tabs.
 - **Installable PWA, no service worker** → `app/manifest.ts` builds the manifest from
   settings (title, palette color, uploaded icon); standalone launch only — offline is
   intentionally out of scope, so there is nothing to register/cache and admin/API are

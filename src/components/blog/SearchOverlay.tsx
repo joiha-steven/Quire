@@ -100,7 +100,7 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
           onChange={(e) => setQ(e.target.value)}
           placeholder={t(lang).searchPlaceholder}
           aria-label={t(lang).search}
-          className="w-full border-b border-rule bg-transparent pb-3 text-xl tracking-tight outline-none placeholder:text-meta"
+          className="fs-h3 w-full border-b border-rule bg-transparent pb-3 tracking-tight outline-none placeholder:text-meta"
         />
         <div className="mt-4 max-h-[55vh] overflow-y-auto">
           {needle.length < 1 ? (

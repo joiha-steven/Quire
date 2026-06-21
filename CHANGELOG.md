@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-06-22 (type scale re-tuned + one font everywhere)
+- **change(typography): smaller, calmer default scale.** List-card titles (H2) were reading as
+  banners — the whole scale was re-tuned down to a restrained ~1.18 ratio off an 18px body:
+  `h1 1.95 / h2 1.4 / h3 1.2 / h4 1.15 / h5 0.9 rem` (was `2.26 / 1.74 / 1.45 / 1.24 / 0.9`),
+  with line-heights/letter-spacing balanced per role for long-form reading. Reset restores these.
+- **change(typography): one typeface for everything.** Code blocks + inline code now reuse the
+  site font (Inter or the uploaded face) instead of a separate monospace stack — no font family
+  is ever auto-added on the reading site. (Admin keeps functional monospace for the hex inputs +
+  raw-Markdown source editor, a deliberate tool affordance.)
+- **chore(typography): full site sweep, no stray hardcoded sizes.** Search inputs now use the
+  `.fs-h2`/`.fs-h3` roles; the only remaining fixed public sizes are the brand wordmark and the
+  404 numeral (deliberate display). Admin's arbitrary `text-[10px]/[11px]` badges normalized to
+  `text-xs`; admin chrome otherwise stays on Tailwind's standard scale by design (it must NOT
+  resize when the owner tunes the reader's content sizes). `v0.9.25`.
+
 ## 2026-06-21 (full per-role typography + per-weight fonts)
 - **feat(typography): every text role fully tunable, zero hardcoded sizes.** Nine roles —
   h1–h5, body, small (dates/meta/related/ToC/pagination/search), caption, code — each with its

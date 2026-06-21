@@ -68,7 +68,7 @@ function PresetCard({
           {name}
         </span>
         {isDefault && (
-          <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white dark:bg-white dark:text-neutral-900">
+          <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
             {defaultLabel}
           </span>
         )}
