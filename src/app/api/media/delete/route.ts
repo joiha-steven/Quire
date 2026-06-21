@@ -3,9 +3,11 @@
 // any multi-delete so concurrent single-deletes can't clobber each other's
 // manifest write (lost-update race). Returns the authoritative post-delete list.
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { deleteMediaBatch } from '@/lib/media'
+import { revalidateEverything } from '@/lib/revalidate'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export const maxDuration = 60 // a large unused-sweep may delete many blobs
@@ -24,7 +26,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('No urls provided', 400)
     }
     const items = await deleteMediaBatch(urls) // authoritative post-delete list
-    revalidatePath('/', 'layout') // a deleted image may appear on a cached page
+    revalidateEverything() // a deleted image may appear on any cached page; freshen data too
+    after(() => logActivity('media.delete', `${urls.length} image(s)`))
     logRequest(req, 200, start)
     return ok(items)
   } catch (error) {

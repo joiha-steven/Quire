@@ -1,6 +1,60 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **fix(cache): tag Supabase reads + `revalidateTag('db')` on every save.** GET reads now carry
+  the `db` tag (cache-eligible, so pages stay ISR); each write helper in `revalidate.ts` calls
+  `revalidateTag('db','max')` alongside its `revalidatePath` superset, so a re-rendered page
+  always reads fresh from Postgres — closes the window where an ISR page could serve up-to-1h
+  stale data after an edit. `v0.9.15`.
+- **feat(media): cron backfills missing thumbnails.** `finalizePendingThumbs` generates a
+  `-thumb.webp` for any media row without a thumb (e.g. migration imports), so the library grid
+  never has to load full-size originals. Runs hourly with the variant sweep. `v0.9.15`.
+- **chore: code + docs cleanup after the Supabase move.** Removed the dead vanity-domain
+  priming (`getSettings()` calls in read paths), tidied the data layer, and rewrote the caching
+  / Blob / data-model docs (CLAUDE/ARCHITECTURE/README) to match the Postgres model; legacy
+  `_index.json` scripts flagged as pre-migration. `v0.9.15`.
+- **fix(media): render the canonical lowercase Blob host.** The store id is mixed-case in the
+  token but the public host is lowercase; `blobBase()` now lowercases it so image URLs are
+  canonical (avoids uppercase/lowercase duplicate-URL SEO). `v0.9.14`.
+- **change(media): drop the vanity media domain — serve images straight from Vercel Blob.**
+  Removed the `mediaBaseUrl` setting + `BLOB_PUBLIC_BASE` env + the `setMediaBase`/`publicBase`
+  machinery; `expandBlob`/`blobOrigin` now always use the Blob store host. Fixes broken
+  thumbnails in the media library (the proxy returned a restrictive CSP), simplifies the data
+  layer (removed the now-dead `getSettings()` priming from every read), and keeps content
+  store-relative so a future move (e.g. → R2) is still just a token/base swap. `v0.9.13`.
+- **feat(seo): image sitemap + Article image.** `sitemap.xml` now lists each post's images
+  (`<image:image>`) and the post's `BlogPosting` JSON-LD carries an `image` (featured, else the
+  first body image), so search engines associate every image with its manhhung.me page even
+  though the files are on the Blob host. New `extractImageUrls` helper. `v0.9.13`.
+- **feat(admin): activity log — transparent record of admin actions.** Every mutation
+  (post/page create·update·delete, media/file upload·delete, icon upload, settings save,
+  taxonomy change, cache clear) is recorded to a Postgres `activity_log` table and shown on
+  a new **Admin → Log** page (newest first, with a Clear button). Logging is toggleable in
+  Settings → Features (`activityLog`, default on); writes happen via `after()` so they never
+  slow the action. New `src/lib/activity.ts`, `GET/DELETE /api/activity`. `v0.9.12`.
+- **feat(admin): System panel on the Overview.** Shows hosting (Vercel) + region + environment
+  + commit, the database (Supabase · region · ref) with a live reachability check, and the
+  media storage host. `v0.9.12`.
+- **fix(media): deleting an image now removes EVERY version, original included.** Delete attempts
+  the original + thumbnail + all four display variants for any raster (idempotent / no-op when a
+  file is absent), regardless of the `variants` flag, so nothing is ever left orphaned on the
+  store. Upload already keeps the untouched original. `v0.9.12`.
+- **feat(storage): move all TEXT content from Vercel Blob to Supabase Postgres (P1.5).** Posts,
+  pages, revisions, media/file metadata and settings now live in Postgres tables; the
+  `_index.json` manifests + `.md` files are gone. Binaries (images, attachments, icons) stay on
+  Vercel Blob, referenced store-relative (still portable, e.g. to Cloudflare R2). This kills the
+  whole class of no-DB bugs at the root: **deleted images can no longer "come back"** (each row
+  delete is atomic — no concurrent manifest read-modify-write to clobber), reads are always
+  fresh + transactional (no `?ts` cache-bust needed; removed), and **admin save is faster** —
+  the read-modify-write of the manifest is now a single atomic upsert. New `src/lib/db.ts`
+  (server-only `service_role` client; reads cache-eligible for ISR, writes `no-store`).
+  A Postgres `tsvector` column is in place for future body search. Schema lives in the
+  `vibeblog` Supabase project (ap-southeast-1). `v0.9.11`.
+- **perf(save): display-variant (AVIF/WebP) encoding moved OFF the save request.** `savePost`/
+  `savePage` return immediately after the DB write; `finalizeContentMedia` runs in the
+  background via `after()` (the original always renders meanwhile). An hourly Vercel Cron
+  (`/api/cron`) sweeps any still-pending variants AND keep-alives the Supabase free-tier
+  project so it never pauses. `v0.9.11`.
 - **fix(media): atomic batch delete — fixes "deleted unused images come back".** Root cause was
   a lost-update race, not matching: deleting several unused images fired separate requests that
   each read the same manifest and wrote their own copy, so the last write clobbered the earlier

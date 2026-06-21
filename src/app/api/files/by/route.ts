@@ -2,8 +2,10 @@
 // The blob URL is passed via the `url` search param (it is the manifest key).
 // Mirrors /api/media/by. Site icons (favicon/app-icon) are refused by deleteFile.
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { deleteFile } from '@/lib/files'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export async function DELETE(req: NextRequest): Promise<Response> {
@@ -19,6 +21,7 @@ export async function DELETE(req: NextRequest): Promise<Response> {
       return fail('Missing url', 400)
     }
     const items = await deleteFile(url) // authoritative post-delete list
+    after(() => logActivity('file.delete', url.split('/').pop() || url))
     logRequest(req, 200, start)
     return ok(items)
   } catch (error) {

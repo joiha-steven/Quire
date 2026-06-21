@@ -22,9 +22,13 @@ Everything else already ports to a plain Node/Docker runtime:
 - `sharp` does all image work (runs natively on Node — no Vercel image service).
 - ISR + `revalidatePath`, the OG route, NextAuth and Markdown (gray-matter) all run
   under `next start` / standalone output.
-- The **no-DB** model (Markdown files + `_index.json` manifests) works on any
-  storage backend, and content is already stored **store-relative** (`collapseBlob`/
-  `expandBlob`), so swapping the backend is mostly resolving a different base URL.
+- Text content lives in **Supabase Postgres** (any Postgres works for self-host);
+  binaries are store-relative on Blob (`collapseBlob`/`expandBlob`), so swapping the
+  binary backend is mostly resolving a different base URL.
+
+> **Done (2026-06-21, P1.5):** migrated all text from the old no-DB `_index.json` +
+> `.md`-on-Blob model to Supabase Postgres (`src/lib/db.ts`). Binaries stay on Blob.
+> The Phase 1 storage adapter below now concerns the BINARY store only.
 
 So the roadmap is feature work on a sound base, not a rewrite.
 

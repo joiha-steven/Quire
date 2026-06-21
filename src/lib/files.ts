@@ -1,15 +1,16 @@
 // Small file store for site icons (favicon, app icon) kept OUT of the media
-// library so they don't clutter the post-image grid. Uploaded under `files/` on
-// Blob. Unlike media, `.ico` is accepted here (favicons are often .ico), and no
-// variants/thumbnails are generated — the icon is stored verbatim.
+// library so they don't clutter the post-image grid, plus a general "Files"
+// attachment library. Binaries are uploaded under `files/` on Blob; the Files
+// library metadata lives in the Postgres `files` table. Site icons are stored
+// verbatim on Blob and are NOT table rows, so they never show in the Files tab.
 
 import { cache } from 'react'
 import type { FileItem } from '@/types'
 import {
-  uploadFile, readJson, writeJson, blobUrl, expandBlob, collapseBlob, deleteByPathname, listBlobs,
+  uploadFile, expandBlob, collapseBlob, deleteByPathname, listBlobs,
 } from '@/lib/blob'
+import { db } from '@/lib/db'
 import { slugify } from '@/lib/utils'
-import { getSettings } from '@/lib/settings'
 
 // contentType -> file extension. `.ico` arrives as x-icon / vnd.microsoft.icon
 // (and occasionally a bare type), so it's matched explicitly.
@@ -38,35 +39,58 @@ export async function uploadIcon(kind: string, body: ArrayBuffer | Buffer, conte
 }
 
 // ----- General file library ("Files" tab) -------------------------------------
-// Any non-image attachment (PDF, zip, docx, audio…). Listed via a manifest so the
-// site icons under files/ (favicon-*, app-icon-*), which are NOT in the manifest,
-// never show up here. Stored verbatim — no thumbnails or variants.
+// Any non-image attachment (PDF, zip, docx, audio…). Listed from the `files`
+// table so the site icons under files/ (favicon-*, app-icon-*), which are NOT
+// rows, never show up here. Stored verbatim — no thumbnails or variants.
 
-const FILES_INDEX = 'files/_index.json'
 const ICON_PREFIXES = ['favicon-', 'app-icon-'] // managed in Settings, hidden here
 
-// Read the file manifest, newest first. Fresh every request (React.cache dedupes
-// per render) so a deleted file is gone the moment the library reopens.
-// Expand stored entries into client items (absolute URLs, newest first) — the
-// exact shape getFiles returns, so callers can hand back the in-memory post-write
-// list without re-reading Blob.
-function toClientFiles(items: FileItem[]): FileItem[] {
-  return [...items]
-    .map((f) => ({ ...f, url: expandBlob(f.url) }))
-    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+type FileRow = {
+  url: string
+  filename: string
+  size: number
+  content_type: string
+  uploaded_at: string
 }
 
-export const getFiles = cache(async (): Promise<FileItem[]> => {
-  await getSettings() // prime the vanity media base before expandBlob
-  const items = await readJson<FileItem[]>(FILES_INDEX, [])
-  return toClientFiles(items)
-})
+function rowToItem(row: FileRow): FileItem {
+  return {
+    url: expandBlob(row.url),
+    filename: row.filename,
+    size: Number(row.size),
+    contentType: row.content_type,
+    uploadedAt: row.uploaded_at,
+  }
+}
 
-// All `files/` pathnames already taken (manifest ∪ actual store contents, incl.
+// Non-cached read of the library, newest first. Used by the mutating helpers so
+// they return the authoritative current state.
+async function listFiles(): Promise<FileItem[]> {
+  try {
+    const { data, error } = await db()
+      .from('files')
+      .select('*')
+      .order('uploaded_at', { ascending: false })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] files.listFiles: ${error.message}`)
+      return []
+    }
+    return (data as FileRow[]).map(rowToItem)
+  } catch (error) {
+    console.error(`[ERROR] files.listFiles: ${(error as Error).message}`)
+    return []
+  }
+}
+
+// Library list, newest first. Fresh every request (React.cache dedupes per render).
+export const getFiles = cache(listFiles)
+
+// All `files/` pathnames already taken (table rows ∪ actual store contents, incl.
 // the icon files), so a new upload never collides with an existing name.
-async function takenFilePaths(items: FileItem[]): Promise<Set<string>> {
+async function takenFilePaths(): Promise<Set<string>> {
   const set = new Set<string>()
-  for (const f of items) set.add(collapseBlob(f.url))
+  const { data } = await db().from('files').select('url')
+  for (const r of (data as { url: string }[] | null) ?? []) set.add(collapseBlob(r.url))
   for (const b of await listBlobs()) {
     if (b.pathname.startsWith('files/')) set.add(b.pathname)
   }
@@ -83,55 +107,49 @@ function freeFilePath(base: string, ext: string, taken: Set<string>): string {
   return path
 }
 
-// Upload one or more files in a SINGLE read-modify-write of the manifest (same
-// lost-update-safe batch pattern as media). Returns the client items (absolute
-// URLs). Any content type is accepted — this is the catch-all attachment store.
+// Upload one or more files: push binaries to Blob, then insert all rows at once.
+// Any content type is accepted — this is the catch-all attachment store.
 export async function addFilesBatch(
   files: { filename: string; body: ArrayBuffer; contentType: string }[],
 ): Promise<FileItem[]> {
-  const current = await readJson<FileItem[]>(FILES_INDEX, [])
-  const taken = await takenFilePaths(current)
-  const items: FileItem[] = []
-  const stored: FileItem[] = []
+  const taken = await takenFilePaths()
+  const rows: FileRow[] = []
   for (const f of files) {
     const dot = f.filename.lastIndexOf('.')
     const rawExt = dot >= 0 ? f.filename.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : ''
     const base = slugify(dot >= 0 ? f.filename.slice(0, dot) : f.filename) || 'file'
     const path = freeFilePath(base, rawExt, taken)
     await uploadFile(path, f.body, f.contentType || 'application/octet-stream')
-    const common = {
+    rows.push({
+      url: path,
       filename: f.filename,
       size: f.body.byteLength,
-      contentType: f.contentType || 'application/octet-stream',
-      uploadedAt: new Date().toISOString(),
-    }
-    items.push({ ...common, url: blobUrl(path) })
-    stored.push({ ...common, url: path })
+      content_type: f.contentType || 'application/octet-stream',
+      uploaded_at: new Date().toISOString(),
+    })
   }
-  await writeJson(FILES_INDEX, [...stored, ...current])
-  return items
+  const { error } = await db().from('files').insert(rows)
+  if (error) throw new Error(`addFilesBatch: ${error.message}`)
+  return rows.map(rowToItem)
 }
 
 // Extract the store-relative `files/...` pathname from any URL form (absolute on
-// any host, or already collapsed) — host-independent matching, same rationale as
-// media's mediaKey.
+// any host, or already collapsed) — host-independent matching.
 function fileKey(s: string): string | null {
   return s.match(/files\/[^?#"')\s]+/)?.[0] ?? null
 }
 
-// Delete a file: its manifest entry + blob. Refuses to touch the site icons,
-// which are not manifest entries (defence in depth — they never reach here).
-// Manifest write first, then blob cleanup. Returns the AUTHORITATIVE new list
-// from the in-memory manifest (no Blob re-read).
+// Delete a file: its row + blob. Refuses to touch the site icons (not rows;
+// defence in depth — they never reach here). Row delete first, then blob cleanup.
+// Returns the authoritative new list.
 export async function deleteFile(url: string): Promise<FileItem[]> {
-  const current = await readJson<FileItem[]>(FILES_INDEX, [])
   const targetKey = fileKey(url)
   if (!targetKey || ICON_PREFIXES.some((p) => targetKey.startsWith(`files/${p}`))) {
-    return toClientFiles(current)
+    return listFiles()
   }
-  const remaining = current.filter((f) => fileKey(f.url) !== targetKey)
-  if (remaining.length === current.length) return toClientFiles(current) // no match: don't rewrite
-  await writeJson(FILES_INDEX, remaining)
+  const { data } = await db().from('files').select('url').eq('url', targetKey)
+  if (!data || data.length === 0) return listFiles() // no match: nothing to do
+  await db().from('files').delete().eq('url', targetKey)
   await deleteByPathname(targetKey).catch(() => {})
-  return toClientFiles(remaining)
+  return listFiles()
 }

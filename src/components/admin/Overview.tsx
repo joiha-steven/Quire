@@ -6,6 +6,16 @@ import { useAdminT } from './I18nProvider'
 
 type Taxo = { name: string; count: number }
 
+export type SystemInfo = {
+  hosting: string
+  env: string
+  region: string
+  commit: string
+  database: string
+  dbReachable: boolean
+  storage: string
+}
+
 // Shared style for the small header pills (version + license) so they stay identical.
 const PILL =
   'rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200'
@@ -18,6 +28,7 @@ type Props = {
   categories: Taxo[]
   tags: Taxo[]
   version: string
+  system: SystemInfo
 }
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
@@ -54,7 +65,39 @@ function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty
   )
 }
 
-export function Overview({ posts, pages, mediaCount, totalBytes, categories, tags, version }: Props) {
+function SystemCard({ system }: { system: SystemInfo }) {
+  const t = useAdminT()
+  const rows: { label: string; value: string; ok?: boolean }[] = [
+    { label: t.sysHosting, value: system.hosting },
+    { label: t.sysRegion, value: system.region },
+    { label: t.sysEnv, value: system.env },
+    { label: t.sysCommit, value: system.commit },
+    { label: t.sysDatabase, value: system.database },
+    { label: t.sysDbStatus, value: system.dbReachable ? t.sysReachable : t.sysUnreachable, ok: system.dbReachable },
+    { label: t.sysStorage, value: system.storage },
+  ]
+  return (
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="mb-3 text-sm font-bold">{t.sysTitle}</h2>
+      <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-baseline justify-between gap-3 border-b border-neutral-100 py-1 dark:border-neutral-800/60">
+            <dt className="text-sm text-neutral-500 dark:text-neutral-400">{r.label}</dt>
+            <dd
+              className={`text-right text-sm font-medium ${
+                r.ok === false ? 'text-red-600 dark:text-red-400' : r.ok === true ? 'text-green-600 dark:text-green-400' : 'text-neutral-800 dark:text-neutral-100'
+              }`}
+            >
+              {r.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+export function Overview({ posts, pages, mediaCount, totalBytes, categories, tags, version, system }: Props) {
   const t = useAdminT()
   return (
     <div className="space-y-6">
@@ -95,6 +138,8 @@ export function Overview({ posts, pages, mediaCount, totalBytes, categories, tag
         <TaxoList title={t.statCategories} items={categories} empty={t.statEmpty} />
         <TaxoList title={t.statTags} items={tags} empty={t.statEmpty} />
       </div>
+
+      <SystemCard system={system} />
     </div>
   )
 }

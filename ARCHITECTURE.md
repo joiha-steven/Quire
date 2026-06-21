@@ -6,42 +6,50 @@ in [`CLAUDE.md`](./CLAUDE.md).
 
 ## Mental model
 
-A single-owner, AI-operated blog with **no database**. All content is files in
-**Vercel Blob**. The app is a thin Next.js (App Router) layer over Blob:
-`src/lib` is the data layer, `src/app/api` are thin write routes, `src/app/(blog)`
-is the public site, `src/app/admin` is the owner console. Content is **100% Markdown**.
+A single-owner, AI-operated blog. **Text content lives in Supabase Postgres;
+binaries (images, attachments, icons) live in Vercel Blob.** The app is a thin
+Next.js (App Router) layer: `src/lib` is the data layer (`db.ts` = Postgres,
+`blob.ts` = binaries only), `src/app/api` are thin write routes, `src/app/(blog)`
+is the public site, `src/app/admin` is the owner console. Post/page bodies are
+**Markdown stored in a text column** (portable, exportable).
 
-## Data model (Vercel Blob, no DB)
+## Data model
+
+Postgres (project `vibeblog`, ap-southeast-1), schema `public`:
 
 ```
-posts/_index.json     array of post metadata  ← the query layer (no bodies)
-posts/{slug}.md       frontmatter + markdown body
-pages/{slug}.md       static pages (no taxonomy/date) + pages/_index.json
-media/{name}.{ext}    original upload + responsive variants + media/_index.json
-revisions/{slug}.json last 3 overwritten versions of a post (editor time machine)
-files/{kind}-{ts}.ext site icons (favicon / app icon), kept out of the media grid
-settings/site.json    SiteSettings (6-palette themes map + default, menu, siteUrl, seo, features, customCss)
+posts            slug PK · title · date · status · categories[] · tags[] · featured_image
+                 · excerpt · reading_minutes · content (markdown) · search (tsvector)
+pages            slug PK · title · status · featured_image · content (markdown)
+post_revisions   slug · data (jsonb snapshot) · saved_at   (app keeps last 3 / slug)
+media            path PK · filename · size · width · height · thumb · variants · uploaded_at
+files            url PK · filename · size · content_type · uploaded_at
+settings         single row id=1 · data (jsonb SiteSettings)
+activity_log     at · action · detail   (admin audit trail, Admin → Log; toggleable)
 ```
 
-The `_index.json` manifests are the only "query" mechanism: lists read the
-manifest, detail pages read one `.md`. Every write does a read-modify-write of the
-manifest. Posts + pages share one `/{slug}` URL namespace (`ensureSlugFree`).
+Vercel Blob holds only the binaries: `media/{name}.{ext}` (original + responsive
+variants + thumbnail) and `files/{...}` (attachments + site icons). Posts + pages
+share one `/{slug}` URL namespace (`ensureSlugFree`).
 
-Stored content is **store-relative**: image refs are kept as pathnames
-(`media/x.jpg`), not absolute URLs. The data layer collapses on write / expands on
-read (`collapseBlob`/`expandBlob`), so content carries no storeId and the Blob store
-can change without rewriting anything (see Design decisions).
+Reads are always fresh + transactional (no manifest read-modify-write, no
+read-after-write staleness). Image refs are stored **store-relative** (pathnames
+like `media/x.jpg`); the data layer collapses on write / expands on read
+(`collapseBlob`/`expandBlob`), so content carries no storeId and the binary store
+can change (e.g. → Cloudflare R2) without rewriting anything.
 
 ## Request flow
 
 - **Public read**: server components call `src/lib` (`getPublicPosts`, `getPost`,
   `getSettings`, …). Pages are **ISR-cached** (`revalidate = 3600`; `/[slug]` prerendered
-  via `generateStaticParams`), so visitors get fast cached HTML. There is **no data cache**:
-  reads use `React.cache()` for request-scoped dedup, and the Blob fetch is cache-eligible
-  but `?ts`-busted, so each (re)generation reads fresh. Pagination is path-based (`/page/[n]`,
-  `/category/[slug]/page/[n]`, `/tag/[slug]/page/[n]`; page 1 at the bare path).
-- **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Blob via
-  `src/lib`, then invalidate the cache through one place (`src/lib/revalidate.ts`): a new
+  via `generateStaticParams`), so visitors get fast cached HTML. The Supabase reads are
+  cache-eligible + tagged `db` (so pages can stay static) and deduped per request with
+  `React.cache()`; a save calls `revalidateTag('db')` so any re-render reads fresh from
+  Postgres. Pagination is path-based (`/page/[n]`, `/category/[slug]/page/[n]`,
+  `/tag/[slug]/page/[n]`; page 1 at the bare path).
+- **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Postgres
+  (and Blob for binaries) via `src/lib`, then invalidate through one place
+  (`src/lib/revalidate.ts`): a new
   post refreshes the list/taxonomy surfaces, editing a post also refreshes its own page,
   a settings change purges the whole site. Each purge is a deliberate superset of what a
   change touches, so the edit is live on the next request without under-purging. Admin is
@@ -54,9 +62,10 @@ can change without rewriting anything (see Design decisions).
 
 | Path | What |
 |---|---|
-| `src/lib/blob.ts` | All Blob I/O. URLs are deterministic from the token (no `list()` to read). Reads cache-bust + degrade to fallback on error. |
-| `src/lib/{posts,pages,media,settings}.ts` | Data layer; `React.cache()` dedup only (no cross-request cache). |
-| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon store). |
+| `src/lib/db.ts` | Supabase client (server-only, `service_role`). Custom fetch: GET reads cache-eligible + tagged `db`; writes `no-store`. |
+| `src/lib/blob.ts` | Binary I/O only (images/files/icons). URLs deterministic from the token (lowercase store host; no vanity domain, no `list()` to read). |
+| `src/lib/{posts,pages,media,settings,revisions,activity}.ts` | Data layer over Postgres; `React.cache()` request dedup. `activity` = the admin activity log. |
+| `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon + attachment store). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
 | `src/app/admin/` | Owner console (editor, media, settings). |
@@ -65,22 +74,20 @@ can change without rewriting anything (see Design decisions).
 
 ## Design decisions (the *why*)
 
-- **No database** → zero ops, content portable as files, the repo stays free of
-  personal data (secrets live only in the gitignored `.env.local` + Vercel).
-  Trade-off: no rich queries, so the `_index.json` manifest is the single query layer.
-- **Mutable Blob written with `cacheControlMaxAge: 0` + cache-busted reads** →
-  Blob's default 1-year CDN cache once served a stale `_index.json` after a save and
-  the read-modify-write **clobbered the index**. Mutable content must never be stale.
-- **One cache layer (ISR pages) + scoped purge on save; no data cache** → pages are
-  ISR-cached for speed; every save invalidates through `src/lib/revalidate.ts` (scoped per
-  change but always a superset of affected surfaces), and Blob reads are `?ts`-busted so
-  regeneration is always fresh. We first tried `unstable_cache` + tag revalidation (two
-  cache layers) and it repeatedly served stale content — missing posts, reappearing deleted
-  images, settings not applying, Data Cache persisting across deploys. This model fixes that
-  because: one layer not two; the Full Route Cache is per-deployment (no cross-deploy stale);
-  each save purges a superset of what changed (never under-purges); and `?ts` guarantees
-  fresh Blob. Never reintroduce a cross-request data cache over Blob, and never set the Blob
-  reads to `no-store` (it would force every page dynamic).
+- **Postgres for text, Blob for binaries** → real queries (lists, taxonomy,
+  full-text), atomic writes (no manifest clobber), and always-fresh reads, while
+  binaries stay cheap + portable as plain files. The old no-DB model used
+  `_index.json` manifests as the query layer; every write did a read-modify-write
+  that, under Blob's CDN cache + concurrency, repeatedly **clobbered the index** and
+  resurrected deleted images. Postgres removes that whole class of bug at the root.
+  Secrets (the `service_role` key) live only in the gitignored `.env.local` + Vercel.
+- **ISR pages + tagged DB reads, purged on save** → pages are ISR-cached for speed; the
+  Supabase reads are cache-eligible (so pages can be static) and tagged `db`. Every save,
+  through `src/lib/revalidate.ts`, calls `revalidateTag('db')` (next render reads fresh from
+  Postgres) AND a `revalidatePath` superset (decides which pages re-render). Postgres is always
+  consistent, so this is reliable — unlike the old no-DB model where Blob's CDN staleness +
+  per-tag bookkeeping over `unstable_cache` repeatedly served stale content. Never set the DB
+  reads to `no-store` (it would force every page dynamic, killing ISR).
 - **Store-relative image refs (`collapseBlob`/`expandBlob`)** → stored content holds
   pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
   store / region / provider needs only a token change, no content rewrite. (Used to

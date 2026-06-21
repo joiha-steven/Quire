@@ -21,6 +21,7 @@ export function FeatureFields({ features, onChange, relatedCount, onRelatedCount
     { key: 'related', label: t.featRelated, desc: t.featRelatedDesc },
     { key: 'readingTime', label: t.featReadingTime, desc: t.featReadingTimeDesc },
     { key: 'progressBar', label: t.featProgress, desc: t.featProgressDesc },
+    { key: 'activityLog', label: t.featActivityLog, desc: t.featActivityLogDesc },
   ]
   return (
     <div className="space-y-4">

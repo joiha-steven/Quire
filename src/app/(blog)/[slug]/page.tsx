@@ -16,7 +16,7 @@ import { Toc } from '@/components/blog/Toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { ogImageUrl } from '@/lib/og'
-import { isPublicallyVisible, readingMinutes, extractHeadings } from '@/lib/utils'
+import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
 
 // ISR-cached for fast reads. An edit to this post/page purges it immediately via
 // revalidatePath('/', 'layout') in the save route; the 1h window is a safety net.
@@ -99,7 +99,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               url: `${base}/${post.slug}`,
               datePublished: post.date,
               description: post.excerpt || undefined,
-              image: post.featuredImage,
+              // Featured image if set, else the first image in the body — so the
+              // article's structured data always points at an image on this page.
+              image: post.featuredImage || extractImageUrls(post.content)[0],
               authorName: settings.title,
             })}
           />

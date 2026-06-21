@@ -2,15 +2,17 @@
 // PUT    /api/posts/[slug]  -> overwrite post (owner only)
 // DELETE /api/posts/[slug]  -> delete post (owner only)
 
+import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { PostWithContent } from '@/types'
 import { getPost, savePost, deletePost } from '@/lib/posts'
 import { finalizeContentMedia } from '@/lib/media'
 import { revalidatePost } from '@/lib/revalidate'
 import { SlugConflictError } from '@/lib/slugs'
+import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
-// Saving may generate deferred AVIF/WebP variants for newly-kept images.
+// Display-variant encoding runs AFTER the response via after(); keep headroom.
 export const maxDuration = 60
 
 export async function GET(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]'>): Promise<Response> {
@@ -46,9 +48,18 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]
     const { slug } = await ctx.params
     const body = (await req.json()) as Partial<PostWithContent>
     const meta = await savePost(body, slug)
-    await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+    // Generate display variants AFTER the response is sent so save returns fast.
+    // The original always renders meanwhile; the cron sweep finalizes stragglers.
+    after(async () => {
+      try {
+        await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+      } catch (error) {
+        logError(req, error)
+      }
+    })
     // Refresh this post's page (old + new slug) and every list/taxonomy surface.
     revalidatePost(meta.slug, slug)
+    after(() => logActivity('post.update', meta.title || meta.slug))
     logRequest(req, 200, start)
     return ok(meta)
   } catch (error) {
@@ -72,6 +83,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<'/api/posts/[sl
     const { slug } = await ctx.params
     await deletePost(slug)
     revalidatePost(slug) // drop its now-404 page + refresh every list surface
+    after(() => logActivity('post.delete', slug))
     logRequest(req, 200, start)
     return ok({ slug })
   } catch (error) {

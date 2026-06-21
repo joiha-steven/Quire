@@ -1,10 +1,12 @@
-// Site settings data access. Stored at settings/site.json on Blob.
-// Reads are resilient: any failure (missing file, Blob down) falls back to
-// defaults so the public header and <title> never crash.
+// Site settings data access. Stored as a single row (id=1) in Postgres `settings`.
+// Reads are resilient: any failure (missing row, DB down) falls back to defaults
+// so the public header and <title> never crash. Image refs inside settings live
+// store-relative; binaries themselves stay on Vercel Blob.
 
 import { cache } from 'react'
 import type { FeatureSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings } from '@/types'
-import { readJson, writeJson, collapseBlob, expandBlob, setMediaBase } from '@/lib/blob'
+import { collapseBlob, expandBlob } from '@/lib/blob'
+import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
 import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS } from '@/lib/themes'
 
@@ -95,6 +97,7 @@ function sanitizeFeatures(input: unknown, fallback: FeatureSettings): FeatureSet
     related: bool(o.related, fallback.related),
     readingTime: bool(o.readingTime, fallback.readingTime),
     progressBar: bool(o.progressBar, fallback.progressBar),
+    activityLog: bool(o.activityLog, fallback.activityLog),
   }
 }
 
@@ -117,8 +120,6 @@ function sanitizeUrl(value: unknown): string {
   }
 }
 
-const SETTINGS_PATH = 'settings/site.json'
-
 export const DEFAULT_SEO: SeoSettings = {
   autoSchema: true,
   sitemap: true,
@@ -135,6 +136,7 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   related: true,
   readingTime: true,
   progressBar: true,
+  activityLog: true,
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -142,7 +144,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   title: 'vibeblog',
   description: '',
   siteUrl: '',
-  mediaBaseUrl: '',
   logoUrl: '',
   logoWidth: 120,
   showLogo: false,
@@ -187,14 +188,11 @@ function clampNumber(value: unknown, min: number, max: number, fallback: number)
 // setting is live on the next request — no cache-key versioning to maintain.
 export const getSettings = cache(async (): Promise<SiteSettings> => {
   try {
-    const stored = await readJson<Partial<SiteSettings>>(SETTINGS_PATH, {})
+    const { data: row } = await db().from('settings').select('data').eq('id', 1).maybeSingle()
+    const stored = (row?.data ?? {}) as Partial<SiteSettings>
     // Deep-merge theme + seo so older/partial stored configs keep every key.
     const seo = sanitizeSeo(stored.seo, DEFAULT_SEO)
-    // Configure the vanity media host BEFORE expanding any image ref below, so
-    // logo/OG and all rendered media URLs use it. Owner setting wins, else env.
-    const mediaBaseUrl = sanitizeUrl(stored.mediaBaseUrl)
-    setMediaBase(mediaBaseUrl || process.env.BLOB_PUBLIC_BASE)
-    // Image refs are stored store-relative; expand to absolute URLs for use.
+    // Image refs are stored store-relative; expand to absolute Blob URLs for use.
     return {
       ...DEFAULT_SETTINGS,
       ...stored,
@@ -202,7 +200,6 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       faviconUrl: expandBlob(stored.faviconUrl ?? DEFAULT_SETTINGS.faviconUrl),
       appIconUrl: expandBlob(stored.appIconUrl ?? DEFAULT_SETTINGS.appIconUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
-      mediaBaseUrl,
       relatedCount: clampNumber(stored.relatedCount, 0, 12, DEFAULT_SETTINGS.relatedCount),
       excerptLength: clampNumber(stored.excerptLength, 10, 100, DEFAULT_SETTINGS.excerptLength),
       customCss: sanitizeCss(stored.customCss),
@@ -225,7 +222,6 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
     description: input.description ?? current.description,
     siteUrl: input.siteUrl !== undefined ? sanitizeUrl(input.siteUrl) : current.siteUrl,
-    mediaBaseUrl: input.mediaBaseUrl !== undefined ? sanitizeUrl(input.mediaBaseUrl) : current.mediaBaseUrl,
     logoUrl: input.logoUrl ?? current.logoUrl,
     logoWidth: clampNumber(input.logoWidth, 24, 600, current.logoWidth),
     showLogo: input.showLogo ?? current.showLogo,
@@ -251,6 +247,6 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     appIconUrl: collapseBlob(next.appIconUrl),
     seo: { ...next.seo, ogFallbackImage: collapseBlob(next.seo.ogFallbackImage) },
   }
-  await writeJson(SETTINGS_PATH, stored)
+  await db().from('settings').upsert({ id: 1, data: stored })
   return next
 }

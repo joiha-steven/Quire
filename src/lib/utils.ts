@@ -64,6 +64,16 @@ export function deriveExcerpt(markdown: string, maxWords = 50): string {
   return `${words.slice(0, maxWords).join(' ')}...`
 }
 
+// All image URLs referenced in a piece of (rendered) content: markdown
+// `![](url)`, HTML `src="url"`, and bare image URLs. De-duped, in order. Used for
+// image SEO (sitemap `<image:image>` + Article schema) so search engines associate
+// every image with the manhhung.me page that embeds it. Expects absolute URLs
+// (content from getPost/getPage is already expanded to absolute Blob URLs).
+export function extractImageUrls(content: string): string[] {
+  const re = /https?:\/\/[^\s"')]+\.(?:jpe?g|png|webp|avif|gif|svg)/gi
+  return [...new Set(content.match(re) ?? [])]
+}
+
 // Estimated reading time in whole minutes (>= 1), ~200 words per minute.
 export function readingMinutes(markdown: string): number {
   const words = toPlainText(markdown).split(' ').filter(Boolean).length

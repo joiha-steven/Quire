@@ -1,12 +1,8 @@
 // Slug uniqueness across the shared public URL namespace.
 // Posts and pages both live at /{slug}, so a slug may belong to at most one of
-// them. Reads the raw manifests directly (not via lib/posts|pages) to avoid a
+// them. Queries the tables directly (not via lib/posts|pages) to avoid a
 // circular import.
-import type { Post, Page } from '@/types'
-import { readJson } from '@/lib/blob'
-
-const POSTS_INDEX = 'posts/_index.json'
-const PAGES_INDEX = 'pages/_index.json'
+import { db } from '@/lib/db'
 
 // Thrown by save* when a slug is already taken by a different post/page.
 // API routes map this to a 409 with the `slug_taken` error code.
@@ -24,11 +20,11 @@ export async function ensureSlugFree(
   selfKind: 'post' | 'page',
   selfSlug?: string,
 ): Promise<void> {
-  const [posts, pages] = await Promise.all([
-    readJson<Post[]>(POSTS_INDEX, []),
-    readJson<Page[]>(PAGES_INDEX, []),
+  const [{ data: post }, { data: page }] = await Promise.all([
+    db().from('posts').select('slug').eq('slug', slug).maybeSingle(),
+    db().from('pages').select('slug').eq('slug', slug).maybeSingle(),
   ])
-  const postHit = posts.some((p) => p.slug === slug && !(selfKind === 'post' && p.slug === selfSlug))
-  const pageHit = pages.some((p) => p.slug === slug && !(selfKind === 'page' && p.slug === selfSlug))
+  const postHit = !!post && !(selfKind === 'post' && post.slug === selfSlug)
+  const pageHit = !!page && !(selfKind === 'page' && page.slug === selfSlug)
   if (postHit || pageHit) throw new SlugConflictError(slug)
 }

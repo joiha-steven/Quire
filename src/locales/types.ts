@@ -226,8 +226,6 @@ export type AdminStrings = {
   // SEO fields
   seoCanonical: string
   seoCanonicalHint: string
-  mediaDomain: string
-  mediaDomainHint: string
   seoAutoSchema: string
   seoAutoSchemaDesc: string
   seoSitemapDesc: string
@@ -245,4 +243,28 @@ export type AdminStrings = {
   tmEmpty: string
   revisionLoaded: string
   previewLinkCopied: string
+  // activity log (Admin → Log) + feature toggle
+  navLog: string
+  featActivityLog: string
+  featActivityLogDesc: string
+  logTitle: string
+  logEmpty: string
+  logDisabled: string
+  logColTime: string
+  logColAction: string
+  logColDetail: string
+  logClear: string
+  logClearConfirm: string
+  logCleared: string
+  // system info panel (Overview)
+  sysTitle: string
+  sysHosting: string
+  sysRegion: string
+  sysEnv: string
+  sysCommit: string
+  sysDatabase: string
+  sysDbStatus: string
+  sysStorage: string
+  sysReachable: string
+  sysUnreachable: string
 }

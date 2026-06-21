@@ -1,31 +1,103 @@
-// Post data access. _index.json (metadata only) is the single query layer;
-// full content lives in posts/{slug}.md as YAML frontmatter + markdown body.
+// Post data access. Stored in the Postgres `posts` table (metadata columns +
+// the markdown body in `content`). Image refs (body + featuredImage) are kept
+// store-relative (pathnames), re-expanded to absolute Blob URLs on read; the
+// binaries themselves live on Vercel Blob.
 
 import { cache } from 'react'
-import matter from 'gray-matter'
 import type { Post, PostWithContent } from '@/types'
-import { readJson, writeJson, readText, writeText, deleteByPathname, collapseBlob, expandBlob } from '@/lib/blob'
+import { collapseBlob, expandBlob } from '@/lib/blob'
+import { db } from '@/lib/db'
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible, readingMinutes } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
 import { getSettings } from '@/lib/settings'
 
-const INDEX_PATH = 'posts/_index.json'
-const mdPath = (slug: string) => `posts/${slug}.md`
+// Metadata columns (everything except the heavy `content` body) for list reads.
+const META_COLS = 'slug,title,date,status,categories,tags,featured_image,excerpt,reading_minutes'
 
-// Raw manifest read. NO cross-request cache (that was the source of repeated
-// stale-content bugs vs Blob's read-after-write). `React.cache` only dedupes
-// within a single render pass; every fresh request re-reads Blob (cache-busted),
-// so an edit is visible on the next load with no revalidation dance.
+// A row as stored in Postgres (snake_case, store-relative image refs).
+type PostRow = {
+  slug: string
+  title: string
+  date: string
+  status: string
+  categories: string[] | null
+  tags: string[] | null
+  featured_image: string | null
+  excerpt: string | null
+  reading_minutes: number | null
+  content?: string | null
+}
+
+// Row -> Post metadata (absolute image URLs, no body).
+function rowToMeta(row: PostRow): Post {
+  return {
+    title: row.title,
+    slug: row.slug,
+    date: row.date,
+    status: row.status === 'published' ? 'published' : 'draft',
+    categories: row.categories ?? [],
+    tags: row.tags ?? [],
+    featuredImage: row.featured_image ? expandBlob(row.featured_image) : undefined,
+    excerpt: row.excerpt ?? undefined,
+    readingMinutes: row.reading_minutes ?? undefined,
+  }
+}
+
+// PostWithContent -> row (store-relative). Reading time is recomputed here so the
+// column stays in sync with the body for list reads.
+function toRow(post: PostWithContent): PostRow {
+  return {
+    slug: post.slug,
+    title: post.title,
+    date: post.date,
+    status: post.status,
+    categories: post.categories,
+    tags: post.tags,
+    featured_image: post.featuredImage ? collapseBlob(post.featuredImage) : null,
+    excerpt: post.excerpt ?? null,
+    reading_minutes: readingMinutes(post.content),
+    content: collapseBlob(post.content),
+  }
+}
+
+// Stable store-relative projection of a post's meaningful fields — used to decide
+// whether a save actually changed anything (so a no-op autosave skips a revision).
+function projection(p: PostWithContent): string {
+  return JSON.stringify({
+    title: p.title,
+    date: p.date,
+    status: p.status,
+    categories: p.categories,
+    tags: p.tags,
+    featuredImage: p.featuredImage ? collapseBlob(p.featuredImage) : '',
+    excerpt: p.excerpt ?? '',
+    content: collapseBlob(p.content),
+  })
+}
+
+// Full metadata list, newest first. `React.cache` dedupes within one render only;
+// every fresh request re-reads Postgres (always current, transactional — no
+// read-after-write staleness, so no cache-busting dance needed).
 const readIndex = cache(async (): Promise<Post[]> => {
-  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
-  const posts = await readJson<Post[]>(INDEX_PATH, [])
-  return [...posts]
-    .map((p) => ({ ...p, featuredImage: p.featuredImage ? expandBlob(p.featuredImage) : undefined }))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  try {
+    const { data, error } = await db()
+      .from('posts')
+      .select(META_COLS)
+      .order('date', { ascending: false })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] posts.readIndex: ${error.message}`)
+      return []
+    }
+    return (data as PostRow[]).map(rowToMeta)
+  } catch (error) {
+    // Degrade to empty (e.g. missing env, DB unreachable) instead of 500ing.
+    console.error(`[ERROR] posts.readIndex: ${(error as Error).message}`)
+    return []
+  }
 })
 
-// Full metadata manifest, newest first (admin list incl. drafts). Tag 'posts'.
+// Full metadata manifest, newest first (admin list incl. drafts).
 export async function getIndex(): Promise<Post[]> {
   return readIndex()
 }
@@ -36,31 +108,18 @@ export async function getPublicPosts(): Promise<Post[]> {
   return all.filter((p) => isPublicallyVisible(p.status, p.date))
 }
 
-// Parse a post's frontmatter + markdown body into a PostWithContent.
-function parsePost(raw: string, slug: string): PostWithContent {
-  const { data, content } = matter(raw)
-  const meta = data as Partial<Post>
-  return {
-    title: meta.title ?? slug,
-    slug: meta.slug ?? slug,
-    date: meta.date ?? new Date().toISOString(),
-    status: meta.status === 'published' ? 'published' : 'draft',
-    categories: meta.categories ?? [],
-    tags: meta.tags ?? [],
-    featuredImage: meta.featuredImage ? expandBlob(meta.featuredImage) : undefined,
-    excerpt: meta.excerpt,
-    content: expandBlob(content.trim()),
-  }
-}
-
-// Read+parse one post's markdown. `React.cache` dedupes the read across
-// generateMetadata + the page render in ONE request; no cross-request cache, so
-// the content is always current.
+// Read one full post. `React.cache` dedupes the read across generateMetadata +
+// the page render in ONE request; no cross-request cache, so content is current.
 export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
-  await getSettings() // prime the vanity media base (setMediaBase) before expandBlob
-  const raw = await readText(mdPath(slug))
-  if (!raw) return null
-  return parsePost(raw, slug)
+  try {
+    const { data, error } = await db().from('posts').select('*').eq('slug', slug).maybeSingle()
+    if (error || !data) return null
+    const row = data as PostRow
+    return { ...rowToMeta(row), content: expandBlob(row.content ?? '') }
+  } catch (error) {
+    console.error(`[ERROR] posts.getPost(${slug}): ${(error as Error).message}`)
+    return null
+  }
 })
 
 // Normalize incoming data into a complete Post + content pair. `excerptWords`
@@ -84,35 +143,14 @@ function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWith
   }
 }
 
-// Split a PostWithContent into its index metadata (no body). Reading time is
-// computed from the body here so lists (which read only the index) can show it.
+// Drop the body from a PostWithContent, adding the computed reading time so lists
+// (which never load bodies) can show it.
 function toMeta(post: PostWithContent): Post {
   const { content, ...meta } = post
   return { ...meta, readingMinutes: readingMinutes(content) }
 }
 
-// Store-relative copy of a post's metadata (Blob URLs -> pathnames).
-function collapseMeta(meta: Post): Post {
-  return { ...meta, featuredImage: meta.featuredImage ? collapseBlob(meta.featuredImage) : undefined }
-}
-
-// Serialize a post to frontmatter + markdown, storing Blob refs as pathnames.
-// Strip undefined fields first — js-yaml throws on undefined values.
-function serialize(post: PostWithContent): string {
-  const meta = collapseMeta(toMeta(post))
-  const clean = Object.fromEntries(
-    Object.entries(meta).filter(([, v]) => v !== undefined),
-  )
-  return matter.stringify(collapseBlob(post.content), clean)
-}
-
-// Read index, apply an update in memory, write it back. Never partial-write.
-async function mutateIndex(fn: (posts: Post[]) => Post[]): Promise<void> {
-  const current = await readJson<Post[]>(INDEX_PATH, [])
-  await writeJson(INDEX_PATH, fn(current))
-}
-
-// Create or overwrite a post: write {slug}.md, then sync the manifest.
+// Create or overwrite a post.
 export async function savePost(
   input: Partial<PostWithContent>,
   previousSlug?: string,
@@ -123,37 +161,36 @@ export async function savePost(
   await ensureSlugFree(post.slug, 'post', previousSlug)
 
   // Time machine: before overwriting an existing post, snapshot the current
-  // version so the editor can restore it. Read fresh (not the cached getPost).
+  // version so the editor can restore it.
   const overwriting = previousSlug ?? post.slug
-  const existingRaw = await readText(mdPath(overwriting))
-  if (existingRaw) {
-    const prev = parsePost(existingRaw, overwriting)
-    if (serialize(prev) !== serialize({ ...post, slug: prev.slug })) {
+  const { data: existing } = await db().from('posts').select('*').eq('slug', overwriting).maybeSingle()
+  if (existing) {
+    const row = existing as PostRow
+    const prev: PostWithContent = { ...rowToMeta(row), content: expandBlob(row.content ?? '') }
+    if (projection(prev) !== projection({ ...post, slug: prev.slug })) {
       await pushRevision(prev)
     }
   }
 
-  await writeText(mdPath(post.slug), serialize(post))
+  // Upsert by slug (PK). `updated_at` is bumped explicitly so it tracks edits.
+  const { error } = await db()
+    .from('posts')
+    .upsert({ ...toRow(post), updated_at: new Date().toISOString() })
+  if (error) throw new Error(`savePost: ${error.message}`)
 
-  // If the slug changed, drop the old markdown file and move its revisions.
+  // If the slug changed, drop the old row and move its revisions.
   if (previousSlug && previousSlug !== post.slug) {
-    await deleteByPathname(mdPath(previousSlug))
+    await db().from('posts').delete().eq('slug', previousSlug)
     await renameRevisions(previousSlug, post.slug)
   }
 
-  const meta = toMeta(post)
-  await mutateIndex((posts) => {
-    const without = posts.filter((p) => p.slug !== post.slug && p.slug !== previousSlug)
-    return [...without, collapseMeta(meta)] // store pathname; reads re-expand
-  })
-  return meta // full URLs for the client
+  return toMeta(post) // full URLs for the client
 }
 
-// Delete a post: remove {slug}.md and its manifest entry.
+// Delete a post and its revisions.
 export async function deletePost(slug: string): Promise<void> {
-  await deleteByPathname(mdPath(slug))
+  await db().from('posts').delete().eq('slug', slug)
   await deleteRevisions(slug)
-  await mutateIndex((posts) => posts.filter((p) => p.slug !== slug))
 }
 
 // Up to `limit` other public posts sharing the most tags/categories with `slug`
@@ -190,40 +227,36 @@ function applyTerm(list: string[], name: string, newName: string | null): string
   return out
 }
 
-// Rename (newName set) or remove (newName null) a category/tag across EVERY post:
-// rewrites each affected post's .md AND the index in one pass. No revision is
-// snapshotted (a taxonomy edit is not a content change worth the time machine).
-// Returns how many posts were changed.
+// Rename (newName set) or remove (newName null) a category/tag across EVERY post.
+// Categories/tags are array columns, so only the affected rows' columns change —
+// no body rewrite. Returns how many posts were changed.
 export async function updateTerm(kind: TermKind, name: string, newName: string | null): Promise<number> {
   const field = kind === 'category' ? 'categories' : 'tags'
   const clean = newName?.trim() || null
-  const index = await readJson<Post[]>(INDEX_PATH, [])
+  const { data, error } = await db().from('posts').select(`slug, ${field}`)
+  if (error || !data) return 0
   let changed = 0
-  const next = await Promise.all(
-    index.map(async (meta) => {
-      const list = meta[field] ?? []
-      if (!list.includes(name)) return meta
+  await Promise.all(
+    data.map(async (row) => {
+      const list: string[] = (row as Record<string, string[]>)[field] ?? []
+      if (!list.includes(name)) return
       changed++
-      // Frontmatter is the source of truth on the next parse — rewrite it too.
-      const raw = await readText(mdPath(meta.slug))
-      if (raw) {
-        const post = parsePost(raw, meta.slug)
-        await writeText(mdPath(meta.slug), serialize({ ...post, [field]: applyTerm(post[field], name, clean) }))
-      }
-      return { ...meta, [field]: applyTerm(list, name, clean) }
+      await db()
+        .from('posts')
+        .update({ [field]: applyTerm(list, name, clean) })
+        .eq('slug', (row as { slug: string }).slug)
     }),
   )
-  if (changed > 0) await writeJson(INDEX_PATH, next)
   return changed
 }
 
-// Distinct categories across the manifest.
+// Distinct categories across all posts.
 export async function getCategories(): Promise<string[]> {
   const posts = await getIndex()
   return [...new Set(posts.flatMap((p) => p.categories))].sort()
 }
 
-// Distinct tags across the manifest.
+// Distinct tags across all posts.
 export async function getTags(): Promise<string[]> {
   const posts = await getIndex()
   return [...new Set(posts.flatMap((p) => p.tags))].sort()
