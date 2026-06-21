@@ -51,15 +51,13 @@ function Swatch({ c }: { c: ThemeColors }) {
   )
 }
 
-// Swatch-grid icon — reads clearly as "pick a color theme" (the artist-palette
-// glyph was ambiguous).
+// Three overlapping color swatches — a clean, recognizable "color theme" glyph.
 function PaletteIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="4" y="4" width="7" height="7" rx="2" />
-      <rect x="13" y="4" width="7" height="7" rx="2" />
-      <rect x="4" y="13" width="7" height="7" rx="2" />
-      <rect x="13" y="13" width="7" height="7" rx="2" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="8" r="4.5" />
+      <circle cx="8" cy="15" r="4.5" />
+      <circle cx="16" cy="15" r="4.5" />
     </svg>
   )
 }

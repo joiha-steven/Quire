@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **style(theme): nicer public palette trigger icon** — replaced the swatch-grid glyph with
+  three overlapping color circles (cleaner, clearly "color theme"). `v0.9.7`.
 - **fix(media)/perf(admin): authoritative-from-write deletes (approach A).** The image/file
   delete endpoints now return the **true post-delete list, built from the in-memory manifest
   they just wrote — no Blob re-read** — and the library adopts it directly. This removes the
