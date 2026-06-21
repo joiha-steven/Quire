@@ -6,6 +6,50 @@ Public, open-source blog platform. **Zero personal data in this repo.** Real
 credentials live only in the gitignored `.env.local` and on Vercel (`vercel env
 pull`); never commit them. Personal/instance facts are not tracked in git.
 
+## Working principles
+
+How to work in this repo. These bias toward caution over speed; for trivial changes,
+use judgment. They reinforce the project Conventions below — read both.
+
+**1. Think before coding — don't assume, don't hide confusion, surface tradeoffs.**
+State assumptions explicitly; if uncertain, ask (use AskUserQuestion for genuine
+forks). If multiple interpretations exist, present them — don't pick silently. If a
+simpler approach exists, say so and push back when warranted. If something is unclear,
+stop, name what's confusing, and ask.
+
+**2. Simplicity first — the minimum code that solves the problem, nothing speculative.**
+No features beyond what was asked. No abstractions for single-use code. No "flexibility"
+or configurability that wasn't requested. No error handling for impossible scenarios. If
+200 lines could be 50, rewrite it. Ask: "would a senior engineer call this
+overcomplicated?" — if yes, simplify. (This is also why the `lib/` data layer is thin and
+routes are thin handlers.)
+
+**3. Surgical changes — touch only what you must; clean up only your own mess.** Don't
+"improve" adjacent code, comments, or formatting. Don't refactor what isn't broken. Match
+the existing style even if you'd do it differently (see Conventions: shared class
+constants, theme tokens, one font, i18n). Remove imports/vars/functions that YOUR change
+orphaned; do NOT delete pre-existing dead code unless asked — mention it instead. The
+test: every changed line traces directly to the request. **One exception is mandatory,
+not optional:** when you change behavior, update the matching docs in the SAME change
+(see "Docs & releases") — that is part of the request here, not scope creep.
+
+**4. Goal-driven execution — define success criteria, then loop until verified.** Recast a
+task as something checkable ("add validation" → "invalid inputs are rejected and I've
+exercised each path"; "fix the bug" → "I can reproduce it, then it's gone"). For
+multi-step work, state a brief plan with a verify step each:
+
+```
+1. [step] → verify: [check]
+2. [step] → verify: [check]
+```
+
+**There is NO automated test suite here.** Verification means: `npm run build` AND
+`npm run lint` both exit 0 (TypeScript is strict — `tsc` runs in the build; no `any`),
+plus reasoning through / manually exercising the actual behavior (a route, a render, a
+PageSpeed run), and for a release or feature batch the `audit/` procedure. "It compiles"
+is necessary, not sufficient — confirm the behavior, and report failures honestly with
+their output rather than claiming success.
+
 ## Architecture
 - **Text content in Supabase Postgres; binaries in Vercel Blob.** (Migrated from the
   old no-DB `_index.json`+`.md`-on-Blob model — "P1.5".)
@@ -146,7 +190,7 @@ Blob's CDN staleness, is what made the OLD no-DB `unstable_cache`+`?ts` model se
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors posts.ts; reads are `React.cache()` only |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss`, `fontToCss` (re-exports `DEFAULT_THEME`, `themesToCss`, `getDefaultTheme`, `DEFAULT_TYPOGRAPHY`, `DEFAULT_FONT`) | `getSettings` = `React.cache()` only. Holds the per-palette `themes` map, the per-role `typography`, and the uploaded `customFont` (`{ family, faces[] }`, see Typography below); migrates a legacy single `theme` into the default palette on read, and the old flat typography / single-url font shapes forward. Font face urls are store-relative at rest. `resolveAppIcon(s)` = appIcon → favicon → `/app-icon.png` for the PWA |
 | `themes.ts` | `THEME_PRESETS`, `DEFAULT_THEME`, `DEFAULT_PRESET_ID`, `getPreset`, `isPresetId`, `cloneTheme`, `defaultThemes`, `getDefaultTheme`, `themesToCss`, `paletteOptions` | The 6 built-in palettes (Mono/Sepia/Forest/Ocean/Rose/Amber), each a full light+dark `ThemeSettings`. **Each is independently owner-customizable** — colors live in `settings.themes` (id→ThemeSettings); `settings.themePreset` = the visitor default. `themesToCss(themes, defaultId)` emits CSS for EVERY palette (default on `:root`/`.dark`, others under `[data-palette="id"]` + `[data-palette].dark`) so the client `PaletteToggle` swaps instantly via `<html data-palette>`. Add a palette by appending to `THEME_PRESETS` (names are constant proper nouns, not localized) |
-| `files.ts` | `uploadIcon`, `isAllowedIconType`, `uploadFont`, `isAllowedFontType`, `getFiles`, `addFilesBatch`, `deleteFile`, `deleteFilesBatch`, `getSiteIcons` | Three things share the `files/` Blob prefix: (0) the **custom font** (`uploadFont(name, weight, …)` → `files/font-<weight>-<ms>.<ext>`, `.woff2/.woff/.ttf/.otf`; one per weight; NOT a table row, hidden from the grid; `POST /api/files/font`); (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile`/`deleteFilesBatch` refuse `favicon-`/`app-icon-`. `getSiteIcons` lists the icon blobs (uploadedAt parsed from the `<kind>-<ms>` filename) so the Files tab can show them read-only (tagged "Settings"). `registerFilesBatch` records metadata for files the browser uploaded straight to Blob. Routes: `GET /api/files`, `POST /api/files/blob-token` + `POST /api/files/register` (client direct upload), `DELETE /api/files/by?url=`, `POST /api/files/delete` (multi), `GET /api/files/icons`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`); both grids have multi-select delete. `expandBlob` round-trips `files/` like `media/` |
+| `files.ts` | `renderLogo`, `uploadIcon`, `isAllowedIconType`, `uploadFont`, `isAllowedFontType`, `getFiles`, `addFilesBatch`, `deleteFile`, `deleteFilesBatch`, `getSiteIcons` | `renderLogo(sourceUrl, width)` builds the auto-sized header logo: fetches the owner's original, downscales with sharp to `width`px **@2x (retina)** WebP (never upscaled past the source), uploads to `files/logo-<ms>.webp` (NOT a table row / not an icon → hidden from every grid), returns `{ url, height }` (height = displayed px at `width`). Returns `null` for svg/gif/undecodable (caller serves the original). Called from `saveSettings`, which deletes the previous derived file each regen → exactly one exists. Three things share the `files/` Blob prefix: (0) the **custom font** (`uploadFont(name, weight, …)` → `files/font-<weight>-<ms>.<ext>`, `.woff2/.woff/.ttf/.otf`; one per weight; NOT a table row, hidden from the grid; `POST /api/files/font`); (1) **site icons** (favicon, app icon) via `uploadIcon`, accepting `.ico`, kept OUT of the media grid (NOT table rows); (2) the **Files library** — non-image attachments (PDF/zip/docx/audio…) whose metadata lives in the `files` table (binaries on Blob). `deleteFile`/`deleteFilesBatch` refuse `favicon-`/`app-icon-`. `getSiteIcons` lists the icon blobs (uploadedAt parsed from the `<kind>-<ms>` filename) so the Files tab can show them read-only (tagged "Settings"). `registerFilesBatch` records metadata for files the browser uploaded straight to Blob. Routes: `GET /api/files`, `POST /api/files/blob-token` + `POST /api/files/register` (client direct upload), `DELETE /api/files/by?url=`, `POST /api/files/delete` (multi), `GET /api/files/icons`, plus the icon-only `POST /api/files/upload`. Admin UI: `LibraryTabs` (Images = `MediaLibrary` · Files = `FileLibrary` + `FileUploader`); both grids have multi-select delete. `expandBlob` round-trips `files/` like `media/` |
 | `media.ts` | `getMedia`, `addMedia`, `addMediaBatch`, `registerMediaBatch`, `deleteMedia`/`deleteMediaBatch`, `finalizeContentMedia`, `finalizePendingVariants`, `finalizePendingThumbs` | Metadata in the `media` table; binaries on Blob. **Uploads go straight from the browser to Blob** (`POST /api/media/blob-token` issues an owner-gated client token → the file never passes through a function, so the serverless 4.5MB request-body limit can't fail large photos), then `POST /api/media/register` (`registerMediaBatch`) fetches the original back to read dimensions + make the `-thumb.webp` and inserts the row. Upload keeps the untouched ORIGINAL + a cheap `-thumb.webp`; heavy `-1024`/`-1600` AVIF+WebP are **deferred** off the save request (`finalizeContentMedia` via `after()`, swept by cron). Delete removes EVERY version (original + thumb + all variants), atomic row delete (no resurrection race). `finalizePendingThumbs` backfills thumbs for rows that lack one (migration imports). `PostContent` emits `<picture>` only for originals whose variants exist; others render a plain `<img>` so a missing variant never blanks the image. Body `<img>` carry intrinsic `width`/`height` from the row (CLS-free); the FIRST body image is eager + `fetchpriority=high` (LCP), the rest lazy |
 | `highlight.ts` | `highlightCode` | Server-side Shiki syntax highlighting (singleton highlighter, Vitesse light+dark dual-theme, curated lang set). Called by `PostContent.highlightBlocks` to replace marked's plain `<pre><code class="language-x">` blocks; returns null on failure → caller keeps the plain block. Dark tokens swap via `.dark .shiki` CSS (`!important`, beats Shiki's inline light colors). Zero client JS |
 | `media-usage.ts` | `findUnusedMedia` | **Read-only audit** — returns URLs of media referenced by no post/page/settings **or revision snapshot** (the "Check unused" library button, `GET /api/media/unused`). Flags orphans in the grid for manual review; never deletes. Scans revisions on purpose so a time-machine restore's image is never reported as unused (the old destructive `sweep.ts` missed revisions and could delete a still-needed image) |
@@ -183,6 +227,7 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 
 | Script | Purpose |
 |---|---|
+| `schema.sql` | **Full Postgres schema** (all 9 tables + indexes + the `posts.search` generated tsvector + RLS + the `analytics_summary`/`analytics_totals` RPCs). Run ONCE on a fresh Supabase project (SQL Editor or psql) to create the DB — the install path for self-hosters. Idempotent (`IF NOT EXISTS`/`CREATE OR REPLACE`). NOT executed by the app; transcribed from the live schema, keep it in sync when you change tables/RPCs |
 | `migrate-to-supabase.mjs` | One-off P1.5 migration: read all Blob `_index.json` + `.md` + revisions → insert into Postgres (posts/pages/revisions/media/files/settings). Idempotent (upsert), `--dry` to preview. Already run; kept for reference/recovery |
 | `import-wordpress.mjs` | Import WP XML export → Blob posts |
 | `convert-html-to-markdown.mjs` | Convert WP HTML body → Markdown |
@@ -338,7 +383,14 @@ One-off Node scripts, not part of the app. Run with `node scripts/<name>.mjs`.
 ## Header (public + theme)
 - Logo and the icon row (search, theme, menu) share ONE flex line (`items-center`) so the
   icons stay on the logo's vertical midline at any logo size; the site description sits
-  below that row. Icons are one consistent set: 20px, viewBox 24, stroke 1.8, round caps.
+  below that row.
+- **The logo is auto-sized, never the raw original.** `settings.logoUrl` is the owner's untouched
+  source; the header renders `settings.logoRenderUrl` — a small WebP scaled to `logoWidth` @2x for
+  retina, built server-side on save (`renderLogo`, see `files.ts`) — falling back to the original only
+  for vector/animated logos. The `<img>` carries `width`+`height` (`logoRenderHeight`) so it reserves
+  space (no CLS). `saveSettings` regenerates it when the source/width change and deletes the old
+  derived file (one ever exists). This is the PageSpeed "image delivery" fix — the original (often
+  hundreds of KB) is never shipped to readers. Icons are one consistent set: 20px, viewBox 24, stroke 1.8, round caps.
 - Theme default is **system** (no-FOUC script + `ThemeProvider` both `|| 'system'`). The
   toggle icon reflects the *applied* theme — `useSyncExternalStore` reads the `<html>.dark`
   class (server snapshot = light, so no hydration mismatch), showing sun (light) / moon (dark).

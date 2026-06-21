@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## 2026-06-22 (docs: DB schema + working principles)
+- **docs(setup): added `scripts/schema.sql`** — the full Postgres schema (all 9 tables,
+  indexes, the `posts.search` generated tsvector, RLS, and the `analytics_summary`/
+  `analytics_totals` RPCs), transcribed from the live database. Self-hosters can now create
+  the whole DB in one run; previously the repo had no schema at all (the migration script
+  assumed the tables existed). Idempotent.
+- **docs(readme): rewrote the install guide** — a step-by-step **Local setup** (prerequisites,
+  clone → run `schema.sql` → Supabase keys → Blob token → OAuth app → env → run) and added the
+  missing **Supabase / `schema.sql`** step to both Vercel deploy paths (manual + AI agent).
+- **docs(claude): added a "Working principles" section** (think-before-coding, simplicity,
+  surgical changes, goal-driven verification) at the top of CLAUDE.md, adapted to this repo —
+  notably that verification = `npm run build` + `npm run lint` (no test suite). Pure docs — no
+  version bump.
+
+## 2026-06-22 (auto-sized header logo)
+- **feat(logo): the header logo is auto-compressed to the chosen size.** The owner's picked logo
+  (`logoUrl`) is ALWAYS kept untouched; on every settings save we (re)build one small WebP scaled to
+  the header width at **2x for retina** (`renderLogo` in `lib/files.ts`, via sharp, never upscaled
+  past the source) and serve THAT in the header (`logoRenderUrl`). The previous derived file is
+  deleted each regeneration, so exactly one ever lives on the store (under `files/logo-*.webp`, hidden
+  from every grid). Regenerates only when the source or `logoWidth` changes (or none exists yet);
+  cleared when the logo is removed/hidden. Vector (svg) / animated (gif) logos are served as-is (no
+  derived file). Cuts the header image payload from the full-size original to a few KB — the main
+  PageSpeed "image delivery" win.
+- **fix(cls): the logo now reserves its space.** The `<img>` carries `width`+`height` (`logoRenderHeight`
+  = displayed height at `logoWidth`), so the header no longer shifts as the logo loads. `v0.9.27`.
+
 ## 2026-06-22 (one-font rule — absolute, no exceptions)
 - **change(typography): one typeface for EVERYTHING, hard rule.** Removed the last monospace
   spots in admin (hex inputs, raw-Markdown source editor, code-token button, activity badge) — the

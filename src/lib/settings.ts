@@ -5,7 +5,8 @@
 
 import { cache } from 'react'
 import type { FeatureSettings, FontFace, FontSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
-import { collapseBlob, expandBlob } from '@/lib/blob'
+import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
+import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
 import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES, FONT_WEIGHTS } from '@/lib/themes'
@@ -258,6 +259,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   siteUrl: '',
   logoUrl: '',
   logoWidth: 120,
+  logoRenderUrl: '',
+  logoRenderHeight: 0,
   showLogo: false,
   showDescription: true,
   faviconUrl: '',
@@ -311,6 +314,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       ...DEFAULT_SETTINGS,
       ...stored,
       logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
+      logoRenderUrl: expandBlob(stored.logoRenderUrl ?? DEFAULT_SETTINGS.logoRenderUrl),
       faviconUrl: expandBlob(stored.faviconUrl ?? DEFAULT_SETTINGS.faviconUrl),
       appIconUrl: expandBlob(stored.appIconUrl ?? DEFAULT_SETTINGS.appIconUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
@@ -336,14 +340,39 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
 // Merge a partial update over current settings and persist. Returns the result.
 export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSettings> {
   const current = await getSettings()
+
+  // Logo: keep the owner's original (logoUrl) untouched, but (re)build a small
+  // display-sized WebP (2x for retina) whenever the source or width changes — or
+  // when one doesn't exist yet (covers logos set before this feature). The old
+  // derived file is deleted so exactly one ever lives on the store. Cleared when
+  // the logo is removed or hidden. Vector/animated sources yield no derived file
+  // (renderLogo → null) and are served as-is.
+  const showLogo = input.showLogo ?? current.showLogo
+  const logoUrl = input.logoUrl ?? current.logoUrl
+  const logoWidth = clampNumber(input.logoWidth, 24, 600, current.logoWidth)
+  let logoRenderUrl = current.logoRenderUrl
+  let logoRenderHeight = current.logoRenderHeight
+  if (!showLogo || !logoUrl) {
+    if (current.logoRenderUrl) await deleteByPathname(collapseBlob(current.logoRenderUrl)).catch(() => {})
+    logoRenderUrl = ''
+    logoRenderHeight = 0
+  } else if (logoUrl !== current.logoUrl || logoWidth !== current.logoWidth || !current.logoRenderUrl) {
+    const rendered = await renderLogo(logoUrl, logoWidth)
+    if (current.logoRenderUrl) await deleteByPathname(collapseBlob(current.logoRenderUrl)).catch(() => {})
+    logoRenderUrl = rendered?.url ?? ''
+    logoRenderHeight = rendered?.height ?? 0
+  }
+
   const next: SiteSettings = {
     language: isSiteLang(input.language) ? input.language : current.language,
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
     description: input.description ?? current.description,
     siteUrl: input.siteUrl !== undefined ? sanitizeUrl(input.siteUrl) : current.siteUrl,
-    logoUrl: input.logoUrl ?? current.logoUrl,
-    logoWidth: clampNumber(input.logoWidth, 24, 600, current.logoWidth),
-    showLogo: input.showLogo ?? current.showLogo,
+    logoUrl,
+    logoWidth,
+    logoRenderUrl,
+    logoRenderHeight,
+    showLogo,
     showDescription: input.showDescription ?? current.showDescription,
     faviconUrl: input.faviconUrl ?? current.faviconUrl,
     appIconUrl: input.appIconUrl ?? current.appIconUrl,
@@ -364,6 +393,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
   const stored: SiteSettings = {
     ...next,
     logoUrl: collapseBlob(next.logoUrl),
+    logoRenderUrl: collapseBlob(next.logoRenderUrl),
     faviconUrl: collapseBlob(next.faviconUrl),
     appIconUrl: collapseBlob(next.appIconUrl),
     customFont: { ...next.customFont, faces: next.customFont.faces.map((x) => ({ ...x, url: collapseBlob(x.url) })) },
