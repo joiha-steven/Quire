@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **fix(media): delete now removes ALL versions of an image from Blob and actually takes
+  effect.** Two bugs in `deleteMedia`: (1) it didn't prime the vanity media base before
+  `collapseBlob`, so when a custom media host was configured the deleted URL never collapsed to
+  its `media/…` pathname — nothing matched and the delete silently no-op'd (the image stayed in
+  the library, including "unused" items). (2) display variants (`-1024/-1600` AVIF+WebP) were
+  only removed when the manifest `variants` flag was true, leaving orphans if it was stale. Now
+  it primes settings first and unconditionally sweeps the thumb + all four variants for any
+  raster original. `v0.9.2`.
 - **docs(deploy): expanded the "Deploy to Vercel" guide into two clear methods** — (A) manual
   via the Vercel dashboard (fork → Blob store → env vars → OAuth callback → sign in), noting the
   two `vercel.json` settings to adjust for yourself (the `sin1` region is just the author's

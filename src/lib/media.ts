@@ -202,14 +202,27 @@ export async function addMedia(
 }
 
 // Delete a media item: the original + thumbnail + every display variant + entry.
+// Removes ALL versions of the image from Blob — derived names (thumb + the four
+// AVIF/WebP variants) are deleted unconditionally for any raster original, not
+// gated on the manifest `variants` flag, so a stale/false flag can't leave the
+// heavy variants orphaned in the store.
 export async function deleteMedia(url: string): Promise<void> {
+  // Prime the vanity media base (setMediaBase) so collapseBlob can strip a
+  // configured custom host. Without this, a vanity URL passed from the client
+  // would not collapse to its `media/...` pathname and NOTHING would match — the
+  // delete silently no-op'd (image stayed in the library).
+  await getSettings()
   const current = await readJson<MediaItem[]>(INDEX_PATH, [])
   const target = collapseBlob(url) // original pathname
   const item = current.find((m) => collapseBlob(m.url) === target)
   const paths = new Set<string>([target])
   if (item?.thumb) paths.add(collapseBlob(item.thumb))
-  if (item?.variants) {
+  // Raster originals always have a thumb + display variants under a derived stem,
+  // regardless of the stored `variants` flag — sweep them all (del is a no-op when
+  // a name is missing, so listing extras is harmless).
+  if (/\.(jpe?g|png)$/i.test(target)) {
     const stem = target.replace(/\.[^.]+$/, '')
+    paths.add(`${stem}-thumb.webp`)
     for (const w of SIZES) { paths.add(`${stem}-${w}.webp`); paths.add(`${stem}-${w}.avif`) }
   }
   await Promise.all([...paths].map((p) => deleteByPathname(p).catch(() => {})))
