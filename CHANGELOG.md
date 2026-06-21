@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-06-21 (uploads)
+- **fix(media/files): browser-direct uploads — large files no longer fail.** Images and
+  attachments now upload straight from the browser to Vercel Blob (`/api/media/blob-token` +
+  `/api/media/register`, `/api/files/blob-token` + `/api/files/register`), bypassing the
+  serverless **4.5MB request-body limit** that was silently dropping bigger files. The metadata
+  is registered server-side (dimensions + thumbnail fetched back for images), the new item
+  appears in the grid/list immediately (no refresh), and success/failure is always reported.
+  Removed the old `POST /api/media/upload` and `POST /api/files`. `v0.9.20`.
+
 ## 2026-06-21 (analytics follow-up)
 - **feat(analytics): scroll-depth / average read %.** A `<ScrollDepth/>` beacon on posts sends
   the max % of the page reached on leave (`analytics_scroll` table); the dashboard shows an
