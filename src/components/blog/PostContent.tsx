@@ -4,10 +4,31 @@
 import { marked, type Tokens } from 'marked'
 import { videoEmbed } from '@/lib/video'
 import { collapseBlob } from '@/lib/blob'
+import { highlightCode } from '@/lib/highlight'
 import { slugify } from '@/lib/utils'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// Reverse of escapeHtml — marked emits escaped source inside <code>; Shiki needs
+// the raw text back before re-highlighting it.
+const unescapeHtml = (s: string) =>
+  s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+
+// Replace marked's plain `<pre><code class="language-x">…</code></pre>` blocks with
+// Shiki-highlighted markup. Async (Shiki is async), so collect every match first,
+// highlight in parallel, then splice the results back in. A null result (unknown
+// lang / failure) leaves the original block untouched.
+async function highlightBlocks(html: string): Promise<string> {
+  const re = /<pre><code(?: class="language-([\w-]+)")?>([\s\S]*?)<\/code><\/pre>/g
+  const matches = [...html.matchAll(re)]
+  if (matches.length === 0) return html
+  const out = await Promise.all(
+    matches.map((m) => highlightCode(unescapeHtml(m[2]), (m[1] || 'text').toLowerCase())),
+  )
+  let i = 0
+  return html.replace(re, (whole) => out[i++] ?? whole)
+}
 
 marked.setOptions({ gfm: true, breaks: true })
 marked.use({
@@ -24,6 +45,11 @@ marked.use({
     },
   },
 })
+
+// Intrinsic pixel dimensions of uploaded originals, keyed by collapsed pathname
+// (media/x.jpg). Emitting width/height on the <img> lets the browser reserve the
+// box from the aspect ratio before the bytes arrive -> no layout shift (CLS).
+export type ImageDims = Map<string, { width: number; height: number }>
 
 // Wrap each image in a <figure>. Placement is encoded in the src fragment:
 //   #left | #right        -> alignment (default center)
@@ -52,7 +78,8 @@ function responsiveSources(cleanSrc: string, ready: Set<string>): string | null 
     `<source type="image/webp" srcset="${set('webp')}" sizes="${SIZES_ATTR}">`
   )
 }
-function buildFigures(html: string, ready: Set<string>): string {
+function buildFigures(html: string, ready: Set<string>, dims: ImageDims): string {
+  let seen = 0 // index of the image within the body, in source order
   return html
     .replace(/<p>\s*(<img\b[^>]*>)\s*<\/p>/g, '$1')
     .replace(/<img\b[^>]*>/g, (tag) => {
@@ -61,7 +88,14 @@ function buildFigures(html: string, ready: Set<string>): string {
       const alt = tag.match(/\balt="([^"]*)"/)?.[1] ?? ''
       const [cleanSrc, frag = ''] = src.split('#')
       const caption = alt ? `<figcaption>${alt}</figcaption>` : ''
-      const img = `<img src="${cleanSrc}" alt="${alt}" loading="lazy">`
+      // Intrinsic size (when known) reserves the box -> no CLS as it loads.
+      const d = dims.get(collapseBlob(cleanSrc))
+      const sizeAttrs = d ? ` width="${d.width}" height="${d.height}"` : ''
+      // The first body image is the likely LCP element: load it eagerly with high
+      // priority instead of lazily. Every later image stays lazy.
+      const priority = seen === 0 ? ' fetchpriority="high"' : ' loading="lazy"'
+      seen++
+      const img = `<img src="${cleanSrc}" alt="${alt}"${sizeAttrs}${priority}>`
       const sources = responsiveSources(cleanSrc, ready)
       const media = sources ? `<picture>${sources}${img}</picture>` : img
       return `<figure class="${imgClasses(frag)}">${media}${caption}</figure>`
@@ -84,12 +118,16 @@ function buildVideos(html: string): string {
 export async function PostContent({
   markdown,
   readyOriginals = new Set(),
+  imageDims = new Map(),
 }: {
   markdown: string
   // Collapsed pathnames (media/x.jpg) whose AVIF/WebP variants exist. Images not
   // in this set render as a plain <img> of the original (no broken <picture>).
   readyOriginals?: Set<string>
+  // Intrinsic width/height per collapsed pathname (for CLS-free rendering).
+  imageDims?: ImageDims
 }) {
-  const html = buildVideos(buildFigures(await marked.parse(markdown), readyOriginals))
+  const parsed = buildVideos(buildFigures(await marked.parse(markdown), readyOriginals, imageDims))
+  const html = await highlightBlocks(parsed)
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }

@@ -25,6 +25,7 @@ const ja = {
   notFoundTitle: 'ページが見つかりません',
   notFoundText: 'お探しのページは存在しないか、移動されました。',
   backHome: 'ホームに戻る',
+  backToTop: 'トップへ戻る',
 } satisfies Dict
 
 export default ja

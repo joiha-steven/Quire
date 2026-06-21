@@ -1,4 +1,4 @@
-# vibe**blog** (v0.9.15)
+# vibe**blog** (v0.9.16)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
@@ -126,8 +126,10 @@ at `/admin`. The only step an agent can't do alone is the OAuth **provider** set
 
 ## Usage
 
-- `/` — public blog (published, date-reached posts only)
-- `/search` — client-side search · `/category/<x>`, `/tag/<x>` — taxonomy lists
+- `/` — public blog (published, date-reached posts only); posts get Shiki-highlighted code,
+  intrinsic-sized (CLS-free) images, and a back-to-top button
+- `/search` — instant local title/tag search + full-text body search (Postgres `tsvector`)
+  · `/category/<x>`, `/tag/<x>` — taxonomy lists
 - `/admin` — dashboard (owner only); `/admin/editor`, `/admin/media`, `/admin/settings`
 - SEO / feeds (toggleable in Settings → SEO): `/sitemap.xml`, `/robots.txt`,
   `/feed.xml` (RSS), `/llms.txt`, `/og` (dynamic share image)

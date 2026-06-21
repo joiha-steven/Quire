@@ -26,6 +26,7 @@ export type Dict = {
   notFoundTitle: string
   notFoundText: string
   backHome: string
+  backToTop: string
 }
 
 export type AdminStrings = {
@@ -63,6 +64,9 @@ export type AdminStrings = {
   untitled: string
   statusPublished: string
   statusDraft: string
+  filterPlaceholder: string
+  filterAll: string
+  filterEmpty: string
   edit: string
   delete: string
   confirmDeletePost: string

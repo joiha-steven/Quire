@@ -25,6 +25,7 @@ const vi = {
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',
   backHome: 'Về trang chủ',
+  backToTop: 'Lên đầu trang',
 } satisfies Dict
 
 export default vi

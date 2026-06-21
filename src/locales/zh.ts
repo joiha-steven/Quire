@@ -25,6 +25,7 @@ const zh = {
   notFoundTitle: '页面未找到',
   notFoundText: '您查找的页面不存在或已被移动。',
   backHome: '返回首页',
+  backToTop: '回到顶部',
 } satisfies Dict
 
 export default zh

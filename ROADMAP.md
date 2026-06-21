@@ -82,6 +82,50 @@ Owner-gated `/api/ai/*` routes; key in env, never client-exposed:
 
 Independent of Phases 1–4 — could be done first as a quick win.
 
+### Phase 6 — Native comments `[planned, independent]`
+
+Reader comments with **no third-party login** (giscus was rejected for exactly this —
+it forces a GitHub account). Fully self-hosted on the existing Supabase Postgres,
+owner-moderated, spam-guarded by **Cloudflare Turnstile**. A `features.comments` toggle
+gates the whole thing (re-added; removed when the giscus spike was dropped).
+
+**Data model** — new `comments` table:
+- `id` (uuid), `post_slug` (text, references a post), `author_name` (text, required),
+  `author_email` (text, required, **never shown publicly** — used for a Gravatar hash,
+  dedup, and optional owner notify), `body` (text, plain/lightly-formatted),
+  `status` (`pending` | `approved` | `spam`, default `pending`), `created_at`,
+  `ip` + `user_agent` (abuse triage). Optional v2: `parent_id` for threaded replies.
+- Index on `(post_slug, status, created_at)`.
+
+**Public flow:**
+- Comment form at the end of a post: name + email + body, plus a hidden **honeypot**
+  field and the **Turnstile** widget.
+- `POST /api/comments` → verify Turnstile (server-side `siteverify`) + honeypot empty +
+  per-IP rate-limit → insert as `pending`. Reader sees "awaiting moderation".
+- Only `approved` rows render. **Keep the post page SSG** by loading comments through a
+  small client component (`GET /api/comments?slug=`) instead of server-reading them —
+  the article HTML stays ISR/static; comments hydrate after.
+
+**Moderation (admin):**
+- New `/admin/comments` page (force-dynamic): pending + approved lists, newest first,
+  filter by status / post. Actions: approve, unapprove, mark spam, delete, with bulk
+  select. A pending-count badge in the admin nav.
+- Log each action to the activity log (`comment.approve` / `comment.spam` /
+  `comment.delete`).
+
+**Spam protection:**
+- **Cloudflare Turnstile** (free, privacy-friendly, no puzzle) — env
+  `TURNSTILE_SITE_KEY` (public) + `TURNSTILE_SECRET_KEY` (server). Verified before every
+  insert.
+- Honeypot field + minimum time-on-page + per-IP rate-limit. Optional link/keyword
+  heuristics auto-flag obvious spam straight to `spam`.
+
+**Out of scope for v1 (later):** email-notify the owner on a new pending comment
+(Resend or similar); threaded replies; reactions.
+
+**i18n:** form labels, validation/awaiting-moderation messages, and the moderation UI
+go through `src/locales/` (+ admin) like everything else.
+
 ## Accepted limitations (current design)
 
 - Single author (one `AUTHORIZED_EMAIL`). No multi-user / roles planned.

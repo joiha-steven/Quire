@@ -108,6 +108,32 @@ export async function getPublicPosts(): Promise<Post[]> {
   return all.filter((p) => isPublicallyVisible(p.status, p.date))
 }
 
+// Full-text search over title + BODY via the generated `search` tsvector
+// (config 'simple': accent-sensitive, no stemming). Reaches matches INSIDE the
+// article body — the lean client index only covers title/tags. Returns published
+// + visible posts (metadata, no body), newest first. Empty/failed -> [].
+export async function searchPosts(query: string): Promise<Post[]> {
+  const q = query.trim()
+  if (!q) return []
+  try {
+    const { data, error } = await db()
+      .from('posts')
+      .select(META_COLS)
+      .textSearch('search', q, { type: 'websearch', config: 'simple' })
+      .eq('status', 'published')
+      .order('date', { ascending: false })
+      .limit(50)
+    if (error || !data) {
+      if (error) console.error(`[ERROR] posts.searchPosts: ${error.message}`)
+      return []
+    }
+    return (data as PostRow[]).map(rowToMeta).filter((p) => isPublicallyVisible(p.status, p.date))
+  } catch (error) {
+    console.error(`[ERROR] posts.searchPosts: ${(error as Error).message}`)
+    return []
+  }
+}
+
 // Read one full post. `React.cache` dedupes the read across generateMetadata +
 // the page render in ONE request; no cross-request cache, so content is current.
 export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {

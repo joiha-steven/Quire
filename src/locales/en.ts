@@ -25,6 +25,7 @@ const en = {
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',
   backHome: 'Back home',
+  backToTop: 'Back to top',
 } satisfies Dict
 
 export default en
