@@ -157,8 +157,10 @@ export type SiteSettings = {
   title: string
   description: string
   siteUrl: string // canonical base URL (e.g. https://manhhung.me); '' -> derive from env
-  logoUrl: string // '' when no logo
+  logoUrl: string // '' when no logo — the ALWAYS-kept original source the owner picked
   logoWidth: number // px, horizontal width of the logo in the header
+  logoRenderUrl: string // derived, display-sized WebP (2x for retina) generated from logoUrl at logoWidth; '' = serve original (vector/animated, or none). Regenerated + old one deleted whenever logoUrl/logoWidth change
+  logoRenderHeight: number // displayed height (px) of the logo at logoWidth — set width+height on the <img> to reserve space (no CLS); 0 when unknown
   showLogo: boolean
   showDescription: boolean
   faviconUrl: string // browser-tab icon; '' = the bundled default favicon

@@ -1,4 +1,4 @@
-# vibe**blog** (v0.9.26)
+# vibe**blog** (v0.9.27)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
@@ -17,13 +17,60 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
 - **Deploy:** Vercel (Docker self-host is on the [roadmap](./ROADMAP.md))
 - **Requires:** Node.js 20.9+ (Next 16)
 
-## Setup
+## Local setup
 
-```bash
-npm install
-cp .env.example .env.local   # then fill in the values
-npm run dev
-```
+### Prerequisites
+
+- **Node.js 20.9+** (Next 16) and npm.
+- A **Supabase** project (free tier is fine) — holds all text content.
+- A **Vercel Blob** store — holds binaries (images/files/icons). You need its
+  read/write token; you don't have to deploy to Vercel to use Blob locally.
+- At least one **OAuth app** — Google and/or GitHub — for admin sign-in.
+
+### Steps
+
+1. **Clone + install**
+
+   ```bash
+   git clone https://github.com/joiha-steven/vibeblog.git
+   cd vibeblog
+   npm install
+   ```
+
+2. **Create the database.** In your Supabase project open **SQL Editor → New query**,
+   paste the contents of [`scripts/schema.sql`](./scripts/schema.sql), and **Run**. This
+   creates every table, index, and RPC the app needs (idempotent — safe to re-run).
+
+3. **Get your Supabase keys.** Supabase **Project Settings → API**: copy the
+   **Project URL** (`SUPABASE_URL`) and the **`service_role`** key
+   (`SUPABASE_SERVICE_ROLE_KEY` — secret, server-only).
+
+4. **Get a Blob token.** In the Vercel dashboard, **Storage → Create → Blob**, then in
+   the store's **`.env` / Tokens** tab copy the `BLOB_READ_WRITE_TOKEN`
+   (`vercel_blob_rw_…`). No need to deploy first.
+
+5. **Create an OAuth app** (at least one):
+   - **Google** — [Cloud Console](https://console.cloud.google.com/) → Credentials →
+     OAuth client ID (Web). Authorized redirect URI:
+     `http://localhost:3000/api/auth/callback/google`.
+   - **GitHub** — Settings → Developer settings → OAuth Apps → New. Callback URL:
+     `http://localhost:3000/api/auth/callback/github`.
+
+6. **Configure env.**
+
+   ```bash
+   cp .env.example .env.local   # then fill in the values below
+   npx auth secret              # generates AUTH_SECRET — paste it in
+   ```
+
+7. **Run it.**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open `http://localhost:3000/admin`, sign in as your `AUTHORIZED_EMAIL`, and set your
+   title / palette / menu in **Settings**. Start writing.
 
 ### Required environment variables
 
@@ -32,17 +79,17 @@ See [`.env.example`](./.env.example). In short:
 | Variable                          | What it is                                |
 | --------------------------------- | ----------------------------------------- |
 | `AUTH_SECRET`                     | NextAuth secret — `npx auth secret`       |
+| `AUTHORIZED_EMAIL`                | The only email allowed into `/admin`      |
 | `AUTH_GOOGLE_ID` / `_SECRET`      | Google OAuth client (optional provider)   |
 | `AUTH_GITHUB_ID` / `_SECRET`      | GitHub OAuth app (optional provider)      |
-| `AUTHORIZED_EMAIL`                | The only email allowed into `/admin`      |
-| `BLOB_READ_WRITE_TOKEN`           | Vercel Blob read/write token              |
 | `SUPABASE_URL`                    | Supabase project API URL                  |
 | `SUPABASE_SERVICE_ROLE_KEY`       | Supabase service_role key (secret, server-only) |
+| `BLOB_READ_WRITE_TOKEN`           | Vercel Blob read/write token              |
 | `CRON_SECRET`                     | Protects `/api/cron` (optional)           |
 
-Enable at least one provider; each loads only when its credentials are set.
-OAuth callback URLs: `https://<your-domain>/api/auth/callback/google` and/or
-`.../callback/github` (use `http://localhost:3000/...` locally).
+Enable at least one provider; each loads only when its credentials are set. For
+production, register the same callback URLs against your live domain (see
+[Deploy to Vercel](#deploy-to-vercel)).
 
 > **Note:** `BLOB_READ_WRITE_TOKEN` is also used to derive the public Blob store
 > URL at runtime — no extra env var needed. The token format
@@ -84,21 +131,25 @@ the dashboard, or hand the whole job to an AI agent.
 ### A. Manual (Vercel dashboard)
 
 1. **Fork** this repo on GitHub (so you own the copy Vercel deploys).
-2. In Vercel: **Add New → Project**, then import your fork.
-3. **Storage → Create → Blob**, and connect the store to the project. This injects
+2. **Create the database.** In a [Supabase](https://supabase.com) project, run
+   [`scripts/schema.sql`](./scripts/schema.sql) in the SQL Editor (creates all tables +
+   RPCs). Note the **Project URL** and **`service_role`** key (Project Settings → API).
+3. In Vercel: **Add New → Project**, then import your fork.
+4. **Storage → Create → Blob**, and connect the store to the project. This injects
    `BLOB_READ_WRITE_TOKEN` automatically — the only storage config you need.
-4. Add the rest under **Settings → Environment Variables** (see `.env.example`):
+5. Add the rest under **Settings → Environment Variables** (see `.env.example`):
+   - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — from step 2.
    - `AUTH_SECRET` — run `npx auth secret` and paste the output.
    - `AUTHORIZED_EMAIL` — the single email allowed into `/admin`.
    - At least one OAuth provider: `AUTH_GOOGLE_ID` + `AUTH_GOOGLE_SECRET`, and/or
      `AUTH_GITHUB_ID` + `AUTH_GITHUB_SECRET`.
-5. **Deploy.**
-6. **Register the OAuth callback URL** with your provider, using the live domain:
+6. **Deploy.**
+7. **Register the OAuth callback URL** with your provider, using the live domain:
    - Google: `https://<your-domain>/api/auth/callback/google`
    - GitHub: `https://<your-domain>/api/auth/callback/github`
 
    Add both your `*.vercel.app` URL and any custom domain.
-7. Open `https://<your-domain>/admin`, sign in as `AUTHORIZED_EMAIL`, and set your
+8. Open `https://<your-domain>/admin`, sign in as `AUTHORIZED_EMAIL`, and set your
    title / palette / menu in **Settings**. That's it — start writing.
 
 > **Two `vercel.json` settings to adjust for yourself:**
@@ -112,18 +163,19 @@ the dashboard, or hand the whole job to an AI agent.
 ### B. Via an AI agent (OpenClaw, Hermes, Claude, …)
 
 Rather not click through Vercel? Hand it to any AI agent that can act on **Vercel**
-(through the Vercel API / CLI / MCP) and **GitHub**. Give the agent:
+and **Supabase** (through their API / CLI / MCP) and **GitHub**. Give the agent:
 
 - this repository URL (to fork + import),
 - your `AUTHORIZED_EMAIL`,
 - your OAuth app credentials (or let it create the OAuth app if it has provider access),
-- a **Vercel token** (Account → Settings → Tokens) and GitHub access.
+- a **Vercel token** (Account → Settings → Tokens), **Supabase** access, and GitHub access.
 
-Then ask it to: *fork the repo, create a Vercel project from it, add a Blob store,
-generate `AUTH_SECRET`, set the environment variables above, deploy, and return the
-live URL.* Finish by registering the OAuth callback URL (step 6 above) and signing in
-at `/admin`. The only step an agent can't do alone is the OAuth **provider** setup
-(it needs your Google/GitHub login) — pre-create that app, or grant access.
+Then ask it to: *fork the repo, create a Supabase project and run `scripts/schema.sql`
+on it, create a Vercel project from the fork, add a Blob store, generate `AUTH_SECRET`,
+set the environment variables above (incl. `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`),
+deploy, and return the live URL.* Finish by registering the OAuth callback URL (step 7
+above) and signing in at `/admin`. The only step an agent can't do alone is the OAuth
+**provider** setup (it needs your Google/GitHub login) — pre-create that app, or grant access.
 
 ## Usage
 

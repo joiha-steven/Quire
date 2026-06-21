@@ -5,6 +5,7 @@
 // verbatim on Blob and are NOT table rows, so they never show in the Files tab.
 
 import { cache } from 'react'
+import sharp from 'sharp'
 import type { FileItem } from '@/types'
 import {
   uploadFile, expandBlob, collapseBlob, deleteByPathname, listBlobs,
@@ -36,6 +37,57 @@ export async function uploadIcon(kind: string, body: ArrayBuffer | Buffer, conte
   if (!ext) throw new Error(`Unsupported icon type: ${contentType}`)
   const path = `files/${kind}-${Date.now()}.${ext}`
   return uploadFile(path, body, contentType)
+}
+
+// ----- Logo render (auto-sized for the header) --------------------------------
+// The owner picks a full-size logo from the media library (kept untouched). For
+// the header we don't want to ship that original — instead we generate ONE small
+// WebP scaled to the chosen header width, at 2x so it stays crisp on retina /
+// hi-dpi screens, and never upscaled past the source. The derived file lives
+// under files/logo-*.webp (NOT a Files-table row, NOT an icon → hidden from every
+// grid). saveSettings deletes the previous derived file each time it regenerates,
+// so exactly one ever exists. Vector (svg) / animated (gif) / undecodable sources
+// return null → the caller serves the original as-is (vectors scale for free).
+
+const LOGO_RASTER = /^image\/(png|jpe?g|webp)$/
+const LOGO_EXT_RASTER = /\.(png|jpe?g|jpg|webp)(?:$|[?#])/i
+
+// Build the header logo for `width` CSS px. Returns the derived WebP url + its
+// displayed height (px) at that width (so the <img> can reserve space → no CLS),
+// or null when the source isn't a downscalable raster.
+export async function renderLogo(
+  sourceUrl: string,
+  width: number,
+): Promise<{ url: string; height: number } | null> {
+  if (!sourceUrl) return null
+  let res: Response
+  try {
+    res = await fetch(sourceUrl)
+  } catch {
+    return null
+  }
+  if (!res.ok) return null
+  const contentType = res.headers.get('content-type') ?? ''
+  const isRaster = LOGO_RASTER.test(contentType) || (!contentType && LOGO_EXT_RASTER.test(sourceUrl))
+  if (!isRaster) return null // svg / gif / unknown: serve original untouched
+  const src = Buffer.from(await res.arrayBuffer())
+  try {
+    // 2x the display width for retina; withoutEnlargement keeps small logos sharp
+    // (never upscaled past the original's pixels).
+    const out = await sharp(src, { failOn: 'none' })
+      .rotate()
+      .resize({ width: Math.round(width * 2), withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer()
+    const meta = await sharp(out).metadata()
+    const path = `files/logo-${Date.now()}.webp`
+    const url = await uploadFile(path, out, 'image/webp')
+    // Displayed height = CSS width × the rendered aspect ratio.
+    const height = meta.width ? Math.round(width * (meta.height ?? 0) / meta.width) : 0
+    return { url, height }
+  } catch {
+    return null // decode/encode failure: caller falls back to the original
+  }
 }
 
 // ----- Custom font upload ------------------------------------------------------

@@ -28,16 +28,19 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           <Link href="/" className="inline-flex items-center">
             {showLogo ? (
               // Plain <img>, NOT next/image: the logo host is owner-configurable at
-              // runtime (Settings → Media domain), but next/image's optimizer only
-              // allows hosts whitelisted in next.config at BUILD time — a runtime
-              // vanity domain would 400. A plain tag loads from whatever host the
-              // setting yields, no build coupling. Logos are small + CDN-cached, so
-              // skipping optimization is negligible. height:auto keeps the ratio.
+              // runtime, but next/image's optimizer only allows hosts whitelisted in
+              // next.config at BUILD time — a runtime host would 400. A plain tag loads
+              // from whatever host the setting yields, no build coupling. We serve the
+              // DERIVED logo (logoRenderUrl: a small WebP rendered to logoWidth @2x for
+              // retina, built on save) when present, falling back to the original for
+              // vector/animated logos. width + height attrs reserve space (no CLS);
+              // the CSS width keeps it responsive, height:auto keeps the ratio.
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={settings.logoUrl}
+                src={settings.logoRenderUrl || settings.logoUrl}
                 alt={settings.title}
                 width={settings.logoWidth}
+                height={settings.logoRenderHeight || undefined}
                 style={{ width: settings.logoWidth, height: 'auto' }}
                 fetchPriority="high"
                 decoding="async"
