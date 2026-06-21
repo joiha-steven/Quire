@@ -1,9 +1,9 @@
 'use client'
 
-// Settings screen: ONE form, ONE save button. All settings live in a single
-// state object and are saved together via PUT /api/settings (which merges).
-// Layout = two top-aligned, length-balanced columns of equal-width cards on
-// desktop; one column on mobile.
+// Settings screen: ONE form, ONE save button, split into three tabs — General,
+// Appearance, Advanced. All settings live in a single state object and are saved
+// together via PUT /api/settings (which merges). Cards keep uniform chrome; each
+// tab lays them out in a top-aligned, length-balanced grid on desktop.
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SiteSettings, ApiResponse } from '@/types'
@@ -15,6 +15,8 @@ import { useAdminT } from './I18nProvider'
 import { SiteFields } from './SiteFields'
 import { ThemeFields } from './ThemeFields'
 import { TypographyFields } from './TypographyFields'
+import { FontUpload } from './FontUpload'
+import { AdvancedFields } from './AdvancedFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FeatureFields } from './FeatureFields'
 import { SeoFields } from './SeoFields'
@@ -28,6 +30,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   )
 }
 
+type Tab = 'general' | 'appearance' | 'advanced'
+
 export function SettingsView({ settings, presets }: { settings: SiteSettings; presets: ThemePreset[] }) {
   const t = useAdminT()
   const router = useRouter()
@@ -35,6 +39,7 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
   const [s, setS] = useState<SiteSettings>(settings)
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
+  const [tab, setTab] = useState<Tab>('general')
 
   const update = (partial: Partial<SiteSettings>) => setS((prev) => ({ ...prev, ...partial }))
 
@@ -60,50 +65,105 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
     }
   }
 
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'general', label: t.tabGeneral },
+    { id: 'appearance', label: t.tabAppearance },
+    { id: 'advanced', label: t.tabAdvanced },
+  ]
+
   return (
     <div className="pb-24">
       <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.settingsTitle}</h1>
 
-      {/* Two explicit columns: both start at the top, sections distributed so the
-          two columns end up roughly the same length. */}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <Card title={t.cardGeneral}>
-            <SiteFields s={s} update={update} />
-          </Card>
-          <Card title={t.cardLayout}>
-            <LayoutMenuFields s={s} update={update} />
-          </Card>
-          <Card title={t.cardFeatures}>
-            <FeatureFields
-              features={s.features}
-              onChange={(features) => update({ features })}
-              relatedCount={s.relatedCount}
-              onRelatedCount={(relatedCount) => update({ relatedCount })}
-            />
-          </Card>
-          <Card title={t.cardTypography}>
-            <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card title={t.navAppearance}>
-            <ThemeFields
-              presets={presets}
-              themes={s.themes}
-              defaultId={s.themePreset}
-              onChangeThemes={(themes) => update({ themes })}
-              onSetDefault={(themePreset) => update({ themePreset })}
-              customCss={s.customCss}
-              onCustomCss={(customCss) => update({ customCss })}
-            />
-          </Card>
-          <Card title="SEO">
-            <SeoFields s={s} update={update} />
-          </Card>
-        </div>
+      {/* Tab bar — one shared chip style so the three never drift. */}
+      <div className="mb-6 flex flex-wrap gap-1 border-b border-neutral-200 dark:border-neutral-800">
+        {TABS.map((tb) => (
+          <button
+            key={tb.id}
+            type="button"
+            onClick={() => setTab(tb.id)}
+            aria-pressed={tab === tb.id}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${
+              tab === tb.id
+                ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white'
+                : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+            }`}
+          >
+            {tb.label}
+          </button>
+        ))}
       </div>
+
+      {tab === 'general' && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <Card title={t.cardGeneral}>
+              <SiteFields s={s} update={update} />
+            </Card>
+            <Card title={t.cardLayout}>
+              <LayoutMenuFields s={s} update={update} />
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card title={t.cardFeatures}>
+              <FeatureFields
+                features={s.features}
+                onChange={(features) => update({ features })}
+                relatedCount={s.relatedCount}
+                onRelatedCount={(relatedCount) => update({ relatedCount })}
+              />
+            </Card>
+            <Card title="SEO">
+              <SeoFields s={s} update={update} />
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {tab === 'appearance' && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <Card title={t.navAppearance}>
+              <ThemeFields
+                presets={presets}
+                themes={s.themes}
+                defaultId={s.themePreset}
+                onChangeThemes={(themes) => update({ themes })}
+                onSetDefault={(themePreset) => update({ themePreset })}
+              />
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card title={t.cardFont}>
+              <FontUpload value={s.customFont} onChange={(customFont) => update({ customFont })} />
+            </Card>
+            <Card title={t.cardTypography}>
+              <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {tab === 'advanced' && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <Card title={t.cardRhythm}>
+            <AdvancedFields typography={s.typography} onTypography={(typography) => update({ typography })} />
+          </Card>
+          <Card title={t.customCss}>
+            <div className="space-y-1.5">
+              <textarea
+                value={s.customCss}
+                onChange={(e) => update({ customCss: e.target.value })}
+                rows={10}
+                spellCheck={false}
+                placeholder={'.prose h2 { letter-spacing: -0.01em }'}
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              />
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Single, always-reachable save bar. */}
       <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/90">

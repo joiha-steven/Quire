@@ -38,6 +38,35 @@ export async function uploadIcon(kind: string, body: ArrayBuffer | Buffer, conte
   return uploadFile(path, body, contentType)
 }
 
+// ----- Custom font upload ------------------------------------------------------
+// Owner-uploaded typeface, stored under files/ on Blob (like the site icons —
+// kept OUT of the Files table so it never shows in the attachment grid). Returns
+// the absolute URL + a CSS family name derived from the original filename.
+
+const FONT_EXT = new Set(['woff2', 'woff', 'ttf', 'otf'])
+
+export function fontExt(filename: string): string {
+  return filename.split(/[?#]/)[0].split('.').pop()?.toLowerCase() ?? ''
+}
+export function isAllowedFontType(filename: string): boolean {
+  return FONT_EXT.has(fontExt(filename))
+}
+
+export async function uploadFont(
+  filename: string,
+  body: ArrayBuffer | Buffer,
+  contentType: string,
+): Promise<{ url: string; family: string }> {
+  const ext = fontExt(filename)
+  if (!FONT_EXT.has(ext)) throw new Error(`Unsupported font type: ${ext}`)
+  // CSS family from the base name (letters/digits/space/hyphen), else a stable default.
+  const base = filename.slice(0, filename.length - ext.length - 1)
+  const family = base.replace(/[^A-Za-z0-9 _-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 64) || 'Custom Font'
+  const path = `files/font-${Date.now()}.${ext}`
+  const url = await uploadFile(path, body, contentType || 'font/' + (ext === 'ttf' ? 'ttf' : ext))
+  return { url, family }
+}
+
 // ----- General file library ("Files" tab) -------------------------------------
 // Any non-image attachment (PDF, zip, docx, audio…). Listed from the `files`
 // table so the site icons under files/ (favicon-*, app-icon-*), which are NOT

@@ -8,14 +8,16 @@ import { DEFAULT_TYPOGRAPHY } from '@/lib/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/lib/admin-i18n'
 
-type LevelKey = keyof TypographySettings
+// Only the rem size fields are edited here (rhythm/smoothing live in Advanced).
+type SizeKey = 'base' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5'
 
-const FIELDS: { key: LevelKey; label: keyof AdminStrings }[] = [
+const FIELDS: { key: SizeKey; label: keyof AdminStrings }[] = [
   { key: 'h1', label: 'typoH1' },
   { key: 'h2', label: 'typoH2' },
   { key: 'h3', label: 'typoH3' },
   { key: 'h4', label: 'typoH4' },
   { key: 'h5', label: 'typoH5' },
+  { key: 'base', label: 'typoBase' },
 ]
 
 function SizeRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
@@ -46,8 +48,19 @@ type Props = {
 
 export function TypographyFields({ typography, onChange }: Props) {
   const t = useAdminT()
-  const set = (key: LevelKey, value: number) =>
+  const set = (key: SizeKey, value: number) =>
     onChange({ ...typography, [key]: Number.isFinite(value) ? value : typography[key] })
+  // Reset only the size fields; keep the owner's rhythm/smoothing choices intact.
+  const resetSizes = () =>
+    onChange({
+      ...typography,
+      base: DEFAULT_TYPOGRAPHY.base,
+      h1: DEFAULT_TYPOGRAPHY.h1,
+      h2: DEFAULT_TYPOGRAPHY.h2,
+      h3: DEFAULT_TYPOGRAPHY.h3,
+      h4: DEFAULT_TYPOGRAPHY.h4,
+      h5: DEFAULT_TYPOGRAPHY.h5,
+    })
 
   return (
     <div className="space-y-4">
@@ -55,7 +68,7 @@ export function TypographyFields({ typography, onChange }: Props) {
         <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.typographyHint}</p>
         <button
           type="button"
-          onClick={() => onChange({ ...DEFAULT_TYPOGRAPHY })}
+          onClick={resetSizes}
           className="shrink-0 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
         >
           {t.resetDefault}
@@ -68,19 +81,21 @@ export function TypographyFields({ typography, onChange }: Props) {
         ))}
       </div>
 
-      {/* Live preview: each line uses the matching --fs var so edits show at a glance.
+      {/* Live preview: each line uses its size so edits show at a glance.
           Inline style keeps it independent of the page's injected scale. */}
       <div className="space-y-1.5 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
-        {FIELDS.map((f) => (
+        {(['h1', 'h2', 'h3', 'h4', 'h5'] as const).map((k) => (
           <p
-            key={f.key}
+            key={k}
             className="truncate font-semibold tracking-tight text-neutral-900 dark:text-white"
-            style={{ fontSize: `${typography[f.key]}rem`, lineHeight: 1.2 }}
+            style={{ fontSize: `${typography[k]}rem`, lineHeight: 1.2 }}
           >
-            {f.key.toUpperCase()} · {t.typographyPreview}
+            {k.toUpperCase()} · {t.typographyPreview}
           </p>
         ))}
-        <p className="text-[1.125rem] text-neutral-500 dark:text-neutral-400">{t.typographyPreviewBody}</p>
+        <p className="text-neutral-500 dark:text-neutral-400" style={{ fontSize: `${typography.base}rem` }}>
+          {t.typographyPreviewBody}
+        </p>
       </div>
     </div>
   )

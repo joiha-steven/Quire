@@ -12,7 +12,7 @@ export type ActivityAction =
   | 'post.create' | 'post.update' | 'post.delete'
   | 'page.create' | 'page.update' | 'page.delete'
   | 'media.upload' | 'media.delete'
-  | 'file.add' | 'file.delete' | 'icon.upload'
+  | 'file.add' | 'file.delete' | 'icon.upload' | 'font.upload'
   | 'settings.save' | 'taxonomy.update' | 'cache.clear'
 
 export type ActivityEntry = {
