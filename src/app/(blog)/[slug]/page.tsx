@@ -117,9 +117,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             })}
           />
         )}
-        {/* The post title matches the home/list card title exactly (size + weight)
-            so a post reads consistently from the listing into the article. Both use
-            the H1 scale (--fs-h1). */}
+        {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
         <h1 className="fs-h1 font-semibold tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">
           {formatDate(post.date, language)}
