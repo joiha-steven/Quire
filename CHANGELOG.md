@@ -1,6 +1,16 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **feat(theme): polish the palette pickers + localize palette names.** Admin Settings →
+  Appearance: the preset cards are more compact and spaced out, borderless — the selected
+  palette reads via full opacity + a bold name while the rest sit dimmed (no rings/borders).
+  Public switcher: a clearer swatch-grid trigger icon (the artist-palette glyph was ambiguous)
+  and a wider preview chip that shows each palette's basic colors (heading/body/link/meta).
+  Palette names (Mono/Sepia/Forest/Ocean/Rosé/Amber) are now **localized** via a `paletteNames`
+  dict in all six admin + six public locales (no longer hardcoded in `themes.ts`).
+- **chore(admin-nav): rename nav items.** "Pages / Posts" → **Content**; the appearance
+  switcher now shows a fixed **"Appearance"** label instead of the current palette's name.
+  Both across all six admin locales. `v0.9.4`.
 - **feat(library): rename the media page to "Library" and split it into two tabs** — **Images**
   (the existing media library, unchanged) and **Files**, a new catch-all store for non-image
   attachments (PDF, zip, docx, audio…). Files upload to the `files/` Blob prefix with their own

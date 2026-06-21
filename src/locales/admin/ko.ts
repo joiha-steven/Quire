@@ -2,7 +2,7 @@ import type { AdminStrings } from '../types'
 
 const ko = {
   navHome: '홈',
-  navDashboard: '페이지 / 게시물',
+  navDashboard: '콘텐츠',
   navMedia: '라이브러리',
   navSettings: '설정',
   navViewBlog: '블로그 보기',
@@ -69,6 +69,7 @@ const ko = {
   excerptPlaceholder: '비워두면 본문의 처음 50단어를 자동으로 사용합니다. 최대 200자.',
   multiPlaceholder: '입력 후 Enter 키를 누르세요',
   removeAria: '삭제',
+  paletteNames: { mono: '모노', sepia: '세피아', forest: '포레스트', ocean: '오션', rose: '로즈', amber: '앰버' },
   libraryTitle: '라이브러리',
   tabImages: '이미지',
   tabFiles: '파일',

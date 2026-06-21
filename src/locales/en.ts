@@ -9,6 +9,7 @@ const en = {
   pageLabel: 'Page',
   menu: 'Menu',
   palette: 'Palette',
+  paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Forest', ocean: 'Ocean', rose: 'Rosé', amber: 'Amber' },
   theme: 'Theme',
   themeLight: 'Light',
   themeDark: 'Dark',

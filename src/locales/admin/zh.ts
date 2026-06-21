@@ -2,7 +2,7 @@ import type { AdminStrings } from '../types'
 
 const zh = {
   navHome: '首页',
-  navDashboard: '页面 / 文章',
+  navDashboard: '内容',
   navMedia: '资源库',
   navSettings: '设置',
   navViewBlog: '查看博客',
@@ -69,6 +69,7 @@ const zh = {
   excerptPlaceholder: '留空将自动使用正文前 50 个词。最多 200 个字符。',
   multiPlaceholder: '输入后按回车',
   removeAria: '删除',
+  paletteNames: { mono: '单色', sepia: '棕褐', forest: '森林', ocean: '海洋', rose: '玫瑰', amber: '琥珀' },
   libraryTitle: '资源库',
   tabImages: '图片',
   tabFiles: '文件',

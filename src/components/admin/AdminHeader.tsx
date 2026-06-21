@@ -53,7 +53,7 @@ export function AdminHeader({
   // Theme / cache / sign-out (shared by desktop row and mobile panel).
   const controls = (
     <>
-      <PaletteToggle lang={lang} palettes={palettes} defaultId={defaultPalette} variant="text" triggerClassName={ADMIN_NAV} />
+      <PaletteToggle lang={lang} palettes={palettes} defaultId={defaultPalette} variant="text" triggerClassName={ADMIN_NAV} label={t.navAppearance} />
       <ThemeToggle lang={lang} variant="text" triggerClassName={ADMIN_NAV} />
       <CacheButton />
       <form action={signOut} className="contents">

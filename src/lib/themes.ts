@@ -4,7 +4,8 @@
 // `settings.themePreset` names the visitor default. A visitor can switch palette at
 // will (PaletteToggle), and per-mode "reset" restores THAT palette's built-in colors.
 //
-// Preset names are proper nouns (kept constant across locales, like "Solarized").
+// The `name` here is the English fallback; the displayed name is localized via
+// the `paletteNames` dict (admin + public), keyed by preset id — do not hardcode.
 // Every palette is tuned so both modes stay readable: comfortable body contrast,
 // a distinct accent link, and a rule/surface that reads as a faint tint.
 

@@ -50,23 +50,23 @@ function PresetCard({
   defaultLabel: string
   onPick: () => void
 }) {
+  // No borders: the selected palette reads via full opacity + a bold name; the
+  // rest sit dimmed until hovered.
   return (
     <button
       type="button"
       onClick={onPick}
       aria-pressed={editing}
-      className={`group overflow-hidden rounded-xl border text-left transition ${
-        editing
-          ? 'border-neutral-900 ring-2 ring-neutral-900 dark:border-white dark:ring-white'
-          : 'border-neutral-200 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600'
-      }`}
+      className={`group block w-full text-left transition ${editing ? '' : 'opacity-40 hover:opacity-100'}`}
     >
-      <div className="flex h-10">
+      <div className="flex h-11 overflow-hidden rounded-lg">
         <MiniMode c={theme.light} />
         <MiniMode c={theme.dark} />
       </div>
-      <div className="flex items-center justify-between gap-1 border-t border-neutral-200 px-2 py-1 dark:border-neutral-800">
-        <span className="text-xs font-medium">{name}</span>
+      <div className="mt-1.5 flex items-center justify-between gap-1 px-0.5">
+        <span className={`text-xs ${editing ? 'font-semibold text-neutral-900 dark:text-white' : 'font-medium text-neutral-500 dark:text-neutral-400'}`}>
+          {name}
+        </span>
         {isDefault && (
           <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white dark:bg-white dark:text-neutral-900">
             {defaultLabel}
@@ -122,7 +122,7 @@ function ModeBox({
         </button>
       </div>
       {FIELDS.map((f) => (
-        <ColorRow key={f.key} label={t[f.label]} value={colors[f.key]} onChange={(v) => onChange(f.key, v)} />
+        <ColorRow key={f.key} label={t[f.label] as string} value={colors[f.key]} onChange={(v) => onChange(f.key, v)} />
       ))}
     </div>
   )
@@ -156,11 +156,11 @@ export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetD
 
       <div className="space-y-2">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.themePreset}</span>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
           {presets.map((p) => (
             <PresetCard
               key={p.id}
-              name={p.name}
+              name={t.paletteNames[p.id] ?? p.name}
               theme={themes[p.id] ?? p.theme}
               editing={p.id === editingId}
               isDefault={p.id === defaultId}

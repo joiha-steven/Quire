@@ -35,50 +35,59 @@ function useCurrentPalette(defaultId: string): string {
   )
 }
 
-// Tiny preview: the palette's light background with a heading + link bar.
+// Wide preview chip: the palette's background with its basic colors (heading,
+// body, link, meta) as little bars — enough to recognize the palette at a glance.
 function Swatch({ c }: { c: ThemeColors }) {
   return (
     <span
-      className="flex h-5 w-5 shrink-0 items-center justify-center gap-px rounded-md border"
-      style={{ background: c.bg, borderColor: c.rule }}
+      className="flex h-6 w-11 shrink-0 items-center gap-1 rounded-md px-1.5"
+      style={{ background: c.bg, boxShadow: `inset 0 0 0 1px ${c.rule}` }}
       aria-hidden
     >
-      <span className="h-2.5 w-1 rounded-full" style={{ background: c.heading }} />
-      <span className="h-2.5 w-1 rounded-full" style={{ background: c.link }} />
+      {[c.heading, c.text, c.link, c.meta].map((color, i) => (
+        <span key={i} className="h-3 w-1.5 rounded-full" style={{ background: color }} />
+      ))}
     </span>
   )
 }
 
+// Swatch-grid icon — reads clearly as "pick a color theme" (the artist-palette
+// glyph was ambiguous).
 function PaletteIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-1 1.4-2-.4-1 .2-2 1.3-2H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z" />
-      <circle cx="7.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="9.5" cy="7.5" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="14.5" cy="7.5" r="1.1" fill="currentColor" stroke="none" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="4" y="4" width="7" height="7" rx="2" />
+      <rect x="13" y="4" width="7" height="7" rx="2" />
+      <rect x="4" y="13" width="7" height="7" rx="2" />
+      <rect x="13" y="13" width="7" height="7" rx="2" />
     </svg>
   )
 }
 
-// `variant`: 'icon' (public header) or 'text' (admin header — shows the current
-// palette name, styled like the nav links via `triggerClassName`).
+// `variant`: 'icon' (public header) or 'text' (admin header). The text variant
+// shows `label` (a fixed word like "Appearance") when given, else the current
+// palette name; styled like the nav links via `triggerClassName`.
 export function PaletteToggle({
   lang,
   palettes,
   defaultId,
   variant = 'icon',
   triggerClassName = '',
+  label,
 }: {
   lang: SiteLang
   palettes: PaletteOption[]
   defaultId: string
   variant?: 'icon' | 'text'
   triggerClassName?: string
+  label?: string
 }) {
   const [open, setOpen] = useState(false)
   const current = useCurrentPalette(defaultId)
   const s = t(lang)
-  const currentName = palettes.find((p) => p.id === current)?.name ?? ''
+  const nameOf = (p: PaletteOption) => s.paletteNames[p.id] ?? p.name
+  const currentName = palettes.find((p) => p.id === current)
+  const triggerText = label ?? (currentName ? nameOf(currentName) : s.palette)
 
   return (
     <div className="relative">
@@ -89,12 +98,12 @@ export function PaletteToggle({
         title={s.palette}
         className={variant === 'text' ? triggerClassName : ICON_BTN}
       >
-        {variant === 'text' ? currentName || s.palette : <PaletteIcon />}
+        {variant === 'text' ? triggerText : <PaletteIcon />}
       </button>
       {open && (
         <>
           <button className="fixed inset-0 z-40 cursor-default" aria-hidden onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-rule bg-bg py-1 shadow-lg">
+          <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-rule bg-bg py-1 shadow-lg">
             {palettes.map((p) => (
               <button
                 key={p.id}
@@ -103,12 +112,12 @@ export function PaletteToggle({
                   apply(p.id)
                   setOpen(false)
                 }}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-rule ${
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-rule ${
                   current === p.id ? 'font-semibold text-heading' : 'text-meta'
                 }`}
               >
                 <Swatch c={p.light} />
-                <span className="flex-1">{p.name}</span>
+                <span className="flex-1">{nameOf(p)}</span>
                 {current === p.id && <span aria-hidden>✓</span>}
               </button>
             ))}

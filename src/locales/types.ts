@@ -10,6 +10,7 @@ export type Dict = {
   pageLabel: string
   menu: string
   palette: string
+  paletteNames: Record<string, string>
   theme: string
   themeLight: string
   themeDark: string
@@ -111,6 +112,7 @@ export type AdminStrings = {
   // multi-select
   multiPlaceholder: string
   removeAria: string
+  paletteNames: Record<string, string>
   // media
   libraryTitle: string
   tabImages: string

@@ -2,7 +2,7 @@ import type { AdminStrings } from '../types'
 
 const en = {
   navHome: 'Home',
-  navDashboard: 'Pages / Posts',
+  navDashboard: 'Content',
   navMedia: 'Library',
   navSettings: 'Settings',
   navViewBlog: 'View blog',
@@ -69,6 +69,7 @@ const en = {
   excerptPlaceholder: 'Leave blank to auto-use the first 50 words. Max 200 characters.',
   multiPlaceholder: 'Type, then press Enter',
   removeAria: 'Remove',
+  paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Forest', ocean: 'Ocean', rose: 'Rosé', amber: 'Amber' },
   libraryTitle: 'Library',
   tabImages: 'Images',
   tabFiles: 'Files',
