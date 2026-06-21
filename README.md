@@ -1,4 +1,4 @@
-# vibeblog (v0.9.5)
+# vibe**blog** (v0.9.5)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI; everything (posts + media) is stored in **Vercel Blob** — no database.
