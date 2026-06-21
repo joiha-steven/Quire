@@ -104,8 +104,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             })}
           />
         )}
-        {/* Same type scale as the blog-list title (PostCard) — one title format. */}
-        <h1 className="text-[1.35rem] font-semibold tracking-tight">{post.title}</h1>
+        {/* The page's primary heading: sized clearly above the in-article h2
+            (1.45rem) so the title reads as the H1, not a section heading. */}
+        <h1 className="text-[2.15rem] font-bold leading-[1.15] tracking-tight">{post.title}</h1>
         <p className="mt-3 text-sm text-meta">
           {formatDate(post.date, language)}
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
