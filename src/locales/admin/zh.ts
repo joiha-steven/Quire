@@ -93,6 +93,7 @@ const zh = {
   loading: '加载中...',
   noMedia: '还没有媒体文件。',
   confirmDeleteMedia: '删除此图片？此操作无法撤销。',
+  deleteNoMatch: '服务器未匹配到要删除的文件（URL 不一致）。',
   copiedUrl: '已复制 URL',
   loadMediaFailed: '加载媒体库失败',
   dropzone: '将图片拖到此处或点击选择',

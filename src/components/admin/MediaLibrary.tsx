@@ -55,7 +55,15 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
       if (!json.success) throw new Error(json.error)
       // Adopt the server's authoritative post-delete list (built from the manifest
       // it just wrote — no Blob re-read), so the grid reflects true server state.
-      if (json.data) setItems(json.data)
+      if (json.data) {
+        setItems(json.data)
+        // If the URL is STILL in the returned list, the server matched nothing —
+        // surface it loudly instead of leaving the image silently sitting there.
+        if (json.data.some((m) => m.url === url)) {
+          notify(t.deleteNoMatch, 'error')
+          return
+        }
+      }
       setUnused((prev) => {
         if (!prev?.has(url)) return prev
         const next = new Set(prev)

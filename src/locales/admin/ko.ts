@@ -93,6 +93,7 @@ const ko = {
   loading: '불러오는 중...',
   noMedia: '아직 미디어가 없습니다.',
   confirmDeleteMedia: '이 이미지를 삭제할까요? 이 작업은 되돌릴 수 없습니다.',
+  deleteNoMatch: '삭제할 파일을 서버에서 찾지 못했습니다(URL 불일치).',
   copiedUrl: 'URL이 복사되었습니다',
   loadMediaFailed: '미디어를 불러오지 못했습니다',
   dropzone: '여기에 이미지를 끌어다 놓거나 클릭하여 선택하세요',

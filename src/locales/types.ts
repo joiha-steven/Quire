@@ -137,6 +137,7 @@ export type AdminStrings = {
   loading: string
   noMedia: string
   confirmDeleteMedia: string
+  deleteNoMatch: string
   copiedUrl: string
   loadMediaFailed: string
   // uploader

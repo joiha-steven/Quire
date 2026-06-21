@@ -93,6 +93,7 @@ const de = {
   loading: 'Wird geladen...',
   noMedia: 'Noch keine Medien.',
   confirmDeleteMedia: 'Dieses Bild löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+  deleteNoMatch: 'Der Server hat keine Datei zum Löschen gefunden (URL passt nicht).',
   copiedUrl: 'URL kopiert',
   loadMediaFailed: 'Medien konnten nicht geladen werden',
   dropzone: 'Bilder hierher ziehen oder zum Auswählen klicken',
