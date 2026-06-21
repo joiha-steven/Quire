@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **fix(media): atomic batch delete — fixes "deleted unused images come back".** Root cause was
+  a lost-update race, not matching: deleting several unused images fired separate requests that
+  each read the same manifest and wrote their own copy, so the last write clobbered the earlier
+  removals (a no-DB concurrency bug). New `deleteMediaBatch` removes ALL given URLs in ONE
+  manifest read-modify-write (single delete now delegates to it), and a **"Delete all unused"**
+  button (`POST /api/media/delete`) sweeps the whole unused set atomically. Blob-file cleanup is
+  best-effort after the write and only touches variants that were actually generated (faster).
+  `v0.9.10`.
 - **fix(media): surface a silent no-match delete + add an owner diagnostic.** If the delete
   endpoint matched nothing (URL still present in the returned list), the library now shows an
   explicit error toast instead of leaving the image silently in place. Added owner-only

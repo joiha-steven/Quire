@@ -89,6 +89,8 @@ const vi = {
   unusedBadge: 'chưa dùng',
   showUnusedOnly: 'Chỉ hiện ảnh chưa dùng',
   showAll: 'Hiện tất cả',
+  deleteAllUnused: 'Xoá tất cả ảnh chưa dùng',
+  confirmDeleteUnused: 'Xoá TẤT CẢ ảnh chưa dùng? Không thể hoàn tác.',
   close: 'Đóng',
   loading: 'Đang tải...',
   noMedia: 'Chưa có ảnh nào.',

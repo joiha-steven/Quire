@@ -133,6 +133,8 @@ export type AdminStrings = {
   unusedBadge: string
   showUnusedOnly: string
   showAll: string
+  deleteAllUnused: string
+  confirmDeleteUnused: string
   close: string
   loading: string
   noMedia: string

@@ -89,6 +89,8 @@ const ko = {
   unusedBadge: '미사용',
   showUnusedOnly: '미사용만 보기',
   showAll: '전체 보기',
+  deleteAllUnused: '미사용 모두 삭제',
+  confirmDeleteUnused: '미사용 이미지를 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다.',
   close: '닫기',
   loading: '불러오는 중...',
   noMedia: '아직 미디어가 없습니다.',
