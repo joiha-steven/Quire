@@ -1,6 +1,14 @@
 # CHANGELOG
 
 ## 2026-06-22
+- **fix(media)/perf(admin): authoritative-from-write deletes (approach A).** The image/file
+  delete endpoints now return the **true post-delete list, built from the in-memory manifest
+  they just wrote — no Blob re-read** — and the library adopts it directly. This removes the
+  read-after-write/eventual-consistency window that made a deleted image seem to "come back",
+  and makes a failed server delete visible instead of silently optimistic. Hardened
+  `deleteMedia`/`deleteFile`: only rewrite the manifest when an entry actually matched (never
+  wipe it on a transient read failure), and sweep the original + thumb + all four display
+  variants for any raster (regardless of the stored `variants` flag). `v0.9.6`.
 - **chore: version in README title + repo link on the Overview pill.** The README H1 now
   carries the version (`# vibeblog (v0.9.x)`, kept in sync on each bump), and the admin
   Overview version pill links to the repo root (`/vibeblog`) instead of the releases page.
