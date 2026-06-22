@@ -180,10 +180,12 @@ are called out elsewhere (Caching, Typography, Conventions).
   Connectors that require OAuth run a minimal OAuth 2.1 authorization-code + PKCE flow gated by the
   owner's NextAuth login (`src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-*`);
   the `/token` exchange **mints an eternal token via `mintOAuthToken`** (named "OAuth connector") and
-  returns it. **OAuth tokens are exempt from the manual 5-cap and are NEVER pre-deleted** — a re-auth
-  keeps the connector's in-use token valid; only a small rolling window (`MAX_OAUTH_TOKENS`) is kept
-  so reconnects don't pile up. So **authorize once = works indefinitely** (no churn that strands a
-  client on a dead token; the old "replaced per connect" behavior is gone). Codes are HMAC-signed
+  returns it. **OAuth tokens are exempt from the manual 5-cap and are NEVER auto-deleted.**
+  **Lifecycle rule: the admin is the SOLE authority over a connection** — a token persists forever
+  (no expiry, no prune) until the OWNER deletes it in the admin; deleting the connector in Claude
+  alone just lets it re-authorize (a new token). So authorize once = stays connected indefinitely,
+  and an admin delete is final unless the owner re-authorizes. (A reconnect mints a new row; the
+  prior one persists until the owner removes it — the admin lists/deletes them all.) Codes are HMAC-signed
   (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`. Token CRUD: owner-only
   `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only).
 - **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;

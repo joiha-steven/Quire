@@ -10,9 +10,10 @@ const MAX_TOKENS = 5 // manual (admin-created) tokens only
 const TOKEN_PREFIX = 'vbmcp_'
 
 // OAuth-issued tokens share this name and are managed separately from manual ones:
-// exempt from MAX_TOKENS and kept as a small rolling window (mintOAuthToken).
+// exempt from MAX_TOKENS. They are NEVER auto-deleted — a connection persists until
+// the owner deletes it in the admin (the admin is the sole authority over a
+// connection's lifecycle); deleting from Claude alone just lets it re-authorize.
 export const OAUTH_TOKEN_NAME = 'OAuth connector'
-const MAX_OAUTH_TOKENS = 2 // current + previous, so a re-auth never kills the in-use token
 
 // What the admin UI sees — never the secret itself.
 export type McpTokenInfo = {
@@ -73,10 +74,10 @@ export async function createToken(name: string): Promise<{ token: string; info: 
   return { token, info: toInfo(data as TokenRow) }
 }
 
-// Mint the OAuth-connector token (called by /api/mcp/token). NEVER pre-deletes, so a
-// connector's in-use token survives a re-authorize; afterwards prunes to the most
-// recent MAX_OAUTH_TOKENS so reconnects can't pile up. Exempt from the manual cap →
-// authorizing never fails with "limit reached". Eternal (no expiry) → connect once.
+// Mint the OAuth-connector token (called by /api/mcp/token). NEVER deletes any token
+// (the in-use one survives a re-authorize; nothing auto-prunes — the owner alone
+// removes connections in the admin). Exempt from the manual cap → authorizing never
+// fails with "limit reached". Eternal (no expiry) → connect once, stays connected.
 export async function mintOAuthToken(): Promise<{ token: string; info: McpTokenInfo }> {
   const { token, prefix } = newSecret()
   const { data, error } = await db()
@@ -85,14 +86,6 @@ export async function mintOAuthToken(): Promise<{ token: string; info: McpTokenI
     .select('id,name,prefix,created_at,last_used_at')
     .single()
   if (error) throw new Error(`mintOAuthToken: ${error.message}`)
-  const { data: stale } = await db()
-    .from('mcp_tokens')
-    .select('id')
-    .eq('name', OAUTH_TOKEN_NAME)
-    .order('id', { ascending: false }) // monotonic PK → the just-minted row is always newest, never pruned
-    .range(MAX_OAUTH_TOKENS, 1000)
-  const ids = ((stale as { id: number }[] | null) ?? []).map((r) => r.id)
-  if (ids.length) await db().from('mcp_tokens').delete().in('id', ids)
   return { token, info: toInfo(data as TokenRow) }
 }
 

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.7 — MCP: admin is the sole authority over a connection)
+- **change(mcp): OAuth tokens are NEVER auto-deleted.** Removed the rolling-window prune
+  (`MAX_OAUTH_TOKENS`) — the system no longer removes connections behind the owner's back.
+  Lifecycle rule now matches intent: a connection **persists forever** (eternal token, no expiry,
+  no prune) until the **owner deletes it in the admin**; an admin delete is final unless the owner
+  re-authorizes. Deleting the connector in Claude alone just lets it re-authorize (a new token row;
+  the old one persists until the owner removes it). `v1.0.7`.
+
 ## 2026-06-22 (v1.0.6 — MCP token list always reflects reality)
 - **fix(admin): the MCP token list no longer shows a stale snapshot.** It loaded only on mount, so
   connecting/disconnecting in Claude (out-of-band) left the admin list wrong — "can't delete the old
