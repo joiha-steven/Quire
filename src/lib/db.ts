@@ -15,8 +15,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 //   whole route dynamic, killing the page cache). They are tagged `db`, and EVERY
 //   admin write calls `revalidateTag('db')` (see revalidate.ts) — so when a purged
 //   page re-renders it always reads CURRENT data, never a stale Data Cache entry.
-//   The 3600s revalidate is just a safety net. On a force-dynamic route (all of
-//   /admin) Next overrides reads to `no-store`, so the editor always sees live data.
+//   The 3600s revalidate is just a safety net. Admin surfaces that must read LIVE
+//   (the /admin layout + the owner-only list API routes) set BOTH `dynamic =
+//   'force-dynamic'` AND `fetchCache = 'force-no-store'` — force-dynamic ALONE does not
+//   de-cache these reads, because they opt into the Data Cache with an explicit
+//   `next.revalidate` (Next only auto-de-caches force-dynamic fetches that set none).
 // - WRITES (POST/PATCH/DELETE/etc.) are `no-store` — never cached.
 export const DB_TAG = 'db'
 const REVALIDATE = 3600
