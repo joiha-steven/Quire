@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.11 — full-site backups to Google Drive)
+- **feat: full-site backup to the owner's Google Drive** (Admin → Settings → Advanced). One
+  snapshot = a single self-contained `.tar.gz` — `db.json` (every text table) + `blob/<pathname>`
+  (every binary) + `manifest.json`. Automatic on a schedule (cron, every `intervalDays`, default
+  4) with retention (keep the newest `keep`, default 4), plus **Back up now / Restore / Delete**
+  in the admin. New `lib/backup.ts` + `lib/gdrive.ts` + `lib/backup-state.ts`; routes
+  `/api/backup` (status/run/delete), `/api/backup/restore`, `/api/backup/{connect,callback,disconnect}`.
+  Cron (`/api/cron`) calls `maybeRunBackup()`.
+- **Drive auth is separate from sign-in.** A dedicated `drive.file` OAuth consent (reuses the
+  Google client; login scope untouched) stores a refresh token in the new **`backup_state`** table
+  (single row). The token is a SECRET and is kept OUT of `settings.data` (which is sent to the
+  client) — only non-secret config (`enabled`/`intervalDays`/`keep`) rides in `settings.backups`;
+  status + the snapshot list come from owner-only `/api/backup` (never the token).
+- **Restore** replaces every text table (settings upserted; others delete-all + insert with
+  `id`/generated `search` stripped) and re-uploads every blob; a pre-restore snapshot is taken
+  first. New `backups` activity actions; new `backup*` admin locale keys in all 6 languages; new
+  `tar` dependency. Owner one-time setup: enable the Google Drive API + add the callback redirect
+  URI to the OAuth client, then **Connect Google Drive**. `v1.0.11`.
+
 ## 2026-06-22 (v1.0.10 — hardening: edge guard, Google-only, MCP token expiry)
 - **feat(security): `src/middleware.ts` edge owner-guard (defense-in-depth).** Reads the NextAuth
   JWT and blocks `/admin/:path*` (→ sign-in) and owner-only `/api/:path*` (→ 401) BEFORE the route

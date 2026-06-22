@@ -20,6 +20,8 @@ export type ActivityAction =
   | 'trash.empty'
   // MCP access tokens (Admin → Settings → Advanced).
   | 'mcp.token.create' | 'mcp.token.delete'
+  // Google Drive backups (Admin → Settings → Advanced).
+  | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
 
 export type ActivityEntry = {
   id: number

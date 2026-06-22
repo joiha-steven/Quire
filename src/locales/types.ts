@@ -375,6 +375,28 @@ export type AdminStrings = {
   mcpTokenDeleted: string
   mcpLimitReached: string
   mcpCreateFailed: string
+  // backups (Google Drive)
+  backupTitle: string
+  backupHint: string
+  backupConnect: string
+  backupDisconnect: string
+  backupDisconnectConfirm: string
+  backupConnected: string
+  backupAuto: string
+  backupAutoDesc: string
+  backupIntervalLabel: string
+  backupKeepLabel: string
+  backupNow: string
+  backupNone: string
+  backupLastRun: string
+  backupNever: string
+  backupColDate: string
+  backupColSize: string
+  backupRestore: string
+  backupRestoreConfirm: string
+  backupDeleteConfirm: string
+  backupToastOk: string
+  backupToastFail: string
   // sidebar collapse
   navCollapse: string
   navExpand: string

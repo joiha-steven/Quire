@@ -8,6 +8,7 @@
 import type { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { finalizePendingVariants, finalizePendingThumbs } from '@/lib/media'
+import { maybeRunBackup } from '@/lib/backup'
 import { ok, fail, logRequest, logError } from '@/lib/api'
 
 // Variant encoding can take a while if a batch is pending.
@@ -26,8 +27,11 @@ export async function GET(req: NextRequest): Promise<Response> {
     await db().from('settings').select('id').limit(1)
     const finalized = await finalizePendingVariants()
     const thumbs = await finalizePendingThumbs()
+    // Full-snapshot backup when enabled, connected, and the interval has elapsed.
+    // Self-contained errors (never break keep-alive); state is recorded internally.
+    const backup = await maybeRunBackup().catch((e) => ({ ran: false, error: (e as Error).message }))
     logRequest(req, 200, start)
-    return ok({ alive: true, finalized, thumbs })
+    return ok({ alive: true, finalized, thumbs, backup })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)

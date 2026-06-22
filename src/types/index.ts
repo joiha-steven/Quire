@@ -182,12 +182,21 @@ export type SiteSettings = {
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
   mcp: McpSettings // MCP server toggle (tokens are managed separately)
+  backups: BackupSettings // Google Drive backup config (secrets live in backup_state)
 }
 
 // MCP server settings. Just an on/off switch — the access tokens live in their own
 // `mcp_tokens` table (hashed), managed from Admin → Settings → Advanced.
 export type McpSettings = {
   enabled: boolean // when false, /api/mcp + the OAuth flow are disabled
+}
+
+// Google Drive backup config (non-secret, lives in settings.data). The Drive
+// refresh token + run state are kept server-only in the `backup_state` table.
+export type BackupSettings = {
+  enabled: boolean // when true, the cron runs a full snapshot every intervalDays
+  intervalDays: number // days between automatic full snapshots (default 4)
+  keep: number // how many most-recent snapshots to retain on Drive (default 4)
 }
 
 // Uniform API envelope returned by every route.

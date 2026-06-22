@@ -5,7 +5,7 @@
 // together via PUT /api/settings (which merges). Cards keep uniform chrome; each
 // tab lays them out in a top-aligned, length-balanced grid on desktop.
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { SiteSettings, ApiResponse } from '@/types'
 import type { ThemePreset } from '@/lib/themes'
 import { Button } from '@/components/ui/Button'
@@ -18,6 +18,7 @@ import { TypographyFields } from './TypographyFields'
 import { FontUpload } from './FontUpload'
 import { AdvancedFields } from './AdvancedFields'
 import { McpFields } from './McpFields'
+import { BackupFields } from './BackupFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FeatureFields } from './FeatureFields'
 import { SeoFields } from './SeoFields'
@@ -40,7 +41,10 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
   const [s, setS] = useState<SiteSettings>(settings)
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
-  const [tab, setTab] = useState<Tab>('general')
+  // Open the tab named by ?tab= (the Drive-connect redirect lands on advanced);
+  // admin is force-dynamic so the param is consistent server/client (no mismatch).
+  const tabParam = useSearchParams().get('tab')
+  const [tab, setTab] = useState<Tab>(tabParam === 'appearance' || tabParam === 'advanced' ? tabParam : 'general')
 
   const update = (partial: Partial<SiteSettings>) => setS((prev) => ({ ...prev, ...partial }))
 
@@ -149,7 +153,11 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
       )}
 
       {tab === 'advanced' && (
-        <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <Card title={t.backupTitle}>
+            <BackupFields backups={s.backups} onChange={(backups) => update({ backups })} />
+          </Card>
+          <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.cardMcp}>
             <McpFields mcp={s.mcp} onChange={(mcp) => update({ mcp })} />
           </Card>
@@ -166,6 +174,7 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
               <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
             </div>
           </Card>
+          </div>
         </div>
       )}
 

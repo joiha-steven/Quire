@@ -48,9 +48,11 @@ not sufficient — confirm behavior, and report failures honestly with their out
 ## Architecture (operational)
 
 - **Text in Supabase Postgres; binaries in Vercel Blob.** Tables (schema `public`):
-  `posts` `pages` `post_revisions` `media` `files` `settings` `activity_log`
-  `analytics_events` `analytics_scroll` — full DDL in `scripts/schema.sql`; data-model
-  shapes + the *why* in ARCHITECTURE.md.
+  `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens`
+  `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
+  `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
+  `backup_state` (single row) holds the **secret** Drive refresh token + run state and
+  is NEVER read into the client-bound settings payload (see Backups).
 - Writes are atomic upserts/deletes (no read-modify-write manifest); reads always fresh +
   transactional.
 - `src/lib` = data layer (`db.ts` Postgres, `blob.ts` binaries); `src/app/api` = thin
@@ -148,6 +150,9 @@ are called out elsewhere (Caching, Typography, Conventions).
 | `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getViewTotals`, `isBot` | Cookieless (`analytics_events` + `analytics_scroll`). `visitor` = salted (`AUTH_SECRET`) hash of IP+UA — **no PII**; bots + admin/api + the **owner's own** visits skipped. `getAnalytics` → `analytics_summary` RPC; `getViewTotals` → `analytics_totals`. Kept FOREVER. Beacons `Track.tsx` (every page) + `ScrollDepth.tsx` (posts) fire after hydration (pages stay SSG) |
 | `activity.ts` | `logActivity`, `getActivity`, `clearActivity` | `activity_log`; gated by `features.activityLog`, never throws; called via `after()` from every mutating route |
 | `media-usage.ts` | `findUnusedMedia` | Read-only audit (scans posts/pages/settings + revision snapshots); badges orphans, never deletes |
+| `backup.ts` | `runBackup`, `maybeRunBackup`, `listBackups`, `deleteBackup`, `restoreBackup` | Full-snapshot backup to Google Drive (one `.tar.gz` = `db.json` + all blobs + manifest). `maybeRunBackup` = the cron entry (due check). `restoreBackup` is DESTRUCTIVE (replaces tables + re-uploads blobs; pre-restore snapshot taken first; strips `id`/`search`) |
+| `backup-state.ts` | `getBackupState`, `toStatus`, `setDriveAuth`, `clearDriveAuth`, `recordRun` | SERVER-ONLY secret store (`backup_state`): Drive refresh token + folder id + last-run. `toStatus` is the client-safe view (NO token) |
+| `gdrive.ts` | `consentUrl`, `exchangeCode`, `accessToken`, `signState`/`verifyState`, `ensureFolder`, `listSnapshots`, `uploadSnapshot`, `deleteSnapshot`, `downloadSnapshot` | Drive REST + the separate `drive.file` OAuth flow (reuses the Google client; login scope untouched) |
 | `highlight.ts` | `highlightCode` | Server-side Shiki (Vitesse dual-theme); zero client JS; null on failure → caller keeps the plain block |
 | `auth.ts` | `handlers`, `auth`, `signIn`, `signOut`, `isAuthorized`, `getAuthState` | Anyone signs in; only `AUTHORIZED_EMAIL` is authorized |
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the namespace → 409 on collision |
@@ -205,6 +210,32 @@ are called out elsewhere (Caching, Typography, Conventions).
   the zod inputSchema IS the allowlist, so sensitive settings can't be written over MCP. `get_settings`
   reads all. **Adding a tool that mutates → revalidate + `logActivity` like the admin routes.**
 
+## Backups — Google Drive (Admin → Settings → Advanced)
+
+- **What it is.** A full-site snapshot to the owner's Google Drive: one self-contained
+  `.tar.gz` = `db.json` (every text table except `backup_state`) + `blob/<pathname>` (every
+  binary) + `manifest.json`. Built in `/tmp` then resumable-uploaded into a `vibeblog-backups`
+  Drive folder. Runs on a schedule (cron, every `settings.backups.intervalDays`, default 4) or
+  the "Back up now" button; retention keeps the newest `settings.backups.keep` (default 4).
+- **Auth is SEPARATE from sign-in.** A dedicated `drive.file` OAuth flow (reuses the Google
+  client `AUTH_GOOGLE_*`, never touches the login scope): `GET /api/backup/connect` → Google
+  consent → `GET /api/backup/callback` exchanges the code for a **refresh token**, stored in
+  `backup_state` (server-only). `drive.file` = the app only ever sees files IT created.
+- **Secret hygiene (HARD RULE).** The Drive refresh token must NEVER reach the client. It lives
+  in `backup_state`, NOT in `settings.data` (which is sent to the admin). Only non-secret config
+  (`enabled`/`intervalDays`/`keep`) lives in `settings.backups` and flows through the settings
+  form; the connection + snapshot list come from owner-only `/api/backup` (returns `toStatus`,
+  never the token) — same split as MCP tokens.
+- **Restore is DESTRUCTIVE** (`POST /api/backup/restore`): replaces every text table (settings
+  upserted by id=1; others delete-all then insert with `id`/`search` stripped) and re-uploads
+  every blob. A **pre-restore snapshot is taken first**. UI confirms before calling.
+- **Routes:** `/api/backup` (GET status+list, POST run-now, DELETE `?id=`), `/api/backup/restore`,
+  `/api/backup/{connect,callback,disconnect}`. All owner-only (middleware + `requireOwner`); the
+  cron calls `maybeRunBackup()` directly (no HTTP). New mutating action? `logActivity('backup.*')`.
+- **Owner setup (one-time):** enable the **Google Drive API** in the Cloud project behind
+  `AUTH_GOOGLE_ID`, add `https://<domain>/api/backup/callback` (+ localhost) as an Authorized
+  redirect URI on the OAuth client, then click **Connect Google Drive**. No new env var.
+
 ## Localization — `src/locales/` (RULES)
 
 - `types.ts` = shapes (`Dict` public, `AdminStrings` admin). Add a key → every locale file
@@ -221,7 +252,7 @@ are called out elsewhere (Caching, Typography, Conventions).
 
 `node --env-file=.env.local scripts/<name>.mjs [--dry]` — idempotent.
 
-- **`schema.sql`** — full Postgres schema (9 tables + indexes + `posts.search` tsvector +
+- **`schema.sql`** — full Postgres schema (11 tables + indexes + `posts.search` tsvector +
   RLS + the analytics RPCs). Run ONCE on a fresh Supabase project. NOT run by the app;
   transcribed from the live schema — **keep it in sync when you change tables/RPCs.**
 - **`migrate-to-supabase.mjs`** — one-off P1.5 migration (Blob `_index.json`+`.md` →
@@ -298,7 +329,7 @@ are called out elsewhere (Caching, Typography, Conventions).
 ## Activity log + System panel (Admin)
 
 - **Activity log:** every mutating route does `after(() => logActivity(action, detail))`
-  (post/page CRUD, media/file/icon/font, settings, taxonomy, cache.clear). Gated by
+  (post/page CRUD, media/file/icon/font, settings, taxonomy, cache.clear, backup.*). Gated by
   `features.activityLog`. Admin → Log (force-dynamic, latest 200, Clear). **Adding a mutating
   route → log it too.**
 - **System panel** (admin Overview, `getSystemInfo()`): hosting/URL/region/env/git + database

@@ -117,6 +117,21 @@ create index if not exists mcp_tokens_hash_idx on public.mcp_tokens (token_hash)
 alter table public.mcp_tokens
   add column if not exists expires_at timestamptz not null default (now() + interval '180 days');
 
+-- ----- backup_state (Google Drive backup: secret refresh token + run state) ---
+-- Single row (id=1). The refresh_token is a SECRET and never leaves the server —
+-- it is NOT stored in `settings.data` (which is sent to the admin client). Backup
+-- config (enabled/interval/keep) lives in settings; only secrets + run state here.
+create table if not exists public.backup_state (
+  id            int primary key default 1,
+  refresh_token text,
+  folder_id     text,
+  last_run_at   timestamptz,
+  last_status   text,
+  last_error    text,
+  last_size     bigint,
+  constraint backup_state_singleton check (id = 1)
+);
+
 -- ----- activity_log ----------------------------------------------------------
 create table if not exists public.activity_log (
   id     bigint generated always as identity primary key,
@@ -154,6 +169,7 @@ alter table public.post_revisions   enable row level security;
 alter table public.media            enable row level security;
 alter table public.files            enable row level security;
 alter table public.settings         enable row level security;
+alter table public.backup_state     enable row level security;
 alter table public.mcp_tokens       enable row level security;
 alter table public.activity_log     enable row level security;
 alter table public.analytics_events enable row level security;

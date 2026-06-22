@@ -1,4 +1,4 @@
-# vibe**blog** (v1.0.10)
+# vibe**blog** (v1.0.11)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
@@ -13,6 +13,7 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
 - **PWA:** installable to the iPhone/Android home screen, launches standalone (no service worker / no offline by design)
 - **Admin:** Overview with a System panel (hosting/region/env + database + storage); a toggleable activity log (Admin → Log) recording every save/upload/delete
 - **Trash:** every delete (posts, pages, media, files) is a recoverable soft delete; an Admin → Trash area restores or permanently removes items per type — nothing auto-purges
+- **Backups (optional):** connect Google Drive in Admin → Settings → Advanced to store full-site snapshots (database + all binaries in one `.tar.gz`); automatic on a schedule (default every 4 days, keep the latest 4), plus back-up-now / restore / delete. The Drive consent is separate from sign-in (`drive.file` scope) and the refresh token never leaves the server
 - **MCP server (optional):** a remote MCP endpoint (`/api/mcp`) lets an AI agent (Claude, ChatGPT) write and manage the blog with the same data layer as the admin UI. Toggle it on in Admin → Settings → Advanced and generate up to 5 named access tokens there (shown once, hashed at rest, revocable, expire after 180 days); a thin OAuth layer covers connectors that need it; sensitive settings are blocked
 - **UI languages:** en (default), vi, de, ja, zh, ko
 - **Styles:** Tailwind CSS v4
