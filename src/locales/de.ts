@@ -24,6 +24,9 @@ const de = {
   relatedTitle: 'Ähnliche Beiträge',
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',
+  errorTitle: 'Etwas ist schiefgelaufen',
+  errorText: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.',
+  tryAgain: 'Erneut versuchen',
   backHome: 'Zur Startseite',
   backToTop: 'Nach oben',
 } satisfies Dict

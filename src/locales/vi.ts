@@ -24,6 +24,9 @@ const vi = {
   relatedTitle: 'Bài viết liên quan',
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',
+  errorTitle: 'Đã xảy ra lỗi',
+  errorText: 'Có lỗi không mong muốn. Vui lòng thử lại.',
+  tryAgain: 'Thử lại',
   backHome: 'Về trang chủ',
   backToTop: 'Lên đầu trang',
 } satisfies Dict

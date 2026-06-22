@@ -25,6 +25,9 @@ export type Dict = {
   relatedTitle: string
   notFoundTitle: string
   notFoundText: string
+  errorTitle: string
+  errorText: string
+  tryAgain: string
   backHome: string
   backToTop: string
 }

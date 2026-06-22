@@ -24,6 +24,9 @@ const en = {
   relatedTitle: 'Related posts',
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',
+  errorTitle: 'Something went wrong',
+  errorText: 'An unexpected error occurred. Please try again.',
+  tryAgain: 'Try again',
   backHome: 'Back home',
   backToTop: 'Back to top',
 } satisfies Dict

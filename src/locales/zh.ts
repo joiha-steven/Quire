@@ -24,6 +24,9 @@ const zh = {
   relatedTitle: '相关文章',
   notFoundTitle: '页面未找到',
   notFoundText: '您查找的页面不存在或已被移动。',
+  errorTitle: '出错了',
+  errorText: '发生了意外错误，请重试。',
+  tryAgain: '重试',
   backHome: '返回首页',
   backToTop: '回到顶部',
 } satisfies Dict
