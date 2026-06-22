@@ -88,8 +88,8 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 5. **Raw HTML in markdown is escaped, never executed.** `html` renderer → `escapeHtml`; `safeHref` drops
    `javascript:`/`data:`/`vbscript:`. *Enforced at:* `PostContent.tsx`. *Test:* `post-content.test.ts`.
 6. **Every delete is a soft delete.** `deleteX()` sets `deleted_at`; EVERY live read filters
-   `.is('deleted_at', null)` (each read writes its own WHERE — no shared helper; guarantee by repetition).
-   *Enforced at:* data-layer files + `docs/features.md`. *Test:* `lib/soft-delete.test.ts` (4 read paths).
+   `.is('deleted_at', null)` via `liveOnly()` (`db.ts`) — predicate defined ONCE; Trash reads the
+   complement. *Enforced at:* data-layer files + `docs/features.md`. *Test:* `lib/soft-delete.test.ts`.
 7. **Cache-bust is asymmetric.** Out-of-band writes (`backup_state`) MUST `revalidateTag(DB_TAG)`; MCP
    token routes MUST NOT (`force-no-store`; busting `db` over-purges public). *Enforced at:*
    `lib/backup-state.ts` vs `api/mcp/tokens`. *Test:* `check:token-bust` (backup side = coarse tripwire).

@@ -5,7 +5,7 @@
 import { cache } from 'react'
 import type { Post, PostWithContent } from '@/types'
 import { collapseBlob, expandBlob } from '@/lib/blob'
-import { db } from '@/lib/db'
+import { db, liveOnly } from '@/lib/db'
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible, readingMinutes } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
@@ -79,10 +79,8 @@ function projection(p: PostWithContent): string {
 // request re-reads Postgres (always current, transactional).
 const readIndex = cache(async (): Promise<Post[]> => {
   try {
-    const { data, error } = await db()
-      .from('posts')
-      .select(META_COLS)
-      .is('deleted_at', null) // live posts only; trashed rows are excluded everywhere but the Trash view
+    // liveOnly = `.is('deleted_at', null)` — trashed rows excluded everywhere but the Trash view.
+    const { data, error } = await liveOnly(db().from('posts').select(META_COLS))
       .order('date', { ascending: false })
     if (error || !data) {
       if (error) console.error(`[ERROR] posts.readIndex: ${error.message}`)
@@ -113,12 +111,13 @@ export async function searchPosts(query: string): Promise<Post[]> {
   const q = query.trim()
   if (!q) return []
   try {
-    const { data, error } = await db()
-      .from('posts')
-      .select(META_COLS)
-      .textSearch('search', q, { type: 'websearch', config: 'simple' })
-      .eq('status', 'published')
-      .is('deleted_at', null) // never surface trashed posts in search
+    const { data, error } = await liveOnly(
+      db()
+        .from('posts')
+        .select(META_COLS)
+        .textSearch('search', q, { type: 'websearch', config: 'simple' })
+        .eq('status', 'published'), // never surface trashed posts in search
+    )
       .order('date', { ascending: false })
       .limit(50)
     if (error || !data) {
@@ -135,7 +134,7 @@ export async function searchPosts(query: string): Promise<Post[]> {
 // Read one full post. `React.cache` dedupes across generateMetadata + render in one request.
 export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
   try {
-    const { data, error } = await db().from('posts').select('*').eq('slug', slug).is('deleted_at', null).maybeSingle()
+    const { data, error } = await liveOnly(db().from('posts').select('*').eq('slug', slug)).maybeSingle()
     if (error || !data) return null
     const row = data as PostRow
     return { ...rowToMeta(row), content: expandBlob(row.content ?? '') }

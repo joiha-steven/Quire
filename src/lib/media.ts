@@ -8,7 +8,7 @@ import type { MediaItem } from '@/types'
 import {
   uploadFile, blobUrl, deleteByPathname, collapseBlob, expandBlob, listBlobs,
 } from '@/lib/blob'
-import { db } from '@/lib/db'
+import { db, liveOnly } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import {
   imageSize, safeSize, makeThumb, makeDisplay, RASTER, PASSTHROUGH, SIZES,
@@ -46,10 +46,8 @@ function rowToItem(row: MediaRow): MediaItem {
 // return authoritative current state).
 async function listMedia(): Promise<MediaItem[]> {
   try {
-    const { data, error } = await db()
-      .from('media')
-      .select('*')
-      .is('deleted_at', null) // live library only; trashed images live in the Trash view
+    // liveOnly = `.is('deleted_at', null)` — trashed images live in the Trash view.
+    const { data, error } = await liveOnly(db().from('media').select('*'))
       .order('uploaded_at', { ascending: false })
     if (error || !data) {
       if (error) console.error(`[ERROR] media.listMedia: ${error.message}`)
@@ -353,7 +351,7 @@ export async function finalizeVariants(pathnames: string[]): Promise<void> {
 // Backfill thumbs for rows that have none (script/migration imports). Raster gets a
 // real `-thumb.webp`; everything else points `thumb` at the original. Cron-swept.
 export async function finalizePendingThumbs(): Promise<number> {
-  const { data } = await db().from('media').select('path').is('thumb', null).is('deleted_at', null)
+  const { data } = await liveOnly(db().from('media').select('path').is('thumb', null))
   const targets = ((data as { path: string }[] | null) ?? [])
   let done = 0
   for (const { path } of targets) {
@@ -384,7 +382,7 @@ export async function finalizeContentMedia(content: string, featuredImage?: stri
 // Cron backstop: sweep all raster originals still pending variants, in case a
 // background finalize never ran (e.g. the function froze after the save response).
 export async function finalizePendingVariants(): Promise<number> {
-  const { data } = await db().from('media').select('path').eq('variants', false).is('deleted_at', null)
+  const { data } = await liveOnly(db().from('media').select('path').eq('variants', false))
   const paths = ((data as { path: string }[] | null) ?? [])
     .map((r) => r.path)
     .filter((p) => /\.(jpe?g|png)$/i.test(p))

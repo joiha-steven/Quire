@@ -48,3 +48,12 @@ export function db(): SupabaseClient {
   })
   return _client
 }
+
+// Soft-delete predicate, defined ONCE (Invariant 6). EVERY live read of a
+// soft-deletable table (posts/pages/media/files) wraps its query in liveOnly, so
+// the column + null check live here and nowhere else — a read can't drift to a
+// different filter. Trash views read the complement directly
+// (`.not('deleted_at', 'is', null)`); those must NOT use this.
+export function liveOnly<Q extends { is(column: 'deleted_at', value: null): Q }>(query: Q): Q {
+  return query.is('deleted_at', null)
+}
