@@ -256,6 +256,8 @@ export type AdminStrings = {
   statPosts: string
   statPages: string
   statMedia: string
+  statVariants: string
+  statFiles: string
   statStorage: string
   statCategories: string
   statTags: string
@@ -332,6 +334,10 @@ export type AdminStrings = {
   sysStorage: string
   sysReachable: string
   sysUnreachable: string
+  sysMcp: string
+  sysBackup: string
+  sysOn: string
+  sysOff: string
   sysSite: string
   sysBranch: string
   sysRuntime: string

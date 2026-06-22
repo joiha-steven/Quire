@@ -23,6 +23,8 @@ export type SystemInfo = {
   storageHref?: string
   runtime: string
   framework: string
+  mcpEnabled: boolean
+  backupOn: boolean
 }
 
 // Shared style for the small header pills (version + license) so they stay identical.
@@ -32,7 +34,9 @@ const PILL =
 type Props = {
   posts: number
   pages: number
-  mediaCount: number
+  originals: number
+  variants: number
+  files: number
   totalBytes: number
   categories: Taxo[]
   tags: Taxo[]
@@ -40,11 +44,12 @@ type Props = {
   system: SystemInfo
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <div className="text-2xl font-bold tracking-tight">{value}</div>
       <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{label}</div>
+      {sub && <div className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{sub}</div>}
     </div>
   )
 }
@@ -88,6 +93,8 @@ function SystemCard({ system }: { system: SystemInfo }) {
     { label: t.sysDatabase, value: system.database, href: system.databaseHref },
     { label: t.sysDbStatus, value: system.dbReachable ? t.sysReachable : t.sysUnreachable, ok: system.dbReachable },
     { label: t.sysStorage, value: system.storage, href: system.storageHref },
+    { label: t.sysMcp, value: system.mcpEnabled ? t.sysOn : t.sysOff, ok: system.mcpEnabled || undefined },
+    { label: t.sysBackup, value: system.backupOn ? t.sysOn : t.sysOff, ok: system.backupOn || undefined },
   ]
   return (
     <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
@@ -117,7 +124,7 @@ function SystemCard({ system }: { system: SystemInfo }) {
   )
 }
 
-export function Overview({ posts, pages, mediaCount, totalBytes, categories, tags, version, system }: Props) {
+export function Overview({ posts, pages, originals, variants, files, totalBytes, categories, tags, version, system }: Props) {
   const t = useAdminT()
   return (
     <div className="space-y-6">
@@ -150,13 +157,17 @@ export function Overview({ posts, pages, mediaCount, totalBytes, categories, tag
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard label={t.statPosts} value={posts} />
         <StatCard label={t.statPages} value={pages} />
-        <StatCard label={t.statMedia} value={mediaCount} />
+        <StatCard
+          label={t.statMedia}
+          value={originals}
+          sub={`${variants} ${t.statVariants} · ${files} ${t.statFiles}`}
+        />
         <StatCard label={t.statStorage} value={formatBytes(totalBytes)} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TaxoList title={t.statCategories} items={categories} empty={t.statEmpty} />
-        <TaxoList title={t.statTags} items={tags} empty={t.statEmpty} />
+        <TaxoList title={`${t.statCategories} (${categories.length})`} items={categories} empty={t.statEmpty} />
+        <TaxoList title={`${t.statTags} (${tags.length})`} items={tags} empty={t.statEmpty} />
       </div>
 
       <SystemCard system={system} />
