@@ -476,6 +476,11 @@ On any behavior change, update the matching doc in the SAME change (Working prin
 - **CLAUDE.md** (this) = rules / data-layer / caching / gotchas. **ARCHITECTURE.md** = overview
   + why. **CHANGELOG.md** = one entry per user-facing change. **CHECKLIST.md** = pre-deploy
   steps. **README.md** = setup + features. **ROADMAP.md** = direction.
+- **README is the canonical install/usage doc — keep it current.** Its **two install paths**
+  (1️⃣ do-it-yourself, 2️⃣ hand-to-an-AI-agent) + the **MCP "let an agent write & publish"** section
+  + the **env-var table** must be updated in the SAME change whenever setup/deploy/env/auth/MCP/backup
+  behavior changes (new/renamed env var, a new owner setup step, a changed redirect URI, etc.).
+  Never let the README drift from how the app is actually installed and run.
 - Keep personal/instance values (credentials, Vercel/Blob IDs, the live domain) OUT of tracked
   files — `.env.local` + Vercel only.
 - **Audits** (`audit/`): a full review per `audit/README.md` → dated `audit/YYYY-MM-DD-<scope>.md`;
@@ -484,6 +489,6 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   owner cut **1.0.0** with the MCP + Trash release). Each change bumps the patch `x`
   (→ `1.0.999`), a running counter with no semver meaning. NEVER raise `1.0` → `1.1` or `→ 2.0`
   unless the owner asks. A code change bumps `x`; pure-docs may skip. On a bump, also update the
-  **README H1** `# vibeblog (v1.0.x)`.
+  **README version badge** (`![Version](https://img.shields.io/badge/version-1.0.x-…)`).
 - **Cutting a release:** `x` already current; `npm run build` + `npm run lint` exit 0; push `main`;
   `gh release create v1.0.<x> --title "v1.0.<x> - <tagline>" --notes "…"`.
