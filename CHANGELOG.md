@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.4 — full-width admin + non-wrapping table headers)
+- **feat(admin): admin pages now fill the browser width.** Dropped the `max-w-6xl` lock on the
+  admin content column (no longer needed with the column/sidebar layout) — content is full width
+  with ~100px gutters on desktop (`lg:px-[100px]`), tighter padding on mobile (`px-4`, `sm:px-6`).
+  The fixed save bars (post/page editor, settings) align to the same gutters.
+- **fix(admin): table column headers no longer wrap.** Added `whitespace-nowrap` to every admin
+  table header row (posts, pages, trash, activity log); columns auto-size to content (auto table
+  layout) instead of squeezing a header onto two lines.
+- **polish(admin): mobile spacing.** Re-tuned the content gutters/top padding for phones alongside
+  the width change. `v1.0.4`.
+
+## 2026-06-22 (v1.0.3 — slim down: dead scripts + deps + comments)
+- **chore: removed `@vercel/analytics`.** It duplicated the built-in cookieless analytics and
+  shipped extra client JS; dropped the `<Analytics/>` tag + the package. The custom analytics
+  (`analytics.ts`, Admin → Analytics) is unchanged.
+- **chore: moved 12 pre-Supabase one-off scripts to `scripts/legacy/`** (kept for recovery, not
+  deleted). Their parser deps (`gray-matter` → devDeps, `turndown`/`turndown-plugin-gfm`/
+  `fast-xml-parser` already dev) no longer sit in production `dependencies`.
+- **docs: trimmed verbose comments** across the data layer (`media`/`files`/`posts`/`settings`/
+  `blob`/`themes`/`revalidate`) + `layout.tsx` / `PostContent.tsx` to terse, AI-readable notes —
+  GOTCHAs and the "why" behind non-obvious decisions kept. No behavior change. `v1.0.3`.
+
 ## 2026-06-22 (v1.0.2 — collapsible sidebar + admin polish)
 - **feat(admin): the sidebar is now collapsible and icon-led.** Each nav item has an icon
   (`navIcons.tsx`); the rail is narrower (`w-52`, was `w-60`) and a toggle collapses it to

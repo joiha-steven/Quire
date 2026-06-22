@@ -71,7 +71,7 @@ image — there is no second version to maintain.
 
 Still planned: a plain HTTP **ingest endpoint** that takes Markdown + frontmatter and maps
 it to post fields (for the note-app plugins below), rehosting embedded images.
-(`scripts/rehost-images.mjs` and `import-wordpress.mjs` are existing patterns to build on.)
+(`scripts/legacy/rehost-images.mjs` and `legacy/import-wordpress.mjs` are existing patterns to build on.)
 
 ### Phase 4 — Obsidian, then Craft `[planned, needs Phase 3]`
 - **Obsidian plugin**: a command that POSTs the active note (frontmatter + body) and

@@ -1,13 +1,7 @@
-// Built-in color palettes. Each is a full light+dark reading palette (the same 6
-// tokens the public site renders via `themesToCss`). All 6 live in `settings.themes`
-// (id -> ThemeSettings) and every one is independently owner-customizable;
-// `settings.themePreset` names the visitor default. A visitor can switch palette at
-// will (PaletteToggle), and per-mode "reset" restores THAT palette's built-in colors.
-//
-// The `name` here is the English fallback; the displayed name is localized via
-// the `paletteNames` dict (admin + public), keyed by preset id — do not hardcode.
-// Every palette is tuned so both modes stay readable: comfortable body contrast,
-// a distinct accent link, and a rule/surface that reads as a faint tint.
+// Built-in palettes (6 tokens × light+dark, emitted by `themesToCss`). All live in
+// `settings.themes` (id -> ThemeSettings), each owner-customizable; `themePreset`
+// names the visitor default (switchable via PaletteToggle). `name` is the English
+// fallback — the displayed name is localized via `paletteNames`, keyed by id.
 
 import type { ThemeColors, ThemeSettings, TypographySettings, TypeRole, FontSettings } from '@/types'
 
@@ -24,14 +18,9 @@ export const TYPE_ROLES: TypeRole[] = ['h1', 'h2', 'h3', 'h4', 'h5', 'body', 'sm
 // Custom-font weight slots (one upload each; all share the family).
 export const FONT_WEIGHTS = [400, 500, 600, 700] as const
 
-// Default type system. Lives here (a client-safe module) so the settings UI can
-// import it for its reset buttons without pulling in the server-only data layer.
-// Tuned for calm, readable long-form out of the box — reset returns to exactly
-// this. A restrained scale (~1.18 ratio off an 18px body) so list-card titles (H2)
-// read as headings, not banners; single-post/page/category titles step up to H1.
-//   body 1.125rem (18px) · h1 1.95 (31px) · h2 1.4 (22px) · h3 1.2 (19px)
-//   h4 1.15 (18.4px) · h5 0.9 (14.4px, eyebrow) · small 0.875 (14px, meta)
-//   caption 0.8125 (13px) · code 0.875 (14px)
+// Default type system (client-safe so the settings UI imports it for reset).
+// Restrained ~1.18 scale off an 18px body: list-card titles (H2) read as headings,
+// single-post/page/category titles step up to H1.
 export const DEFAULT_TYPOGRAPHY: TypographySettings = {
   roles: {
     h1: { size: 1.95, line: 1.2, spacing: -0.02 },
@@ -140,11 +129,9 @@ function vars(c: ThemeColors): string {
   return `--c-bg:${c.bg};--c-text:${c.text};--c-heading:${c.heading};--c-meta:${c.meta};--c-link:${c.link};--c-rule:${c.rule}`
 }
 
-// CSS for EVERY palette so the client switcher can swap instantly by setting
-// `<html data-palette="id">` — no server round-trip. The default palette also
-// lands on :root/.dark as the no-JS / no-selection baseline. Per-palette blocks
-// come after, and the mode-qualified `[data-palette].dark` (higher specificity)
-// always wins for dark, so a non-default palette in dark mode resolves correctly.
+// CSS for EVERY palette so the switcher swaps instantly via `<html data-palette>`.
+// Default also lands on :root/.dark (no-JS baseline); mode-qualified
+// `[data-palette].dark` has higher specificity so dark resolves correctly.
 export function themesToCss(themes: Record<string, ThemeSettings>, defaultId: string): string {
   const base = getDefaultTheme(themes, defaultId)
   let css = `:root{${vars(base.light)}}.dark{${vars(base.dark)}}`

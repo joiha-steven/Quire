@@ -209,11 +209,12 @@ are called out elsewhere (Caching, Typography, Conventions).
   transcribed from the live schema — **keep it in sync when you change tables/RPCs.**
 - **`migrate-to-supabase.mjs`** — one-off P1.5 migration (Blob `_index.json`+`.md` →
   Postgres). Already run; kept for recovery.
-- **Legacy (pre-Supabase) one-offs — do NOT run against the live site** (they operate on the
-  retired Blob `_index.json`/`.md` model): `import-wordpress`, `convert-html-to-markdown`,
+- **`scripts/legacy/` — pre-Supabase one-offs, do NOT run against the live site** (they operate
+  on the retired Blob `_index.json`/`.md` model): `import-wordpress`, `convert-html-to-markdown`,
   `fix-import-captions`, `backfill-excerpts`, `rehost-images`, `rebuild-index`, `wipe-media`,
   `backfill-reading-time`, `list-posts-with-images`, `check-image-links`,
-  `backfill-media-dimensions`, `remap-original-images`.
+  `backfill-media-dimensions`, `remap-original-images`. Kept for recovery only; their deps
+  (`gray-matter`/`turndown`/`turndown-plugin-gfm`/`fast-xml-parser`) are devDependencies.
 
 ## SEO (toggleable, Admin → Settings → SEO)
 

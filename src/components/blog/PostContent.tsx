@@ -1,6 +1,5 @@
-// Renders owner-authored markdown to HTML. The blog is 100% Markdown: any raw
-// HTML/CSS in the source is NOT rendered, it is escaped and shown verbatim as
-// code. Only Markdown-generated elements (incl. GFM tables) are produced.
+// Markdown -> HTML. 100% Markdown: raw HTML/CSS is escaped and shown verbatim,
+// never rendered. Only Markdown-generated elements (incl. GFM tables) are produced.
 import { marked, type Tokens } from 'marked'
 import { videoEmbed } from '@/lib/video'
 import { collapseBlob } from '@/lib/blob'
@@ -13,24 +12,19 @@ const escapeHtml = (s: string) =>
 // Escape a string for use inside a double-quoted HTML attribute.
 const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
 
-// Drop dangerous link schemes (javascript:/data:/vbscript:) — marked v5+ no longer
-// sanitizes URLs, so a `[x](javascript:…)` would otherwise become an executable href.
-// Whitespace/control chars are stripped first so `java\tscript:` can't slip through.
-// http(s)/mailto/relative/anchor links pass untouched.
+// Drop dangerous schemes (javascript:/data:/vbscript:) — marked v5+ no longer
+// sanitizes URLs. Strip control chars first so `java\tscript:` can't slip through.
 const safeHref = (href: string): string => {
   const cleaned = href.trim().replace(/[\u0000-\u001F\u007F]/g, '')
   return /^(?:javascript|data|vbscript):/i.test(cleaned) ? '#' : cleaned
 }
 
-// Reverse of escapeHtml — marked emits escaped source inside <code>; Shiki needs
-// the raw text back before re-highlighting it.
+// Reverse of escapeHtml — Shiki needs the raw text back before re-highlighting.
 const unescapeHtml = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
 
-// Replace marked's plain `<pre><code class="language-x">…</code></pre>` blocks with
-// Shiki-highlighted markup. Async (Shiki is async), so collect every match first,
-// highlight in parallel, then splice the results back in. A null result (unknown
-// lang / failure) leaves the original block untouched.
+// Swap marked's `<pre><code>` blocks for Shiki-highlighted markup (parallel; a
+// null result leaves the original block untouched).
 async function highlightBlocks(html: string): Promise<string> {
   const re = /<pre><code(?: class="language-([\w-]+)")?>([\s\S]*?)<\/code><\/pre>/g
   const matches = [...html.matchAll(re)]
@@ -49,9 +43,8 @@ marked.use({
     html(token: Tokens.HTML | Tokens.Tag) {
       return escapeHtml(token.raw)
     },
-    // Give H2/H3 slug ids so the table of contents can anchor to them. Duplicate
-    // ids are de-duped in a post-pass (dedupeHeadingIds) — kept in sync with
-    // extractHeadings so the ToC anchors match.
+    // H2/H3 slug ids for ToC anchors; duplicates de-duped in dedupeHeadingIds
+    // (kept in sync with extractHeadings).
     heading(token: Tokens.Heading) {
       const inner = this.parser.parseInline(token.tokens)
       const id = token.depth === 2 || token.depth === 3 ? ` id="${slugify(token.text)}"` : ''
@@ -66,8 +59,7 @@ marked.use({
   },
 })
 
-// Second occurrence of a heading slug becomes `slug-2`, third `slug-3`, … so two
-// identical headings don't emit the same id. MUST match extractHeadings' counter
+// 2nd occurrence of a slug → `slug-2`, etc. MUST match extractHeadings' counter
 // (both walk H2/H3 in document order) or the ToC anchors break.
 function dedupeHeadingIds(html: string): string {
   const counts = new Map<string, number>()
@@ -78,30 +70,22 @@ function dedupeHeadingIds(html: string): string {
   })
 }
 
-// Intrinsic pixel dimensions of uploaded originals, keyed by collapsed pathname
-// (media/x.jpg). Emitting width/height on the <img> lets the browser reserve the
-// box from the aspect ratio before the bytes arrive -> no layout shift (CLS).
+// Intrinsic dims of uploaded originals, keyed by collapsed pathname. width/height
+// on the <img> reserves the box from the aspect ratio → no CLS.
 export type ImageDims = Map<string, { width: number; height: number }>
 
-// Wrap each image in a <figure>. Placement is encoded in the src fragment:
-//   #left | #right        -> alignment (default center)
-//   #wide / #left-wide... -> 30% wider than the column (breaks out)
-// The caption is the image alt. Lone images sit in their own <p>, which we
-// unwrap first so the block-level <figure> is valid.
+// Figure placement from the src fragment: #left|#right (align, default center),
+// #wide (30% wider, breaks out). Caption = alt.
 function imgClasses(frag: string): string {
-  // Parse exact hyphen-separated tokens so a stray fragment like `#bright` can't
-  // match `right`. Recognized: left | right | wide | left-wide | right-wide.
+  // Exact hyphen tokens so `#bright` can't match `right`: left|right|wide|left-wide|right-wide.
   const tokens = frag.split('-')
   const align = tokens.includes('left') ? 'img-left' : tokens.includes('right') ? 'img-right' : 'img-center'
   return tokens.includes('wide') ? `${align} img-wide` : align
 }
 
-// Emit a <picture> (AVIF/WebP @1024/1600) ONLY for uploaded raster originals
-// whose variants are confirmed to exist (`ready` = the media index's
-// variants:true pathnames). A <picture> gives NO fallback when a chosen <source>
-// 404s, so guessing the variants exist (deferred encoding) left blank images
-// whenever generation had not happened yet. Anything not confirmed renders as a
-// plain <img> of the original, which always loads.
+// <picture> (AVIF/WebP @1024/1600) ONLY for raster originals with confirmed
+// variants (`ready`). A <picture> has no fallback on a 404 source, so anything
+// unconfirmed renders as a plain <img> of the original (always loads).
 const SIZES_ATTR = '(max-width: 768px) 100vw, 768px'
 function responsiveSources(cleanSrc: string, ready: Set<string>): string | null {
   const m = cleanSrc.match(/^(.*\/media\/.+)\.(?:jpe?g|png)$/i)
@@ -126,8 +110,7 @@ function buildFigures(html: string, ready: Set<string>, dims: ImageDims): string
       // Intrinsic size (when known) reserves the box -> no CLS as it loads.
       const d = dims.get(collapseBlob(cleanSrc))
       const sizeAttrs = d ? ` width="${d.width}" height="${d.height}"` : ''
-      // The first body image is the likely LCP element: load it eagerly with high
-      // priority instead of lazily. Every later image stays lazy.
+      // First image = likely LCP → eager + high priority; later images stay lazy.
       const priority = seen === 0 ? ' fetchpriority="high"' : ' loading="lazy"'
       seen++
       const img = `<img src="${cleanSrc}" alt="${alt}"${sizeAttrs}${priority}>`

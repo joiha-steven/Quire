@@ -38,10 +38,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           palettes={paletteOptions(settings.themes)}
           defaultPalette={settings.themePreset}
         />
-        {/* Main column to the right of the sidebar. Wide enough for the editor's
-            writing column + the settings panel. */}
+        {/* Main column right of the sidebar. Full browser width (admin is column-based
+            now); ~100px gutters on desktop, tight padding on mobile. */}
         <main className="min-w-0 flex-1">
-          <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-[100px] lg:py-8">{children}</div>
         </main>
       </div>
     </AdminI18nProvider>

@@ -1,8 +1,7 @@
-// Small file store for site icons (favicon, app icon) kept OUT of the media
-// library so they don't clutter the post-image grid, plus a general "Files"
-// attachment library. Binaries are uploaded under `files/` on Blob; the Files
-// library metadata lives in the Postgres `files` table. Site icons are stored
-// verbatim on Blob and are NOT table rows, so they never show in the Files tab.
+// `files/` Blob prefix holds 3 things kept OUT of the media grid: site icons
+// (favicon/app-icon), the custom font, and the general "Files" attachment library.
+// Only the Files library has Postgres rows (`files` table); icons/font are blobs
+// only, so they never show in the Files tab.
 
 import { cache } from 'react'
 import sharp from 'sharp'
@@ -13,8 +12,7 @@ import {
 import { db } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 
-// contentType -> file extension. `.ico` arrives as x-icon / vnd.microsoft.icon
-// (and occasionally a bare type), so it's matched explicitly.
+// contentType -> extension. `.ico` arrives as x-icon / vnd.microsoft.icon.
 const EXT: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
@@ -29,9 +27,8 @@ export function isAllowedIconType(contentType: string): boolean {
   return contentType in EXT
 }
 
-// Upload one icon and return its absolute URL. `kind` namespaces the stored name
-// (favicon / app-icon); a timestamp keeps it unique so a replaced icon gets a
-// fresh URL (busting the aggressive favicon cache) instead of overwriting.
+// Upload one icon, return its absolute URL. `kind` namespaces the name
+// (favicon/app-icon); the timestamp gives a replaced icon a fresh URL (cache-bust).
 export async function uploadIcon(kind: string, body: ArrayBuffer | Buffer, contentType: string): Promise<string> {
   const ext = EXT[contentType]
   if (!ext) throw new Error(`Unsupported icon type: ${contentType}`)
@@ -40,21 +37,16 @@ export async function uploadIcon(kind: string, body: ArrayBuffer | Buffer, conte
 }
 
 // ----- Logo render (auto-sized for the header) --------------------------------
-// The owner picks a full-size logo from the media library (kept untouched). For
-// the header we don't want to ship that original — instead we generate ONE small
-// WebP scaled to the chosen header width, at 2x so it stays crisp on retina /
-// hi-dpi screens, and never upscaled past the source. The derived file lives
-// under files/logo-*.webp (NOT a Files-table row, NOT an icon → hidden from every
-// grid). saveSettings deletes the previous derived file each time it regenerates,
-// so exactly one ever exists. Vector (svg) / animated (gif) / undecodable sources
-// return null → the caller serves the original as-is (vectors scale for free).
+// From the owner's untouched source logo, generate ONE small WebP scaled to the
+// header width @2x (retina), never upscaled. Lives at files/logo-*.webp (no row,
+// no icon → hidden from grids); saveSettings deletes the prior one so exactly one
+// exists. Vector/animated/undecodable → null (caller serves the original as-is).
 
 const LOGO_RASTER = /^image\/(png|jpe?g|webp)$/
 const LOGO_EXT_RASTER = /\.(png|jpe?g|jpg|webp)(?:$|[?#])/i
 
-// Build the header logo for `width` CSS px. Returns the derived WebP url + its
-// displayed height (px) at that width (so the <img> can reserve space → no CLS),
-// or null when the source isn't a downscalable raster.
+// Returns the derived WebP url + its displayed height at `width` px (reserves
+// space → no CLS), or null when the source isn't a downscalable raster.
 export async function renderLogo(
   sourceUrl: string,
   width: number,
@@ -72,8 +64,7 @@ export async function renderLogo(
   if (!isRaster) return null // svg / gif / unknown: serve original untouched
   const src = Buffer.from(await res.arrayBuffer())
   try {
-    // 2x the display width for retina; withoutEnlargement keeps small logos sharp
-    // (never upscaled past the original's pixels).
+    // @2x for retina; withoutEnlargement never upscales past the source.
     const out = await sharp(src, { failOn: 'none' })
       .rotate()
       .resize({ width: Math.round(width * 2), withoutEnlargement: true })
@@ -91,9 +82,8 @@ export async function renderLogo(
 }
 
 // ----- Custom font upload ------------------------------------------------------
-// Owner-uploaded typeface, stored under files/ on Blob (like the site icons —
-// kept OUT of the Files table so it never shows in the attachment grid). Returns
-// the absolute URL + a CSS family name derived from the original filename.
+// Owner typeface under files/ (no Files row). Returns the URL + a CSS family name
+// derived from the filename.
 
 const FONT_EXT = new Set(['woff2', 'woff', 'ttf', 'otf'])
 
@@ -104,8 +94,7 @@ export function isAllowedFontType(filename: string): boolean {
   return FONT_EXT.has(fontExt(filename))
 }
 
-// Strip common weight/style tokens so the derived family is shared across the
-// weight slots (e.g. "Inter-Bold" / "Inter Regular" → "Inter").
+// Strip weight/style tokens so all weight slots share one family ("Inter-Bold" → "Inter").
 const WEIGHT_TOKENS = /\b(thin|extralight|ultralight|light|regular|normal|book|text|medium|semibold|demibold|bold|extrabold|ultrabold|black|heavy|italic|oblique|variable|vf)\b/gi
 
 export async function uploadFont(
@@ -116,7 +105,6 @@ export async function uploadFont(
 ): Promise<{ url: string; family: string; weight: number }> {
   const ext = fontExt(filename)
   if (!FONT_EXT.has(ext)) throw new Error(`Unsupported font type: ${ext}`)
-  // CSS family from the base name (weight/style words + separators removed).
   const base = filename.slice(0, filename.length - ext.length - 1)
   const family =
     base.replace(WEIGHT_TOKENS, ' ').replace(/[^A-Za-z0-9 _-]/g, ' ').replace(/[\s_-]+/g, ' ').trim().slice(0, 64) ||
@@ -127,9 +115,8 @@ export async function uploadFont(
 }
 
 // ----- General file library ("Files" tab) -------------------------------------
-// Any non-image attachment (PDF, zip, docx, audio…). Listed from the `files`
-// table so the site icons under files/ (favicon-*, app-icon-*), which are NOT
-// rows, never show up here. Stored verbatim — no thumbnails or variants.
+// Any attachment (PDF, zip, docx, audio…). Listed from the `files` table, stored
+// verbatim (no thumbs/variants). Site icons under files/ are not rows → never listed here.
 
 const ICON_PREFIXES = ['favicon-', 'app-icon-'] // managed in Settings, hidden here
 
@@ -153,8 +140,7 @@ function rowToItem(row: FileRow): FileItem {
   }
 }
 
-// Non-cached read of the library, newest first. Used by the mutating helpers so
-// they return the authoritative current state.
+// Non-cached read, newest first (mutating helpers return authoritative state).
 async function listFiles(): Promise<FileItem[]> {
   try {
     const { data, error } = await db()
@@ -176,8 +162,7 @@ async function listFiles(): Promise<FileItem[]> {
 // Library list, newest first. Fresh every request (React.cache dedupes per render).
 export const getFiles = cache(listFiles)
 
-// All `files/` pathnames already taken (table rows ∪ actual store contents, incl.
-// the icon files), so a new upload never collides with an existing name.
+// All taken `files/` pathnames (rows ∪ store contents) so an upload never collides.
 async function takenFilePaths(): Promise<Set<string>> {
   const set = new Set<string>()
   const { data } = await db().from('files').select('url')
@@ -198,8 +183,7 @@ function freeFilePath(base: string, ext: string, taken: Set<string>): string {
   return path
 }
 
-// Upload one or more files: push binaries to Blob, then insert all rows at once.
-// Any content type is accepted — this is the catch-all attachment store.
+// Upload files to Blob, then insert all rows at once. Any content type accepted.
 export async function addFilesBatch(
   files: { filename: string; body: ArrayBuffer; contentType: string }[],
 ): Promise<FileItem[]> {
@@ -224,10 +208,8 @@ export async function addFilesBatch(
   return rows.map(rowToItem)
 }
 
-// Register files the BROWSER already uploaded straight to Blob (client direct
-// upload — bypasses the serverless 4.5MB request-body limit, so large files no
-// longer fail). The binary is already on the store at `url`; we just insert the
-// metadata row. Returns the inserted items.
+// Register files the BROWSER uploaded straight to Blob (bypasses the 4.5MB body
+// limit). Binary already on the store; we just insert the metadata row.
 export async function registerFilesBatch(
   items: { url: string; filename: string; size: number; contentType: string }[],
 ): Promise<FileItem[]> {
@@ -246,22 +228,18 @@ export async function registerFilesBatch(
   return rows.map(rowToItem)
 }
 
-// Extract the store-relative `files/...` pathname from any URL form (absolute on
-// any host, or already collapsed) — host-independent matching.
+// Store-relative `files/...` pathname from any URL form (host-independent).
 function fileKey(s: string): string | null {
   return s.match(/files\/[^?#"')\s]+/)?.[0] ?? null
 }
 
-// Filter raw urls to deletable file keys (drops non-matches and the site icons,
-// which are managed in Settings and are not table rows).
+// Deletable file keys (drops non-matches + site icons, which aren't rows).
 function deletableKeys(urls: string[]): string[] {
   return [...new Set(urls.map(fileKey).filter((k): k is string => k !== null))]
     .filter((k) => !ICON_PREFIXES.some((p) => k.startsWith(`files/${p}`)))
 }
 
-// Soft-delete one or MORE library files: move them to the Trash (set deleted_at),
-// keeping the blob. Site icons are skipped (defence in depth — they never reach
-// here as rows). Returns the authoritative live list.
+// Soft-delete library files (set deleted_at), keeping the blob. Icons skipped.
 export async function deleteFilesBatch(urls: string[]): Promise<FileItem[]> {
   const keys = deletableKeys(urls)
   if (keys.length === 0) return listFiles()
@@ -284,8 +262,7 @@ export async function restoreFilesBatch(urls: string[]): Promise<FileItem[]> {
   return listFiles()
 }
 
-// Permanently delete one or MORE library files (hard delete, irreversible): row
-// delete first, then best-effort blob cleanup. Only reached from the Trash UI.
+// Hard delete (Trash UI only): row delete first, then best-effort blob cleanup.
 export async function purgeFilesBatch(urls: string[]): Promise<void> {
   const keys = deletableKeys(urls)
   if (keys.length === 0) return
@@ -320,9 +297,8 @@ export async function emptyFilesTrash(): Promise<number> {
   return trashed.length
 }
 
-// The site icons (favicon, app icon) uploaded in Settings. They live under
-// `files/` on Blob but are NOT `files` rows, so the Files tab lists them
-// separately (read-only, tagged "Settings") via this. Newest first.
+// Site icons (favicon/app-icon) from Settings: under files/ but NOT rows, so the
+// Files tab lists them separately (read-only). Newest first.
 const ICON_EXT: Record<string, string> = {
   ico: 'image/x-icon', png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml',
   gif: 'image/gif', webp: 'image/webp',
@@ -335,8 +311,7 @@ export async function getSiteIcons(): Promise<FileItem[]> {
       .map((b) => {
         const name = b.pathname.replace(/^files\//, '')
         const ext = b.pathname.split('.').pop()?.toLowerCase() ?? ''
-        // Icon names are `<kind>-<Date.now()>.<ext>` (see uploadIcon) — recover the
-        // upload time from that millisecond stamp; fall back to epoch if absent.
+        // Names are `<kind>-<Date.now()>.<ext>` → recover upload time from the stamp.
         const ms = Number(name.match(/-(\d{10,})\./)?.[1] ?? 0)
         return {
           url: expandBlob(b.pathname),
