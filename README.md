@@ -22,7 +22,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 <br/>
 
-<img src="docs/demo.png" alt="vibeblog admin dashboard and reading view" width="900">
+<img src="docs/demo.jpg" alt="vibeblog admin dashboard and reading view" width="900">
 
 </div>
 
