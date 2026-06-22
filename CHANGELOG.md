@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.9 — every error page shares one look)
+- **refactor: all error/edge screens now route through ONE `ErrorScreen` component** so they can't
+  drift. The public 404, the 5xx boundaries (`ErrorView`), and a new **admin 404**
+  (`app/admin/not-found.tsx`, for unmatched admin URLs) all render the identical layout (number +
+  title + text + actions on theme tokens) — fully consistent per request. Shared `ERROR_LINK` class.
+- The public 404 keeps the blog header/footer; the admin 404 renders in the admin shell. (Other 4xx
+  like 401/403 stay auth redirects/JSON by design, not pages.) `v1.0.9`.
+
 ## 2026-06-22 (v1.0.8 — fix stale admin lists + 5xx/error pages)
 - **fix(admin): admin list endpoints showed STALE data (the real "can't delete a token" bug).**
   `db()` GET reads are Data-Cache-eligible (tag `db`, 1h). The admin client-fetched list routes
