@@ -4,6 +4,8 @@ import pkg from '../../../package.json'
 import { getIndex } from '@/lib/posts'
 import { getPageIndex } from '@/lib/pages'
 import { listBlobs, blobOrigin } from '@/lib/blob'
+import { getSettings } from '@/lib/settings'
+import { getBackupState } from '@/lib/backup-state'
 import { db } from '@/lib/db'
 import { Overview, type SystemInfo } from '@/components/admin/Overview'
 
@@ -35,7 +37,12 @@ async function getSystemInfo(): Promise<SystemInfo> {
   const prodUrl = env.VERCEL_PROJECT_PRODUCTION_URL ?? ''
   const nextVer = (pkg.dependencies as Record<string, string>).next?.replace(/^[\^~]/, '') ?? ''
 
+  // Feature status: MCP on/off + whether backups are active (enabled AND connected).
+  const [settings, backup] = await Promise.all([getSettings(), getBackupState()])
+
   return {
+    mcpEnabled: settings.mcp.enabled,
+    backupOn: settings.backups.enabled && !!backup.refreshToken,
     hosting: 'Vercel',
     hostingHref: 'https://vercel.com/dashboard',
     site: prodUrl || '—',
@@ -73,14 +80,22 @@ export default async function AdminHome() {
     getSystemInfo(),
   ])
 
+  // Media blobs split into originals vs derived variants (thumb + -1024/-1600
+  // AVIF/WebP, named by convention), plus the files/ attachment+icon+font blobs.
+  const isVariant = (p: string) => /-(?:thumb|\d+)\.(?:avif|webp)$/.test(p)
   const mediaBlobs = blobs.filter((b) => b.pathname.startsWith('media/') && !b.pathname.endsWith('_index.json'))
+  const variantCount = mediaBlobs.filter((b) => isVariant(b.pathname)).length
+  const originalCount = mediaBlobs.length - variantCount
+  const fileCount = blobs.filter((b) => b.pathname.startsWith('files/')).length
   const totalBytes = blobs.reduce((sum, b) => sum + b.size, 0)
 
   return (
     <Overview
       posts={posts.length}
       pages={pages.length}
-      mediaCount={mediaBlobs.length}
+      originals={originalCount}
+      variants={variantCount}
+      files={fileCount}
       totalBytes={totalBytes}
       categories={tally(posts.flatMap((p) => p.categories))}
       tags={tally(posts.flatMap((p) => p.tags))}

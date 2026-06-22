@@ -2,6 +2,7 @@
 // Returns an empty sitemap when the feature is toggled off.
 import type { MetadataRoute } from 'next'
 import { getPublicPosts, getPost, getCategories, getTags } from '@/lib/posts'
+import { termSlug } from '@/lib/taxonomy'
 import { getPublicPages } from '@/lib/pages'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { extractImageUrls } from '@/lib/utils'
@@ -20,7 +21,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getTags(),
   ])
 
-  const enc = (v: string) => encodeURIComponent(v)
   const newest = posts[0]?.date ?? new Date().toISOString()
 
   // Per-post images for an image sitemap (`<image:image>`), so search engines
@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...(postImages[i].length ? { images: postImages[i] } : {}),
     })),
     ...pages.map((p) => ({ url: `${base}/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.5 })),
-    ...categories.map((c) => ({ url: `${base}/category/${enc(c)}`, changeFrequency: 'weekly' as const, priority: 0.4 })),
-    ...tags.map((t) => ({ url: `${base}/tag/${enc(t)}`, changeFrequency: 'weekly' as const, priority: 0.3 })),
+    ...categories.map((c) => ({ url: `${base}/category/${termSlug(c)}`, changeFrequency: 'weekly' as const, priority: 0.4 })),
+    ...tags.map((t) => ({ url: `${base}/tag/${termSlug(t)}`, changeFrequency: 'weekly' as const, priority: 0.3 })),
   ]
 }

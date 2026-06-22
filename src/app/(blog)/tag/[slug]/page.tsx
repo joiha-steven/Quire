@@ -1,6 +1,8 @@
 // Posts filtered by tag, first page. Deeper pages: /tag/[slug]/page/[n].
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getPublicPosts } from '@/lib/posts'
+import { resolveTerm } from '@/lib/taxonomy'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { ogCardUrl, siteDomain } from '@/lib/og'
 import { t } from '@/lib/i18n'
@@ -11,7 +13,9 @@ export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/',
 // OG card: top line = #tag (the # marks it as a tag), bottom line = domain.
 export async function generateMetadata({ params }: PageProps<'/tag/[slug]'>): Promise<Metadata> {
   const { slug } = await params
-  const name = `#${decodeURIComponent(slug)}`
+  const { name: term } = resolveTerm(await getPublicPosts(), 'tags', slug)
+  if (!term) return {}
+  const name = `#${term}`
   const settings = await getSettings()
   const base = resolveSiteUrl(settings)
   const og = ogCardUrl(settings, base, { title: name, site: siteDomain(base) })
@@ -25,9 +29,9 @@ export async function generateMetadata({ params }: PageProps<'/tag/[slug]'>): Pr
 
 export default async function TagPage({ params }: PageProps<'/tag/[slug]'>) {
   const { slug } = await params
-  const name = decodeURIComponent(slug)
   const [posts, { language }] = await Promise.all([getPublicPosts(), getSettings()])
-  const filtered = posts.filter((p) => p.tags.includes(name))
+  const { name, posts: filtered } = resolveTerm(posts, 'tags', slug)
+  if (!name) notFound()
 
   return (
     <section>

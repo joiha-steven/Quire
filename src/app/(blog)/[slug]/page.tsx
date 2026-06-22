@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
+import { termSlug } from '@/lib/taxonomy'
 import { getPage, getPublicPages } from '@/lib/pages'
 import { getMedia } from '@/lib/media'
 import { collapseBlob } from '@/lib/blob'
@@ -140,12 +141,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             <footer className="mt-6 space-y-1 t-small text-meta">
               {post.tags.length > 0 && (
                 <p>
-                  {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${encodeURIComponent(s)}`)}
+                  {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${termSlug(s)}`)}
                 </p>
               )}
               {post.categories.length > 0 && (
                 <p>
-                  {t(language).categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${encodeURIComponent(s)}`)}
+                  {t(language).categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${termSlug(s)}`)}
                 </p>
               )}
             </footer>

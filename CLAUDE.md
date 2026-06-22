@@ -129,6 +129,11 @@ Other rules:
 - **Pagination is path-based:** page 1 at the bare path, deeper at `/page/[n]`
   (+`/category|tag/[slug]/page/[n]`) — no `?query`. `parsePathPage` returns a page only for
   `n >= 2` (else `null` → 404). Shared `components/blog/BlogListing` renders all six routes.
+- **Taxonomy URLs use the SLUGIFIED term** (`lib/taxonomy.ts`): `Suy nghĩ` → `/category/suy-nghi`,
+  NOT the raw `%`-encoded name. Links call `termSlug(term)` (post footer, sitemap); the four
+  `category|tag/[slug]` routes call `resolveTerm(posts, kind, slug)` → the term whose `slugify`
+  matches (+ a back-compat match on the raw pre-slug term, so old encoded URLs still resolve) →
+  `notFound()` if none. New taxonomy link/route MUST go through these (never hand-encode the name).
 - List entries carry `readingMinutes` (computed at save) so lists need no bodies.
 
 ## Data layer map — `src/lib/`
@@ -158,6 +163,7 @@ are called out elsewhere (Caching, Typography, Conventions).
 | `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the namespace → 409 on collision |
 | `revalidate.ts` | `revalidateNewPost/Post/Page/Everything`, `warmCache` | Single source of cache invalidation (see Caching) |
 | `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Every route calls `requireOwner()` first |
+| `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug (`slugify(term)`) + reverse-resolve a slug to its display name + matching posts (back-compat with raw pre-slug URLs) |
 | others | `video.ts` (YT/Vimeo/TikTok embeds), `paginate.ts`, `i18n.ts` (`t`/`formatDate`), `admin-i18n.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`isPublicallyVisible` = published && date past /…) | Pure/shared helpers |
 
 ## Trash (soft delete) — Admin → Trash (`/admin/trash`)
@@ -333,7 +339,9 @@ are called out elsewhere (Caching, Typography, Conventions).
   `features.activityLog`. Admin → Log (force-dynamic, latest 200, Clear). **Adding a mutating
   route → log it too.**
 - **System panel** (admin Overview, `getSystemInfo()`): hosting/URL/region/env/git + database
-  (Supabase, live reachability) + Blob host; rows may deep-link.
+  (Supabase, live reachability) + Blob host + **MCP on/off** + **Backups on** (= enabled AND Drive
+  connected); rows may deep-link. The stat cards split media into **originals / variants / files**
+  (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
   (`getViewTotals`). Detail in the data-layer map (`analytics.ts`).
 

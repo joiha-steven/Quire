@@ -1,6 +1,8 @@
 // Posts filtered by category, first page. Deeper pages: /category/[slug]/page/[n].
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getPublicPosts } from '@/lib/posts'
+import { resolveTerm } from '@/lib/taxonomy'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { ogCardUrl, siteDomain } from '@/lib/og'
 import { t } from '@/lib/i18n'
@@ -11,7 +13,8 @@ export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/',
 // OG card: top line = category name, bottom line = domain.
 export async function generateMetadata({ params }: PageProps<'/category/[slug]'>): Promise<Metadata> {
   const { slug } = await params
-  const name = decodeURIComponent(slug)
+  const { name } = resolveTerm(await getPublicPosts(), 'categories', slug)
+  if (!name) return {}
   const settings = await getSettings()
   const base = resolveSiteUrl(settings)
   const og = ogCardUrl(settings, base, { title: name, site: siteDomain(base) })
@@ -25,9 +28,9 @@ export async function generateMetadata({ params }: PageProps<'/category/[slug]'>
 
 export default async function CategoryPage({ params }: PageProps<'/category/[slug]'>) {
   const { slug } = await params
-  const name = decodeURIComponent(slug)
   const [posts, { language }] = await Promise.all([getPublicPosts(), getSettings()])
-  const filtered = posts.filter((p) => p.categories.includes(name))
+  const { name, posts: filtered } = resolveTerm(posts, 'categories', slug)
+  if (!name) notFound()
 
   return (
     <section>

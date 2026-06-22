@@ -1,6 +1,7 @@
 // Category pagination: /category/[slug]/page/2, … (page 1 lives at /category/[slug]).
 import { notFound } from 'next/navigation'
 import { getPublicPosts } from '@/lib/posts'
+import { resolveTerm } from '@/lib/taxonomy'
 import { getSettings } from '@/lib/settings'
 import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
@@ -12,9 +13,9 @@ export default async function CategoryPaged({ params }: PageProps<'/category/[sl
   const { slug, n } = await params
   const page = parsePathPage(n)
   if (page === null) notFound()
-  const name = decodeURIComponent(slug)
   const [posts, { language }] = await Promise.all([getPublicPosts(), getSettings()])
-  const filtered = posts.filter((p) => p.categories.includes(name))
+  const { name, posts: filtered } = resolveTerm(posts, 'categories', slug)
+  if (!name) notFound()
 
   return (
     <section>

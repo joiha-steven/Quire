@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.12 — slugified taxonomy URLs + clearer Overview)
+- **fix(seo): category/tag URLs now use the slugified term**, e.g. `/category/suy-nghi` instead of
+  `/category/Suy%20ngh%C4%A9`. New `lib/taxonomy.ts` (`termSlug`/`resolveTerm`); post-footer links +
+  sitemap emit `termSlug(term)`; the four `category|tag/[slug]` routes resolve the slug back to the
+  term (by `slugify` match) and `notFound()` on no match. **Old `%`-encoded URLs still resolve**
+  (back-compat raw-term match) so nothing 404s. OG/metadata show the real term name.
+- **feat(admin): Overview is clearer.** The media stat card now reads **Images** = original count,
+  with a sub-line `N variants · M files` (variants = derived `-thumb`/`-1024`/`-1600` AVIF/WebP;
+  files = `files/` blobs) instead of one opaque "Attachments" total. Category/Tag cards show their
+  **total count** in the title. The System panel adds **MCP server** (on/off) and **Backups**
+  (on when enabled + Drive connected) rows. New `stat*`/`sys*` locale keys in all 6 languages. `v1.0.12`.
+
 ## 2026-06-22 (v1.0.11 — full-site backups to Google Drive)
 - **feat: full-site backup to the owner's Google Drive** (Admin → Settings → Advanced). One
   snapshot = a single self-contained `.tar.gz` — `db.json` (every text table) + `blob/<pathname>`
