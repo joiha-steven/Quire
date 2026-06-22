@@ -310,6 +310,7 @@ const en = {
   mcpColName: 'Name',
   mcpColCreated: 'Created',
   mcpColLastUsed: 'Last used',
+  mcpRefresh: 'Refresh',
   mcpNeverUsed: 'Never',
   mcpConfirmDelete: 'Delete this token? Any client using it will stop working.',
   mcpTokenDeleted: 'Token deleted',

@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.6 — MCP token list always reflects reality)
+- **fix(admin): the MCP token list no longer shows a stale snapshot.** It loaded only on mount, so
+  connecting/disconnecting in Claude (out-of-band) left the admin list wrong — "can't delete the old
+  one", "don't see the new one". It now **refetches on tab focus / visibility change** and has a
+  manual **Refresh** button, so the owner always sees and can revoke every live token/connection.
+- **fix(mcp): prune the OAuth rolling window by `id` (monotonic PK), not `created_at`** — removes a
+  tie risk where a freshly minted token could be pruned. `v1.0.6`.
+- Note: deleting a connector's token revokes that session; the connector can only re-appear if the
+  owner re-approves OAuth (authorize is gated by the owner's login). To fully stop access, also
+  disconnect in Claude or turn the MCP toggle off.
+
 ## 2026-06-22 (v1.0.5 — MCP: authorize once, connect forever)
 - **fix(mcp): connecting an OAuth connector once now works indefinitely.** The `/token` exchange
   used to delete the previous "OAuth connector" token on every connect (single slot), so any

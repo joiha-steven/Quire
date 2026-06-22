@@ -89,7 +89,7 @@ export async function mintOAuthToken(): Promise<{ token: string; info: McpTokenI
     .from('mcp_tokens')
     .select('id')
     .eq('name', OAUTH_TOKEN_NAME)
-    .order('created_at', { ascending: false })
+    .order('id', { ascending: false }) // monotonic PK → the just-minted row is always newest, never pruned
     .range(MAX_OAUTH_TOKENS, 1000)
   const ids = ((stale as { id: number }[] | null) ?? []).map((r) => r.id)
   if (ids.length) await db().from('mcp_tokens').delete().in('id', ids)

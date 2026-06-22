@@ -44,6 +44,19 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
       .catch(() => {})
   }, [])
 
+  // Refetch whenever the owner returns to this tab — connectors are created/revoked
+  // out-of-band (in Claude), so the list must re-sync or it shows a stale snapshot
+  // ("I reconnected but don't see it"). Listeners only, so no setState in the body.
+  useEffect(() => {
+    const onFocus = () => { if (document.visibilityState === 'visible') refresh() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [refresh])
+
   async function generate() {
     const name = prompt(t.mcpNamePrompt)?.trim()
     if (!name) return
@@ -110,9 +123,18 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
             <h3 className="text-sm font-semibold">{t.mcpTokensTitle}</h3>
             <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{t.mcpTokensHint}</p>
           </div>
-          <Button type="button" onClick={generate} disabled={pending || tokens.filter((tk) => !tk.oauth).length >= MAX}>
-            {t.mcpGenerate}
-          </Button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => refresh()}
+              className="rounded-lg px-2.5 py-1.5 text-xs text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+            >
+              {t.mcpRefresh}
+            </button>
+            <Button type="button" onClick={generate} disabled={pending || tokens.filter((tk) => !tk.oauth).length >= MAX}>
+              {t.mcpGenerate}
+            </Button>
+          </div>
         </div>
 
         {/* The just-created plaintext token, shown ONCE. */}
