@@ -34,6 +34,10 @@ export async function generateViewport(): Promise<Viewport> {
   const { themes, themePreset } = await getSettings()
   const theme = getDefaultTheme(themes, themePreset)
   return {
+    // Extend the page under the notch / Dynamic Island so a fixed top bar (the
+    // reading progress) sits flush at the true screen edge; `body` re-pads the
+    // content past the safe area (globals.css) so the header never tucks under it.
+    viewportFit: 'cover',
     themeColor: [
       { media: '(prefers-color-scheme: light)', color: theme.light.bg },
       { media: '(prefers-color-scheme: dark)', color: theme.dark.bg },

@@ -1,6 +1,13 @@
 # CHANGELOG
 
-## 2026-06-22 (v1.0.15 — README: clearer "What it is" + friendlier install)
+## 2026-06-23 (v1.0.16 — reading progress bar reaches the top edge on notch/Dynamic Island)
+- **fix(ios): the reading progress bar sat below the Dynamic Island / notch instead of at the
+  true top edge.** Without `viewport-fit=cover`, iOS Safari lays the page out inside the safe area,
+  so the bar's `top: 0` landed at the top of the *content* area (under the island), looking like it
+  floated mid-screen. Set `viewportFit: 'cover'` in `generateViewport` so the page fills under the
+  island and the fixed bar reaches the real top edge, and added `env(safe-area-inset-*)` padding on
+  `body` so the header/content re-clear the island (env() is 0 on devices without insets, so no
+  effect elsewhere). `v1.0.16`.
 - **docs(readme): rewrote "What it is"** to lead with the actual pitch — open-source (MIT),
   built for people who just want to **write**, **fast load on mobile + desktop**, **readable
   typography**, and **easy to tweak from the admin with no hardcoded values**. Gave the feature
