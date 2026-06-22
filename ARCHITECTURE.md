@@ -1,8 +1,9 @@
 # Architecture
 
 A fresh-reader map of vibeblog: the mental model, how a request flows, and the
-*why* behind the main decisions. Operational detail, traps, and recovery all live
-in [`CLAUDE.md`](./CLAUDE.md).
+*why* behind the main decisions. Operational rules, invariants, and a per-area DEBUG
+ROUTER live in [`CLAUDE.md`](./CLAUDE.md); per-area detail lives in [`docs/`](./docs/)
+(conventions, features, seo-pwa, mcp, backups).
 
 ## Mental model
 

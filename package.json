@@ -1,6 +1,6 @@
 {
   "name": "vibeblog",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "private": true,
   "license": "MIT",
   "browserslist": [
@@ -14,7 +14,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:routes": "node scripts/checks/routes-guarded.mjs",
+    "check:filesize": "node scripts/checks/file-size.mjs",
+    "check:no-any": "node scripts/checks/no-any.mjs",
+    "check:token-bust": "node scripts/checks/token-no-public-bust.mjs",
+    "check:consistency:live": "node scripts/checks/consistency.mjs",
+    "check:all": "npm run typecheck && npm run lint && npm run check:routes && npm run check:filesize && npm run check:no-any && npm run check:token-bust && npm test"
   },
   "engines": {
     "node": ">=20.9"
@@ -56,6 +64,7 @@
     "tailwindcss": "^4",
     "turndown": "^7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }
