@@ -24,7 +24,7 @@ import { SeoFields } from './SeoFields'
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+    <section className="rounded-2xl border border-neutral-200 bg-white shadow-sm p-5 dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="mb-4 text-base font-bold tracking-tight">{title}</h2>
       {children}
     </section>
@@ -169,8 +169,9 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
         </div>
       )}
 
-      {/* Single, always-reachable save bar. Offset past the sidebar on desktop. */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur md:left-60 dark:border-neutral-800 dark:bg-neutral-900/90">
+      {/* Single, always-reachable save bar. Offset past the sidebar on desktop via
+          the --admin-nav-w var the sidebar publishes (adapts to collapse). */}
+      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur md:left-[var(--admin-nav-w,13rem)] dark:border-neutral-800 dark:bg-neutral-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}

@@ -3,13 +3,23 @@
 // Header button: purge the whole public cache and warm it again. Public pages
 // are ISR-cached and also auto-purge on save; this is the manual "refresh
 // everything now" escape hatch (e.g. after editing content directly in Blob).
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { useAdminT } from './I18nProvider'
 import { ADMIN_NAV } from './headerActions'
 
-export function CacheButton({ className = ADMIN_NAV }: { className?: string }) {
+// `icon` + `collapsed` let the sidebar render this as an icon row (label shown
+// only when expanded). Without an icon it stays a plain text button (default).
+export function CacheButton({
+  className = ADMIN_NAV,
+  icon,
+  collapsed = false,
+}: {
+  className?: string
+  icon?: ReactNode
+  collapsed?: boolean
+}) {
   const t = useAdminT()
   const { notify } = useToast()
   const [busy, setBusy] = useState(false)
@@ -30,8 +40,9 @@ export function CacheButton({ className = ADMIN_NAV }: { className?: string }) {
   }
 
   return (
-    <button type="button" onClick={clear} disabled={busy} className={className}>
-      {t.clearCache}
+    <button type="button" onClick={clear} disabled={busy} className={className} title={collapsed ? t.clearCache : undefined}>
+      {icon}
+      {!collapsed && <span>{t.clearCache}</span>}
     </button>
   )
 }

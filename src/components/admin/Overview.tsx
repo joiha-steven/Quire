@@ -42,7 +42,7 @@ type Props = {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <div className="text-2xl font-bold tracking-tight">{value}</div>
       <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{label}</div>
     </div>
@@ -51,7 +51,7 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
 
 function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty: string }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="mb-3 text-sm font-bold">{title}</h2>
       {items.length === 0 ? (
         <p className="text-sm text-neutral-400 dark:text-neutral-500">{empty}</p>
@@ -90,7 +90,7 @@ function SystemCard({ system }: { system: SystemInfo }) {
     { label: t.sysStorage, value: system.storage, href: system.storageHref },
   ]
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="mb-3 text-sm font-bold">{t.sysTitle}</h2>
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {rows.map((r) => (

@@ -63,10 +63,11 @@
 - [ ] `update_settings` only changes title/description/showDescription (sensitive settings refused)
 - [ ] `/.well-known/oauth-protected-resource` + `/.well-known/oauth-authorization-server` return JSON
 
-## Admin nav (left sidebar)
-- [ ] Desktop: sticky left sidebar; active route highlighted; controls pinned at the bottom
-- [ ] Mobile: hamburger opens a drawer with the same links + controls
-- [ ] Settings save bar sits to the right of the sidebar (not under it) on desktop
+## Admin nav (collapsible left sidebar)
+- [ ] Desktop: sticky left sidebar with icons; active route highlighted; controls pinned at the bottom
+- [ ] Collapse toggle → icon-only rail; state persists across navigation (localStorage); tooltips show
+- [ ] Mobile: hamburger opens a drawer with the same links + controls (always icon+label)
+- [ ] Settings + editor save bars sit to the right of the sidebar (not under it) at any collapse state
 
 ## Layout / visual (owner is very sensitive here)
 - [ ] Header rows align on one line: every item (incl. the wordmark) is an `h-9`/`h-10`

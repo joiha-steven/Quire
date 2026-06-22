@@ -315,6 +315,8 @@ const de = {
   mcpTokenDeleted: 'Token gelöscht',
   mcpLimitReached: 'Token-Limit erreicht (5). Lösche zuerst einen.',
   mcpCreateFailed: 'Token konnte nicht erstellt werden',
+  navCollapse: 'Seitenleiste einklappen',
+  navExpand: 'Seitenleiste ausklappen',
 } satisfies AdminStrings
 
 export default de

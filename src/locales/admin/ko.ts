@@ -315,6 +315,8 @@ const ko = {
   mcpTokenDeleted: '토큰을 삭제했습니다',
   mcpLimitReached: '토큰 한도(5개)에 도달했습니다. 먼저 하나를 삭제하세요.',
   mcpCreateFailed: '토큰을 생성할 수 없습니다',
+  navCollapse: '사이드바 접기',
+  navExpand: '사이드바 펼치기',
 } satisfies AdminStrings
 
 export default ko

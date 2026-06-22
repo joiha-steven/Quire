@@ -315,6 +315,8 @@ const ja = {
   mcpTokenDeleted: 'トークンを削除しました',
   mcpLimitReached: 'トークンの上限（5 個）に達しました。先に 1 つ削除してください。',
   mcpCreateFailed: 'トークンを作成できませんでした',
+  navCollapse: 'サイドバーを折りたたむ',
+  navExpand: 'サイドバーを展開',
 } satisfies AdminStrings
 
 export default ja

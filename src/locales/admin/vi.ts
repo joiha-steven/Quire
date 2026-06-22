@@ -315,6 +315,8 @@ const vi = {
   mcpTokenDeleted: 'Đã xoá token',
   mcpLimitReached: 'Đã đạt giới hạn 5 token. Hãy xoá bớt một cái.',
   mcpCreateFailed: 'Không tạo được token',
+  navCollapse: 'Thu gọn thanh bên',
+  navExpand: 'Mở rộng thanh bên',
 } satisfies AdminStrings
 
 export default vi

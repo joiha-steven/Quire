@@ -188,7 +188,7 @@ export function PageForm({ initial, contentWidth }: Props) {
         <PageSettings draft={draft} update={update} onPickFeatured={() => setPicker('featured')} />
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 dark:border-neutral-800 dark:bg-neutral-900/90 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur md:left-[var(--admin-nav-w,13rem)] dark:border-neutral-800 dark:bg-neutral-900/90">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}

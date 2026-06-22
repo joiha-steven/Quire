@@ -38,16 +38,16 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
 
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.analyticsPrivacyNote}</p>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="text-3xl font-bold tracking-tight">{data.totalViews.toLocaleString()}</div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsViews}</div>
         </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="text-3xl font-bold tracking-tight">{data.uniqueVisitors.toLocaleString()}</div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsVisitors}</div>
         </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="text-3xl font-bold tracking-tight">{data.avgReadDepth}%</div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsAvgDepth}</div>
         </div>
@@ -58,7 +58,7 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
       ) : (
         <>
           {/* Daily views — thin bars scaled to the busiest day. */}
-          <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
             <div className="flex h-32 items-end gap-px">
               {data.daily.map((d) => (
                 <div
@@ -72,7 +72,7 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
           </div>
 
           {/* Top pages. */}
-          <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
             <h2 className="mb-3 text-sm font-bold">{t.analyticsTopPages}</h2>
             <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
               {data.topPages.map((p) => (

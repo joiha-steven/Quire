@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.2 — collapsible sidebar + admin polish)
+- **feat(admin): the sidebar is now collapsible and icon-led.** Each nav item has an icon
+  (`navIcons.tsx`); the rail is narrower (`w-52`, was `w-60`) and a toggle collapses it to
+  icon-only (`w-16`), persisted in localStorage and remembered across navigation. Collapsed items
+  show a tooltip; the footer controls switch to icon-only too. The fixed settings/editor save bars
+  follow the rail via a `--admin-nav-w` CSS variable (no hardcoded offset). All monochrome — no
+  hardcoded accent colors/fonts/text sizes, per the project rules.
+- **polish(admin): softer cards + a mobile-safe analytics grid.** Added a subtle `shadow-sm` to the
+  admin card containers (lifts white cards off the gray canvas, matching the reference) and made the
+  Analytics summary cards stack on phones (`grid-cols-1 sm:grid-cols-3`) instead of cramming three
+  across. `v1.0.2`.
+
 ## 2026-06-22 (v1.0.1 — admin-managed MCP + left sidebar)
 - **feat(mcp): MCP is now toggled + tokenized from the admin.** Replaced the single `MCP_TOKEN`
   env var with an Admin → Settings → Advanced panel: an **enable toggle** (`settings.mcp.enabled`)

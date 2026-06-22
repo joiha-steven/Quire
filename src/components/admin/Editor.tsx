@@ -319,7 +319,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <Toolbar editor={editor} onPickImage={onPickImage} raw={raw} onToggleRaw={toggleRaw} />
       {/* Center the writing column at the public single-post width so what you
           type wraps exactly like the published article. */}

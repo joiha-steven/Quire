@@ -315,6 +315,8 @@ const zh = {
   mcpTokenDeleted: '已删除令牌',
   mcpLimitReached: '已达到令牌上限（5 个）。请先删除一个。',
   mcpCreateFailed: '无法创建令牌',
+  navCollapse: '收起侧边栏',
+  navExpand: '展开侧边栏',
 } satisfies AdminStrings
 
 export default zh

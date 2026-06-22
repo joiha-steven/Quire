@@ -315,6 +315,8 @@ const en = {
   mcpTokenDeleted: 'Token deleted',
   mcpLimitReached: 'Token limit reached (5). Delete one first.',
   mcpCreateFailed: 'Could not create token',
+  navCollapse: 'Collapse sidebar',
+  navExpand: 'Expand sidebar',
 } satisfies AdminStrings
 
 export default en

@@ -1,19 +1,25 @@
 'use client'
 
-// Admin navigation as a LEFT VERTICAL SIDEBAR (the top bar grew too crowded). On
-// desktop it's a sticky full-height column: brand → nav links → controls pinned to
-// the bottom. On mobile it collapses to a slim top bar with a hamburger that opens
-// the same items as a drawer. Every item (links AND theme/palette/cache/sign-out)
-// shares SIDEBAR_NAV so the column reads as one uniform set and can't drift.
+// Admin navigation as a LEFT SIDEBAR that collapses between icon+label and
+// icon-only (desktop), persisted in localStorage. On mobile it's a slim top bar
+// with a hamburger drawer (always icon+label). Every item shares SIDEBAR_NAV so
+// the rail reads as one uniform set. Monochrome by design (admin tooling stays on
+// the neutral scale — no hardcoded accent colors).
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { SiteLang } from '@/types'
 import { useAdminT } from './I18nProvider'
 import { SIDEBAR_NAV, SIDEBAR_NAV_ACTIVE } from './headerActions'
 import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { PaletteToggle, type PaletteOption } from '@/components/theme/PaletteToggle'
+import {
+  IconHome, IconAnalytics, IconContent, IconMedia, IconTrash, IconSettings,
+  IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft,
+} from './navIcons'
+
+const STORE_KEY = 'vb-admin-nav-collapsed'
 
 export function AdminSidebar({
   lang,
@@ -28,23 +34,53 @@ export function AdminSidebar({
 }) {
   const t = useAdminT()
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false) // mobile drawer
+  const [collapsed, setCollapsed] = useState(false) // desktop rail
   const close = () => setOpen(false)
 
+  // Publish the current desktop rail width as a CSS var so fixed-position chrome
+  // (e.g. the settings save bar) can offset past the sidebar at any collapse state.
+  const applyWidthVar = (c: boolean) =>
+    document.documentElement.style.setProperty('--admin-nav-w', c ? '4rem' : '13rem')
+
+  // Restore the desktop collapsed state after mount (client-only; server renders
+  // expanded so hydration matches, then we sync). Deferred a microtask so the
+  // setState isn't in the effect body.
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      const c = localStorage.getItem(STORE_KEY) === '1'
+      setCollapsed(c)
+      applyWidthVar(c)
+    })
+  }, [])
+
+  function toggleCollapsed() {
+    setCollapsed((v) => {
+      const next = !v
+      localStorage.setItem(STORE_KEY, next ? '1' : '0')
+      applyWidthVar(next)
+      return next
+    })
+  }
+
   const links = [
-    { href: '/admin', label: t.navHome },
-    { href: '/admin/analytics', label: t.navAnalytics },
-    { href: '/admin/content', label: t.navDashboard },
-    { href: '/admin/media', label: t.navMedia },
-    { href: '/admin/trash', label: t.navTrash },
-    { href: '/admin/settings', label: t.navSettings },
-    { href: '/admin/log', label: t.navLog },
+    { href: '/admin', label: t.navHome, icon: <IconHome /> },
+    { href: '/admin/analytics', label: t.navAnalytics, icon: <IconAnalytics /> },
+    { href: '/admin/content', label: t.navDashboard, icon: <IconContent /> },
+    { href: '/admin/media', label: t.navMedia, icon: <IconMedia /> },
+    { href: '/admin/trash', label: t.navTrash, icon: <IconTrash /> },
+    { href: '/admin/settings', label: t.navSettings, icon: <IconSettings /> },
+    { href: '/admin/log', label: t.navLog, icon: <IconLog /> },
   ]
 
   const isActive = (href: string): boolean =>
     href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(`${href}/`)
 
-  const navItems = (
+  // `c` = render collapsed (icon-only). Mobile drawer always passes false.
+  const rowClass = (c: boolean, active = false): string =>
+    `${SIDEBAR_NAV} ${c ? 'justify-center' : 'gap-3'} ${active ? SIDEBAR_NAV_ACTIVE : ''}`
+
+  const navItems = (c: boolean): ReactNode => (
     <>
       {links.map((l) => (
         <Link
@@ -52,46 +88,68 @@ export function AdminSidebar({
           href={l.href}
           onClick={close}
           aria-current={isActive(l.href) ? 'page' : undefined}
-          className={`${SIDEBAR_NAV} ${isActive(l.href) ? SIDEBAR_NAV_ACTIVE : ''}`}
+          title={c ? l.label : undefined}
+          className={rowClass(c, isActive(l.href))}
         >
-          {l.label}
+          {l.icon}
+          {!c && <span className="truncate">{l.label}</span>}
         </Link>
       ))}
-      <a href="/" target="_blank" rel="noopener" className={SIDEBAR_NAV} onClick={close}>
-        {t.navViewBlog}
+      <a href="/" target="_blank" rel="noopener" onClick={close} title={c ? t.navViewBlog : undefined} className={rowClass(c)}>
+        <IconExternal />
+        {!c && <span className="truncate">{t.navViewBlog}</span>}
       </a>
     </>
   )
 
-  const controls = (
+  // Footer controls: text rows when expanded, icon-only when collapsed (uniform
+  // within the cluster). Palette/theme have their own icon variant.
+  const controls = (c: boolean): ReactNode => (
     <>
-      <PaletteToggle lang={lang} palettes={palettes} defaultId={defaultPalette} variant="text" triggerClassName={SIDEBAR_NAV} label={t.navAppearance} />
-      <ThemeToggle lang={lang} variant="text" triggerClassName={SIDEBAR_NAV} />
-      <CacheButton className={SIDEBAR_NAV} />
+      <PaletteToggle
+        lang={lang}
+        palettes={palettes}
+        defaultId={defaultPalette}
+        variant={c ? 'icon' : 'text'}
+        triggerClassName={c ? undefined : rowClass(false)}
+        label={c ? undefined : t.navAppearance}
+      />
+      <ThemeToggle lang={lang} variant={c ? 'icon' : 'text'} triggerClassName={c ? undefined : rowClass(false)} />
+      <CacheButton className={rowClass(c)} icon={c ? <IconCache /> : undefined} collapsed={c} />
       <form action={signOut} className="contents">
-        <button className={SIDEBAR_NAV}>{t.signOut}</button>
+        <button className={rowClass(c)} title={c ? t.signOut : undefined}>
+          {c ? <IconSignOut /> : <span>{t.signOut}</span>}
+        </button>
       </form>
+      <button type="button" onClick={toggleCollapsed} className={rowClass(c)} title={c ? t.navExpand : t.navCollapse} aria-label={c ? t.navExpand : t.navCollapse}>
+        <span className={`grid place-items-center transition-transform ${c ? 'rotate-180' : ''}`}><IconChevronLeft /></span>
+        {!c && <span className="truncate">{t.navCollapse}</span>}
+      </button>
     </>
   )
 
-  const brand = (
+  const brand = (c: boolean): ReactNode => (
     <Link href="/admin" onClick={close} className="flex h-9 items-center px-3 text-xl leading-none tracking-tight">
-      vibe<span className="font-bold">blog</span>
+      {c ? <span className="font-bold">vb</span> : <>vibe<span className="font-bold">blog</span></>}
     </Link>
   )
 
   return (
     <>
-      {/* Desktop: sticky full-height left column */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-4 md:flex dark:border-neutral-800 dark:bg-neutral-900">
-        {brand}
-        <nav className="mt-4 flex flex-col gap-1">{navItems}</nav>
-        <div className="mt-auto flex flex-col gap-1 border-t border-neutral-200 pt-3 dark:border-neutral-800">{controls}</div>
+      {/* Desktop: sticky full-height left column; width animates on collapse */}
+      <aside
+        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-4 transition-[width] duration-200 md:flex dark:border-neutral-800 dark:bg-neutral-900 ${
+          collapsed ? 'md:w-16' : 'md:w-52'
+        }`}
+      >
+        {brand(collapsed)}
+        <nav className="mt-4 flex flex-col gap-1">{navItems(collapsed)}</nav>
+        <div className="mt-auto flex flex-col gap-1 border-t border-neutral-200 pt-3 dark:border-neutral-800">{controls(collapsed)}</div>
       </aside>
 
-      {/* Mobile: top bar + drawer */}
+      {/* Mobile: top bar + drawer (always icon+label) */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
-        {brand}
+        {brand(false)}
         <button
           type="button"
           className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
@@ -106,9 +164,9 @@ export function AdminSidebar({
       </header>
       {open && (
         <nav className="flex flex-col gap-1 border-b border-neutral-200 bg-white px-3 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
-          {navItems}
+          {navItems(false)}
           <span className="my-1 h-px w-full bg-neutral-200 dark:bg-neutral-700" aria-hidden />
-          {controls}
+          {controls(false)}
         </nav>
       )}
     </>

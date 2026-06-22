@@ -369,4 +369,7 @@ export type AdminStrings = {
   mcpTokenDeleted: string
   mcpLimitReached: string
   mcpCreateFailed: string
+  // sidebar collapse
+  navCollapse: string
+  navExpand: string
 }
