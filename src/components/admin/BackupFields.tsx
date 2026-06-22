@@ -52,6 +52,19 @@ export function BackupFields({ backups, onChange }: { backups: BackupSettings; o
       .catch(() => {})
   }, [])
 
+  // Re-sync when the owner returns to the tab — connecting Drive happens via a
+  // full-page OAuth round-trip, so refetch on focus to reflect it without a manual
+  // reload (listeners only — no setState in the body).
+  useEffect(() => {
+    const onFocus = () => { if (document.visibilityState === 'visible') refresh() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [refresh])
+
   // Show a toast for the Drive connect redirect result (?backup=connected|error).
   useEffect(() => {
     const p = new URLSearchParams(window.location.search).get('backup')

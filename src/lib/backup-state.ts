@@ -4,7 +4,8 @@
 // settings; the token, the Drive folder id, and last-run state live here in the
 // `backup_state` table (single row id=1). Never import this from a client component.
 
-import { db } from '@/lib/db'
+import { revalidateTag } from 'next/cache'
+import { db, DB_TAG } from '@/lib/db'
 
 export type BackupState = {
   refreshToken: string | null
@@ -79,16 +80,19 @@ export function toStatus(s: BackupState): BackupStatus {
 // Store the Drive refresh token (from the consent callback). folderId stays as-is.
 export async function setDriveAuth(refreshToken: string): Promise<void> {
   await db().from('backup_state').upsert({ id: 1, refresh_token: refreshToken })
+  revalidateTag(DB_TAG, 'max') // bust the cached read so the admin sees "connected" at once
 }
 
 // Remember the snapshot folder once created so we reuse it.
 export async function setFolderId(folderId: string): Promise<void> {
   await db().from('backup_state').upsert({ id: 1, folder_id: folderId })
+  revalidateTag(DB_TAG, 'max')
 }
 
 // Disconnect Drive: forget the token + folder (snapshots already on Drive stay).
 export async function clearDriveAuth(): Promise<void> {
   await db().from('backup_state').upsert({ id: 1, refresh_token: null, folder_id: null })
+  revalidateTag(DB_TAG, 'max')
 }
 
 // Stamp the outcome of a backup run for the admin status panel.
@@ -100,4 +104,5 @@ export async function recordRun(status: 'success' | 'error', error: string | nul
     last_error: error,
     last_size: size,
   })
+  revalidateTag(DB_TAG, 'max')
 }

@@ -236,6 +236,11 @@ are called out elsewhere (Caching, Typography, Conventions).
   (`enabled`/`intervalDays`/`keep`) lives in `settings.backups` and flows through the settings
   form; the connection + snapshot list come from owner-only `/api/backup` (returns `toStatus`,
   never the token) — same split as MCP tokens.
+- **`backup_state` writes MUST `revalidateTag(DB_TAG, 'max')`** (`backup-state.ts`:
+  `setDriveAuth`/`clearDriveAuth`/`setFolderId`/`recordRun`). The state read is Data-Cache-eligible
+  (tag `db`, 1h) and is read by BOTH `/api/backup` and the admin Overview — `force-dynamic` on one
+  route is NOT enough to dodge the *shared* Data Cache, so without busting it the admin showed stale
+  "not connected" after a successful connect (the bug that shipped in 1.0.11–1.0.13).
 - **Restore is DESTRUCTIVE** (`POST /api/backup/restore`): replaces every text table (settings
   upserted by id=1; others delete-all then insert with `id`/`search` stripped) and re-uploads
   every blob. A **pre-restore snapshot is taken first**. UI confirms before calling.
