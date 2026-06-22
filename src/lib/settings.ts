@@ -1,7 +1,6 @@
-// Site settings data access. Stored as a single row (id=1) in Postgres `settings`.
-// Reads are resilient: any failure (missing row, DB down) falls back to defaults
-// so the public header and <title> never crash. Image refs inside settings live
-// store-relative; binaries themselves stay on Vercel Blob.
+// Settings: a single row (id=1) in Postgres `settings`. Reads fall back to
+// defaults on any failure so the header/<title> never crash. Image refs stored
+// store-relative, binaries on Blob.
 
 import { cache } from 'react'
 import type { FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
@@ -51,8 +50,8 @@ function sanitizeTheme(input: unknown, fallback: ThemeSettings): ThemeSettings {
   }
 }
 
-// Back-compat: older configs stored a single `theme`. Seed it into the (then-)
-// default palette so the owner's custom colors survive the move to per-palette.
+// Back-compat: older configs stored a single `theme`; seed it into the default
+// palette so custom colors survive the move to per-palette.
 function migrateThemes(stored: Record<string, unknown>): Record<string, ThemeSettings> {
   const base = defaultThemes()
   const legacy = stored.theme
@@ -63,8 +62,8 @@ function migrateThemes(stored: Record<string, unknown>): Record<string, ThemeSet
   return base
 }
 
-// Sanitize the per-palette map: for every known preset id, merge the stored
-// colors over `base` (current or built-in). Ids outside the presets are dropped.
+// Per-palette map: merge stored colors over `base` for each known preset id;
+// unknown ids dropped.
 function sanitizeThemes(input: unknown, base: Record<string, ThemeSettings>): Record<string, ThemeSettings> {
   const o = (input ?? {}) as Record<string, unknown>
   const out: Record<string, ThemeSettings> = {}
@@ -107,9 +106,8 @@ function sanitizeMcp(input: unknown, fallback: McpSettings): McpSettings {
   return { enabled: bool(o.enabled, fallback.enabled) }
 }
 
-// Owner-authored CSS, injected raw into a <style> on public pages. Owner-only, so
-// the only real hazard is an accidental `</style>` closing the tag early — strip
-// any such sequence; everything else is passed through untouched.
+// Owner CSS injected raw into <style>. Owner-only, so the only hazard is an
+// accidental `</style>` closing the tag early — strip it; pass the rest through.
 function sanitizeCss(value: unknown): string {
   return typeof value === 'string' ? value.replace(/<\/style/gi, '') : ''
 }
@@ -162,7 +160,7 @@ function sanitizeStyle(input: unknown, fallback: TypeStyle): TypeStyle {
 }
 
 // Back-compat: the first typography shape was flat ({ base, h1..h5, lineHeight,
-// letterSpacing }). Lift any such values into the role map so an early save survives.
+// letterSpacing }); lift those into the role map so an early save survives.
 function migrateTypography(o: Record<string, unknown>, base: TypographySettings): TypographySettings {
   if (o.roles || typeof o.base !== 'number') return base
   const num = (v: unknown, f: number) => (typeof v === 'number' && Number.isFinite(v) ? v : f)
@@ -192,8 +190,8 @@ function sanitizeTypography(input: unknown, fallback: TypographySettings): Typog
   return { roles, smoothing: bool(o.smoothing, base.smoothing) }
 }
 
-// Family name -> safe CSS identifier (owner-only, but never trust raw into a
-// <style>): allow letters/digits/space/hyphen, collapse the rest.
+// Family name -> safe CSS identifier (never trust raw into <style>): allow
+// letters/digits/space/hyphen, collapse the rest.
 function sanitizeFamily(value: unknown): string {
   return typeof value === 'string' ? value.replace(/[^A-Za-z0-9 _-]/g, '').trim().slice(0, 64) : ''
 }
@@ -231,9 +229,8 @@ function fontFormat(url: string): string {
   return ext === 'woff2' ? 'woff2' : ext === 'woff' ? 'woff' : ext === 'ttf' ? 'truetype' : ext === 'otf' ? 'opentype' : ''
 }
 
-// Emit the per-role type CSS variables on :root (plus the optional font-smoothing
-// rule). Injected after globals.css (whose :root carries the same defaults), so a
-// saved scale wins while a fresh install still renders correctly with no row.
+// Per-role type CSS vars on :root (+ optional font-smoothing). Injected after
+// globals.css (same defaults), so a saved scale wins and a fresh install still works.
 export function typographyToCss(t: TypographySettings): string {
   const vars = TYPE_ROLES.map((r) => {
     const s = t.roles[r]
@@ -285,8 +282,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   mcp: { enabled: false },
 }
 
-// Resolve the canonical base URL: owner-set value wins, else the Vercel
-// production domain, else localhost (dev). Always without a trailing slash.
+// Canonical base URL: owner value, else Vercel production domain, else localhost.
 export function resolveSiteUrl(s: SiteSettings): string {
   if (s.siteUrl) return s.siteUrl
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -294,8 +290,7 @@ export function resolveSiteUrl(s: SiteSettings): string {
   return 'http://localhost:3000'
 }
 
-// The effective PWA / home-screen icon: owner's app icon wins, else the favicon,
-// else the bundled default (`/app-icon.png`). Always returns a usable URL.
+// PWA / home-screen icon: app icon → favicon → bundled `/app-icon.png`.
 export function resolveAppIcon(s: SiteSettings): string {
   return s.appIconUrl || s.faviconUrl || '/app-icon.png'
 }
@@ -306,16 +301,14 @@ function clampNumber(value: unknown, min: number, max: number, fallback: number)
   return Math.min(max, Math.max(min, Math.round(value)))
 }
 
-// Read settings merged over defaults. Returns defaults on any error. No
-// cross-request cache (`React.cache` dedupes within one render only), so a saved
-// setting is live on the next request — no cache-key versioning to maintain.
+// Settings merged over defaults; defaults on any error. `React.cache` dedupes per
+// render only, so a saved setting is live next request.
 export const getSettings = cache(async (): Promise<SiteSettings> => {
   try {
     const { data: row } = await db().from('settings').select('data').eq('id', 1).maybeSingle()
     const stored = (row?.data ?? {}) as Partial<SiteSettings>
-    // Deep-merge theme + seo so older/partial stored configs keep every key.
     const seo = sanitizeSeo(stored.seo, DEFAULT_SEO)
-    // Image refs are stored store-relative; expand to absolute Blob URLs for use.
+    // Expand store-relative image refs to absolute Blob URLs.
     return {
       ...DEFAULT_SETTINGS,
       ...stored,
@@ -348,12 +341,9 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
 export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSettings> {
   const current = await getSettings()
 
-  // Logo: keep the owner's original (logoUrl) untouched, but (re)build a small
-  // display-sized WebP (2x for retina) whenever the source or width changes — or
-  // when one doesn't exist yet (covers logos set before this feature). The old
-  // derived file is deleted so exactly one ever lives on the store. Cleared when
-  // the logo is removed or hidden. Vector/animated sources yield no derived file
-  // (renderLogo → null) and are served as-is.
+  // Logo: keep the original untouched; (re)build the small display WebP when the
+  // source/width changes or none exists yet. Delete the prior derived file (one
+  // ever exists); clear when logo removed/hidden. Vector/animated → null (served as-is).
   const showLogo = input.showLogo ?? current.showLogo
   const logoUrl = input.logoUrl ?? current.logoUrl
   const logoWidth = clampNumber(input.logoWidth, 24, 600, current.logoWidth)

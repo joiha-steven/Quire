@@ -1,7 +1,6 @@
-// Post data access. Stored in the Postgres `posts` table (metadata columns +
-// the markdown body in `content`). Image refs (body + featuredImage) are kept
-// store-relative (pathnames), re-expanded to absolute Blob URLs on read; the
-// binaries themselves live on Vercel Blob.
+// Posts: metadata columns + markdown body in the Postgres `posts` table. Image
+// refs (body + featuredImage) stored store-relative, re-expanded to absolute Blob
+// URLs on read.
 
 import { cache } from 'react'
 import type { Post, PostWithContent } from '@/types'
@@ -44,8 +43,8 @@ function rowToMeta(row: PostRow): Post {
   }
 }
 
-// PostWithContent -> row (store-relative). Reading time is recomputed here so the
-// column stays in sync with the body for list reads.
+// PostWithContent -> row (store-relative). Reading time recomputed so the column
+// stays in sync with the body for list reads.
 function toRow(post: PostWithContent): PostRow {
   return {
     slug: post.slug,
@@ -61,8 +60,8 @@ function toRow(post: PostWithContent): PostRow {
   }
 }
 
-// Stable store-relative projection of a post's meaningful fields — used to decide
-// whether a save actually changed anything (so a no-op autosave skips a revision).
+// Stable projection of meaningful fields — to decide whether a save changed
+// anything (so a no-op autosave skips a revision).
 function projection(p: PostWithContent): string {
   return JSON.stringify({
     title: p.title,
@@ -76,9 +75,8 @@ function projection(p: PostWithContent): string {
   })
 }
 
-// Full metadata list, newest first. `React.cache` dedupes within one render only;
-// every fresh request re-reads Postgres (always current, transactional — no
-// read-after-write staleness, so no cache-busting dance needed).
+// Full metadata list, newest first. `React.cache` dedupes within one render; each
+// request re-reads Postgres (always current, transactional).
 const readIndex = cache(async (): Promise<Post[]> => {
   try {
     const { data, error } = await db()
@@ -92,7 +90,7 @@ const readIndex = cache(async (): Promise<Post[]> => {
     }
     return (data as PostRow[]).map(rowToMeta)
   } catch (error) {
-    // Degrade to empty (e.g. missing env, DB unreachable) instead of 500ing.
+    // Degrade to empty (missing env, DB unreachable) instead of 500ing.
     console.error(`[ERROR] posts.readIndex: ${(error as Error).message}`)
     return []
   }
@@ -103,16 +101,14 @@ export async function getIndex(): Promise<Post[]> {
   return readIndex()
 }
 
-// Public-facing list: published + date reached only. Derives from the cached index.
+// Public list: published + date reached only.
 export async function getPublicPosts(): Promise<Post[]> {
   const all = await readIndex()
   return all.filter((p) => isPublicallyVisible(p.status, p.date))
 }
 
-// Full-text search over title + BODY via the generated `search` tsvector
-// (config 'simple': accent-sensitive, no stemming). Reaches matches INSIDE the
-// article body — the lean client index only covers title/tags. Returns published
-// + visible posts (metadata, no body), newest first. Empty/failed -> [].
+// FTS over title + BODY via the `search` tsvector (config 'simple': accent-
+// sensitive, no stemming). Returns published + visible metadata, newest first.
 export async function searchPosts(query: string): Promise<Post[]> {
   const q = query.trim()
   if (!q) return []
@@ -136,8 +132,7 @@ export async function searchPosts(query: string): Promise<Post[]> {
   }
 }
 
-// Read one full post. `React.cache` dedupes the read across generateMetadata +
-// the page render in ONE request; no cross-request cache, so content is current.
+// Read one full post. `React.cache` dedupes across generateMetadata + render in one request.
 export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
   try {
     const { data, error } = await db().from('posts').select('*').eq('slug', slug).is('deleted_at', null).maybeSingle()
@@ -150,13 +145,13 @@ export const getPost = cache(async (slug: string): Promise<PostWithContent | nul
   }
 })
 
-// Normalize incoming data into a complete Post + content pair. `excerptWords`
-// (from settings) controls the auto-excerpt length when the author leaves it blank.
+// Normalize input into a complete Post + content pair. `excerptWords` sets the
+// auto-excerpt length when the author leaves it blank.
 function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWithContent {
   const content = (input.content ?? '').trim()
   const title = (input.title ?? '').trim()
   const slug = input.slug?.trim() ? slugify(input.slug) : slugify(title)
-  // Author excerpt wins (but is length-capped); otherwise auto from the body.
+  // Author excerpt wins (length-capped); else auto from the body.
   const excerpt = input.excerpt?.trim() ? clampExcerpt(input.excerpt.trim()) : deriveExcerpt(content, excerptWords)
   return {
     title,
@@ -171,8 +166,7 @@ function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWith
   }
 }
 
-// Drop the body from a PostWithContent, adding the computed reading time so lists
-// (which never load bodies) can show it.
+// Drop the body, add computed reading time so lists (no bodies) can show it.
 function toMeta(post: PostWithContent): Post {
   const { content, ...meta } = post
   return { ...meta, readingMinutes: readingMinutes(content) }
@@ -185,11 +179,10 @@ export async function savePost(
 ): Promise<Post> {
   const { excerptLength } = await getSettings()
   const post = normalize(input, excerptLength)
-  // Reject a slug already taken by another post or page (shared URL namespace).
+  // Slug shared across posts + pages → reject collisions.
   await ensureSlugFree(post.slug, 'post', previousSlug)
 
-  // Time machine: before overwriting an existing post, snapshot the current
-  // version so the editor can restore it.
+  // Time machine: snapshot the current version before overwriting.
   const overwriting = previousSlug ?? post.slug
   const { data: existing } = await db().from('posts').select('*').eq('slug', overwriting).maybeSingle()
   if (existing) {
@@ -200,37 +193,33 @@ export async function savePost(
     }
   }
 
-  // Upsert by slug (PK). `updated_at` is bumped explicitly so it tracks edits.
+  // Upsert by slug (PK); bump `updated_at` to track edits.
   const { error } = await db()
     .from('posts')
     .upsert({ ...toRow(post), updated_at: new Date().toISOString() })
   if (error) throw new Error(`savePost: ${error.message}`)
 
-  // If the slug changed, drop the old row and move its revisions.
+  // Slug changed → drop the old row and move its revisions.
   if (previousSlug && previousSlug !== post.slug) {
     await db().from('posts').delete().eq('slug', previousSlug)
     await renameRevisions(previousSlug, post.slug)
   }
 
-  return toMeta(post) // full URLs for the client
+  return toMeta(post)
 }
 
-// Soft-delete a post: move it to the Trash (set deleted_at). The row, its body,
-// its revisions and every referenced blob are kept untouched so a published post
-// that links its images never breaks — nothing is purged until an explicit Trash
-// purge. The slug stays reserved (the row still exists) so restore always works.
+// Soft-delete (set deleted_at): row/body/revisions/blobs kept, slug stays reserved
+// so restore always works. Nothing purged until an explicit Trash purge.
 export async function deletePost(slug: string): Promise<void> {
   await db().from('posts').update({ deleted_at: new Date().toISOString() }).eq('slug', slug)
 }
 
-// Restore a trashed post back to live (clear deleted_at). The slug was reserved
-// while trashed, so no collision check is needed.
+// Restore to live (clear deleted_at); slug was reserved → no collision check.
 export async function restorePost(slug: string): Promise<void> {
   await db().from('posts').update({ deleted_at: null }).eq('slug', slug)
 }
 
-// Permanently remove a post and its revisions (hard delete, irreversible). Only
-// reached from the Trash UI ("Delete permanently" / "Empty trash").
+// Hard delete a post + its revisions (Trash UI only).
 export async function purgePost(slug: string): Promise<void> {
   await db().from('posts').delete().eq('slug', slug)
   await deleteRevisions(slug)
@@ -265,8 +254,8 @@ export async function emptyPostsTrash(): Promise<number> {
   return trashed.length
 }
 
-// Up to `limit` other public posts sharing the most tags/categories with `slug`
-// (tags weighted higher), newest first as a tiebreak. Empty when nothing shares.
+// Up to `limit` other public posts sharing the most tags/categories (tags weighted
+// ×2), newest first as tiebreak. Empty when nothing shares.
 export async function getRelatedPosts(slug: string, limit = 3): Promise<Post[]> {
   const all = await getPublicPosts()
   const current = all.find((p) => p.slug === slug)
@@ -299,9 +288,8 @@ function applyTerm(list: string[], name: string, newName: string | null): string
   return out
 }
 
-// Rename (newName set) or remove (newName null) a category/tag across EVERY post.
-// Categories/tags are array columns, so only the affected rows' columns change —
-// no body rewrite. Returns how many posts were changed.
+// Rename (newName set) or remove (null) a category/tag across EVERY post. Array
+// columns → only affected rows change, no body rewrite. Returns posts changed.
 export async function updateTerm(kind: TermKind, name: string, newName: string | null): Promise<number> {
   const field = kind === 'category' ? 'categories' : 'tags'
   const clean = newName?.trim() || null

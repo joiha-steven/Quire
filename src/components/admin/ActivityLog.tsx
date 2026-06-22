@@ -60,9 +60,9 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
       ) : (
         <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-left text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+            <thead className="bg-neutral-50 text-left text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400 whitespace-nowrap">
               <tr>
-                <th className="px-4 py-2 font-medium whitespace-nowrap">{t.logColTime}</th>
+                <th className="px-4 py-2 font-medium">{t.logColTime}</th>
                 <th className="px-4 py-2 font-medium">{t.logColAction}</th>
                 <th className="hidden px-4 py-2 font-medium sm:table-cell">{t.logColDetail}</th>
               </tr>

@@ -1,38 +1,28 @@
-// Single source of truth for cache invalidation. Every admin write calls exactly
-// ONE function here, so the "what to purge" decision lives in one place and is
-// always a SUPERSET of the surfaces a change can appear on — it never under-purges,
-// which is what made earlier per-tag bookkeeping go stale ("applies late" bugs).
+// Single source of truth for cache invalidation. Every admin write calls ONE
+// function here, always a SUPERSET of the affected surfaces (never under-purges).
+// Not `revalidatePath('/', 'layout')` everywhere because that dumps every post
+// DETAIL page too (cold render for the next visitor of each); these refresh only
+// LIST/aggregate surfaces, leaving unrelated bodies warm.
 //
-// Why not just `revalidatePath('/', 'layout')` everywhere: that also dumps every
-// post DETAIL page, so after any edit the first visitor to each of N posts pays a
-// cold render. These helpers refresh every LIST/aggregate surface a post can show
-// on, while leaving unrelated post bodies warm.
-//
-// The ONE accepted staleness: the "related posts" box on OTHER post detail pages.
-// Adding/editing post X does not purge post Y's page, so if X newly shares a tag
-// with Y, Y's related list won't include X until Y's own ISR window (<=1h) or its
-// next save. This is cosmetic, self-heals, and the admin "Clear all cache" button
-// (revalidateEverything + warm) is the instant full-sync escape hatch.
+// ONE accepted staleness: the "related posts" box on OTHER posts. Editing X
+// doesn't purge Y, so Y's related list updates only on Y's ISR window (<=1h) /
+// next save. Cosmetic, self-heals; "Clear all cache" is the full-sync escape hatch.
 
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { getPublicPosts } from '@/lib/posts'
 import { getPublicPages } from '@/lib/pages'
 import { DB_TAG } from '@/lib/db'
 
-// Invalidate every cache-eligible Supabase read so the NEXT render of any purged
-// page reads fresh from Postgres (never a stale Data Cache entry). One coarse tag,
-// revalidated on every write — no per-key bookkeeping to drift. Pages still only
-// re-render when their PATH is purged below; this just guarantees fresh data then.
+// Invalidate every cache-eligible Supabase read so the next render of a purged
+// page reads fresh from Postgres. One coarse tag; pages still re-render only when
+// their PATH is purged below.
 function freshenData(): void {
-  // Next 16 requires a second arg; 'max' purges the tag across all cache profiles.
+  // Next 16 requires a second arg; 'max' purges across all cache profiles.
   revalidateTag(DB_TAG, 'max')
 }
 
-// Every route that lists or aggregates post metadata. A post's
-// title/excerpt/date/taxonomy shows on ALL of these, so any post create/edit/
-// delete must refresh them. The bracketed dynamic forms (+ 'page') cover every
-// slug and every pagination page in one call — no per-value list to drift.
-// (/search is force-dynamic, so it is always fresh and needs no purge.)
+// Every route that lists/aggregates post metadata. Bracketed dynamic forms (+
+// 'page') cover all slugs + pagination in one call. (/search is force-dynamic.)
 function revalidatePostLists(): void {
   revalidatePath('/') // home, page 1
   revalidatePath('/page/[n]', 'page') // home pagination
@@ -45,15 +35,13 @@ function revalidatePostLists(): void {
   revalidatePath('/llms.txt') // AI content index (ISR-cached)
 }
 
-// A brand-new post: not on its own detail URL yet (renders on first visit), but
-// it appears on every list surface immediately.
+// New post: not on its own URL yet (renders on first visit); refresh the lists.
 export function revalidateNewPost(): void {
   freshenData()
   revalidatePostLists()
 }
 
-// An edited or deleted post: refresh its own detail page (old + new slug when the
-// slug changed) AND every list surface (its metadata lives there too).
+// Edited/deleted post: refresh its own page (old + new slug) AND every list surface.
 export function revalidatePost(slug: string, previousSlug?: string): void {
   freshenData()
   revalidatePath(`/${slug}`)
@@ -61,8 +49,7 @@ export function revalidatePost(slug: string, previousSlug?: string): void {
   revalidatePostLists()
 }
 
-// Static pages are standalone: a page appears only on its own URL (+ sitemap /
-// llms index), never on post lists or taxonomy. Purge just its path(s) and those.
+// Pages are standalone: only their own URL + sitemap/llms, never post lists/taxonomy.
 export function revalidatePage(slug: string, previousSlug?: string): void {
   freshenData()
   revalidatePath(`/${slug}`)
@@ -71,16 +58,13 @@ export function revalidatePage(slug: string, previousSlug?: string): void {
   revalidatePath('/llms.txt')
 }
 
-// Settings (theme, menu, title, SEO toggles, siteUrl) affect EVERY rendered page,
-// so this is the one case that still purges the whole site under the root layout.
+// Settings affect EVERY page → purge the whole site under the root layout.
 export function revalidateEverything(): void {
   freshenData()
   revalidatePath('/', 'layout')
 }
 
-// Re-render the home page + the newest detail pages so the cache is primed after a
-// purge. Best-effort: a failed warm fetch never throws. `origin` comes from the
-// incoming request. Shared by the "Clear all cache" button and settings save.
+// Prime the cache after a purge (home + newest pages). Best-effort, never throws.
 const WARM_LIMIT = 12 // home + this many of the newest posts/pages
 export async function warmCache(origin: string, limit = WARM_LIMIT): Promise<number> {
   const [posts, pages] = await Promise.all([getPublicPosts(), getPublicPages()])
