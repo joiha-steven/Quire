@@ -115,6 +115,11 @@ body {
   letter-spacing: var(--ls-body, 0em);
   background: var(--c-bg);
   color: var(--c-text);
+  /* viewport-fit=cover (root layout) lets the page fill under the notch / Dynamic
+     Island so fixed top bars (reading progress) reach the true top edge. Re-pad the
+     content past the safe area here so the header/text never sit under the island.
+     env() is 0 on devices without insets, so this is a no-op there. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
 }
 
 /* Selection feels intentional and on-brand (monochrome). */

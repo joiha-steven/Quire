@@ -424,6 +424,11 @@ are called out elsewhere (Caching, Typography, Conventions).
 - iOS home-screen icon = the **apple-touch-icon** (`generateMetadata` in `app/layout.tsx`);
   standalone via the manifest's `display:standalone` (iOS 16.4+). Status bar via
   `generateViewport` → `themeColor`.
+- **Notch / Dynamic Island:** `generateViewport` sets `viewportFit: 'cover'` so the page fills
+  under the island and fixed top bars (the reading-progress bar) reach the true screen edge;
+  `body` re-pads with `env(safe-area-inset-*)` (globals.css) so the header/content clear the
+  island. `env()` is 0 on devices without insets — no effect there. Don't remove one without the
+  other (cover alone tucks the header under the island; padding alone leaves the bar below it).
 - App icon order: `appIconUrl` → `faviconUrl` → bundled `public/app-icon.png`.
 - **Favicon: ONE `<link rel="icon">`, driven only by `generateMetadata`** (`settings.faviconUrl ||
   '/favicon.ico'`). The default lives in **`public/favicon.ico`, NOT `app/`** — an `app/favicon.ico`
