@@ -7,12 +7,18 @@ current design is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Goal
 
-Make vibeblog something other people can actually run and live in — not just the
-author's personal instance. Three tracks:
+Make vibeblog something other people can actually run and live in - not just the
+author's personal instance. Near-term tracks:
 
 1. Run anywhere: **Vercel or Docker**, from one codebase.
 2. Publish from a **Markdown note app** (Obsidian, then Craft).
 3. Optional **AI assist** in the editor (titles, tags, drafting, images).
+
+Long horizon (after Docker ships): a **free multi-tenant SaaS** at `vibeblog.app`
+(see Phase 7). The whole point of the SaaS is the *opposite* of lock-in - it is "the
+same open-source app, hosted for you", and any blog exports to a single snapshot that
+re-installs on Docker or a Vercel + Supabase stack with one button. Hosted is a
+convenience, never a trap.
 
 ## Architecture fit (why this is mostly additive)
 
@@ -34,6 +40,12 @@ So the roadmap is feature work on a sound base, not a rewrite.
 
 ## Decisions locked
 
+- **No lock-in (hard principle).** Portability is a first-class feature, not an
+  afterthought. A blog's full state is one portable snapshot (the existing Backup
+  `.tar.gz` = `db.json` + all binaries + manifest), and that same format is the import
+  path on every target. The SaaS must always offer one-button export to self-host, with
+  no proprietary data trapped server-side. Transparency over retention - never hold a
+  user's content hostage.
 - **Storage is pluggable.** Self-host is fully independent of Vercel — default S3-
   compatible (MinIO / Cloudflare R2 / Backblaze) or local filesystem; Vercel Blob
   stays the default on Vercel.
@@ -130,9 +142,56 @@ gates the whole thing (re-added; removed when the giscus spike was dropped).
 **i18n:** form labels, validation/awaiting-moderation messages, and the moderation UI
 go through `src/locales/` (+ admin) like everything else.
 
+### Phase 7 — Multi-tenant SaaS `[planned, needs Docker (Phases 1-2)]`
+
+A **free, hosted** vibeblog at `vibeblog.app`: same open-source app, run for you. Built
+only AFTER Docker ships, so every hosted blog has a guaranteed eject path - hosted is a
+convenience, not a trap (see "No lock-in" in Decisions locked). This is the **model-A**
+choice: one shared stack, many blogs, isolated by `tenant_id` (true multi-tenant, not
+deploy-per-user). It is a large rewrite of the data layer, accepted deliberately.
+
+**Tenancy (the foundation, biggest lift):**
+- New `tenants` (id, owner_user_id, subdomain, custom_domain, plan, status) + `users`
+  (auth identity, owner of a tenant). Add `tenant_id` to EVERY content table (`posts`
+  `pages` `post_revisions` `media` `files` `settings` `mcp_tokens` `backup_state`
+  `activity_log` `analytics_*`).
+- `settings` drops the hardcoded `id=1` → one row per tenant.
+- **Cache tags go per-tenant** (`db:<tenantId>` not the global `db`), or one user's save
+  purges everyone's cache.
+- **Blob paths get a tenant prefix** (`t/<tenantId>/...`); URLs stay deterministic from
+  the one store token. Easiest part - blob I/O is already centralized.
+- **Security:** the app uses `service_role` today (bypasses RLS). Multi-tenant requires
+  either per-request clients scoped by JWT claims, or enforcing `tenant_id` in every
+  query. This is the most sensitive surface - get it wrong and tenants read each other.
+
+**Auth & routing:**
+- Open signup, owner-per-tenant (replaces the single `AUTHORIZED_EMAIL`).
+- Wildcard `*.vibeblog.app`; middleware resolves the tenant from the host. Admin at
+  `app.vibeblog.app`. Custom domains via the Vercel Domains API + automated SSL.
+
+**Portability backbone (the headline promise):**
+- Reuse Backup/Restore as the universal interchange format. **Export** = the tenant's
+  slice as a `.tar.gz`; **Import** = restore that snapshot into a fresh Docker or
+  Vercel + Supabase install. Make import a first-class onboarding step on self-host.
+- One button to leave, no proprietary state left behind.
+
+**Plans (this is a hobby, never for profit):**
+- **Free, for everyone**: 1GB storage AND custom domain - no questions, no upsell games,
+  no feature held back. The free tier is the product; the operator's own salary covers
+  its running cost. Custom domain is obviously free.
+- **Paid, only for heavy/professional users who outgrow 1GB**: buy more storage for
+  yourself when you genuinely need it. Priced later, **just enough to cover cost, kept
+  super cheap** - it offsets storage, it does not make money.
+
+**Cost & abuse guardrails (make-or-break for "free"):**
+- Per-blog storage quota + rate limits; reap/flag long-dead free blogs.
+- Hosting user content = real liability: ToS, content reporting, a per-tenant kill
+  switch, DMCA path. Plan this in, not after.
+
 ## Accepted limitations (current design)
 
-- Single author (one `AUTHORIZED_EMAIL`). No multi-user / roles planned.
+- Single author (one `AUTHORIZED_EMAIL`) per instance. No multi-user / roles in the
+  self-host build - multi-tenant arrives only in the SaaS (Phase 7), which lifts this.
 - `_index.json` is read in full per list regeneration — fine to the low hundreds of
   posts; sharding would be needed well beyond that.
 - Related-posts box on other posts can lag up to the ISR window after a new post
