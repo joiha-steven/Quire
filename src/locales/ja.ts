@@ -24,6 +24,9 @@ const ja = {
   relatedTitle: '関連記事',
   notFoundTitle: 'ページが見つかりません',
   notFoundText: 'お探しのページは存在しないか、移動されました。',
+  errorTitle: '問題が発生しました',
+  errorText: '予期しないエラーが発生しました。もう一度お試しください。',
+  tryAgain: '再試行',
   backHome: 'ホームに戻る',
   backToTop: 'トップへ戻る',
 } satisfies Dict

@@ -7,6 +7,11 @@ import { listTokens, createToken } from '@/lib/mcp/tokens'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
+// Admin-only live data: the GET list must reflect the DB immediately (creates +
+// OAuth mints + deletes happen out-of-band). Without this, db() GET reads are
+// Data-Cache-eligible (tag 'db', 1h) → the list shows deleted/stale tokens.
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
   try {

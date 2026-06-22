@@ -6,6 +6,10 @@ import type { NextRequest } from 'next/server'
 import { findUnusedMedia } from '@/lib/media-usage'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
+// Admin-only live audit: db() GET reads are Data-Cache-eligible (tag 'db', 1h);
+// force a live read so the "unused" set reflects the current DB.
+export const dynamic = 'force-dynamic'
+
 // Reads every post/page body plus revision snapshots to collect references.
 export const maxDuration = 60
 

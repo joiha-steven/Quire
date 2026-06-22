@@ -24,6 +24,9 @@ const ko = {
   relatedTitle: '관련 게시물',
   notFoundTitle: '페이지를 찾을 수 없습니다',
   notFoundText: '찾으시는 페이지가 존재하지 않거나 이동되었습니다.',
+  errorTitle: '문제가 발생했습니다',
+  errorText: '예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.',
+  tryAgain: '다시 시도',
   backHome: '홈으로',
   backToTop: '맨 위로',
 } satisfies Dict

@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.8 — fix stale admin lists + 5xx/error pages)
+- **fix(admin): admin list endpoints showed STALE data (the real "can't delete a token" bug).**
+  `db()` GET reads are Data-Cache-eligible (tag `db`, 1h). The admin client-fetched list routes
+  weren't `force-dynamic`, so after a delete/upload the cached list still showed the old rows — the
+  MCP token list kept showing a just-deleted token, so re-clicking Delete was a no-op on a dead id
+  (only toggling MCP off, which calls `revalidateTag('db')`, refreshed it). Marked **`force-dynamic`**
+  on every owner-only list route so they always read live: `mcp/tokens`, `files`, `media`,
+  `media/unused`, `posts/[slug]/revisions`. Deleting a connection from the admin now takes effect
+  immediately, as intended.
+- **fix(admin): corrected `api/media` GET header comment** (said "public read" — it is owner-only).
+- **feat: 5xx / error pages now match the 404.** Added `error.tsx` (per-segment) + `(blog)/error.tsx`
+  (keeps the public shell) + `global-error.tsx` (root-layout failures), all rendering a shared
+  `ErrorView` styled identically to the 404 (number + title + text + Try again / Back home, on theme
+  tokens). New locale keys `errorTitle`/`errorText`/`tryAgain` in all 6 languages. `v1.0.8`.
+
 ## 2026-06-22 (v1.0.7 — MCP: admin is the sole authority over a connection)
 - **change(mcp): OAuth tokens are NEVER auto-deleted.** Removed the rolling-window prune
   (`MAX_OAUTH_TOKENS`) — the system no longer removes connections behind the owner's back.

@@ -1,8 +1,12 @@
-// GET /api/media -> media manifest (public read)
+// GET /api/media -> media manifest (owner only; the admin media library reads it).
 
 import type { NextRequest } from 'next/server'
 import { getMedia } from '@/lib/media'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
+
+// Admin-only live data: db() GET reads are Data-Cache-eligible (tag 'db', 1h), so
+// without this the library stays stale after an upload/delete. Force a live read.
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
