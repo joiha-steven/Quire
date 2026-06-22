@@ -106,9 +106,16 @@ create table if not exists public.mcp_tokens (
   token_hash   text not null unique,
   prefix       text not null default '',
   created_at   timestamptz not null default now(),
+  -- Tokens expire 180 days after creation; the app sets this explicitly on insert
+  -- and rejects an expired bearer. (Connectors silently re-authorize; a manual
+  -- token must be recreated.)
+  expires_at   timestamptz not null default (now() + interval '180 days'),
   last_used_at timestamptz
 );
 create index if not exists mcp_tokens_hash_idx on public.mcp_tokens (token_hash);
+-- Upgrade path: add expires_at to a pre-existing mcp_tokens table (no-op on fresh installs).
+alter table public.mcp_tokens
+  add column if not exists expires_at timestamptz not null default (now() + interval '180 days');
 
 -- ----- activity_log ----------------------------------------------------------
 create table if not exists public.activity_log (

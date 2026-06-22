@@ -310,6 +310,8 @@ const zh = {
   mcpColName: '名称',
   mcpColCreated: '创建时间',
   mcpColLastUsed: '最近使用',
+  mcpColExpires: '过期时间',
+  mcpExpired: '已过期',
   mcpRefresh: '刷新',
   mcpNeverUsed: '从未使用',
   mcpConfirmDelete: '删除此令牌？正在使用它的客户端将停止工作。',
