@@ -6,7 +6,7 @@ import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
 import { paletteOptions } from '@/lib/themes'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
-import { AdminHeader } from '@/components/admin/AdminHeader'
+import { AdminSidebar } from '@/components/admin/AdminSidebar'
 
 // The entire admin is uncached — every view reads the current Blob state, so the
 // editor/media library/settings never show a stale snapshot of your own edits.
@@ -31,16 +31,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AdminI18nProvider lang={language}>
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-        <AdminHeader
+      <div className="min-h-screen bg-neutral-50 md:flex dark:bg-neutral-950">
+        <AdminSidebar
           lang={language}
           signOut={signOutAction}
           palettes={paletteOptions(settings.themes)}
           defaultPalette={settings.themePreset}
         />
-        {/* Wider admin shell so the editor's writing column can match the public
-            single-post width with room to spare for the settings panel. */}
-        <div className="mx-auto max-w-7xl px-6 py-8">{children}</div>
+        {/* Main column to the right of the sidebar. Wide enough for the editor's
+            writing column + the settings panel. */}
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+        </main>
       </div>
     </AdminI18nProvider>
   )

@@ -1,4 +1,4 @@
-# vibe**blog** (v1.0.0)
+# vibe**blog** (v1.0.1)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
@@ -13,7 +13,7 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
 - **PWA:** installable to the iPhone/Android home screen, launches standalone (no service worker / no offline by design)
 - **Admin:** Overview with a System panel (hosting/region/env + database + storage); a toggleable activity log (Admin → Log) recording every save/upload/delete
 - **Trash:** every delete (posts, pages, media, files) is a recoverable soft delete; an Admin → Trash area restores or permanently removes items per type — nothing auto-purges
-- **MCP server (optional):** a remote MCP endpoint (`/api/mcp`) lets an AI agent (Claude, ChatGPT) write and manage the blog with the same data layer as the admin UI — one full-access token + a thin OAuth layer; sensitive settings are blocked
+- **MCP server (optional):** a remote MCP endpoint (`/api/mcp`) lets an AI agent (Claude, ChatGPT) write and manage the blog with the same data layer as the admin UI. Toggle it on in Admin → Settings → Advanced and generate up to 5 named access tokens there (shown once, hashed at rest, revocable); a thin OAuth layer covers connectors that need it; sensitive settings are blocked
 - **UI languages:** en (default), vi, de, ja, zh, ko
 - **Styles:** Tailwind CSS v4
 - **Deploy:** Vercel (Docker self-host is on the [roadmap](./ROADMAP.md))
@@ -88,8 +88,7 @@ See [`.env.example`](./.env.example). In short:
 | `SUPABASE_SERVICE_ROLE_KEY`       | Supabase service_role key (secret, server-only) |
 | `BLOB_READ_WRITE_TOKEN`           | Vercel Blob read/write token              |
 | `CRON_SECRET`                     | Protects `/api/cron` (optional)           |
-| `MCP_TOKEN`                       | Full-access token enabling the MCP server `/api/mcp` (optional; unset = off) |
-| `MCP_OAUTH_SECRET`                | Signs MCP OAuth codes (optional; falls back to `AUTH_SECRET`) |
+| `MCP_OAUTH_SECRET`                | Signs MCP OAuth codes (optional; falls back to `AUTH_SECRET`). The MCP server is enabled and its tokens generated in Admin → Settings → Advanced — no token env var |
 
 Enable at least one provider; each loads only when its credentials are set. For
 production, register the same callback URLs against your live domain (see

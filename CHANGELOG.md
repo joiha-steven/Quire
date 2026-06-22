@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.1 — admin-managed MCP + left sidebar)
+- **feat(mcp): MCP is now toggled + tokenized from the admin.** Replaced the single `MCP_TOKEN`
+  env var with an Admin → Settings → Advanced panel: an **enable toggle** (`settings.mcp.enabled`)
+  and an **access-token manager** — generate up to **5 named tokens**, each shown **once** on
+  creation (only its SHA-256 hash is stored in a new `mcp_tokens` table), with last-used time and
+  one-click revoke. `verifyMcpToken` now checks the bearer's hash against live tokens while the
+  toggle is on. The OAuth `/token` exchange mints a managed token (named "OAuth connector",
+  refreshed per connect) instead of returning a static secret. New owner-only
+  `/api/mcp/tokens` (+ `/[id]`) routes; activity actions `mcp.token.create|delete`.
+- **feat(admin): left vertical sidebar nav.** The admin top bar grew too crowded, so navigation
+  moved to a sticky left sidebar (brand → links → theme/palette/cache/sign-out pinned at the
+  bottom), with active-route highlighting; it collapses to a hamburger drawer on mobile. New
+  `AdminSidebar` (replaces `AdminHeader`); shared `SIDEBAR_NAV` constant keeps every item uniform.
+- **change(settings): "Text rendering" moved from Advanced → Appearance.** Font smoothing now sits
+  with the other appearance controls; Advanced holds the MCP panel + custom CSS. `v1.0.1`.
+
 ## 2026-06-22 (v1.0.0 — MCP server + Trash)
 First stable release: the blog can now be operated by an AI agent over MCP, and every
 delete is recoverable via a Trash.

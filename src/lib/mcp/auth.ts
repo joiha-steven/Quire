@@ -1,23 +1,25 @@
-// MCP auth: a single full-access bearer token (`MCP_TOKEN`) plus a thin OAuth 2.1
-// layer so connectors that require OAuth discovery (ChatGPT, Claude) can obtain
-// that token after the OWNER approves. The OAuth flow issues short-lived,
-// HMAC-signed authorization codes (with PKCE); the token endpoint then hands back
-// the static MCP_TOKEN as the access token — "one token, full power". There is no
-// user database: the only identity is the configured blog owner (NextAuth).
-//
-// SERVER-ONLY. The token is the keys to the whole admin surface — never expose it.
+// MCP auth: access tokens are admin-managed (see tokens.ts) and the endpoint is
+// gated by a settings toggle. The thin OAuth 2.1 layer lets connectors that
+// require OAuth obtain a token after the OWNER approves: the /token exchange mints
+// a managed token and hands it back (see /api/mcp/token). The only identity is the
+// configured blog owner (NextAuth). SERVER-ONLY.
 
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto'
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
+import { getSettings } from '@/lib/settings'
+import { verifyTokenHash } from '@/lib/mcp/tokens'
 
-const token = (): string => process.env.MCP_TOKEN ?? ''
-// The OAuth codes are signed with MCP_OAUTH_SECRET, falling back to AUTH_SECRET so
-// a self-hoster only has to set one secret.
+// OAuth codes are signed with MCP_OAUTH_SECRET, falling back to AUTH_SECRET so a
+// self-hoster only has to set one secret.
 const secret = (): string => process.env.MCP_OAUTH_SECRET || process.env.AUTH_SECRET || ''
 
-// MCP is enabled only when a token is configured; otherwise every entry point 401/503s.
-export function mcpConfigured(): boolean {
-  return token() !== '' && secret() !== ''
+// MCP is live only when the owner has switched it on (Admin → Settings → Advanced).
+export async function mcpEnabled(): Promise<boolean> {
+  try {
+    return (await getSettings()).mcp.enabled
+  } catch {
+    return false
+  }
 }
 
 // Constant-time string compare (lengths may differ → false without leaking).
@@ -27,10 +29,12 @@ function safeEq(a: string, b: string): boolean {
   return ab.length === bb.length && timingSafeEqual(ab, bb)
 }
 
-// withMcpAuth verifyToken: accept the configured MCP_TOKEN as a full-access bearer.
+// withMcpAuth verifyToken: accept any live managed token while MCP is enabled.
 export async function verifyMcpToken(_req: Request, bearer?: string): Promise<AuthInfo | undefined> {
-  if (!bearer || !mcpConfigured() || !safeEq(bearer, token())) return undefined
-  return { token: bearer, clientId: 'owner', scopes: ['full'] }
+  if (!bearer || !(await mcpEnabled())) return undefined
+  const hit = await verifyTokenHash(bearer)
+  if (!hit) return undefined
+  return { token: bearer, clientId: `token:${hit.id}`, scopes: ['full'] }
 }
 
 // ----- thin OAuth: HMAC-signed authorization codes (carry PKCE challenge) -------
@@ -62,9 +66,4 @@ export function verifyCode(code: string, redirectUri: string, verifier: string):
   if (Date.now() > p.exp || p.redirectUri !== redirectUri) return false
   const computed = createHash('sha256').update(verifier).digest('base64url')
   return safeEq(computed, p.challenge)
-}
-
-// The access token handed out after a valid code exchange = the static MCP_TOKEN.
-export function accessToken(): string {
-  return token()
 }

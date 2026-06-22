@@ -18,6 +18,8 @@ export type ActivityAction =
   | 'post.restore' | 'post.purge' | 'page.restore' | 'page.purge'
   | 'media.restore' | 'media.purge' | 'file.restore' | 'file.purge'
   | 'trash.empty'
+  // MCP access tokens (Admin → Settings → Advanced).
+  | 'mcp.token.create' | 'mcp.token.delete'
 
 export type ActivityEntry = {
   id: number

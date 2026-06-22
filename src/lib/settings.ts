@@ -4,7 +4,7 @@
 // store-relative; binaries themselves stay on Vercel Blob.
 
 import { cache } from 'react'
-import type { FeatureSettings, FontFace, FontSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
+import type { FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
 import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
 import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
@@ -100,6 +100,11 @@ function sanitizeFeatures(input: unknown, fallback: FeatureSettings): FeatureSet
     progressBar: bool(o.progressBar, fallback.progressBar),
     activityLog: bool(o.activityLog, fallback.activityLog),
   }
+}
+
+function sanitizeMcp(input: unknown, fallback: McpSettings): McpSettings {
+  const o = (input ?? {}) as Partial<McpSettings>
+  return { enabled: bool(o.enabled, fallback.enabled) }
 }
 
 // Owner-authored CSS, injected raw into a <style> on public pages. Owner-only, so
@@ -277,6 +282,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   customFont: DEFAULT_FONT,
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
+  mcp: { enabled: false },
 }
 
 // Resolve the canonical base URL: owner-set value wins, else the Vercel
@@ -330,6 +336,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       })(),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
+      mcp: sanitizeMcp(stored.mcp, DEFAULT_SETTINGS.mcp),
     }
   } catch (error) {
     console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
@@ -388,6 +395,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     customFont: sanitizeFont(input.customFont, current.customFont),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
+    mcp: sanitizeMcp(input.mcp, current.mcp),
   }
   // Persist image refs store-relative (collapse); keep `next` absolute for the client.
   const stored: SiteSettings = {
