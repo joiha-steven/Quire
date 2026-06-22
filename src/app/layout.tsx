@@ -20,10 +20,13 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(resolveSiteUrl(settings)),
     title: { default: title, template: `%s · ${title}` },
     description: description || undefined,
-    // Owner-set favicon overrides the bundled app/favicon.ico. `apple` is the
+    // ONE favicon, driven entirely here: the owner's, else the bundled default in
+    // public/. The default lives in public/ (NOT app/) on purpose — an app/favicon.ico
+    // is auto-injected by Next IN ADDITION to this, which emitted two conflicting
+    // <link rel="icon"> and let the browser pick the wrong one. `apple` is the
     // home-screen icon iOS uses on "Add to Home Screen" (it ignores the manifest).
     icons: {
-      icon: settings.faviconUrl || undefined,
+      icon: settings.faviconUrl || '/favicon.ico',
       apple: resolveAppIcon(settings),
     },
     // Standalone launch: Android reads the manifest's `display:standalone`; iOS

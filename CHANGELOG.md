@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-06-22 (fix: duplicate favicon)
+- **fix(favicon): emit exactly one `<link rel="icon">`.** Next auto-injects a `<link>` for
+  `app/favicon.ico` **in addition to** the metadata `icons.icon`, so the page shipped two
+  conflicting favicons (the bundled `vb` default declaring `sizes="256x256"` + the owner's custom
+  one) and browsers often picked the wrong/bundled one — the custom favicon looked like it wasn't
+  loading. Moved the default to `public/favicon.ico` (no auto-inject) and drive the icon solely via
+  `generateMetadata` (`settings.faviconUrl || '/favicon.ico'`). `v0.9.29`.
+
 ## 2026-06-22 (audit fixes: self-hosted font, link hardening)
 - **fix(build): self-host Inter — no more Google Fonts dependency.** Replaced `next/font/google`
   (which fetched Inter at build → broke offline / restricted-CI / Google-outage builds) with

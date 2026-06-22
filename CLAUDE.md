@@ -315,6 +315,10 @@ are called out elsewhere (Caching, Typography, Conventions).
   standalone via the manifest's `display:standalone` (iOS 16.4+). Status bar via
   `generateViewport` → `themeColor`.
 - App icon order: `appIconUrl` → `faviconUrl` → bundled `public/app-icon.png`.
+- **Favicon: ONE `<link rel="icon">`, driven only by `generateMetadata`** (`settings.faviconUrl ||
+  '/favicon.ico'`). The default lives in **`public/favicon.ico`, NOT `app/`** — an `app/favicon.ico`
+  is auto-injected by Next ON TOP of the metadata icon, which shipped two conflicting favicons.
+  Don't re-add `app/favicon.ico`.
 
 ## Conventions (HARD RULES)
 
