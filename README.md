@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.0.17`
+# vibe**blog** &nbsp;`v1.0.18`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -155,7 +155,7 @@ npx auth secret                   # AUTH_SECRET
 npm run dev                       # http://localhost:3000/admin
 ```
 
-Point the same Supabase + Blob at local, and add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm run build` + `npm run lint` must both pass (strict `tsc`, no `any`).
+Point the same Supabase + Blob at local, and add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm run check:all` must pass before any change is done (typecheck + lint + invariant checks + the vitest seam tests; offline, no creds); `npm run build` for a release.
 
 ---
 

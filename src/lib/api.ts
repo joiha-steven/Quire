@@ -15,7 +15,7 @@ export function fail(error: string, status = 400): Response {
 // Standard request/response log line.
 export function logRequest(req: NextRequest, status: number, start: number): void {
   const { pathname } = new URL(req.url)
-  console.log(`[${req.method}] ${pathname} — ${status} — ${Date.now() - start}ms`)
+  console.log(`[${req.method}] ${pathname} — ${status} — ${Date.now() - start}ms`) // check:allow-console -- intentional request access log
 }
 
 // Standard error log line.

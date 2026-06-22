@@ -3,7 +3,6 @@
 // -thumb.webp. Vector/anim (svg/gif/webp) stored as-is. Variant URLs derived by
 // convention from the original's name.
 
-import sharp from 'sharp'
 import { cache } from 'react'
 import type { MediaItem } from '@/types'
 import {
@@ -11,11 +10,9 @@ import {
 } from '@/lib/blob'
 import { db } from '@/lib/db'
 import { slugify } from '@/lib/utils'
-
-const RASTER = /^image\/(jpeg|png)$/ // full responsive pipeline
-const PASSTHROUGH = /^image\/(svg\+xml|gif|webp)$/ // stored as-is, no variants
-const SIZES = [1024, 1600] as const // display widths (in-column / wider)
-const THUMB_WIDTH = 400
+import {
+  imageSize, safeSize, makeThumb, makeDisplay, RASTER, PASSTHROUGH, SIZES,
+} from '@/lib/image'
 
 // A row as stored in Postgres (store-relative paths).
 type MediaRow = {
@@ -68,48 +65,6 @@ async function listMedia(): Promise<MediaItem[]> {
 // Library list, newest first. `React.cache` dedupes within one render; each
 // request re-reads Postgres so the library is always fresh.
 export const getMedia = cache(listMedia)
-
-type Variant = { suffix: string; data: Buffer; contentType: string }
-
-// From the original bytes, read pixel dimensions (auto-oriented).
-async function imageSize(original: Buffer): Promise<{ width: number; height: number }> {
-  const meta = await sharp(original, { failOn: 'none' }).rotate().metadata()
-  return { width: meta.width ?? 0, height: meta.height ?? 0 }
-}
-
-// Pixel dimensions for any image we can decode (raster + webp/gif, and most svg).
-async function safeSize(buf: Buffer): Promise<{ width?: number; height?: number }> {
-  try {
-    const { width, height } = await imageSize(buf)
-    return width && height ? { width, height } : {}
-  } catch {
-    return {}
-  }
-}
-
-// Small library thumbnail — cheap, made on upload so the grid renders at once.
-async function makeThumb(original: Buffer): Promise<Buffer> {
-  return sharp(original, { failOn: 'none' })
-    .rotate()
-    .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
-    .webp({ quality: 70 })
-    .toBuffer()
-}
-
-// The heavy display set (AVIF + WebP @ each size) — deferred to AFTER save so the
-// save request never blocks on the AVIF encode (the original always renders).
-async function makeDisplay(original: Buffer): Promise<Variant[]> {
-  const { width: ow } = await imageSize(original)
-  const files: Variant[] = []
-  for (const w of SIZES) {
-    const pipe = sharp(original, { failOn: 'none' })
-      .rotate()
-      .resize({ width: ow ? Math.min(w, ow) : w, withoutEnlargement: true })
-    files.push({ suffix: `-${w}.webp`, data: await pipe.clone().webp({ quality: 80 }).toBuffer(), contentType: 'image/webp' })
-    files.push({ suffix: `-${w}.avif`, data: await pipe.clone().avif({ quality: 50 }).toBuffer(), contentType: 'image/avif' })
-  }
-  return files
-}
 
 // All taken media pathnames, for collision-free naming. Unions DB rows with
 // ACTUAL store contents (listBlobs) so derived thumb/variant names are covered too.

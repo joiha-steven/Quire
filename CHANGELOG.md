@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.0.18 — verification is one command now, not a reading session)
+- **build: `npm run check:all` is the Definition of Done** — typecheck + lint + four static
+  invariant checks (`check:routes`, `check:filesize`, `check:no-any`, `check:token-bust`) + the
+  vitest suite, all offline/no-creds. Codifies the manual greps that lived in `CHECKLIST.md` /
+  `audit/README.md`. A separate `check:consistency:live` cross-checks the `media`/`files` rows
+  against the real Blob store (skips cleanly without `.env.local`).
+- **test: a minimal vitest seam suite (62 tests, <0.5s)** pinning the load-bearing invariants —
+  blob collapse/expand round-trip, shared slug namespace, revalidate SUPERSET, markdown raw-HTML
+  escaping + ToC anchor sync, and soft-delete (trashed content never leaks to a live read). Not
+  broad coverage by design.
+- **refactor: split two oversized modules under the 400-line cap (behaviour-preserving)** —
+  `lib/media.ts` → `lib/image.ts` (pure sharp encoding) and `lib/settings.ts` →
+  `lib/settings-sanitize.ts` (pure validation/migration); both one-way imports, all re-exports kept.
+- **docs: CLAUDE.md restructured for debugging (504 → 199 lines)** — a per-area DEBUG ROUTER + a
+  numbered Invariants list (each with its enforcing test/guard) up front; topic detail moved to
+  `docs/{conventions,features,seo-pwa,mcp,backups}.md`, loaded on demand. No runtime change. `v1.0.18`.
+
 ## 2026-06-23 (v1.0.17 — admin live reads were silently served from the 1h Data Cache)
 - **fix(admin): the MCP token list (and every admin live read) could show STALE data —
   most visibly "list token không hiện" after connecting a connector from Claude.** Root cause:
