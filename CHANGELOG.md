@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.13 — fix Drive connect redirect + tidy Backups layout)
+- **fix(backup): `redirect_uri_mismatch` connecting Google Drive.** The consent + token-exchange
+  redirect URI was built from `req.nextUrl.origin`, which is a `*.vercel.app` host when the admin
+  is reached there (sign-in still works because NextAuth uses `AUTH_URL`) — so it didn't match the
+  one URI registered on the OAuth client. New `backupRedirectUri(settings)` derives it from the
+  canonical `resolveSiteUrl(settings)` (e.g. `https://manhhung.me/api/backup/callback`), used by
+  both `/api/backup/connect` and `/api/backup/callback`. Register that exact URI on the client.
+- **ui(backup): the Backups card no longer spans full width.** It now sits in the same two-column
+  Advanced grid as MCP + custom CSS, so the section reads evenly. `v1.0.13`.
+
 ## 2026-06-22 (v1.0.12 — slugified taxonomy URLs + clearer Overview)
 - **fix(seo): category/tag URLs now use the slugified term**, e.g. `/category/suy-nghi` instead of
   `/category/Suy%20ngh%C4%A9`. New `lib/taxonomy.ts` (`termSlug`/`resolveTerm`); post-footer links +
