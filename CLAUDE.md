@@ -105,6 +105,14 @@ THEN a `revalidatePath` SUPERSET (which pages re-render):
 Other rules:
 - Admin forms `router.refresh()` after save; admin routes are `force-dynamic` (their DB
   reads become `no-store` → editor/media/settings always live).
+- **GOTCHA — owner-only API LIST routes fetched from a client component MUST export
+  `dynamic = 'force-dynamic'`.** They are NOT under the `/admin` layout, so without it
+  their `db()` GET reads stay Data-Cache-eligible (tag `db`, 1h) and the client list shows
+  STALE rows after a mutation (this caused "deleting an MCP token does nothing" — the
+  cached list kept showing a deleted id). Applies to `api/mcp/tokens`, `api/files`,
+  `api/media`, `api/media/unused`, `api/posts/[slug]/revisions`. Token CRUD intentionally
+  does NOT `revalidateTag('db')` (that would over-purge public pages) — `force-dynamic` is
+  the right tool: live admin read, zero public-cache impact.
 - `experimental.staleTimes: { dynamic: 0, static: 30 }` (Next 16 rejects `static: 0`).
 - **Accepted staleness:** the "related posts" box on OTHER posts (≤1h ISR / next save).
 - **DO NOT** set the Supabase GET reads to `cache: 'no-store'` (forces every page dynamic,
