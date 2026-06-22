@@ -29,6 +29,7 @@ type MediaRow = {
   height: number | null
   thumb: string | null
   variants: boolean
+  deleted_at?: string | null
 }
 
 // Row -> client item (absolute URLs).
@@ -42,6 +43,7 @@ function rowToItem(row: MediaRow): MediaItem {
     height: row.height ?? undefined,
     thumb: row.thumb ? expandBlob(row.thumb) : undefined,
     variants: row.variants,
+    deletedAt: row.deleted_at ?? undefined,
   }
 }
 
@@ -52,6 +54,7 @@ async function listMedia(): Promise<MediaItem[]> {
     const { data, error } = await db()
       .from('media')
       .select('*')
+      .is('deleted_at', null) // live library only; trashed images live in the Trash view
       .order('uploaded_at', { ascending: false })
     if (error || !data) {
       if (error) console.error(`[ERROR] media.listMedia: ${error.message}`)
@@ -281,22 +284,51 @@ function mediaKey(s: string): string | null {
   return s.match(/media\/[^?#"')\s]+/)?.[0] ?? null
 }
 
-// Delete one or MORE media items. Each row delete is atomic in Postgres, so the
-// old "concurrent manifest rewrite resurrected a deleted image" race is gone.
-// Removes the DB rows first (the library's source of truth), THEN best-effort
-// deletes the blob files. Returns the authoritative new list.
+// Soft-delete one or MORE media items: move them to the Trash (set deleted_at),
+// keeping EVERY blob (original + thumb + variants) on the store. A published post
+// that links these images keeps rendering — nothing is removed until an explicit
+// Trash purge. Returns the authoritative live list (trashed images excluded).
 export async function deleteMediaBatch(urls: string[]): Promise<MediaItem[]> {
   const keys = [...new Set(urls.map(mediaKey).filter((k): k is string => k !== null))]
   if (keys.length === 0) return listMedia()
+  const { error } = await db()
+    .from('media')
+    .update({ deleted_at: new Date().toISOString() })
+    .in('path', keys)
+  if (error) throw new Error(`deleteMediaBatch: ${error.message}`)
+  return listMedia()
+}
+
+// Soft-delete a single media item (delegates to the batch path).
+export async function deleteMedia(url: string): Promise<MediaItem[]> {
+  return deleteMediaBatch([url])
+}
+
+// Restore trashed media back to the live library (clear deleted_at). Returns the
+// authoritative live list.
+export async function restoreMediaBatch(urls: string[]): Promise<MediaItem[]> {
+  const keys = [...new Set(urls.map(mediaKey).filter((k): k is string => k !== null))]
+  if (keys.length === 0) return listMedia()
+  const { error } = await db().from('media').update({ deleted_at: null }).in('path', keys)
+  if (error) throw new Error(`restoreMediaBatch: ${error.message}`)
+  return listMedia()
+}
+
+// Permanently delete one or MORE media items (hard delete, irreversible). Removes
+// the DB rows first (the library's source of truth), THEN best-effort deletes the
+// blob files. Each row delete is atomic in Postgres. Only reached from the Trash UI.
+export async function purgeMediaBatch(urls: string[]): Promise<void> {
+  const keys = [...new Set(urls.map(mediaKey).filter((k): k is string => k !== null))]
+  if (keys.length === 0) return
 
   // Fetch the rows we're about to remove (need thumb + variants for blob cleanup).
   const { data } = await db().from('media').select('*').in('path', keys)
   const removed = (data as MediaRow[] | null) ?? []
-  if (removed.length === 0) return listMedia()
+  if (removed.length === 0) return
 
   // 1) Remove the rows first — this is what makes the images disappear.
   const { error } = await db().from('media').delete().in('path', keys)
-  if (error) throw new Error(`deleteMediaBatch: ${error.message}`)
+  if (error) throw new Error(`purgeMediaBatch: ${error.message}`)
 
   // 2) Best-effort cleanup of EVERY blob file for each item: the ORIGINAL, the
   // thumbnail, and all four display variants. We attempt the variant paths for any
@@ -314,12 +346,33 @@ export async function deleteMediaBatch(urls: string[]): Promise<MediaItem[]> {
     }
   }
   await Promise.all([...paths].map((p) => deleteByPathname(p).catch(() => {})))
-  return listMedia()
 }
 
-// Delete a single media item (delegates to the batch path).
-export async function deleteMedia(url: string): Promise<MediaItem[]> {
-  return deleteMediaBatch([url])
+// Trashed media (most-recently-deleted first) for the Trash view.
+export async function getTrashedMedia(): Promise<MediaItem[]> {
+  try {
+    const { data, error } = await db()
+      .from('media')
+      .select('*')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] media.getTrashedMedia: ${error.message}`)
+      return []
+    }
+    return (data as MediaRow[]).map(rowToItem)
+  } catch (error) {
+    console.error(`[ERROR] media.getTrashedMedia: ${(error as Error).message}`)
+    return []
+  }
+}
+
+// Permanently remove EVERY trashed media item (empty the media Trash). Returns the count.
+export async function emptyMediaTrash(): Promise<number> {
+  const trashed = await getTrashedMedia()
+  if (trashed.length === 0) return 0
+  await purgeMediaBatch(trashed.map((m) => m.url))
+  return trashed.length
 }
 
 // Owner-only diagnostic: report what a delete of `url` would match in the DB.
@@ -367,7 +420,7 @@ export async function finalizeVariants(pathnames: string[]): Promise<void> {
 // `-thumb.webp`; everything else just points `thumb` at the original (small enough
 // for the grid). Swept by the cron so the library never has to load full originals.
 export async function finalizePendingThumbs(): Promise<number> {
-  const { data } = await db().from('media').select('path').is('thumb', null)
+  const { data } = await db().from('media').select('path').is('thumb', null).is('deleted_at', null)
   const targets = ((data as { path: string }[] | null) ?? [])
   let done = 0
   for (const { path } of targets) {
@@ -399,7 +452,7 @@ export async function finalizeContentMedia(content: string, featuredImage?: stri
 // backstop so a variant set is never permanently missing if a background
 // finalize didn't run (e.g. the function froze after the save response).
 export async function finalizePendingVariants(): Promise<number> {
-  const { data } = await db().from('media').select('path').eq('variants', false)
+  const { data } = await db().from('media').select('path').eq('variants', false).is('deleted_at', null)
   const paths = ((data as { path: string }[] | null) ?? [])
     .map((r) => r.path)
     .filter((p) => /\.(jpe?g|png)$/i.test(p))

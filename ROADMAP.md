@@ -63,11 +63,15 @@ public bucket or a proxy route). Foundation for Docker.
 One codebase, one CI: the same source produces both the Vercel deploy and the Docker
 image — there is no second version to maintain.
 
-### Phase 3 — Token auth + ingest API `[planned]`
-API-token auth alongside OAuth, so external tools can publish. An endpoint that takes
-Markdown + frontmatter, **rehosts embedded images** to storage, and maps frontmatter
-to post fields. (`scripts/rehost-images.mjs` and `import-wordpress.mjs` are existing
-patterns to build on.)
+### Phase 3 — Token auth + ingest API `[partly done]`
+> **Done (2026-06-22, v1.0.0):** token auth + external publishing landed as the **MCP
+> server** (`/api/mcp`) — a single full-access `MCP_TOKEN` (+ thin OAuth for connectors)
+> lets an agent create/update/delete posts & pages, manage media/files, and read settings,
+> all through the same data layer. `add_media_from_url` rehosts an image URL to Blob.
+
+Still planned: a plain HTTP **ingest endpoint** that takes Markdown + frontmatter and maps
+it to post fields (for the note-app plugins below), rehosting embedded images.
+(`scripts/rehost-images.mjs` and `import-wordpress.mjs` are existing patterns to build on.)
 
 ### Phase 4 — Obsidian, then Craft `[planned, needs Phase 3]`
 - **Obsidian plugin**: a command that POSTs the active note (frontmatter + body) and

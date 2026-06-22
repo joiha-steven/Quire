@@ -1,5 +1,40 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.0 — MCP server + Trash)
+First stable release: the blog can now be operated by an AI agent over MCP, and every
+delete is recoverable via a Trash.
+
+### MCP server
+- **feat(mcp): remote MCP endpoint at `/api/mcp` (Streamable HTTP).** An MCP client (Claude,
+  ChatGPT, …) can operate the blog through the SAME data layer as the admin UI — tools to
+  list/get/create/update/delete(→Trash)/restore posts and pages, manage media + files (incl.
+  `add_media_from_url`), read taxonomy, and read settings. Content is Markdown verbatim (no
+  conversion). Tools live in `src/lib/mcp`; built on `mcp-handler` + `@modelcontextprotocol/sdk`.
+- **feat(mcp): one full-access token + a thin OAuth layer.** Auth is a single bearer
+  `MCP_TOKEN` ("one token, full power"); connectors that require OAuth obtain it via a minimal
+  OAuth 2.1 flow (authorization-code + PKCE) gated by the owner's existing NextAuth login —
+  `/api/mcp/{authorize,token,register}` + `/.well-known/oauth-{protected-resource,authorization-server}`.
+  Unset `MCP_TOKEN` disables the endpoint entirely.
+- **feat(mcp): sensitive settings are blocked.** `get_settings` reads everything, but
+  `update_settings` exposes only a safe allowlist (title / description / showDescription) — theme,
+  fonts, typography, menu, domain, SEO, language and logos cannot be changed over MCP.
+
+### Trash / soft delete
+- **feat(trash): every delete is now a soft delete to a recoverable Trash.** Posts, pages, media
+  and files gain a nullable `deleted_at` column (NULL = live, timestamp = trashed). Deleting from
+  anywhere (admin tables, media/file libraries, multi-select, "delete all unused") now MOVES the
+  item to Trash instead of destroying it — every live read filters `deleted_at is null`, so trashed
+  items vanish from the site, lists, search, sitemap/feed/llms and the libraries. Media/file soft
+  delete KEEPS the blob, so a published post that links a trashed image keeps rendering; nothing is
+  removed from Blob until an explicit purge. A trashed row keeps its slug (still reserved) so
+  restore always works.
+- **feat(trash): new Admin → Trash page (`/admin/trash`).** Four tabs (Posts / Pages / Media /
+  Files), each its own list with **Restore** + **Delete permanently**, plus **Empty trash** per
+  tab. Nothing auto-purges — permanent removal is manual only. New unified `POST /api/trash`
+  (`{ kind, action: restore|purge|empty, ids? }`), owner-gated; restores revalidate the item's
+  surfaces, media/file purges revalidate everything (blobs removed). New activity actions
+  (`*.restore` / `*.purge` / `trash.empty`). i18n synced across all 6 locales. `v1.0.0`.
+
 ## 2026-06-22 (fix: duplicate favicon)
 - **fix(favicon): emit exactly one `<link rel="icon">`.** Next auto-injects a `<link>` for
   `app/favicon.ico` **in addition to** the metadata `icons.icon`, so the page shipped two

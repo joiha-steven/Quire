@@ -281,6 +281,21 @@ const de = {
   sysBranch: 'Branch',
   sysRuntime: 'Runtime',
   sysFramework: 'Framework',
+  navTrash: 'Papierkorb',
+  trashTitle: 'Papierkorb',
+  trashHint: 'Gelöschte Elemente bleiben hier, bis du sie endgültig entfernst. Wiederherstellen holt ein Element zurück; das Leeren des Papierkorbs kann nicht rückgängig gemacht werden.',
+  trashEmpty: 'Papierkorb ist leer',
+  colDeletedAt: 'Gelöscht',
+  restored: 'Wiederhergestellt',
+  restoreFailed: 'Wiederherstellen fehlgeschlagen',
+  deletePermanently: 'Endgültig löschen',
+  confirmPurge: 'Dieses Element endgültig löschen? Das kann nicht rückgängig gemacht werden.',
+  emptyTrash: 'Papierkorb leeren',
+  confirmEmptyTrash: 'Alles in diesem Papierkorb endgültig löschen? Das kann nicht rückgängig gemacht werden.',
+  trashEmptied: 'Papierkorb geleert',
+  purged: 'Endgültig gelöscht',
+  purgeFailed: 'Endgültiges Löschen fehlgeschlagen',
+  movedToTrash: 'In den Papierkorb verschoben',
 } satisfies AdminStrings
 
 export default de

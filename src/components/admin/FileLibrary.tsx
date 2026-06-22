@@ -61,7 +61,7 @@ export function FileLibrary() {
       if (!json.success || !json.data) throw new Error(json.error)
       setItems(json.data)
       setSelected(new Set())
-      notify(t.deleted)
+      notify(t.movedToTrash)
     } catch {
       notify(t.deleteFailed, 'error')
     }

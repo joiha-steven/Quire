@@ -281,6 +281,21 @@ const vi = {
   sysBranch: 'Nhánh',
   sysRuntime: 'Môi trường chạy',
   sysFramework: 'Framework',
+  navTrash: 'Thùng rác',
+  trashTitle: 'Thùng rác',
+  trashHint: 'Mục đã xoá được giữ ở đây cho tới khi bạn xoá vĩnh viễn. Khôi phục để lấy lại; dọn sạch thùng rác không thể hoàn tác.',
+  trashEmpty: 'Thùng rác trống',
+  colDeletedAt: 'Đã xoá',
+  restored: 'Đã khôi phục',
+  restoreFailed: 'Khôi phục thất bại',
+  deletePermanently: 'Xoá vĩnh viễn',
+  confirmPurge: 'Xoá vĩnh viễn mục này? Không thể hoàn tác.',
+  emptyTrash: 'Dọn sạch thùng rác',
+  confirmEmptyTrash: 'Xoá vĩnh viễn mọi thứ trong thùng rác này? Không thể hoàn tác.',
+  trashEmptied: 'Đã dọn sạch thùng rác',
+  purged: 'Đã xoá vĩnh viễn',
+  purgeFailed: 'Xoá vĩnh viễn thất bại',
+  movedToTrash: 'Đã chuyển vào thùng rác',
 } satisfies AdminStrings
 
 export default vi

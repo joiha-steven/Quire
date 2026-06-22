@@ -84,6 +84,7 @@ const readIndex = cache(async (): Promise<Post[]> => {
     const { data, error } = await db()
       .from('posts')
       .select(META_COLS)
+      .is('deleted_at', null) // live posts only; trashed rows are excluded everywhere but the Trash view
       .order('date', { ascending: false })
     if (error || !data) {
       if (error) console.error(`[ERROR] posts.readIndex: ${error.message}`)
@@ -121,6 +122,7 @@ export async function searchPosts(query: string): Promise<Post[]> {
       .select(META_COLS)
       .textSearch('search', q, { type: 'websearch', config: 'simple' })
       .eq('status', 'published')
+      .is('deleted_at', null) // never surface trashed posts in search
       .order('date', { ascending: false })
       .limit(50)
     if (error || !data) {
@@ -138,7 +140,7 @@ export async function searchPosts(query: string): Promise<Post[]> {
 // the page render in ONE request; no cross-request cache, so content is current.
 export const getPost = cache(async (slug: string): Promise<PostWithContent | null> => {
   try {
-    const { data, error } = await db().from('posts').select('*').eq('slug', slug).maybeSingle()
+    const { data, error } = await db().from('posts').select('*').eq('slug', slug).is('deleted_at', null).maybeSingle()
     if (error || !data) return null
     const row = data as PostRow
     return { ...rowToMeta(row), content: expandBlob(row.content ?? '') }
@@ -213,10 +215,54 @@ export async function savePost(
   return toMeta(post) // full URLs for the client
 }
 
-// Delete a post and its revisions.
+// Soft-delete a post: move it to the Trash (set deleted_at). The row, its body,
+// its revisions and every referenced blob are kept untouched so a published post
+// that links its images never breaks — nothing is purged until an explicit Trash
+// purge. The slug stays reserved (the row still exists) so restore always works.
 export async function deletePost(slug: string): Promise<void> {
+  await db().from('posts').update({ deleted_at: new Date().toISOString() }).eq('slug', slug)
+}
+
+// Restore a trashed post back to live (clear deleted_at). The slug was reserved
+// while trashed, so no collision check is needed.
+export async function restorePost(slug: string): Promise<void> {
+  await db().from('posts').update({ deleted_at: null }).eq('slug', slug)
+}
+
+// Permanently remove a post and its revisions (hard delete, irreversible). Only
+// reached from the Trash UI ("Delete permanently" / "Empty trash").
+export async function purgePost(slug: string): Promise<void> {
   await db().from('posts').delete().eq('slug', slug)
   await deleteRevisions(slug)
+}
+
+// Trashed posts (metadata only), most-recently-deleted first, for the Trash view.
+export async function getTrashedPosts(): Promise<Post[]> {
+  try {
+    const { data, error } = await db()
+      .from('posts')
+      .select(`${META_COLS},deleted_at`)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] posts.getTrashedPosts: ${error.message}`)
+      return []
+    }
+    return (data as (PostRow & { deleted_at: string })[]).map((row) => ({
+      ...rowToMeta(row),
+      deletedAt: row.deleted_at,
+    }))
+  } catch (error) {
+    console.error(`[ERROR] posts.getTrashedPosts: ${(error as Error).message}`)
+    return []
+  }
+}
+
+// Permanently remove EVERY trashed post (empty the posts Trash). Returns the count.
+export async function emptyPostsTrash(): Promise<number> {
+  const trashed = await getTrashedPosts()
+  await Promise.all(trashed.map((p) => purgePost(p.slug)))
+  return trashed.length
 }
 
 // Up to `limit` other public posts sharing the most tags/categories with `slug`

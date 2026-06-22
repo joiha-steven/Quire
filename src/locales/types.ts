@@ -333,4 +333,20 @@ export type AdminStrings = {
   sysBranch: string
   sysRuntime: string
   sysFramework: string
+  // trash (Admin → Trash) — soft-deleted posts/pages/media/files
+  navTrash: string
+  trashTitle: string
+  trashHint: string
+  trashEmpty: string
+  colDeletedAt: string
+  restored: string
+  restoreFailed: string
+  deletePermanently: string
+  confirmPurge: string
+  emptyTrash: string
+  confirmEmptyTrash: string
+  trashEmptied: string
+  purged: string
+  purgeFailed: string
+  movedToTrash: string
 }

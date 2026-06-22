@@ -34,6 +34,7 @@ export function AdminHeader({
     { href: '/admin/analytics', label: t.navAnalytics },
     { href: '/admin/content', label: t.navDashboard },
     { href: '/admin/media', label: t.navMedia },
+    { href: '/admin/trash', label: t.navTrash },
     { href: '/admin/settings', label: t.navSettings },
     { href: '/admin/log', label: t.navLog },
   ]

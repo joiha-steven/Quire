@@ -56,7 +56,8 @@ not sufficient — confirm behavior, and report failures honestly with their out
 - `src/lib` = data layer (`db.ts` Postgres, `blob.ts` binaries); `src/app/api` = thin
   owner-gated handlers; UI in `src/components`.
 - **Env:** `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret, server-only) + the Blob
-  token — `.env.local` + Vercel only.
+  token — `.env.local` + Vercel only. Optional: `MCP_TOKEN` (+ `MCP_OAUTH_SECRET`) enable the MCP
+  server; unset = it's off.
 
 ## Blob — `src/lib/blob.ts` (BINARIES ONLY)
 
@@ -145,6 +146,43 @@ are called out elsewhere (Caching, Typography, Conventions).
 | `revalidate.ts` | `revalidateNewPost/Post/Page/Everything`, `warmCache` | Single source of cache invalidation (see Caching) |
 | `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Every route calls `requireOwner()` first |
 | others | `video.ts` (YT/Vimeo/TikTok embeds), `paginate.ts`, `i18n.ts` (`t`/`formatDate`), `admin-i18n.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`isPublicallyVisible` = published && date past /…) | Pure/shared helpers |
+
+## Trash (soft delete) — Admin → Trash (`/admin/trash`)
+
+- **Every delete is a soft delete.** `posts`/`pages`/`media`/`files` each have a nullable
+  `deleted_at` (NULL = live, timestamp = trashed). `deleteX()` sets `deleted_at`; nothing is
+  hard-deleted on a normal delete. EVERY live read filters `.is('deleted_at', null)`
+  (index/search/getPost, page index/getPage, media/file lists, the finalize sweeps) so trashed
+  items leave the site, lists, search, sitemap/feed/llms and the libraries at once.
+- **Media/file soft delete KEEPS the blob** — a published post linking a trashed image keeps
+  rendering; the blob is removed only on purge. So `/api/media/delete` no longer purges the page
+  cache (it used to). A trashed row **keeps its slug** (still reserved via `ensureSlugFree`) so
+  restore never collides.
+- Per kind the lib exports `restoreX`, `purgeX` (hard delete: row + revisions/blobs),
+  `getTrashedX`, `emptyXTrash`. The Trash page server-loads all four lists; `TrashView` (4 tabs)
+  acts via **`POST /api/trash`** `{ kind, action: restore|purge|empty, ids? }` (owner-gated) then
+  `router.refresh()`. **Nothing auto-purges** — permanent removal is manual (per-item or Empty
+  trash). Restores revalidate the item's surfaces; media/file purges `revalidateEverything()`.
+- Adding a mutating trash action → log it (activity actions `*.restore` / `*.purge` /
+  `trash.empty`) and keep the i18n keys in sync.
+
+## MCP server — `/api/mcp` + `src/lib/mcp/`
+
+- **What it is.** A remote MCP endpoint (Streamable HTTP, `mcp-handler` + `@modelcontextprotocol/sdk`)
+  that lets an MCP client (Claude/ChatGPT) operate the blog. Tools are THIN wrappers over the same
+  `lib/` functions the admin routes use — same slug rules, revisions, soft-delete, revalidation,
+  activity log. **Disabled unless `MCP_TOKEN` is set** (then `verifyMcpToken` 401s every call).
+- **Auth = one full-access token + thin OAuth.** `MCP_TOKEN` is a single bearer with full power
+  (everything the admin can do, minus sensitive settings). Connectors that require OAuth get the
+  token via a minimal OAuth 2.1 authorization-code + PKCE flow, gated by the owner's NextAuth login:
+  `src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-{protected-resource,authorization-server}`.
+  The `/token` exchange returns the static `MCP_TOKEN` as the access token (never expires; single
+  owner). Codes are HMAC-signed (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`.
+- **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
+  results via `result.ts`). Content is Markdown verbatim — no HTML conversion. Deletes are soft
+  (→ Trash). **`update_settings` exposes only a safe allowlist (title/description/showDescription)** —
+  the zod inputSchema IS the allowlist, so sensitive settings can't be written over MCP. `get_settings`
+  reads all. **Adding a tool that mutates → revalidate + `logActivity` like the admin routes.**
 
 ## Localization — `src/locales/` (RULES)
 
@@ -365,9 +403,10 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   files — `.env.local` + Vercel only.
 - **Audits** (`audit/`): a full review per `audit/README.md` → dated `audit/YYYY-MM-DD-<scope>.md`;
   read the latest first so a pass starts from the last clean line.
-- **Versioning (owner's rule — do NOT auto-bump):** the version is **`0.9.x`**; each change bumps
-  the patch `x` (→ `0.9.999`), a running counter with no semver meaning. NEVER raise `0.9` → `0.10`
-  or `→ 1.0` unless the owner asks. A code change bumps `x`; pure-docs may skip. On a bump, also
-  update the **README H1** `# vibeblog (v0.9.x)`.
+- **Versioning (owner's rule — do NOT auto-bump):** the version is **`1.0.x`** (was `0.9.x`; the
+  owner cut **1.0.0** with the MCP + Trash release). Each change bumps the patch `x`
+  (→ `1.0.999`), a running counter with no semver meaning. NEVER raise `1.0` → `1.1` or `→ 2.0`
+  unless the owner asks. A code change bumps `x`; pure-docs may skip. On a bump, also update the
+  **README H1** `# vibeblog (v1.0.x)`.
 - **Cutting a release:** `x` already current; `npm run build` + `npm run lint` exit 0; push `main`;
-  `gh release create v0.9.<x> --title "v0.9.<x> - <tagline>" --notes "…"`.
+  `gh release create v1.0.<x> --title "v1.0.<x> - <tagline>" --notes "…"`.

@@ -31,7 +31,7 @@ function rowToMeta(row: PageRow): Page {
 // dedupes within one render; every request re-reads Postgres (always current).
 const readIndex = cache(async (): Promise<Page[]> => {
   try {
-    const { data, error } = await db().from('pages').select(META_COLS)
+    const { data, error } = await db().from('pages').select(META_COLS).is('deleted_at', null)
     if (error || !data) {
       if (error) console.error(`[ERROR] pages.readIndex: ${error.message}`)
       return []
@@ -57,7 +57,7 @@ export async function getPublicPages(): Promise<Page[]> {
 // Read one full page. `React.cache` dedupes within one request only.
 export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
   try {
-    const { data, error } = await db().from('pages').select('*').eq('slug', slug).maybeSingle()
+    const { data, error } = await db().from('pages').select('*').eq('slug', slug).is('deleted_at', null).maybeSingle()
     if (error || !data) return null
     const row = data as PageRow
     return { ...rowToMeta(row), content: expandBlob(row.content ?? '') }
@@ -120,7 +120,48 @@ export async function savePage(
   return toMeta(page) // full URLs for the client
 }
 
-// Delete a page.
+// Soft-delete a page: move it to the Trash (set deleted_at). The row, body and any
+// referenced blobs are kept; nothing is purged until an explicit Trash purge. The
+// slug stays reserved (the row still exists) so restore always works.
 export async function deletePage(slug: string): Promise<void> {
+  await db().from('pages').update({ deleted_at: new Date().toISOString() }).eq('slug', slug)
+}
+
+// Restore a trashed page back to live (clear deleted_at).
+export async function restorePage(slug: string): Promise<void> {
+  await db().from('pages').update({ deleted_at: null }).eq('slug', slug)
+}
+
+// Permanently remove a page (hard delete, irreversible). Only reached from Trash.
+export async function purgePage(slug: string): Promise<void> {
   await db().from('pages').delete().eq('slug', slug)
+}
+
+// Trashed pages (metadata only), most-recently-deleted first, for the Trash view.
+export async function getTrashedPages(): Promise<Page[]> {
+  try {
+    const { data, error } = await db()
+      .from('pages')
+      .select(`${META_COLS},deleted_at`)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] pages.getTrashedPages: ${error.message}`)
+      return []
+    }
+    return (data as (PageRow & { deleted_at: string })[]).map((row) => ({
+      ...rowToMeta(row),
+      deletedAt: row.deleted_at,
+    }))
+  } catch (error) {
+    console.error(`[ERROR] pages.getTrashedPages: ${(error as Error).message}`)
+    return []
+  }
+}
+
+// Permanently remove EVERY trashed page (empty the pages Trash). Returns the count.
+export async function emptyPagesTrash(): Promise<number> {
+  const trashed = await getTrashedPages()
+  await Promise.all(trashed.map((p) => purgePage(p.slug)))
+  return trashed.length
 }

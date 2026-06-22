@@ -139,6 +139,7 @@ type FileRow = {
   size: number
   content_type: string
   uploaded_at: string
+  deleted_at?: string | null
 }
 
 function rowToItem(row: FileRow): FileItem {
@@ -148,6 +149,7 @@ function rowToItem(row: FileRow): FileItem {
     size: Number(row.size),
     contentType: row.content_type,
     uploadedAt: row.uploaded_at,
+    deletedAt: row.deleted_at ?? undefined,
   }
 }
 
@@ -158,6 +160,7 @@ async function listFiles(): Promise<FileItem[]> {
     const { data, error } = await db()
       .from('files')
       .select('*')
+      .is('deleted_at', null) // live library only; trashed files live in the Trash view
       .order('uploaded_at', { ascending: false })
     if (error || !data) {
       if (error) console.error(`[ERROR] files.listFiles: ${error.message}`)
@@ -249,31 +252,72 @@ function fileKey(s: string): string | null {
   return s.match(/files\/[^?#"')\s]+/)?.[0] ?? null
 }
 
-// Delete a file: its row + blob. Refuses to touch the site icons (not rows;
-// defence in depth — they never reach here). Row delete first, then blob cleanup.
-// Returns the authoritative new list.
-export async function deleteFile(url: string): Promise<FileItem[]> {
-  const targetKey = fileKey(url)
-  if (!targetKey || ICON_PREFIXES.some((p) => targetKey.startsWith(`files/${p}`))) {
-    return listFiles()
-  }
-  const { data } = await db().from('files').select('url').eq('url', targetKey)
-  if (!data || data.length === 0) return listFiles() // no match: nothing to do
-  await db().from('files').delete().eq('url', targetKey)
-  await deleteByPathname(targetKey).catch(() => {})
+// Filter raw urls to deletable file keys (drops non-matches and the site icons,
+// which are managed in Settings and are not table rows).
+function deletableKeys(urls: string[]): string[] {
+  return [...new Set(urls.map(fileKey).filter((k): k is string => k !== null))]
+    .filter((k) => !ICON_PREFIXES.some((p) => k.startsWith(`files/${p}`)))
+}
+
+// Soft-delete one or MORE library files: move them to the Trash (set deleted_at),
+// keeping the blob. Site icons are skipped (defence in depth — they never reach
+// here as rows). Returns the authoritative live list.
+export async function deleteFilesBatch(urls: string[]): Promise<FileItem[]> {
+  const keys = deletableKeys(urls)
+  if (keys.length === 0) return listFiles()
+  const { error } = await db().from('files').update({ deleted_at: new Date().toISOString() }).in('url', keys)
+  if (error) throw new Error(`deleteFilesBatch: ${error.message}`)
   return listFiles()
 }
 
-// Delete MANY library files in one atomic row delete (then best-effort blob
-// cleanup) — the multi-select path. Site icons are skipped (managed in Settings).
-// Returns the authoritative post-delete list.
-export async function deleteFilesBatch(urls: string[]): Promise<FileItem[]> {
-  const keys = [...new Set(urls.map(fileKey).filter((k): k is string => k !== null))]
-    .filter((k) => !ICON_PREFIXES.some((p) => k.startsWith(`files/${p}`)))
+// Soft-delete a single library file (delegates to the batch path).
+export async function deleteFile(url: string): Promise<FileItem[]> {
+  return deleteFilesBatch([url])
+}
+
+// Restore trashed files back to the live library (clear deleted_at).
+export async function restoreFilesBatch(urls: string[]): Promise<FileItem[]> {
+  const keys = deletableKeys(urls)
   if (keys.length === 0) return listFiles()
+  const { error } = await db().from('files').update({ deleted_at: null }).in('url', keys)
+  if (error) throw new Error(`restoreFilesBatch: ${error.message}`)
+  return listFiles()
+}
+
+// Permanently delete one or MORE library files (hard delete, irreversible): row
+// delete first, then best-effort blob cleanup. Only reached from the Trash UI.
+export async function purgeFilesBatch(urls: string[]): Promise<void> {
+  const keys = deletableKeys(urls)
+  if (keys.length === 0) return
   await db().from('files').delete().in('url', keys)
   await Promise.all(keys.map((k) => deleteByPathname(k).catch(() => {})))
-  return listFiles()
+}
+
+// Trashed library files (most-recently-deleted first) for the Trash view.
+export async function getTrashedFiles(): Promise<FileItem[]> {
+  try {
+    const { data, error } = await db()
+      .from('files')
+      .select('*')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] files.getTrashedFiles: ${error.message}`)
+      return []
+    }
+    return (data as FileRow[]).map(rowToItem)
+  } catch (error) {
+    console.error(`[ERROR] files.getTrashedFiles: ${(error as Error).message}`)
+    return []
+  }
+}
+
+// Permanently remove EVERY trashed file (empty the files Trash). Returns the count.
+export async function emptyFilesTrash(): Promise<number> {
+  const trashed = await getTrashedFiles()
+  if (trashed.length === 0) return 0
+  await purgeFilesBatch(trashed.map((f) => f.url))
+  return trashed.length
 }
 
 // The site icons (favicon, app icon) uploaded in Settings. They live under

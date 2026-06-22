@@ -1,12 +1,12 @@
-// POST /api/media/delete -> delete MANY media items in one atomic manifest write
-// (owner only). Body: { urls: string[] }. Use this for "delete all unused" and
-// any multi-delete so concurrent single-deletes can't clobber each other's
-// manifest write (lost-update race). Returns the authoritative post-delete list.
+// POST /api/media/delete -> move MANY media items to the Trash (soft delete, owner
+// only). Body: { urls: string[] }. Used for "delete all unused" and any multi-
+// delete. Soft delete KEEPS every blob, so a published post linking these images
+// keeps rendering (no public cache purge needed) — permanent removal happens only
+// on Trash purge. Returns the authoritative live list (trashed images excluded).
 
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { deleteMediaBatch } from '@/lib/media'
-import { revalidateEverything } from '@/lib/revalidate'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -25,8 +25,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       logRequest(req, 400, start)
       return fail('No urls provided', 400)
     }
-    const items = await deleteMediaBatch(urls) // authoritative post-delete list
-    revalidateEverything() // a deleted image may appear on any cached page; freshen data too
+    const items = await deleteMediaBatch(urls) // authoritative live list (trashed excluded)
     after(() => logActivity('media.delete', `${urls.length} image(s)`))
     logRequest(req, 200, start)
     return ok(items)

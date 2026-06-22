@@ -19,11 +19,11 @@ Postgres (project `vibeblog`, ap-southeast-1), schema `public`:
 
 ```
 posts            slug PK · title · date · status · categories[] · tags[] · featured_image
-                 · excerpt · reading_minutes · content (markdown) · search (tsvector)
-pages            slug PK · title · status · featured_image · content (markdown)
+                 · excerpt · reading_minutes · content (markdown) · search (tsvector) · deleted_at
+pages            slug PK · title · status · featured_image · content (markdown) · deleted_at
 post_revisions   slug · data (jsonb snapshot) · saved_at   (app keeps last 3 / slug)
-media            path PK · filename · size · width · height · thumb · variants · uploaded_at
-files            url PK · filename · size · content_type · uploaded_at
+media            path PK · filename · size · width · height · thumb · variants · uploaded_at · deleted_at
+files            url PK · filename · size · content_type · uploaded_at · deleted_at
 settings         single row id=1 · data (jsonb SiteSettings)
 activity_log     at · action · detail   (admin audit trail, Admin → Log; toggleable)
 ```
@@ -31,6 +31,11 @@ activity_log     at · action · detail   (admin audit trail, Admin → Log; tog
 Vercel Blob holds only the binaries: `media/{name}.{ext}` (original + responsive
 variants + thumbnail) and `files/{...}` (attachments + site icons). Posts + pages
 share one `/{slug}` URL namespace (`ensureSlugFree`).
+
+`deleted_at` powers a **Trash** (soft delete): every delete just timestamps the row, so
+all four kinds are recoverable; live reads filter `deleted_at is null`. Media/file soft
+delete keeps the blob (a published post's images never break), removed only on an explicit
+purge. Admin → Trash restores or permanently removes per kind — nothing auto-purges.
 
 Reads are always fresh + transactional (no manifest read-modify-write, no
 read-after-write staleness). Image refs are stored **store-relative** (pathnames
@@ -68,7 +73,8 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
 | `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon + attachment store). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
-| `src/app/admin/` | Owner console (editor, media, settings). |
+| `src/app/admin/` | Owner console (editor, media, settings, trash). |
+| `src/lib/mcp/` + `src/app/api/mcp/` | MCP server: tools (thin wrappers over the data layer) + the `/api/mcp` endpoint, the thin OAuth flow, and `/.well-known/*` metadata. Off unless `MCP_TOKEN` is set. |
 | `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | SEO / feeds / dynamic share image. |
 | `src/components/{blog,admin,ui,theme}/` | UI. `ui/` = shared primitives (Button, Input, Switch, Toast). |
 
