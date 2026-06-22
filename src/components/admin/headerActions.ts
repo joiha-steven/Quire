@@ -12,3 +12,13 @@
 // recurring "menu items not lined up" drift.
 export const ADMIN_NAV =
   'inline-flex h-9 items-center text-sm text-neutral-600 transition-colors hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-300 dark:hover:text-white'
+
+// Vertical sidebar variant: a full-width h-9 row with hover surface. EVERY sidebar
+// item (nav links AND the theme/palette/cache/sign-out controls) shares this ONE
+// string so the column reads as a single uniform set and can't drift — same rule as
+// ADMIN_NAV, just laid out as rows. Active links add `SIDEBAR_NAV_ACTIVE`.
+export const SIDEBAR_NAV =
+  'flex h-9 w-full items-center rounded-lg px-3 text-left text-sm text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white'
+
+export const SIDEBAR_NAV_ACTIVE =
+  'bg-neutral-100 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-white'

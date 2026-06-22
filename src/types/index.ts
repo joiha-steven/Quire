@@ -181,6 +181,13 @@ export type SiteSettings = {
   customFont: FontSettings // owner-uploaded typeface (Blob files/); '' = bundled Inter
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
+  mcp: McpSettings // MCP server toggle (tokens are managed separately)
+}
+
+// MCP server settings. Just an on/off switch — the access tokens live in their own
+// `mcp_tokens` table (hashed), managed from Admin → Settings → Advanced.
+export type McpSettings = {
+  enabled: boolean // when false, /api/mcp + the OAuth flow are disabled
 }
 
 // Uniform API envelope returned by every route.

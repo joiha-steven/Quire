@@ -17,6 +17,7 @@ import { ThemeFields } from './ThemeFields'
 import { TypographyFields } from './TypographyFields'
 import { FontUpload } from './FontUpload'
 import { AdvancedFields } from './AdvancedFields'
+import { McpFields } from './McpFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FeatureFields } from './FeatureFields'
 import { SeoFields } from './SeoFields'
@@ -140,14 +141,17 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
             <Card title={t.cardTypography}>
               <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
             </Card>
+            <Card title={t.cardRendering}>
+              <AdvancedFields typography={s.typography} onTypography={(typography) => update({ typography })} />
+            </Card>
           </div>
         </div>
       )}
 
       {tab === 'advanced' && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <Card title={t.cardRendering}>
-            <AdvancedFields typography={s.typography} onTypography={(typography) => update({ typography })} />
+          <Card title={t.cardMcp}>
+            <McpFields mcp={s.mcp} onChange={(mcp) => update({ mcp })} />
           </Card>
           <Card title={t.customCss}>
             <div className="space-y-1.5">
@@ -165,9 +169,9 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
         </div>
       )}
 
-      {/* Single, always-reachable save bar. */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+      {/* Single, always-reachable save bar. Offset past the sidebar on desktop. */}
+      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur md:left-60 dark:border-neutral-800 dark:bg-neutral-900/90">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>

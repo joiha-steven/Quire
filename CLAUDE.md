@@ -56,8 +56,8 @@ not sufficient — confirm behavior, and report failures honestly with their out
 - `src/lib` = data layer (`db.ts` Postgres, `blob.ts` binaries); `src/app/api` = thin
   owner-gated handlers; UI in `src/components`.
 - **Env:** `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret, server-only) + the Blob
-  token — `.env.local` + Vercel only. Optional: `MCP_TOKEN` (+ `MCP_OAUTH_SECRET`) enable the MCP
-  server; unset = it's off.
+  token — `.env.local` + Vercel only. The MCP server is enabled + tokenized from the admin (no
+  `MCP_TOKEN` env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`).
 
 ## Blob — `src/lib/blob.ts` (BINARIES ONLY)
 
@@ -171,13 +171,17 @@ are called out elsewhere (Caching, Typography, Conventions).
 - **What it is.** A remote MCP endpoint (Streamable HTTP, `mcp-handler` + `@modelcontextprotocol/sdk`)
   that lets an MCP client (Claude/ChatGPT) operate the blog. Tools are THIN wrappers over the same
   `lib/` functions the admin routes use — same slug rules, revisions, soft-delete, revalidation,
-  activity log. **Disabled unless `MCP_TOKEN` is set** (then `verifyMcpToken` 401s every call).
-- **Auth = one full-access token + thin OAuth.** `MCP_TOKEN` is a single bearer with full power
-  (everything the admin can do, minus sensitive settings). Connectors that require OAuth get the
-  token via a minimal OAuth 2.1 authorization-code + PKCE flow, gated by the owner's NextAuth login:
-  `src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-{protected-resource,authorization-server}`.
-  The `/token` exchange returns the static `MCP_TOKEN` as the access token (never expires; single
-  owner). Codes are HMAC-signed (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`.
+  activity log. **Off unless the owner enables it** (Admin → Settings → Advanced toggle,
+  `settings.mcp.enabled`); `verifyMcpToken` 401s every call while off.
+- **Auth = admin-managed tokens + thin OAuth.** Tokens are created in the admin (up to 5, named,
+  shown ONCE on creation — only the SHA-256 hash is kept in the `mcp_tokens` table; see
+  `lib/mcp/tokens.ts`). `verifyMcpToken` hashes the bearer + looks it up (and stamps `last_used_at`)
+  while the toggle is on. There is **no `MCP_TOKEN` env var.** Connectors that require OAuth run a
+  minimal OAuth 2.1 authorization-code + PKCE flow gated by the owner's NextAuth login
+  (`src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-*`); the `/token`
+  exchange **mints a managed token** (named "OAuth connector", replaced per connect) and returns it.
+  Codes are HMAC-signed (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`.
+  Token CRUD: owner-only `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx`.
 - **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
   results via `result.ts`). Content is Markdown verbatim — no HTML conversion. Deletes are soft
   (→ Trash). **`update_settings` exposes only a safe allowlist (title/description/showDescription)** —
@@ -289,8 +293,10 @@ are called out elsewhere (Caching, Typography, Conventions).
 - **ONE form, ONE save button, THREE tabs** (`general | appearance | advanced`; tab state not
   persisted). One `useState<SiteSettings>` → one PUT `/api/settings`.
 - Controlled field groups (no own state/save): General `SiteFields`/`LayoutMenuFields`/
-  `FeatureFields`/`SeoFields`; Appearance `ThemeFields`/`FontUpload`/`TypographyFields`;
-  Advanced `AdvancedFields` + custom-CSS.
+  `FeatureFields`/`SeoFields`; Appearance `ThemeFields`/`FontUpload`/`TypographyFields`/
+  `AdvancedFields` (font smoothing = "Text rendering"); Advanced `McpFields` + custom-CSS.
+  `McpFields` is the EXCEPTION to "no own state/save": the MCP enable toggle flows through the
+  settings form, but its token manager has its own `/api/mcp/tokens` API (plaintext shown once).
 - Each tab: `grid lg:grid-cols-2 items-start` (explicit columns, NOT CSS `columns`).
 - **Save calls `router.refresh()`** so the admin shell + public header reflect the change
   immediately.
@@ -361,10 +367,12 @@ are called out elsewhere (Caching, Typography, Conventions).
 ## Conventions (HARD RULES)
 
 - **Repeated chrome shares ONE class constant — never hand-roll per element.** Sibling controls
-  import the same string so they can't drift. Admin header → `headerActions.ts` `ADMIN_NAV`
-  (the SAME plain-text-link style for EVERY item, incl. theme toggle / clear-cache / sign-out —
-  nothing styled as a button). Public header's 40px icon buttons → `ICON_BTN`
-  (`ui/iconButton.ts`). Adding an item = reuse the constant, never copy a class list.
+  import the same string so they can't drift. Admin nav is a **left sidebar** (`AdminSidebar.tsx`):
+  every item — nav links AND theme/palette/cache/sign-out controls — uses `headerActions.ts`
+  `SIDEBAR_NAV` (active links add `SIDEBAR_NAV_ACTIVE`); on mobile it collapses to a hamburger
+  drawer with the same items. (`ADMIN_NAV` is the older horizontal variant, still exported.)
+  Public header's 40px icon buttons → `ICON_BTN` (`ui/iconButton.ts`). Adding an item = reuse the
+  constant, never copy a class list.
 - **Header/menu alignment must be pixel-exact — the owner is very sensitive and it has drifted
   repeatedly.** Every header-row item (incl. the bigger brand wordmark) is an
   `inline-flex h-9 items-center` box; the row is `items-center`. NEVER align a bigger wordmark

@@ -5,12 +5,12 @@
 
 import type { NextRequest } from 'next/server'
 import { getAuthState } from '@/lib/auth'
-import { issueCode, mcpConfigured } from '@/lib/mcp/auth'
+import { issueCode, mcpEnabled } from '@/lib/mcp/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest): Promise<Response> {
-  if (!mcpConfigured()) return new Response('MCP not configured', { status: 503 })
+  if (!(await mcpEnabled())) return new Response('MCP is disabled', { status: 503 })
 
   const url = new URL(req.url)
   const p = url.searchParams

@@ -97,6 +97,19 @@ create table if not exists public.settings (
   data jsonb not null
 );
 
+-- ----- mcp_tokens (MCP server access tokens; only the SHA-256 hash is stored) --
+-- The plaintext token is shown once on creation and never persisted. `prefix` is a
+-- short non-secret display hint (e.g. "vbmcp_AbCd"). Max 5 enforced in the app.
+create table if not exists public.mcp_tokens (
+  id           bigint generated always as identity primary key,
+  name         text not null default '',
+  token_hash   text not null unique,
+  prefix       text not null default '',
+  created_at   timestamptz not null default now(),
+  last_used_at timestamptz
+);
+create index if not exists mcp_tokens_hash_idx on public.mcp_tokens (token_hash);
+
 -- ----- activity_log ----------------------------------------------------------
 create table if not exists public.activity_log (
   id     bigint generated always as identity primary key,
@@ -134,6 +147,7 @@ alter table public.post_revisions   enable row level security;
 alter table public.media            enable row level security;
 alter table public.files            enable row level security;
 alter table public.settings         enable row level security;
+alter table public.mcp_tokens       enable row level security;
 alter table public.activity_log     enable row level security;
 alter table public.analytics_events enable row level security;
 alter table public.analytics_scroll enable row level security;

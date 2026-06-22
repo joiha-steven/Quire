@@ -57,10 +57,16 @@
 - [ ] A published post linking a trashed image still renders that image (blob kept until purge)
 
 ## MCP server (optional)
-- [ ] Unset `MCP_TOKEN` → `GET /api/mcp` returns 401 (endpoint disabled)
-- [ ] With `MCP_TOKEN` set, a bearer-authed MCP client lists/creates/updates posts
+- [ ] MCP toggle OFF (Admin → Settings → Advanced) → `GET /api/mcp` returns 401
+- [ ] Generate a token: shown once, appears in the list (name + prefix), max 5 enforced, delete works
+- [ ] With the toggle ON, a `Authorization: Bearer <token>` MCP client lists/creates/updates posts
 - [ ] `update_settings` only changes title/description/showDescription (sensitive settings refused)
 - [ ] `/.well-known/oauth-protected-resource` + `/.well-known/oauth-authorization-server` return JSON
+
+## Admin nav (left sidebar)
+- [ ] Desktop: sticky left sidebar; active route highlighted; controls pinned at the bottom
+- [ ] Mobile: hamburger opens a drawer with the same links + controls
+- [ ] Settings save bar sits to the right of the sidebar (not under it) on desktop
 
 ## Layout / visual (owner is very sensitive here)
 - [ ] Header rows align on one line: every item (incl. the wordmark) is an `h-9`/`h-10`

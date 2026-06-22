@@ -349,4 +349,24 @@ export type AdminStrings = {
   purged: string
   purgeFailed: string
   movedToTrash: string
+  // MCP server (Admin → Settings → Advanced)
+  cardMcp: string
+  mcpEnable: string
+  mcpEnableDesc: string
+  mcpTokensTitle: string
+  mcpTokensHint: string
+  mcpGenerate: string
+  mcpNamePrompt: string
+  mcpOnceWarning: string
+  mcpCopy: string
+  mcpCopied: string
+  mcpNoTokens: string
+  mcpColName: string
+  mcpColCreated: string
+  mcpColLastUsed: string
+  mcpNeverUsed: string
+  mcpConfirmDelete: string
+  mcpTokenDeleted: string
+  mcpLimitReached: string
+  mcpCreateFailed: string
 }
