@@ -20,6 +20,10 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 <sub>The demo at **manhhung.me** is the author's personal blog — a live instance to see the *platform* in action, not a content showcase (ignore what it says, look at how it works).</sub>
 
+<br/>
+
+<img src="docs/demo.png" alt="vibeblog admin dashboard and reading view" width="900">
+
 </div>
 
 ---
