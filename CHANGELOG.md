@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.15 — README: clearer "What it is" + friendlier install)
+- **docs(readme): rewrote "What it is"** to lead with the actual pitch — open-source (MIT),
+  built for people who just want to **write**, **fast load on mobile + desktop**, **readable
+  typography**, and **easy to tweak from the admin with no hardcoded values**. Gave the feature
+  table a real header row (`Area | What you get`) instead of the blank `&nbsp;` cells.
+- **docs(readme): both "Get your own" paths now open by default** (the AI-agent path was
+  collapsed and easy to miss). **The agent path now has the agent walk the owner through creating
+  the Google OAuth "Web" client** (Cloud Console clicks, consent screen, redirect URI) and collect
+  the client ID/secret back, instead of telling the owner to pre-create it alone. `v1.0.15`.
+
 ## 2026-06-22 (v1.0.14 — fix Backups card stuck on "Connect" after connecting)
 - **fix(backup): the Backups card kept showing "Connect Google Drive" after a successful
   connect** (and "Back up now" stayed disabled). Root cause: the `backup_state` read is Data-Cache-
