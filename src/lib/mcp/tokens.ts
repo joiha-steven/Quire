@@ -6,8 +6,13 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { db } from '@/lib/db'
 
-const MAX_TOKENS = 5
+const MAX_TOKENS = 5 // manual (admin-created) tokens only
 const TOKEN_PREFIX = 'vbmcp_'
+
+// OAuth-issued tokens share this name and are managed separately from manual ones:
+// exempt from MAX_TOKENS and kept as a small rolling window (mintOAuthToken).
+export const OAUTH_TOKEN_NAME = 'OAuth connector'
+const MAX_OAUTH_TOKENS = 2 // current + previous, so a re-auth never kills the in-use token
 
 // What the admin UI sees — never the secret itself.
 export type McpTokenInfo = {
@@ -16,6 +21,7 @@ export type McpTokenInfo = {
   prefix: string // short non-secret display hint, e.g. "vbmcp_AbCd"
   createdAt: string
   lastUsedAt: string | null
+  oauth: boolean // true = machine-issued via OAuth (not a manual admin token)
 }
 
 type TokenRow = { id: number; name: string; prefix: string; created_at: string; last_used_at: string | null }
@@ -28,6 +34,7 @@ const toInfo = (r: TokenRow): McpTokenInfo => ({
   prefix: r.prefix,
   createdAt: r.created_at,
   lastUsedAt: r.last_used_at,
+  oauth: r.name === OAUTH_TOKEN_NAME,
 })
 
 export const tokenLimit = (): number => MAX_TOKENS
@@ -41,17 +48,22 @@ export async function listTokens(): Promise<McpTokenInfo[]> {
   return ((data as TokenRow[] | null) ?? []).map(toInfo)
 }
 
-export async function countTokens(): Promise<number> {
-  const { count } = await db().from('mcp_tokens').select('id', { count: 'exact', head: true })
+// Count manual (admin-created) tokens — OAuth-issued ones are exempt from the cap.
+async function countManualTokens(): Promise<number> {
+  const { count } = await db().from('mcp_tokens').select('id', { count: 'exact', head: true }).neq('name', OAUTH_TOKEN_NAME)
   return count ?? 0
 }
 
-// Mint a named token. Returns the PLAINTEXT once (never stored again). Throws
-// 'token_limit' when MAX_TOKENS already exist.
-export async function createToken(name: string): Promise<{ token: string; info: McpTokenInfo }> {
-  if ((await countTokens()) >= MAX_TOKENS) throw new Error('token_limit')
+const newSecret = (): { token: string; prefix: string } => {
   const token = `${TOKEN_PREFIX}${randomBytes(24).toString('base64url')}`
-  const prefix = token.slice(0, 12)
+  return { token, prefix: token.slice(0, 12) }
+}
+
+// Mint a named MANUAL token. Returns the PLAINTEXT once (never stored again).
+// Throws 'token_limit' when MAX_TOKENS manual tokens already exist.
+export async function createToken(name: string): Promise<{ token: string; info: McpTokenInfo }> {
+  if ((await countManualTokens()) >= MAX_TOKENS) throw new Error('token_limit')
+  const { token, prefix } = newSecret()
   const { data, error } = await db()
     .from('mcp_tokens')
     .insert({ name: name.trim().slice(0, 80) || 'Token', token_hash: sha256(token), prefix })
@@ -61,13 +73,31 @@ export async function createToken(name: string): Promise<{ token: string; info: 
   return { token, info: toInfo(data as TokenRow) }
 }
 
-export async function deleteToken(id: number): Promise<void> {
-  await db().from('mcp_tokens').delete().eq('id', id)
+// Mint the OAuth-connector token (called by /api/mcp/token). NEVER pre-deletes, so a
+// connector's in-use token survives a re-authorize; afterwards prunes to the most
+// recent MAX_OAUTH_TOKENS so reconnects can't pile up. Exempt from the manual cap →
+// authorizing never fails with "limit reached". Eternal (no expiry) → connect once.
+export async function mintOAuthToken(): Promise<{ token: string; info: McpTokenInfo }> {
+  const { token, prefix } = newSecret()
+  const { data, error } = await db()
+    .from('mcp_tokens')
+    .insert({ name: OAUTH_TOKEN_NAME, token_hash: sha256(token), prefix })
+    .select('id,name,prefix,created_at,last_used_at')
+    .single()
+  if (error) throw new Error(`mintOAuthToken: ${error.message}`)
+  const { data: stale } = await db()
+    .from('mcp_tokens')
+    .select('id')
+    .eq('name', OAUTH_TOKEN_NAME)
+    .order('created_at', { ascending: false })
+    .range(MAX_OAUTH_TOKENS, 1000)
+  const ids = ((stale as { id: number }[] | null) ?? []).map((r) => r.id)
+  if (ids.length) await db().from('mcp_tokens').delete().in('id', ids)
+  return { token, info: toInfo(data as TokenRow) }
 }
 
-// Remove every token with this name (used to replace a connector's prior token).
-export async function deleteTokensByName(name: string): Promise<void> {
-  await db().from('mcp_tokens').delete().eq('name', name)
+export async function deleteToken(id: number): Promise<void> {
+  await db().from('mcp_tokens').delete().eq('id', id)
 }
 
 // Verify a presented bearer: hash + lookup. On a match, stamp last_used_at and

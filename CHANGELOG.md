@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.5 — MCP: authorize once, connect forever)
+- **fix(mcp): connecting an OAuth connector once now works indefinitely.** The `/token` exchange
+  used to delete the previous "OAuth connector" token on every connect (single slot), so any
+  reconnect or second client stranded an earlier session on a dead token → "connected but zero
+  tools". Now `mintOAuthToken` **never pre-deletes** (the in-use token survives a re-auth) and keeps
+  a small rolling window (`MAX_OAUTH_TOKENS`), so reconnects can't strand a client. Tokens stay
+  eternal (no expiry), so claude.ai authorizes once and never has to re-auth.
+- **fix(mcp): OAuth tokens are exempt from the manual 5-token cap.** Authorizing can no longer fail
+  with "limit reached"; the admin create-token cap counts manual tokens only (`McpTokenInfo.oauth`).
+- **docs:** corrected the stale `api/mcp/route.ts` header (it still described a single `MCP_TOKEN`
+  bearer) and the CLAUDE.md MCP section. `v1.0.5`.
+
 ## 2026-06-22 (v1.0.4 — full-width admin + non-wrapping table headers)
 - **feat(admin): admin pages now fill the browser width.** Dropped the `max-w-6xl` lock on the
   admin content column (no longer needed with the column/sidebar layout) — content is full width
