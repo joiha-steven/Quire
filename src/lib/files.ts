@@ -9,7 +9,7 @@ import type { FileItem } from '@/types'
 import {
   uploadFile, expandBlob, collapseBlob, deleteByPathname, listBlobs,
 } from '@/lib/blob'
-import { db } from '@/lib/db'
+import { db, liveOnly } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 
 // contentType -> extension. `.ico` arrives as x-icon / vnd.microsoft.icon.
@@ -143,10 +143,8 @@ function rowToItem(row: FileRow): FileItem {
 // Non-cached read, newest first (mutating helpers return authoritative state).
 async function listFiles(): Promise<FileItem[]> {
   try {
-    const { data, error } = await db()
-      .from('files')
-      .select('*')
-      .is('deleted_at', null) // live library only; trashed files live in the Trash view
+    // liveOnly = `.is('deleted_at', null)` — trashed files live in the Trash view.
+    const { data, error } = await liveOnly(db().from('files').select('*'))
       .order('uploaded_at', { ascending: false })
     if (error || !data) {
       if (error) console.error(`[ERROR] files.listFiles: ${error.message}`)

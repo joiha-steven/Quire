@@ -4,7 +4,7 @@
 import { cache } from 'react'
 import type { Page, PageWithContent } from '@/types'
 import { collapseBlob, expandBlob } from '@/lib/blob'
-import { db } from '@/lib/db'
+import { db, liveOnly } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 
@@ -31,7 +31,7 @@ function rowToMeta(row: PageRow): Page {
 // dedupes within one render; every request re-reads Postgres (always current).
 const readIndex = cache(async (): Promise<Page[]> => {
   try {
-    const { data, error } = await db().from('pages').select(META_COLS).is('deleted_at', null)
+    const { data, error } = await liveOnly(db().from('pages').select(META_COLS))
     if (error || !data) {
       if (error) console.error(`[ERROR] pages.readIndex: ${error.message}`)
       return []
@@ -57,7 +57,7 @@ export async function getPublicPages(): Promise<Page[]> {
 // Read one full page. `React.cache` dedupes within one request only.
 export const getPage = cache(async (slug: string): Promise<PageWithContent | null> => {
   try {
-    const { data, error } = await db().from('pages').select('*').eq('slug', slug).is('deleted_at', null).maybeSingle()
+    const { data, error } = await liveOnly(db().from('pages').select('*').eq('slug', slug)).maybeSingle()
     if (error || !data) return null
     const row = data as PageRow
     return { ...rowToMeta(row), content: expandBlob(row.content ?? '') }
