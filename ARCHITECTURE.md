@@ -134,6 +134,14 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
   settings (title, palette color, uploaded icon); standalone launch only — offline is
   intentionally out of scope, so there is nothing to register/cache and admin/API are
   never served stale.
+- **Off-provider backups to the owner's Google Drive.** Supabase + Blob are already durable, so
+  backups exist for *off-provider redundancy* + a one-click restore point, not as primary safety.
+  A snapshot is one self-contained `.tar.gz` (DB dump + every blob) because a single file is the
+  easiest thing to retain (delete one = drop a snapshot) and to restore (one file = the whole
+  site). Drive auth is a **separate** `drive.file` consent (not the login scope) so signing in
+  stays unchanged and the app can only touch files it created; the refresh token is the one true
+  secret, so it lives server-side in `backup_state`, never in the client-bound `settings` blob.
+  Blobs are immutable, so even "full every run" stays cheap to produce.
 
 ## Conventions
 

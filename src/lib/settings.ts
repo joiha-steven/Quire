@@ -3,7 +3,7 @@
 // store-relative, binaries on Blob.
 
 import { cache } from 'react'
-import type { FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
+import type { BackupSettings, FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, SeoSettings, SiteSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
 import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
 import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
@@ -106,6 +106,15 @@ function sanitizeMcp(input: unknown, fallback: McpSettings): McpSettings {
   return { enabled: bool(o.enabled, fallback.enabled) }
 }
 
+function sanitizeBackups(input: unknown, fallback: BackupSettings): BackupSettings {
+  const o = (input ?? {}) as Partial<BackupSettings>
+  return {
+    enabled: bool(o.enabled, fallback.enabled),
+    intervalDays: clampNumber(o.intervalDays, 1, 30, fallback.intervalDays),
+    keep: clampNumber(o.keep, 1, 30, fallback.keep),
+  }
+}
+
 // Owner CSS injected raw into <style>. Owner-only, so the only hazard is an
 // accidental `</style>` closing the tag early — strip it; pass the rest through.
 function sanitizeCss(value: unknown): string {
@@ -132,6 +141,12 @@ export const DEFAULT_SEO: SeoSettings = {
   rss: true,
   ogImage: true,
   ogFallbackImage: '',
+}
+
+export const DEFAULT_BACKUPS: BackupSettings = {
+  enabled: false,
+  intervalDays: 4,
+  keep: 4,
 }
 
 export const DEFAULT_FEATURES: FeatureSettings = {
@@ -280,6 +295,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
   mcp: { enabled: false },
+  backups: DEFAULT_BACKUPS,
 }
 
 // Canonical base URL: owner value, else Vercel production domain, else localhost.
@@ -330,6 +346,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
       mcp: sanitizeMcp(stored.mcp, DEFAULT_SETTINGS.mcp),
+      backups: sanitizeBackups(stored.backups, DEFAULT_BACKUPS),
     }
   } catch (error) {
     console.error(`[ERROR] settings.getSettings: ${(error as Error).message}`)
@@ -386,6 +403,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
     mcp: sanitizeMcp(input.mcp, current.mcp),
+    backups: sanitizeBackups(input.backups, current.backups),
   }
   // Persist image refs store-relative (collapse); keep `next` absolute for the client.
   const stored: SiteSettings = {

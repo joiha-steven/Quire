@@ -63,6 +63,15 @@
 - [ ] `update_settings` only changes title/description/showDescription (sensitive settings refused)
 - [ ] `/.well-known/oauth-protected-resource` + `/.well-known/oauth-authorization-server` return JSON
 
+## Backups (Google Drive, optional)
+- [ ] One-time: Google Drive API enabled on the `AUTH_GOOGLE_ID` Cloud project + `https://<domain>/api/backup/callback` added as an Authorized redirect URI
+- [ ] "Connect Google Drive" → consent → returns to Settings → Advanced showing **connected**
+- [ ] "Back up now" creates a `.tar.gz` in the Drive `vibeblog-backups` folder; it appears in the list with a size
+- [ ] The refresh token never appears in the client: `GET /api/settings` / page source has no Drive token (only enabled/interval/keep)
+- [ ] Retention: with N snapshots > `keep`, a new run prunes to the newest `keep`
+- [ ] Restore (on a throwaway/staging site) replaces content from the snapshot; a pre-restore snapshot is created first
+- [ ] Toggle OFF (or disconnect) → the cron no longer creates snapshots
+
 ## Admin nav (collapsible left sidebar)
 - [ ] Desktop: sticky left sidebar with icons; active route highlighted; controls pinned at the bottom
 - [ ] Collapse toggle → icon-only rail; state persists across navigation (localStorage); tooltips show
