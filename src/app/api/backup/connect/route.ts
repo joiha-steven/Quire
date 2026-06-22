@@ -3,7 +3,8 @@
 // a refresh token without touching the login scope. The callback stores the token.
 
 import type { NextRequest } from 'next/server'
-import { consentUrl, signState } from '@/lib/gdrive'
+import { consentUrl, signState, backupRedirectUri } from '@/lib/gdrive'
+import { getSettings } from '@/lib/settings'
 import { fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,10 @@ export async function GET(req: NextRequest): Promise<Response> {
       logRequest(req, 401, start)
       return fail('Unauthorized', 401)
     }
-    const redirectUri = `${req.nextUrl.origin}/api/backup/callback`
+    // Deterministic redirect from the canonical site URL (NOT the request origin),
+    // so it always matches the one URI registered on the OAuth client even when the
+    // admin is reached via a *.vercel.app host.
+    const redirectUri = backupRedirectUri(await getSettings())
     const url = consentUrl(redirectUri, signState())
     logRequest(req, 302, start)
     return Response.redirect(url, 302)

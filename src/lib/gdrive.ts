@@ -4,8 +4,17 @@
 // limits access to files this app creates — it can never see the rest of the Drive.
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import type { SiteSettings } from '@/types'
+import { resolveSiteUrl } from '@/lib/settings'
 
 const SCOPE = 'https://www.googleapis.com/auth/drive.file'
+
+// The OAuth redirect URI, derived from the canonical site URL so it is stable and
+// matches the single URI registered on the Google client — independent of which host
+// (custom domain vs *.vercel.app) the admin is being reached from.
+export function backupRedirectUri(settings: SiteSettings): string {
+  return `${resolveSiteUrl(settings)}/api/backup/callback`
+}
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const FOLDER_NAME = 'vibeblog-backups'

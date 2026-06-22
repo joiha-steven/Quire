@@ -153,11 +153,10 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
       )}
 
       {tab === 'advanced' && (
-        <div className="space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.backupTitle}>
             <BackupFields backups={s.backups} onChange={(backups) => update({ backups })} />
           </Card>
-          <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.cardMcp}>
             <McpFields mcp={s.mcp} onChange={(mcp) => update({ mcp })} />
           </Card>
@@ -174,7 +173,6 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
               <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
             </div>
           </Card>
-          </div>
         </div>
       )}
 

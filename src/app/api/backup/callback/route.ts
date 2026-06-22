@@ -3,7 +3,8 @@
 // bounces back to Settings → Advanced. Owner-only (middleware + requireOwner).
 
 import type { NextRequest } from 'next/server'
-import { exchangeCode, verifyState } from '@/lib/gdrive'
+import { exchangeCode, verifyState, backupRedirectUri } from '@/lib/gdrive'
+import { getSettings } from '@/lib/settings'
 import { setDriveAuth } from '@/lib/backup-state'
 import { logActivity } from '@/lib/activity'
 import { logRequest, logError, requireOwner } from '@/lib/api'
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest): Promise<Response> {
       logRequest(req, 400, start)
       return back(origin, 'error')
     }
-    const refreshToken = await exchangeCode(code, `${origin}/api/backup/callback`)
+    // Must match the redirect_uri used in the consent step (canonical, not origin).
+    const refreshToken = await exchangeCode(code, backupRedirectUri(await getSettings()))
     await setDriveAuth(refreshToken)
     await logActivity('backup.connect', 'Google Drive')
     logRequest(req, 302, start)
