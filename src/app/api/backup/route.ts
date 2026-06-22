@@ -11,8 +11,13 @@ import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 // A full snapshot streams every blob through the function — give it headroom.
 export const maxDuration = 300
-// Owner-only live data: the snapshot list must reflect Drive immediately.
+// Owner-only live data: the snapshot list + connection status must reflect Drive/DB
+// immediately. db() GET reads are Data-Cache-eligible (tag 'db', 1h) and force-dynamic
+// alone does NOT de-cache them (they set an explicit next.revalidate); `fetchCache =
+// 'force-no-store'` forces a live read. (The backup_state writers still purge tag 'db'
+// for the public-cache side — see backup-state.ts.)
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()

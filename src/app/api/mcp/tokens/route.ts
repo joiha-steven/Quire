@@ -7,10 +7,14 @@ import { listTokens, createToken } from '@/lib/mcp/tokens'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
-// Admin-only live data: the GET list must reflect the DB immediately (creates +
-// OAuth mints + deletes happen out-of-band). Without this, db() GET reads are
-// Data-Cache-eligible (tag 'db', 1h) → the list shows deleted/stale tokens.
+// Admin-only live data: the GET list must reflect the DB immediately (manual creates +
+// OAuth connector mints + deletes happen OUT-OF-BAND, e.g. from Claude, and do NOT purge
+// tag 'db'). db() GET reads opt into the Data Cache via an explicit `next.revalidate`+tag,
+// which `dynamic = 'force-dynamic'` does NOT override (it only de-caches fetches with no
+// revalidate). `fetchCache = 'force-no-store'` forces this route's reads to no-store, so a
+// freshly OAuth-connected token shows up at once. (This was the "list token không hiện" bug.)
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()

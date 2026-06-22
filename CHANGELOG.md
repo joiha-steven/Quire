@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.0.17 — admin live reads were silently served from the 1h Data Cache)
+- **fix(admin): the MCP token list (and every admin live read) could show STALE data —
+  most visibly "list token không hiện" after connecting a connector from Claude.** Root cause:
+  `dynamic = 'force-dynamic'` does NOT de-cache our `db()` GET reads, because they opt into the
+  Data Cache with an explicit `next: { revalidate, tags:['db'] }` — Next only auto-de-caches
+  force-dynamic fetches that set NO revalidate (`noFetchConfigAndForceDynamic` in `patch-fetch`).
+  So a tagged read stayed in the 1h Data Cache, and an OAuth token minted out-of-band (which
+  intentionally does not purge tag `db`) never appeared. Added `export const fetchCache =
+  'force-no-store'` — the lever that forces every fetch in a segment to `no-store` regardless of
+  its options — to the `/admin` layout (cascades to all admin pages) and the owner-only live API
+  routes (`api/mcp/tokens`, `api/files`, `api/media`, `api/media/unused`,
+  `api/posts/[slug]/revisions`, `api/backup`). Public pages keep their cached/ISR reads (they set
+  neither config). Same class of bug as the 1.0.11–1.0.13 "Backups stuck on Connect". `v1.0.17`.
+
 ## 2026-06-23 (v1.0.16 — reading progress bar reaches the top edge on notch/Dynamic Island)
 - **fix(ios): the reading progress bar sat below the Dynamic Island / notch instead of at the
   true top edge.** Without `viewport-fit=cover`, iOS Safari lays the page out inside the safe area,

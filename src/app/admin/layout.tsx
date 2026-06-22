@@ -8,9 +8,17 @@ import { paletteOptions } from '@/lib/themes'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 
-// The entire admin is uncached — every view reads the current Blob state, so the
-// editor/media library/settings never show a stale snapshot of your own edits.
+// The entire admin is uncached — every view reads the CURRENT DB, so it never shows
+// a stale snapshot (your own edits, or out-of-band changes like MCP/OAuth tokens,
+// analytics, or a cron backup). NOTE: `dynamic = 'force-dynamic'` alone is NOT enough:
+// our db() GET reads opt into the Data Cache with an explicit `next.revalidate`+tag,
+// and force-dynamic only de-caches fetches that set NO revalidate (see Next's
+// `noFetchConfigAndForceDynamic` in patch-fetch). `fetchCache = 'force-no-store'` is the
+// lever that forces EVERY fetch in this segment to no-store regardless of its options;
+// it cascades to all /admin children. (Public pages keep their cached reads — they set
+// neither config.)
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { email, authorized } = await getAuthState()

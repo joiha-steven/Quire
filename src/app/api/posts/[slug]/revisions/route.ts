@@ -5,9 +5,11 @@ import type { NextRequest } from 'next/server'
 import { getRevisions } from '@/lib/revisions'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
-// Admin-only live data: db() GET reads are Data-Cache-eligible (tag 'db', 1h);
-// force a live read so the time-machine list shows the latest snapshots.
+// Admin-only live data: db() GET reads are Data-Cache-eligible (tag 'db', 1h). force-dynamic
+// alone does NOT de-cache them (they set an explicit next.revalidate) — `fetchCache =
+// 'force-no-store'` forces a live read so the time-machine list shows the latest snapshots.
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export async function GET(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]/revisions'>): Promise<Response> {
   const start = Date.now()

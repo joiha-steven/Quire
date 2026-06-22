@@ -107,14 +107,21 @@ THEN a `revalidatePath` SUPERSET (which pages re-render):
 Other rules:
 - Admin forms `router.refresh()` after save; admin routes are `force-dynamic` (their DB
   reads become `no-store` → editor/media/settings always live).
-- **GOTCHA — owner-only API LIST routes fetched from a client component MUST export
-  `dynamic = 'force-dynamic'`.** They are NOT under the `/admin` layout, so without it
-  their `db()` GET reads stay Data-Cache-eligible (tag `db`, 1h) and the client list shows
-  STALE rows after a mutation (this caused "deleting an MCP token does nothing" — the
-  cached list kept showing a deleted id). Applies to `api/mcp/tokens`, `api/files`,
-  `api/media`, `api/media/unused`, `api/posts/[slug]/revisions`. Token CRUD intentionally
-  does NOT `revalidateTag('db')` (that would over-purge public pages) — `force-dynamic` is
-  the right tool: live admin read, zero public-cache impact.
+- **GOTCHA — admin LIVE reads need `fetchCache = 'force-no-store'`, NOT just
+  `dynamic = 'force-dynamic'`.** Our `db()` GET reads opt into the Data Cache with an
+  explicit `next: { revalidate, tags:['db'] }`. `force-dynamic` does NOT de-cache those —
+  Next only auto-de-caches force-dynamic fetches that set NO revalidate (the
+  `noFetchConfigAndForceDynamic` path in `patch-fetch.js`); an explicit `revalidate`
+  survives. So a tagged read stays in the 1h Data Cache and shows STALE rows after a
+  mutation — especially OUT-OF-BAND ones that don't purge tag `db` (MCP/OAuth token
+  mints from Claude, cron backup state). `fetchCache = 'force-no-store'` is the lever that
+  forces EVERY fetch in the segment to `no-store` regardless of its options. Set BOTH on:
+  the `/admin` layout (cascades to all admin pages) and the owner-only list API routes
+  (NOT under `/admin`): `api/mcp/tokens`, `api/files`, `api/media`, `api/media/unused`,
+  `api/posts/[slug]/revisions`, `api/backup`. Token CRUD intentionally does NOT
+  `revalidateTag('db')` (that would over-purge public pages) — `force-no-store` gives a
+  live admin read with zero public-cache impact. (This caused "list token không hiện"
+  after an OAuth connect, and earlier the "backup shows not-connected" bug 1.0.11–1.0.13.)
 - `experimental.staleTimes: { dynamic: 0, static: 30 }` (Next 16 rejects `static: 0`).
 - **Accepted staleness:** the "related posts" box on OTHER posts (≤1h ISR / next save).
 - **DO NOT** set the Supabase GET reads to `cache: 'no-store'` (forces every page dynamic,
