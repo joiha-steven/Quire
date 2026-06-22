@@ -49,6 +49,9 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Su
 
 > Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel**.
 
+**Who it's for** — one person who wants a fast, good-looking, fully self-owned blog, is happy on Vercel + Supabase (Docker self-host is on the [Roadmap](./ROADMAP.md)), and likes the idea of letting an AI agent help run it.
+**Not for** — multi-author teams / publications needing roles and editorial workflows. vibeblog is single-owner by design (one authorized email); multi-tenant lives in the planned SaaS, not here.
+
 ---
 
 ## 🚀 Get your own copy
@@ -127,16 +130,16 @@ The post is live in seconds. Sensitive settings are blocked over MCP, and you st
 
 See [`.env.example`](./.env.example). The essentials:
 
-| Variable | What it is |
-|---|---|
-| `AUTH_SECRET` | NextAuth secret — `npx auth secret` |
-| `AUTHORIZED_EMAIL` | The only email allowed into `/admin` |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth "Web" client (admin sign-in) |
-| `SUPABASE_URL` | Supabase project API URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase `service_role` key (secret, server-only) |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token — also derives the public Blob URL at runtime |
-| `CRON_SECRET` | Protects `/api/cron` (keep-alive + scheduled backup) — optional |
-| `MCP_OAUTH_SECRET` | Signs MCP OAuth codes — optional, falls back to `AUTH_SECRET` |
+| Variable | Required | What it is · where to get it |
+|---|:---:|---|
+| `AUTH_SECRET` | ✅ | NextAuth secret — generate with `npx auth secret` |
+| `AUTHORIZED_EMAIL` | ✅ | The only email allowed into `/admin` — your email |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
+| `SUPABASE_URL` | ✅ | Supabase project API URL — Supabase → Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase `service_role` key (secret, server-only) — same page |
+| `BLOB_READ_WRITE_TOKEN` | ✅ auto | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL |
+| `CRON_SECRET` | ◻️ optional | Protects `/api/cron` (keep-alive + scheduled backup) — any random string |
+| `MCP_OAUTH_SECRET` | ◻️ optional | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
 
 MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`); your blog content lives in Supabase + Blob, never in git.
 
