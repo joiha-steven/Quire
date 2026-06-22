@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.0.14`
+# vibe**blog** &nbsp;`v1.0.15`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -67,7 +67,7 @@ Two ways to stand up your own blog — **pick one**. Both end with a live site a
 
 </details>
 
-<details>
+<details open>
 <summary><b>2️⃣ &nbsp;Hand it to an AI agent</b> &nbsp;— Claude, OpenAI Codex, OpenClaw, Hermes…</summary>
 
 <br/>
@@ -79,14 +79,20 @@ Deploy my own copy of github.com/joiha-steven/vibeblog:
 1. Fork the repo to my account.
 2. Create a Supabase project and run scripts/schema.sql in its SQL editor.
 3. Create a Vercel project from the fork; add a Vercel Blob store (this sets BLOB_READ_WRITE_TOKEN).
-4. Set env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Supabase → Settings → API),
+4. Walk me step by step through creating a Google OAuth "Web" client
+   (you can't log into my Google account, so guide me through the Cloud Console:
+   create the project, configure the consent screen, create the OAuth client,
+   and tell me exactly what to click), then collect the resulting
+   AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET from me.
+5. Set env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Supabase → Settings → API),
    AUTH_SECRET (generate with `npx auth secret`), AUTHORIZED_EMAIL=<my email>,
-   AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET (my Google OAuth "Web" client).
-5. Deploy, then register https://<domain>/api/auth/callback/google on the Google client.
-6. Return the live URL.
+   AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.
+6. Deploy, then tell me to register https://<domain>/api/auth/callback/google
+   as a redirect URI on the Google client.
+7. Return the live URL.
 ```
 
-> The one step an agent can't do alone is **creating the Google OAuth app** (it needs your Google login). Pre-create it, or grant access, and hand over the client ID/secret.
+> The agent does everything else; for the Google OAuth app it **walks you through the clicks** (it can't log into your Google account) and takes the client ID/secret back from you.
 
 </details>
 
