@@ -8,6 +8,10 @@ import { db } from '@/lib/db'
 
 const MAX_TOKENS = 5 // manual (admin-created) tokens only
 const TOKEN_PREFIX = 'vbmcp_'
+const TOKEN_TTL_DAYS = 180 // every token expires this long after creation
+
+// Expiry stamp for a freshly minted token (created_at + TTL).
+const expiryISO = (): string => new Date(Date.now() + TOKEN_TTL_DAYS * 86_400_000).toISOString()
 
 // OAuth-issued tokens share this name and are managed separately from manual ones:
 // exempt from MAX_TOKENS. They are NEVER auto-deleted — a connection persists until
@@ -21,11 +25,13 @@ export type McpTokenInfo = {
   name: string
   prefix: string // short non-secret display hint, e.g. "vbmcp_AbCd"
   createdAt: string
+  expiresAt: string // created_at + 180d; rejected once past
+  expired: boolean // computed server-side (past expiresAt) for display
   lastUsedAt: string | null
   oauth: boolean // true = machine-issued via OAuth (not a manual admin token)
 }
 
-type TokenRow = { id: number; name: string; prefix: string; created_at: string; last_used_at: string | null }
+type TokenRow = { id: number; name: string; prefix: string; created_at: string; expires_at: string; last_used_at: string | null }
 
 const sha256 = (s: string): string => createHash('sha256').update(s).digest('hex')
 
@@ -34,6 +40,8 @@ const toInfo = (r: TokenRow): McpTokenInfo => ({
   name: r.name,
   prefix: r.prefix,
   createdAt: r.created_at,
+  expiresAt: r.expires_at,
+  expired: Date.parse(r.expires_at) <= Date.now(),
   lastUsedAt: r.last_used_at,
   oauth: r.name === OAUTH_TOKEN_NAME,
 })
@@ -44,7 +52,7 @@ export const tokenLimit = (): number => MAX_TOKENS
 export async function listTokens(): Promise<McpTokenInfo[]> {
   const { data } = await db()
     .from('mcp_tokens')
-    .select('id,name,prefix,created_at,last_used_at')
+    .select('id,name,prefix,created_at,expires_at,last_used_at')
     .order('created_at', { ascending: false })
   return ((data as TokenRow[] | null) ?? []).map(toInfo)
 }
@@ -67,8 +75,8 @@ export async function createToken(name: string): Promise<{ token: string; info: 
   const { token, prefix } = newSecret()
   const { data, error } = await db()
     .from('mcp_tokens')
-    .insert({ name: name.trim().slice(0, 80) || 'Token', token_hash: sha256(token), prefix })
-    .select('id,name,prefix,created_at,last_used_at')
+    .insert({ name: name.trim().slice(0, 80) || 'Token', token_hash: sha256(token), prefix, expires_at: expiryISO() })
+    .select('id,name,prefix,created_at,expires_at,last_used_at')
     .single()
   if (error) throw new Error(`createToken: ${error.message}`)
   return { token, info: toInfo(data as TokenRow) }
@@ -82,8 +90,8 @@ export async function mintOAuthToken(): Promise<{ token: string; info: McpTokenI
   const { token, prefix } = newSecret()
   const { data, error } = await db()
     .from('mcp_tokens')
-    .insert({ name: OAUTH_TOKEN_NAME, token_hash: sha256(token), prefix })
-    .select('id,name,prefix,created_at,last_used_at')
+    .insert({ name: OAUTH_TOKEN_NAME, token_hash: sha256(token), prefix, expires_at: expiryISO() })
+    .select('id,name,prefix,created_at,expires_at,last_used_at')
     .single()
   if (error) throw new Error(`mintOAuthToken: ${error.message}`)
   return { token, info: toInfo(data as TokenRow) }
@@ -93,12 +101,14 @@ export async function deleteToken(id: number): Promise<void> {
   await db().from('mcp_tokens').delete().eq('id', id)
 }
 
-// Verify a presented bearer: hash + lookup. On a match, stamp last_used_at and
-// return the token's id/name; otherwise null.
+// Verify a presented bearer: hash + lookup. Rejects an expired token (past
+// expires_at). On a live match, stamps last_used_at and returns the token's
+// id/name; otherwise null.
 export async function verifyTokenHash(bearer: string): Promise<{ id: number; name: string } | null> {
-  const { data } = await db().from('mcp_tokens').select('id,name').eq('token_hash', sha256(bearer)).maybeSingle()
+  const { data } = await db().from('mcp_tokens').select('id,name,expires_at').eq('token_hash', sha256(bearer)).maybeSingle()
   if (!data) return null
-  const r = data as { id: number; name: string }
+  const r = data as { id: number; name: string; expires_at: string }
+  if (Date.parse(r.expires_at) <= Date.now()) return null // expired → treat as invalid
   await db().from('mcp_tokens').update({ last_used_at: new Date().toISOString() }).eq('id', r.id)
-  return r
+  return { id: r.id, name: r.name }
 }

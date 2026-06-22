@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.10 — hardening: edge guard, Google-only, MCP token expiry)
+- **feat(security): `src/middleware.ts` edge owner-guard (defense-in-depth).** Reads the NextAuth
+  JWT and blocks `/admin/:path*` (→ sign-in) and owner-only `/api/:path*` (→ 401) BEFORE the route
+  runs — so a new admin page or API route is protected even if it forgets `requireOwner()`. Self-
+  authed/public paths are allow-listed (`/api/auth`, `/api/cron`, `/api/track`, `/api/search`,
+  `/api/mcp` except `/api/mcp/tokens`); add new public/bearer routes to `isPublicApi()`.
+- **change(auth): Google is now the ONLY sign-in provider.** Dropped the GitHub OAuth provider
+  (`auth.ts`, `.env.example`, README). `AUTH_GITHUB_ID/SECRET` are no longer read.
+- **feat(security): MCP tokens now expire 180 days after creation.** New `mcp_tokens.expires_at`
+  column (migration `mcp_tokens_add_expires_at`; default in `schema.sql`); `createToken` /
+  `mintOAuthToken` set it on insert; `verifyTokenHash` rejects an expired bearer. The admin token
+  table shows an **Expires** column (red "Expired" when past). Connectors silently re-authorize
+  across the boundary; a manual token must be recreated. New locale keys `mcpColExpires` / `mcpExpired`
+  in all 6 languages. The admin remains the sole authority over deletion. `v1.0.10`.
+
 ## 2026-06-22 (v1.0.9 — every error page shares one look)
 - **refactor: all error/edge screens now route through ONE `ErrorScreen` component** so they can't
   drift. The public 404, the 5xx boundaries (`ErrorView`), and a new **admin 404**

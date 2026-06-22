@@ -1,4 +1,4 @@
-# vibe**blog** (v1.0.9)
+# vibe**blog** (v1.0.10)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;
@@ -6,14 +6,14 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
 
 - **Framework:** Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - **Storage:** Supabase Postgres for all text (`posts`/`pages`/`post_revisions`/`media`/`files`/`settings` tables; post bodies are Markdown in a text column); Vercel Blob for binaries only. Image refs stored store-relative (no vendor lock-in)
-- **Auth:** NextAuth v5 (Google and/or GitHub OAuth), single authorized owner
+- **Auth:** NextAuth v5 (Google OAuth), single authorized owner
 - **Editor:** TipTap 3 with Markdown; responsive images via `sharp` (original + AVIF/WebP variants, encoded in the background after save); a 3-version time machine per post
 - **Theming:** 6 built-in light+dark color palettes, each fully customizable; visitors can switch palette and light/dark/system/by-time mode; optional custom CSS
 - **Typography:** one tunable type system — every text role (h1–h5, body, small, caption, code) has its own size / line-height / letter-spacing, applied site-wide via CSS variables (no hardcoded sizes); upload a custom typeface per weight (Regular/Medium/SemiBold/Bold); one font for everything
 - **PWA:** installable to the iPhone/Android home screen, launches standalone (no service worker / no offline by design)
 - **Admin:** Overview with a System panel (hosting/region/env + database + storage); a toggleable activity log (Admin → Log) recording every save/upload/delete
 - **Trash:** every delete (posts, pages, media, files) is a recoverable soft delete; an Admin → Trash area restores or permanently removes items per type — nothing auto-purges
-- **MCP server (optional):** a remote MCP endpoint (`/api/mcp`) lets an AI agent (Claude, ChatGPT) write and manage the blog with the same data layer as the admin UI. Toggle it on in Admin → Settings → Advanced and generate up to 5 named access tokens there (shown once, hashed at rest, revocable); a thin OAuth layer covers connectors that need it; sensitive settings are blocked
+- **MCP server (optional):** a remote MCP endpoint (`/api/mcp`) lets an AI agent (Claude, ChatGPT) write and manage the blog with the same data layer as the admin UI. Toggle it on in Admin → Settings → Advanced and generate up to 5 named access tokens there (shown once, hashed at rest, revocable, expire after 180 days); a thin OAuth layer covers connectors that need it; sensitive settings are blocked
 - **UI languages:** en (default), vi, de, ja, zh, ko
 - **Styles:** Tailwind CSS v4
 - **Deploy:** Vercel (Docker self-host is on the [roadmap](./ROADMAP.md))
@@ -27,7 +27,7 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
 - A **Supabase** project (free tier is fine) — holds all text content.
 - A **Vercel Blob** store — holds binaries (images/files/icons). You need its
   read/write token; you don't have to deploy to Vercel to use Blob locally.
-- At least one **OAuth app** — Google and/or GitHub — for admin sign-in.
+- A **Google OAuth app** — for admin sign-in.
 
 ### Steps
 
@@ -51,12 +51,10 @@ binaries (images, attachments, icons) live in **Vercel Blob**.
    the store's **`.env` / Tokens** tab copy the `BLOB_READ_WRITE_TOKEN`
    (`vercel_blob_rw_…`). No need to deploy first.
 
-5. **Create an OAuth app** (at least one):
-   - **Google** — [Cloud Console](https://console.cloud.google.com/) → Credentials →
+5. **Create a Google OAuth app.**
+   - [Cloud Console](https://console.cloud.google.com/) → Credentials →
      OAuth client ID (Web). Authorized redirect URI:
      `http://localhost:3000/api/auth/callback/google`.
-   - **GitHub** — Settings → Developer settings → OAuth Apps → New. Callback URL:
-     `http://localhost:3000/api/auth/callback/github`.
 
 6. **Configure env.**
 
@@ -82,8 +80,7 @@ See [`.env.example`](./.env.example). In short:
 | --------------------------------- | ----------------------------------------- |
 | `AUTH_SECRET`                     | NextAuth secret — `npx auth secret`       |
 | `AUTHORIZED_EMAIL`                | The only email allowed into `/admin`      |
-| `AUTH_GOOGLE_ID` / `_SECRET`      | Google OAuth client (optional provider)   |
-| `AUTH_GITHUB_ID` / `_SECRET`      | GitHub OAuth app (optional provider)      |
+| `AUTH_GOOGLE_ID` / `_SECRET`      | Google OAuth client                       |
 | `SUPABASE_URL`                    | Supabase project API URL                  |
 | `SUPABASE_SERVICE_ROLE_KEY`       | Supabase service_role key (secret, server-only) |
 | `BLOB_READ_WRITE_TOKEN`           | Vercel Blob read/write token              |
@@ -144,12 +141,10 @@ the dashboard, or hand the whole job to an AI agent.
    - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — from step 2.
    - `AUTH_SECRET` — run `npx auth secret` and paste the output.
    - `AUTHORIZED_EMAIL` — the single email allowed into `/admin`.
-   - At least one OAuth provider: `AUTH_GOOGLE_ID` + `AUTH_GOOGLE_SECRET`, and/or
-     `AUTH_GITHUB_ID` + `AUTH_GITHUB_SECRET`.
+   - Google OAuth: `AUTH_GOOGLE_ID` + `AUTH_GOOGLE_SECRET`.
 6. **Deploy.**
-7. **Register the OAuth callback URL** with your provider, using the live domain:
-   - Google: `https://<your-domain>/api/auth/callback/google`
-   - GitHub: `https://<your-domain>/api/auth/callback/github`
+7. **Register the OAuth callback URL** with Google, using the live domain:
+   - `https://<your-domain>/api/auth/callback/google`
 
    Add both your `*.vercel.app` URL and any custom domain.
 8. Open `https://<your-domain>/admin`, sign in as `AUTHORIZED_EMAIL`, and set your
@@ -178,7 +173,7 @@ on it, create a Vercel project from the fork, add a Blob store, generate `AUTH_S
 set the environment variables above (incl. `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`),
 deploy, and return the live URL.* Finish by registering the OAuth callback URL (step 7
 above) and signing in at `/admin`. The only step an agent can't do alone is the OAuth
-**provider** setup (it needs your Google/GitHub login) — pre-create that app, or grant access.
+**provider** setup (it needs your Google login) — pre-create that app, or grant access.
 
 ## Usage
 

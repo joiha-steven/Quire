@@ -310,6 +310,8 @@ const de = {
   mcpColName: 'Name',
   mcpColCreated: 'Erstellt',
   mcpColLastUsed: 'Zuletzt benutzt',
+  mcpColExpires: 'Läuft ab',
+  mcpExpired: 'Abgelaufen',
   mcpRefresh: 'Aktualisieren',
   mcpNeverUsed: 'Nie',
   mcpConfirmDelete: 'Diesen Token löschen? Jeder Client, der ihn nutzt, funktioniert nicht mehr.',

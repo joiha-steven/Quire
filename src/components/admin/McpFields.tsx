@@ -167,6 +167,7 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
                   <th className="px-3 py-2 font-medium">{t.mcpColName}</th>
                   <th className="hidden px-3 py-2 font-medium sm:table-cell">{t.mcpColCreated}</th>
                   <th className="hidden px-3 py-2 font-medium sm:table-cell">{t.mcpColLastUsed}</th>
+                  <th className="hidden px-3 py-2 font-medium sm:table-cell">{t.mcpColExpires}</th>
                   <th className="px-3 py-2" />
                 </tr>
               </thead>
@@ -182,6 +183,13 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
                     </td>
                     <td className="hidden whitespace-nowrap px-3 py-2 text-neutral-500 sm:table-cell dark:text-neutral-400">
                       {tok.lastUsedAt ? formatDateTimeShort(tok.lastUsedAt) : t.mcpNeverUsed}
+                    </td>
+                    <td className="hidden whitespace-nowrap px-3 py-2 sm:table-cell">
+                      {tok.expired ? (
+                        <span className="text-red-600 dark:text-red-400">{t.mcpExpired}</span>
+                      ) : (
+                        <span className="text-neutral-500 dark:text-neutral-400">{formatDateTimeShort(tok.expiresAt)}</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right">
                       <button

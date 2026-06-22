@@ -183,17 +183,20 @@ are called out elsewhere (Caching, Typography, Conventions).
   `settings.mcp.enabled`); `verifyMcpToken` 401s every call while off.
 - **Auth = admin-managed tokens + thin OAuth.** Manual tokens are created in the admin (up to 5,
   named, shown ONCE on creation — only the SHA-256 hash is kept in the `mcp_tokens` table; see
-  `lib/mcp/tokens.ts`). All tokens are **eternal (no expiry)**. `verifyMcpToken` hashes the bearer +
-  looks it up (and stamps `last_used_at`) while the toggle is on. There is **no `MCP_TOKEN` env var.**
-  Connectors that require OAuth run a minimal OAuth 2.1 authorization-code + PKCE flow gated by the
-  owner's NextAuth login (`src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-*`);
-  the `/token` exchange **mints an eternal token via `mintOAuthToken`** (named "OAuth connector") and
-  returns it. **OAuth tokens are exempt from the manual 5-cap and are NEVER auto-deleted.**
-  **Lifecycle rule: the admin is the SOLE authority over a connection** — a token persists forever
-  (no expiry, no prune) until the OWNER deletes it in the admin; deleting the connector in Claude
-  alone just lets it re-authorize (a new token). So authorize once = stays connected indefinitely,
-  and an admin delete is final unless the owner re-authorizes. (A reconnect mints a new row; the
-  prior one persists until the owner removes it — the admin lists/deletes them all.) Codes are HMAC-signed
+  `lib/mcp/tokens.ts`). Every token **expires 180 days after creation** (`expires_at`, set on insert,
+  default in `schema.sql`); `verifyMcpToken` hashes the bearer, looks it up, **rejects it once past
+  `expires_at`**, else stamps `last_used_at` (while the toggle is on). There is **no `MCP_TOKEN` env
+  var.** Connectors that require OAuth run a minimal OAuth 2.1 authorization-code + PKCE flow gated by
+  the owner's NextAuth login (`src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-*`);
+  the `/token` exchange **mints a 180-day token via `mintOAuthToken`** (named "OAuth connector") and
+  returns it. **OAuth tokens are exempt from the manual 5-cap and are NEVER auto-deleted** (an expired
+  row lingers as dead until the owner deletes it; a connector silently re-authorizes to mint a fresh one).
+  **Lifecycle rule: the admin is the SOLE authority over a connection** — beyond the 180-day expiry a
+  token persists (no prune) until the OWNER deletes it in the admin; deleting the connector in Claude
+  alone just lets it re-authorize (a new token). So authorize once = stays connected (connector
+  re-auths across the 180-day boundary), and an admin delete is final unless the owner re-authorizes.
+  (A reconnect mints a new row; the prior one persists until the owner removes it — the admin
+  lists/deletes them all.) Codes are HMAC-signed
   (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`. Token CRUD: owner-only
   `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only).
 - **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
@@ -408,7 +411,13 @@ are called out elsewhere (Caching, Typography, Conventions).
   (components only).
 - Max 400 lines per file. No `any` (use `unknown` + narrowing).
 - Every API handler: time + log the request, try/catch with logged errors. Auth: only
-  `AUTHORIZED_EMAIL` reaches `/admin`; all write/delete routes are owner-gated server-side (401).
+  `AUTHORIZED_EMAIL` reaches `/admin`; all write/delete routes are owner-gated server-side (401)
+  via `requireOwner()`. **`src/middleware.ts` is the edge defense-in-depth net** — it reads the
+  NextAuth JWT and blocks `/admin/:path*` (→ sign-in) and owner-only `/api/:path*` (→ 401) even if a
+  new route forgets `requireOwner()`. It **allow-lists self-authed/public paths** (`/api/auth`,
+  `/api/cron`, `/api/track`, `/api/search`, `/api/mcp` except `/api/mcp/tokens`) — a NEW public or
+  bearer/secret-authed API route must be added to `isPublicApi()` there or it gets 401'd. Google is
+  the ONLY sign-in provider.
 
 ## Next.js 16
 

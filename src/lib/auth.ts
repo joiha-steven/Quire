@@ -1,13 +1,11 @@
-// NextAuth v5 config: OAuth sign-in, single authorized owner.
-// Providers (Google, GitHub) are enabled per env — only the ones whose
-// credentials are present load, so a self-hoster can pick either or both.
+// NextAuth v5 config: Google OAuth sign-in, single authorized owner.
+// Google is the only provider; it loads when its credentials are present.
 // Anyone can sign in, but only AUTHORIZED_EMAIL is treated as authorized.
 // Unauthorized accounts are not blocked at sign-in (no error page); access is
 // gated downstream so they are silently redirected to the homepage.
 
 import NextAuth from 'next-auth'
 import type { Provider } from 'next-auth/providers'
-import GitHub from 'next-auth/providers/github'
 import Google from 'next-auth/providers/google'
 
 // Normalize for comparison: email is case-insensitive in practice and providers
@@ -15,10 +13,9 @@ import Google from 'next-auth/providers/google'
 const normalizeEmail = (e?: string | null): string => (e ?? '').trim().toLowerCase()
 const AUTHORIZED_EMAIL = normalizeEmail(process.env.AUTHORIZED_EMAIL)
 
-// Load only the providers that have credentials configured.
+// Google loads only when its credentials are configured.
 const providers: Provider[] = []
 if (process.env.AUTH_GOOGLE_ID) providers.push(Google)
-if (process.env.AUTH_GITHUB_ID) providers.push(GitHub)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
