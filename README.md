@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog**
+# vibe**blog** &nbsp;`v1.0.13`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -15,9 +15,10 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-ready-7c3aed)
 ![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)
-![Version](https://img.shields.io/badge/version-1.0.13-64748b)
 
-[**Get your own copy**](#-get-your-own-copy) · [**Let an AI run it**](#-let-an-ai-agent-write--publish-mcp) · [**Architecture**](./ARCHITECTURE.md) · [**Roadmap**](./ROADMAP.md) · [**License**](#-license)
+[**🌐 Live demo**](https://manhhung.me) · [**Get your own copy**](#-get-your-own-copy) · [**Let an AI run it**](#-let-an-ai-agent-write--publish-mcp) · [**Architecture**](./ARCHITECTURE.md) · [**Roadmap**](./ROADMAP.md) · [**License**](#-license)
+
+<sub>The demo at **manhhung.me** is the author's personal blog — a live instance to see the *platform* in action, not a content showcase (ignore what it says, look at how it works).</sub>
 
 </div>
 
@@ -27,18 +28,18 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 A fast, single-owner blog where **all the writing happens in a polished `/admin`** (or over MCP), and the public site is statically cached for speed. Text lives in **Supabase Postgres**, binaries (images, files, icons) in **Vercel Blob** — no git push to publish, no CMS to wrangle.
 
-| | |
-|---|---|
-| 🖋️ **Editor** | TipTap 3 + Markdown · responsive `sharp` images (original + AVIF/WebP variants) · 3-version time machine · 60s autosave |
-| 🎨 **Look** | 6 customizable light+dark palettes · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · upload a custom font per weight |
-| 🌍 **i18n** | Admin + site in `en · vi · de · ja · zh · ko` |
-| 🔍 **Reading** | instant local + Postgres full-text search · ToC · related posts · reading time · progress bar |
-| 📈 **Built-in** | cookieless analytics (views / visitors / top pages, no PII) · activity log · soft-delete Trash (nothing auto-purges) |
-| 🔎 **SEO** | sitemap · RSS · `robots.txt` · `llms.txt` · dynamic OG images — all toggleable |
-| 💾 **Backups** | one-click full snapshots (DB + all binaries) to **Google Drive**, scheduled + restore |
-| 🤖 **MCP** | a remote endpoint that lets an AI agent write & manage the blog with the same rules as the admin |
-| 📱 **PWA** | installable, launches standalone |
-| 🔐 **Auth** | NextAuth v5 · Google sign-in · single authorized owner · edge-guarded admin/API |
+| &nbsp; | &nbsp; |
+|:---|:---|
+| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · responsive `sharp` images (original + AVIF/WebP variants) · 3-version time machine · 60s autosave |
+| 🎨&nbsp;**Look** | 6 customizable light+dark palettes · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · upload a custom font per weight |
+| 🌍&nbsp;**i18n** | Admin + site in `en · vi · de · ja · zh · ko` |
+| 🔍&nbsp;**Reading** | instant local + Postgres full-text search · ToC · related posts · reading time · progress bar |
+| 📈&nbsp;**Built-in** | cookieless analytics (views / visitors / top pages, no PII) · activity log · soft-delete Trash (nothing auto-purges) |
+| 🔎&nbsp;**SEO** | sitemap · RSS · `robots.txt` · `llms.txt` · dynamic OG images — all toggleable |
+| 💾&nbsp;**Backups** | one-click full snapshots (DB + all binaries) to **Google Drive**, scheduled + restore |
+| 🤖&nbsp;**MCP** | a remote endpoint that lets an AI agent write & manage the blog with the same rules as the admin |
+| 📱&nbsp;**PWA** | installable, launches standalone |
+| 🔐&nbsp;**Auth** | NextAuth v5 · Google sign-in · single authorized owner · edge-guarded admin/API |
 
 > Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel**.
 

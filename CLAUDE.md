@@ -489,6 +489,6 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   owner cut **1.0.0** with the MCP + Trash release). Each change bumps the patch `x`
   (→ `1.0.999`), a running counter with no semver meaning. NEVER raise `1.0` → `1.1` or `→ 2.0`
   unless the owner asks. A code change bumps `x`; pure-docs may skip. On a bump, also update the
-  **README version badge** (`![Version](https://img.shields.io/badge/version-1.0.x-…)`).
+  **README title** version: `` # vibe**blog** `v1.0.x` `` (centered header, top of README).
 - **Cutting a release:** `x` already current; `npm run build` + `npm run lint` exit 0; push `main`;
   `gh release create v1.0.<x> --title "v1.0.<x> - <tagline>" --notes "…"`.
