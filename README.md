@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.0.13`
+# vibe**blog** &nbsp;`v1.0.14`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -26,9 +26,11 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 ## ✨ What it is
 
-A fast, single-owner blog where **all the writing happens in a polished `/admin`** (or over MCP), and the public site is statically cached for speed. Text lives in **Supabase Postgres**, binaries (images, files, icons) in **Vercel Blob** — no git push to publish, no CMS to wrangle.
+An **open-source** (MIT), single-owner blog built for people who just want to **write**. The public site is statically cached so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
 
-| &nbsp; | &nbsp; |
+All the writing happens in a polished `/admin` (or over MCP). Text lives in **Supabase Postgres**, binaries (images, files, icons) in **Vercel Blob** — no git push to publish, no CMS to wrangle.
+
+| Area | What you get |
 |:---|:---|
 | 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · responsive `sharp` images (original + AVIF/WebP variants) · 3-version time machine · 60s autosave |
 | 🎨&nbsp;**Look** | 6 customizable light+dark palettes · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · upload a custom font per weight |

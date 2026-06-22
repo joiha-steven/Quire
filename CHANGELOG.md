@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-06-22 (v1.0.14 — fix Backups card stuck on "Connect" after connecting)
+- **fix(backup): the Backups card kept showing "Connect Google Drive" after a successful
+  connect** (and "Back up now" stayed disabled). Root cause: the `backup_state` read is Data-Cache-
+  eligible (tag `db`, 1h), and the connect write (`setDriveAuth`) didn't `revalidateTag('db')`, so
+  `GET /api/backup` served the stale pre-connect "not connected" state until the cache expired.
+  `setDriveAuth` / `clearDriveAuth` / `setFolderId` / `recordRun` now bust the `db` tag, so the
+  admin reflects connect / disconnect / run / last-status immediately (confirmed via Supabase API
+  logs: no `backup_state` re-read occurred after the connect writes). Also added a focus/visibility
+  refetch to `BackupFields` so it re-syncs after the OAuth round-trip. `v1.0.14`.
+
 ## 2026-06-22 (v1.0.13 — fix Drive connect redirect + tidy Backups layout)
 - **fix(backup): `redirect_uri_mismatch` connecting Google Drive.** The consent + token-exchange
   redirect URI was built from `req.nextUrl.origin`, which is a `*.vercel.app` host when the admin
