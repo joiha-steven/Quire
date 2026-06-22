@@ -310,6 +310,7 @@ const ja = {
   mcpColName: '名前',
   mcpColCreated: '作成日',
   mcpColLastUsed: '最終使用',
+  mcpRefresh: '更新',
   mcpNeverUsed: '未使用',
   mcpConfirmDelete: 'このトークンを削除しますか？使用中のクライアントは動作しなくなります。',
   mcpTokenDeleted: 'トークンを削除しました',

@@ -310,6 +310,7 @@ const vi = {
   mcpColName: 'Tên',
   mcpColCreated: 'Tạo lúc',
   mcpColLastUsed: 'Dùng gần nhất',
+  mcpRefresh: 'Làm mới',
   mcpNeverUsed: 'Chưa dùng',
   mcpConfirmDelete: 'Xoá token này? Mọi client đang dùng nó sẽ ngừng hoạt động.',
   mcpTokenDeleted: 'Đã xoá token',

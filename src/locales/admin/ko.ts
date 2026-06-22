@@ -310,6 +310,7 @@ const ko = {
   mcpColName: '이름',
   mcpColCreated: '생성일',
   mcpColLastUsed: '마지막 사용',
+  mcpRefresh: '새로고침',
   mcpNeverUsed: '사용 안 함',
   mcpConfirmDelete: '이 토큰을 삭제할까요? 이를 사용하는 모든 클라이언트가 작동을 멈춥니다.',
   mcpTokenDeleted: '토큰을 삭제했습니다',

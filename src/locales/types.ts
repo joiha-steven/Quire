@@ -364,6 +364,7 @@ export type AdminStrings = {
   mcpColName: string
   mcpColCreated: string
   mcpColLastUsed: string
+  mcpRefresh: string
   mcpNeverUsed: string
   mcpConfirmDelete: string
   mcpTokenDeleted: string
