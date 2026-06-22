@@ -37,7 +37,13 @@ vi.mock('@/lib/db', () => {
     }
     return q
   }
-  return { DB_TAG: 'db', db: () => ({ from: () => makeBuilder(state.posts) }) }
+  // liveOnly mirrors the real helper: apply the soft-delete filter to the query.
+  // If a read path drops liveOnly/`.is`, the trashed row stops being filtered.
+  return {
+    DB_TAG: 'db',
+    db: () => ({ from: () => makeBuilder(state.posts) }),
+    liveOnly: (q: Query) => q.is('deleted_at', null),
+  }
 })
 
 import { getIndex, getPublicPosts, searchPosts, getPost } from '@/lib/posts'

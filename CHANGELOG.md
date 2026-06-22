@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — soft-delete filter is enforced in one place)
+- **refactor: `liveOnly()` (in `lib/db.ts`) is the single home of the soft-delete predicate.**
+  Every live read of a soft-deletable table (posts/pages/media/files) now wraps its query in
+  `liveOnly(...)` instead of hand-writing `.is('deleted_at', null)` at each of the 9 call sites —
+  so the column + null check are defined ONCE and can't drift. Trash views still read the complement
+  (`.not('deleted_at','is',null)`) directly. Behaviour-preserving; the `soft-delete.test.ts` suite
+  (listing/public/search/single) guards it. First tagged **beta** of the 1.1 line. `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.0.18 — verification is one command now, not a reading session)
 - **build: `npm run check:all` is the Definition of Done** — typecheck + lint + four static
   invariant checks (`check:routes`, `check:filesize`, `check:no-any`, `check:token-bust`) + the
