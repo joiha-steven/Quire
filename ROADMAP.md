@@ -65,7 +65,9 @@ selected by env var:
 - **Local filesystem** (single volume, smallest setups)
 
 Public-URL resolution is the main work (Vercel Blob has public URLs; S3/FS need a
-public bucket or a proxy route). Foundation for Docker.
+public bucket or a proxy route). Foundation for Docker - and later reused per-tenant in
+the SaaS as "bring your own bucket" (Phase 7), so a tenant's media can live in their own
+R2/S3.
 
 ### Phase 2 — Docker `[planned, needs Phase 1]`
 - `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + optional MinIO).
@@ -182,6 +184,16 @@ deploy-per-user). It is a large rewrite of the data layer, accepted deliberately
 - **Paid, only for heavy/professional users who outgrow 1GB**: buy more storage for
   yourself when you genuinely need it. Priced later, **just enough to cover cost, kept
   super cheap** - it offsets storage, it does not make money.
+- **Bring your own bucket (BYOS)**: a tenant can connect their own Cloudflare R2 / S3
+  bucket; their binaries live there, on their dime, effectively unlimited and entirely
+  outside our quota. This just applies the **Phase 1 storage adapter per-tenant** (the
+  same interface that powers self-host). It reinforces no-lock-in - the media sits
+  literally in the user's own bucket - and a heavy user need not pay us at all.
+
+**Why "free" stays sustainable:** text in Postgres is tiny (a blog's DB stays well under
+1GB); **binaries are the only real cost driver**. With BYOS offloading the heavy media to
+users' own buckets and the shared DB staying small, the operator's running cost barely
+grows with users - the free tier holds almost indefinitely.
 
 **Cost & abuse guardrails (make-or-break for "free"):**
 - Per-blog storage quota + rate limits; reap/flag long-dead free blogs.
