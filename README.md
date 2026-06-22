@@ -1,4 +1,4 @@
-# vibe**blog** (v1.0.4)
+# vibe**blog** (v1.0.5)
 
 An AI-operated personal blog platform. Write and publish from a multilingual admin
 UI. Text content (posts, pages, settings, metadata) lives in **Supabase Postgres**;

@@ -1,8 +1,8 @@
 // Remote MCP endpoint (Streamable HTTP) at /api/mcp. Lets an MCP client (Claude,
 // ChatGPT, …) operate the blog with the SAME data layer as the admin UI. Gated by
-// a single full-access bearer (`MCP_TOKEN`); connectors that require OAuth obtain
-// that token via the thin OAuth layer (see /api/mcp/authorize|token|register and
-// the /.well-known/* metadata routes). Tools live in src/lib/mcp.
+// admin-managed tokens (see lib/mcp/tokens.ts) while the owner's toggle is on;
+// connectors that require OAuth mint an eternal token via the thin OAuth layer
+// (/api/mcp/authorize|token|register + /.well-known/* metadata). Tools in src/lib/mcp.
 
 import { createMcpHandler, withMcpAuth } from 'mcp-handler'
 import { registerTools } from '@/lib/mcp/tools'

@@ -173,15 +173,19 @@ are called out elsewhere (Caching, Typography, Conventions).
   `lib/` functions the admin routes use — same slug rules, revisions, soft-delete, revalidation,
   activity log. **Off unless the owner enables it** (Admin → Settings → Advanced toggle,
   `settings.mcp.enabled`); `verifyMcpToken` 401s every call while off.
-- **Auth = admin-managed tokens + thin OAuth.** Tokens are created in the admin (up to 5, named,
-  shown ONCE on creation — only the SHA-256 hash is kept in the `mcp_tokens` table; see
-  `lib/mcp/tokens.ts`). `verifyMcpToken` hashes the bearer + looks it up (and stamps `last_used_at`)
-  while the toggle is on. There is **no `MCP_TOKEN` env var.** Connectors that require OAuth run a
-  minimal OAuth 2.1 authorization-code + PKCE flow gated by the owner's NextAuth login
-  (`src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-*`); the `/token`
-  exchange **mints a managed token** (named "OAuth connector", replaced per connect) and returns it.
-  Codes are HMAC-signed (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`.
-  Token CRUD: owner-only `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx`.
+- **Auth = admin-managed tokens + thin OAuth.** Manual tokens are created in the admin (up to 5,
+  named, shown ONCE on creation — only the SHA-256 hash is kept in the `mcp_tokens` table; see
+  `lib/mcp/tokens.ts`). All tokens are **eternal (no expiry)**. `verifyMcpToken` hashes the bearer +
+  looks it up (and stamps `last_used_at`) while the toggle is on. There is **no `MCP_TOKEN` env var.**
+  Connectors that require OAuth run a minimal OAuth 2.1 authorization-code + PKCE flow gated by the
+  owner's NextAuth login (`src/app/api/mcp/{authorize,token,register}` + `src/app/.well-known/oauth-*`);
+  the `/token` exchange **mints an eternal token via `mintOAuthToken`** (named "OAuth connector") and
+  returns it. **OAuth tokens are exempt from the manual 5-cap and are NEVER pre-deleted** — a re-auth
+  keeps the connector's in-use token valid; only a small rolling window (`MAX_OAUTH_TOKENS`) is kept
+  so reconnects don't pile up. So **authorize once = works indefinitely** (no churn that strands a
+  client on a dead token; the old "replaced per connect" behavior is gone). Codes are HMAC-signed
+  (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`. Token CRUD: owner-only
+  `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only).
 - **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
   results via `result.ts`). Content is Markdown verbatim — no HTML conversion. Deletes are soft
   (→ Trash). **`update_settings` exposes only a safe allowlist (title/description/showDescription)** —

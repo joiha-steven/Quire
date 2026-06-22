@@ -14,7 +14,7 @@ import { useToast } from '@/components/ui/Toast'
 import { formatDateTimeShort } from '@/lib/utils'
 import { useAdminT } from './I18nProvider'
 
-const MAX = 5
+const MAX = 5 // manual tokens only; OAuth-connector tokens are exempt
 
 export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: McpSettings) => void }) {
   const t = useAdminT()
@@ -110,7 +110,7 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
             <h3 className="text-sm font-semibold">{t.mcpTokensTitle}</h3>
             <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{t.mcpTokensHint}</p>
           </div>
-          <Button type="button" onClick={generate} disabled={pending || tokens.length >= MAX}>
+          <Button type="button" onClick={generate} disabled={pending || tokens.filter((tk) => !tk.oauth).length >= MAX}>
             {t.mcpGenerate}
           </Button>
         </div>
