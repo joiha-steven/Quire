@@ -28,7 +28,7 @@ export function PostsTable({ initialPosts, views }: { initialPosts: Post[]; view
       const json = (await res.json()) as ApiResponse
       if (!json.success) throw new Error(json.error)
       setPosts((prev) => prev.filter((p) => p.slug !== slug))
-      notify(t.deleted)
+      notify(t.movedToTrash)
       router.refresh()
     } catch {
       notify(t.deleteFailed, 'error')

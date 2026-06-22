@@ -14,6 +14,10 @@ export type ActivityAction =
   | 'media.upload' | 'media.delete'
   | 'file.add' | 'file.delete' | 'icon.upload' | 'font.upload'
   | 'settings.save' | 'taxonomy.update' | 'cache.clear'
+  // Trash (soft delete): restore / permanent purge per kind, plus empty-trash.
+  | 'post.restore' | 'post.purge' | 'page.restore' | 'page.purge'
+  | 'media.restore' | 'media.purge' | 'file.restore' | 'file.purge'
+  | 'trash.empty'
 
 export type ActivityEntry = {
   id: number

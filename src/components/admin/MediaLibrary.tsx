@@ -71,7 +71,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
         next.delete(url)
         return next
       })
-      notify(t.deleted)
+      notify(t.movedToTrash)
     } catch {
       notify(t.deleteFailed, 'error')
     }
@@ -105,7 +105,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
       if (!json.success || !json.data) throw new Error(json.error)
       setItems(json.data)
       setSelected(new Set())
-      notify(t.deleted)
+      notify(t.movedToTrash)
     } catch {
       notify(t.deleteFailed, 'error')
     }
@@ -132,7 +132,7 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
       const left = [...unused].filter((u) => surviving.has(u))
       setUnused(left.length ? new Set(left) : null)
       if (left.length === 0) setOnlyUnused(false)
-      notify(t.deleted)
+      notify(t.movedToTrash)
     } catch {
       notify(t.deleteFailed, 'error')
     } finally {

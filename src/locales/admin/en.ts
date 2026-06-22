@@ -281,6 +281,21 @@ const en = {
   sysBranch: 'Branch',
   sysRuntime: 'Runtime',
   sysFramework: 'Framework',
+  navTrash: 'Trash',
+  trashTitle: 'Trash',
+  trashHint: 'Deleted items are kept here until you remove them permanently. Restore brings an item back; emptying the trash cannot be undone.',
+  trashEmpty: 'Trash is empty',
+  colDeletedAt: 'Deleted',
+  restored: 'Restored',
+  restoreFailed: 'Restore failed',
+  deletePermanently: 'Delete permanently',
+  confirmPurge: 'Permanently delete this item? This cannot be undone.',
+  emptyTrash: 'Empty trash',
+  confirmEmptyTrash: 'Permanently delete everything in this trash? This cannot be undone.',
+  trashEmptied: 'Trash emptied',
+  purged: 'Deleted permanently',
+  purgeFailed: 'Permanent delete failed',
+  movedToTrash: 'Moved to Trash',
 } satisfies AdminStrings
 
 export default en

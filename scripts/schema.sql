@@ -23,16 +23,21 @@ create table if not exists public.posts (
   content         text not null default '',
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
+  -- Soft delete: NULL = live, a timestamp = in Trash. Nothing is hard-deleted on a
+  -- normal delete; permanent removal happens only on explicit Trash purge.
+  deleted_at      timestamptz,
   -- Full-text vector over title + body (accent-sensitive 'simple' config; the
   -- /search route's local layer adds accent-insensitivity). Maintained by Postgres.
   search          tsvector generated always as (
                     to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(content, ''))
                   ) stored
 );
+alter table public.posts add column if not exists deleted_at timestamptz;
 create index if not exists posts_status_date_idx on public.posts (status, date desc);
 create index if not exists posts_search_gin      on public.posts using gin (search);
 create index if not exists posts_categories_gin  on public.posts using gin (categories);
 create index if not exists posts_tags_gin        on public.posts using gin (tags);
+create index if not exists posts_deleted_at_idx   on public.posts (deleted_at);
 
 -- ----- pages (share the /{slug} namespace with posts) ------------------------
 create table if not exists public.pages (
@@ -42,8 +47,11 @@ create table if not exists public.pages (
   featured_image  text,
   content         text not null default '',
   created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+  updated_at      timestamptz not null default now(),
+  deleted_at      timestamptz -- soft delete: NULL = live, timestamp = in Trash
 );
+alter table public.pages add column if not exists deleted_at timestamptz;
+create index if not exists pages_deleted_at_idx on public.pages (deleted_at);
 
 -- ----- post_revisions (time machine: last 3 per post) ------------------------
 create table if not exists public.post_revisions (
@@ -63,9 +71,12 @@ create table if not exists public.media (
   width       integer,
   height      integer,
   thumb       text,
-  variants    boolean not null default false
+  variants    boolean not null default false,
+  deleted_at  timestamptz -- soft delete: NULL = live, timestamp = in Trash (blob kept until purge)
 );
+alter table public.media add column if not exists deleted_at timestamptz;
 create index if not exists media_uploaded_at_idx on public.media (uploaded_at desc);
+create index if not exists media_deleted_at_idx  on public.media (deleted_at);
 
 -- ----- files (attachment metadata; binaries on Blob) -------------------------
 create table if not exists public.files (
@@ -73,9 +84,12 @@ create table if not exists public.files (
   filename     text not null,
   size         bigint not null default 0,
   content_type text not null default '',
-  uploaded_at  timestamptz not null default now()
+  uploaded_at  timestamptz not null default now(),
+  deleted_at   timestamptz -- soft delete: NULL = live, timestamp = in Trash (blob kept until purge)
 );
+alter table public.files add column if not exists deleted_at timestamptz;
 create index if not exists files_uploaded_at_idx on public.files (uploaded_at desc);
+create index if not exists files_deleted_at_idx  on public.files (deleted_at);
 
 -- ----- settings (single row, id = 1) -----------------------------------------
 create table if not exists public.settings (

@@ -14,6 +14,7 @@ export type Post = {
   featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
   excerpt?: string // auto-extracted from first paragraph if empty
   readingMinutes?: number // estimated read time, computed from the body at save (for lists)
+  deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
 }
 
 // Full post = metadata + markdown body.
@@ -35,6 +36,7 @@ export type Page = {
   slug: string
   status: PostStatus
   featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
+  deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
 }
 
 // Full page = metadata + markdown body.
@@ -52,6 +54,7 @@ export type MediaItem = {
   height?: number
   thumb?: string // library thumbnail — store-relative, absolute on read
   variants?: boolean // true if responsive -1024/-1600 (avif+webp) were generated
+  deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
 }
 
 // A non-image file in the "Files" library (PDF, zip, docx, audio…). Stored under
@@ -62,6 +65,7 @@ export type FileItem = {
   size: number // bytes
   contentType: string // MIME type as uploaded
   uploadedAt: string // ISO 8601
+  deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
 }
 
 // Site-wide settings, stored at settings/site.json.

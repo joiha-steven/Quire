@@ -16,7 +16,8 @@
 - [ ] Past-date posts show the correct date
 - [ ] Postgres rows stay consistent after every write/delete (posts/pages/media/files)
 - [ ] `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set in the target Vercel environment
-- [ ] Deleting a media item removes it for good (no resurrection on next save/autosave)
+- [ ] Deleting a media item moves it to Trash (it leaves the library but is NOT gone — the
+  blob + every variant stay until purged from Trash)
 
 ## Cache & ISR
 - [ ] After publishing a post: detail page at `/{slug}` shows the new post
@@ -43,9 +44,23 @@
 - [ ] Browser is served AVIF where supported (DevTools → Network on a post)
 - [ ] "Check unused" badges media referenced by no post/page/settings/revision (read-only,
   deletes nothing); the "show unused only" filter appears when any are found
-- [ ] Deleting an image removes the original + thumbnail + every variant
+- [ ] Deleting an image moves it to Trash (blob kept); **purging** it from Trash removes the
+  original + thumbnail + every variant
 - [ ] Favicon / app icon upload accepts `.ico` and lands in `files/` (not the media grid)
 - [ ] Post publish works, appears on blog immediately
+
+## Trash (soft delete)
+- [ ] Deleting a post/page/media/file moves it to Admin → Trash; it leaves the live site/library
+- [ ] Restore returns the item to live (post/page reappears on its URL + lists)
+- [ ] "Delete permanently" / "Empty trash" purges (posts: row+revisions; media/files: row+blobs)
+- [ ] Nothing in Trash disappears on its own (no auto-purge)
+- [ ] A published post linking a trashed image still renders that image (blob kept until purge)
+
+## MCP server (optional)
+- [ ] Unset `MCP_TOKEN` → `GET /api/mcp` returns 401 (endpoint disabled)
+- [ ] With `MCP_TOKEN` set, a bearer-authed MCP client lists/creates/updates posts
+- [ ] `update_settings` only changes title/description/showDescription (sensitive settings refused)
+- [ ] `/.well-known/oauth-protected-resource` + `/.well-known/oauth-authorization-server` return JSON
 
 ## Layout / visual (owner is very sensitive here)
 - [ ] Header rows align on one line: every item (incl. the wordmark) is an `h-9`/`h-10`

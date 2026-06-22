@@ -281,6 +281,21 @@ const zh = {
   sysBranch: '分支',
   sysRuntime: '运行时',
   sysFramework: '框架',
+  navTrash: '回收站',
+  trashTitle: '回收站',
+  trashHint: '已删除的项目会保留在此处，直到你永久删除。恢复可将项目还原；清空回收站无法撤销。',
+  trashEmpty: '回收站为空',
+  colDeletedAt: '删除时间',
+  restored: '已恢复',
+  restoreFailed: '恢复失败',
+  deletePermanently: '永久删除',
+  confirmPurge: '永久删除此项目？此操作无法撤销。',
+  emptyTrash: '清空回收站',
+  confirmEmptyTrash: '永久删除此回收站中的所有内容？此操作无法撤销。',
+  trashEmptied: '回收站已清空',
+  purged: '已永久删除',
+  purgeFailed: '永久删除失败',
+  movedToTrash: '已移至回收站',
 } satisfies AdminStrings
 
 export default zh

@@ -281,6 +281,21 @@ const ko = {
   sysBranch: '브랜치',
   sysRuntime: '런타임',
   sysFramework: '프레임워크',
+  navTrash: '휴지통',
+  trashTitle: '휴지통',
+  trashHint: '삭제한 항목은 영구 삭제할 때까지 여기에 보관됩니다. 복원하면 항목이 되돌아오며, 휴지통 비우기는 취소할 수 없습니다.',
+  trashEmpty: '휴지통이 비어 있습니다',
+  colDeletedAt: '삭제일',
+  restored: '복원됨',
+  restoreFailed: '복원 실패',
+  deletePermanently: '영구 삭제',
+  confirmPurge: '이 항목을 영구 삭제할까요? 되돌릴 수 없습니다.',
+  emptyTrash: '휴지통 비우기',
+  confirmEmptyTrash: '이 휴지통의 모든 항목을 영구 삭제할까요? 되돌릴 수 없습니다.',
+  trashEmptied: '휴지통을 비웠습니다',
+  purged: '영구 삭제됨',
+  purgeFailed: '영구 삭제 실패',
+  movedToTrash: '휴지통으로 이동됨',
 } satisfies AdminStrings
 
 export default ko

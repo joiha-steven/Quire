@@ -281,6 +281,21 @@ const ja = {
   sysBranch: 'ブランチ',
   sysRuntime: 'ランタイム',
   sysFramework: 'フレームワーク',
+  navTrash: 'ゴミ箱',
+  trashTitle: 'ゴミ箱',
+  trashHint: '削除した項目は完全に削除するまでここに保管されます。復元すると元に戻ります。ゴミ箱を空にすると取り消せません。',
+  trashEmpty: 'ゴミ箱は空です',
+  colDeletedAt: '削除日',
+  restored: '復元しました',
+  restoreFailed: '復元に失敗しました',
+  deletePermanently: '完全に削除',
+  confirmPurge: 'この項目を完全に削除しますか？取り消せません。',
+  emptyTrash: 'ゴミ箱を空にする',
+  confirmEmptyTrash: 'このゴミ箱の中身をすべて完全に削除しますか？取り消せません。',
+  trashEmptied: 'ゴミ箱を空にしました',
+  purged: '完全に削除しました',
+  purgeFailed: '完全削除に失敗しました',
+  movedToTrash: 'ゴミ箱に移動しました',
 } satisfies AdminStrings
 
 export default ja
