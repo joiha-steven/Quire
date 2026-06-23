@@ -304,6 +304,10 @@ export type AdminStrings = {
   commentsKeySave: string
   commentsKeySaved: string
   commentsKeySet: string
+  commentsTurnstileHelp: string
+  commentsFacebookHelp: string
+  commentsGoogleHelp: string
+  commentsHelpOpen: string
   commentsNavTitle: string
   commentsCount: string
   commentsColContent: string

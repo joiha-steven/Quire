@@ -14,8 +14,30 @@ import { useAdminT } from './I18nProvider'
 const INPUT =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100'
 
+// External setup links (where the owner gets each integration's keys / settings).
+const LINKS = {
+  turnstile: 'https://dash.cloudflare.com/?to=/:account/turnstile',
+  facebook: 'https://developers.facebook.com/apps/',
+  google: 'https://console.cloud.google.com/apis/credentials/consent',
+}
+
 type Keys = { turnstileSiteKey: string; turnstileSecretKey: string; facebookId: string; facebookSecret: string }
 const EMPTY: Keys = { turnstileSiteKey: '', turnstileSecretKey: '', facebookId: '', facebookSecret: '' }
+
+// One integration's title + help line with an "Open ↗" link to its setup page.
+function Help({ title, text, href, open }: { title: string; text: string; href: string; open: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{title}</p>
+      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+        {text}{' '}
+        <a href={href} target="_blank" rel="noopener" className="font-medium underline hover:text-neutral-900 dark:hover:text-white">
+          {open}
+        </a>
+      </p>
+    </div>
+  )
+}
 
 export function CommentKeys({ comments, env }: { comments: CommentSettings; env: CommentEnv }) {
   const t = useAdminT()
@@ -23,8 +45,9 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
   const [keys, setKeys] = useState<Keys>(EMPTY)
   const [busy, setBusy] = useState(false)
   const showTurnstile = comments.enabled && comments.turnstile
+  const showGoogle = comments.enabled && comments.googleAuth
   const showFacebook = comments.enabled && comments.facebookAuth
-  if (!showTurnstile && !showFacebook) return null
+  if (!showTurnstile && !showGoogle && !showFacebook) return null
 
   const set = (k: keyof Keys, v: string) => setKeys((p) => ({ ...p, [k]: v }))
   // A placeholder hinting the field is already configured (so blank = keep).
@@ -56,26 +79,31 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
     <div className="mt-4 space-y-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
       {showTurnstile && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{t.commentsTurnstile}</p>
+          <Help title={t.commentsTurnstile} text={t.commentsTurnstileHelp} href={LINKS.turnstile} open={t.commentsHelpOpen} />
           <input className={INPUT} placeholder={ph(!!env.turnstileSiteKey, t.commentsKeySite)} value={keys.turnstileSiteKey} onChange={(e) => set('turnstileSiteKey', e.target.value)} />
           <input className={INPUT} type="password" placeholder={ph(env.turnstileConfigured, t.commentsKeySecret)} value={keys.turnstileSecretKey} onChange={(e) => set('turnstileSecretKey', e.target.value)} />
         </div>
       )}
+      {showGoogle && (
+        <Help title={t.commentsGoogleAuth} text={t.commentsGoogleHelp} href={LINKS.google} open={t.commentsHelpOpen} />
+      )}
       {showFacebook && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{t.commentsFacebookAuth}</p>
+          <Help title={t.commentsFacebookAuth} text={t.commentsFacebookHelp} href={LINKS.facebook} open={t.commentsHelpOpen} />
           <input className={INPUT} placeholder={ph(env.facebookConfigured, t.commentsKeyFbId)} value={keys.facebookId} onChange={(e) => set('facebookId', e.target.value)} />
           <input className={INPUT} type="password" placeholder={ph(env.facebookConfigured, t.commentsKeyFbSecret)} value={keys.facebookSecret} onChange={(e) => set('facebookSecret', e.target.value)} />
         </div>
       )}
-      <button
-        type="button"
-        onClick={save}
-        disabled={busy}
-        className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-      >
-        {t.commentsKeySave}
-      </button>
+      {(showTurnstile || showFacebook) && (
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        >
+          {t.commentsKeySave}
+        </button>
+      )}
     </div>
   )
 }
