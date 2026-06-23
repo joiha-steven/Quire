@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## 2026-06-23 (v1.1.0-beta — instant comments (optimistic) + route loading skeleton)
+## 2026-06-23 (v1.1.0-beta — UI fixes: logo cursor, title wrapping, admin dots)
+- **fix: the header logo/wordmark now shows the pointer (hand) cursor**, not the text caret
+  (`cursor-pointer` on the brand link).
+- **fix: titles no longer wrap too early.** Dropped `text-wrap: balance` on headings — it shortened
+  lines and left a premature right rag on list-card titles. Body keeps `text-wrap: pretty`.
+- **change: the admin dotted canvas is more visible** in both light and dark (dot opacity + size up).
 - **feat(comments): a posted comment now appears instantly (optimistic).** It's rendered with the
   SAME `renderCommentMarkdown` the server uses — so there's no content drift — overlaid on the tree
   via the new, tested `lib/comment-tree.ts` `mergeOptimisticComments`, then the authoritative refetch

@@ -158,12 +158,11 @@ p, h1, h2, h3, h4, li, blockquote, a {
   overflow-wrap: break-word;
 }
 
-/* Heading colour (size/tracking come from the role vars below). `text-wrap:
-   balance` evens out multi-line headings (no lone short last line) — progressive,
-   ignored where unsupported. */
+/* Heading colour (size/tracking come from the role vars below). No `text-wrap:
+   balance` — it shortened lines and made titles wrap too early (premature rag);
+   headings wrap normally. Body paragraphs still use `text-wrap: pretty` below. */
 h1, h2, h3, h4, h5 {
   color: var(--c-heading);
-  text-wrap: balance;
 }
 
 /* Role utilities — apply a role to text OUTSIDE .prose so every size/line/spacing
@@ -494,13 +493,13 @@ hr {
    the dot colour is a fixed faint neutral per mode (NOT a public theme token). */
 .admin-canvas {
   background-color: #fafafa; /* neutral-50 */
-  background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(0, 0, 0, 0.13) 1.2px, transparent 1.2px);
   background-size: 22px 22px;
   background-position: -1px -1px;
 }
 .dark .admin-canvas {
   background-color: #0a0a0a; /* neutral-950 */
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.11) 1.2px, transparent 1.2px);
 }
 
 /* Native colour picker (admin theme): strip the default inner padding/border so

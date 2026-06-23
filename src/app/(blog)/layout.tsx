@@ -27,7 +27,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
             on the logo's vertical midline at any logo size. The description sits
             below the whole row. */}
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="inline-flex items-center">
+          <Link href="/" className="inline-flex cursor-pointer items-center">
             {showLogo ? (
               // Plain <img>, NOT next/image: the logo host is owner-configurable at
               // runtime, but next/image's optimizer only allows hosts whitelisted in
