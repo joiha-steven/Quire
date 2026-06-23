@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## 2026-06-23 (v1.1.0-beta — reading time shows on every list post)
+## 2026-06-23 (v1.1.0-beta — activity log: errors now recorded + flagged)
+- **feat: the activity log now captures server errors.** `logError` (the central route catch
+  handler) schedules `after(() => logActivityError("METHOD /path", message))`, writing an
+  `error`-action entry (same `activity_log` table, gated by the same `features.activityLog` toggle,
+  never throws). Unexpected failures are now visible in **Admin → Log**, rendered with a red badge.
+  Only genuine errors land here — validation 400s use `fail()`, not `logError`. `v1.1.0-beta`.
 - **fix: many list posts showed no read time.** List views use the stored `posts.reading_minutes`
   column (the body isn't fetched for lists), and imported posts had it `null`. Added
   `scripts/backfill-reading-time.mjs` (mirrors `lib/utils.ts` `readingMinutes`; `--dry`/`--all`,
