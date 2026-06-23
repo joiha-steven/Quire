@@ -10,9 +10,6 @@
 import { useEffect, useState } from 'react'
 import type { Heading } from '@/lib/utils'
 
-// In-page anchors the panel jumps to (set on the matching blocks in the post page).
-export const TOC_ANCHORS = { tags: 'post-tags', categories: 'post-categories', comments: 'post-comments' }
-
 export function Toc({
   headings,
   title,

@@ -13,6 +13,12 @@
   (e.g. "12 Bình luận", server-rendered). Solid `bg-bg` background so it never shows content
   through; clickable items now get a pointer cursor; phones gain wider side gutters
   (`px-8 sm:px-5`) so the handle clears the text. `v1.1.0-beta`.
+- **fix(blog): the jump link pointed at `#undefined`.** `TOC_ANCHORS` was exported from the
+  `'use client'` `Toc` module and imported into the Server Component post page; a Server Component
+  importing a plain const from a client module gets a client-reference proxy, so `TOC_ANCHORS.tags`
+  read as `undefined` on the server — rendering `href="#undefined"` and matching `id="undefined"`
+  anchor targets (no build error, since the proxy doesn't throw). Moved `TOC_ANCHORS` to a plain
+  `lib/toc.ts` that both sides import. `v1.1.0-beta`.
 
 ## 2026-06-23 (v1.1.0-beta — comment integrations: setup help + links in the admin)
 - **feat(admin): each comment integration now shows a one-line setup guide + a link.** Turnstile →
