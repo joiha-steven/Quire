@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — reading time shows on every list post)
+- **fix: many list posts showed no read time.** List views use the stored `posts.reading_minutes`
+  column (the body isn't fetched for lists), and imported posts had it `null`. Added
+  `scripts/backfill-reading-time.mjs` (mirrors `lib/utils.ts` `readingMinutes`; `--dry`/`--all`,
+  idempotent) and ran it — 44 posts backfilled, 0 remain null. App saves already set the column, so
+  this is a one-off repair. `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — palettes: true-neutral Mono, drop Rosé, add Sci-Fi)
 - **fix(palette): Mono is now truly hueless.** The old values had a faint warm/blue cast (cream
   `bg`/`rule`, slightly blue `text`/`meta`), so the menu hover looked tinted. All pure gray now, and
