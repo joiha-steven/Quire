@@ -109,6 +109,16 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
   Vercel SDK contained so a self-host build can't silently depend on it. **One codebase, no fork:**
   Vercel ignores the `Dockerfile`; the image needs no backend env to build (the data layer
   degrades to empty), so the same source ships both targets.
+- **Bundled DB on self-host, supabase-js unchanged.** Supabase's API is just **PostgREST** over
+  Postgres, and the app uses nothing else from Supabase (no Auth/Realtime/Storage — sign-in is
+  NextAuth, binaries are the storage driver). So the Docker stack bundles **Postgres + PostgREST**
+  and supabase-js talks to the local PostgREST — the whole data layer is identical, no rewrite to a
+  raw Postgres client. The single seam is in `db.ts`: when `POSTGREST_DIRECT=1` the custom `dbFetch`
+  strips the `/rest/v1` path prefix supabase-js adds (bare PostgREST serves tables at `/`), which
+  avoids a proxy container. Postgres applies `scripts/schema.sql` + a role/grant bootstrap on first
+  init; `service_role` is `BYPASSRLS` (every table has RLS on with no policies, exactly like
+  Supabase). Net: a self-hoster needs **no cloud account** — text in a local Postgres volume,
+  binaries on a local disk volume.
 - **100% Markdown, raw HTML escaped** → safe, portable content; videos are bare URLs
   embedded at render, not stored iframes.
 - **Responsive images, encoding deferred to save** → jpg/png uploads keep the

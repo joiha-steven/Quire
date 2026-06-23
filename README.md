@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.1.2`
+# vibe**blog** &nbsp;`v1.1.3`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -33,7 +33,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 An **open-source** (MIT), single-owner blog built for people who just want to **write**. The public site is statically cached so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
 
-All the writing happens in a polished `/admin` (or over MCP). Text lives in **Supabase Postgres**; binaries (images, files, icons) go through a pluggable storage driver — **Vercel Blob** by default, or the **local filesystem** when you self-host with Docker. No git push to publish, no CMS to wrangle.
+All the writing happens in a polished `/admin` (or over MCP). Text lives in **Postgres** (Supabase on Vercel, or a bundled Postgres when you self-host); binaries (images, files, icons) go through a pluggable storage driver — **Vercel Blob** by default, or the **local filesystem** on Docker. No git push to publish, no CMS to wrangle.
 
 | Area | What you get |
 |:---|:---|
@@ -47,7 +47,7 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Su
 | 🤖&nbsp;**MCP** | a remote endpoint that lets an AI agent write & manage the blog with the same rules as the admin |
 | 📱&nbsp;**PWA** | installable, launches standalone |
 | 🔐&nbsp;**Auth** | NextAuth v5 · Google sign-in · single authorized owner · edge-guarded admin/API |
-| 🚀&nbsp;**Deploy** | Vercel + Supabase (+ Vercel Blob), **or** self-host with Docker (local filesystem storage) — same codebase |
+| 🚀&nbsp;**Deploy** | Vercel + Supabase (+ Vercel Blob), **or** self-host with Docker — bundled Postgres + local storage, **no cloud** — same codebase |
 
 > Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel** or self-hosted with **Docker**.
 
@@ -110,15 +110,17 @@ Deploy my own copy of github.com/joiha-steven/vibeblog:
 
 <br/>
 
-Runs the Next standalone server as a plain container. **No Vercel Blob** — binaries use the local filesystem driver and live in a mounted volume (`./data/uploads`); back that folder up next to your Postgres dump. Postgres (Supabase or self-hosted Supabase) and Google OAuth stay external, same as the Vercel path.
+**Fully self-contained — no cloud accounts.** The stack bundles **Postgres + PostgREST** (replaces Supabase) and the **local filesystem** store (replaces Vercel Blob), plus a cron sidecar. Everything runs on your host; only Google sign-in reaches the internet. Data lives in `./data/postgres` (text) + `./data/uploads` (binaries) — back up those two folders.
 
 ```bash
 git clone https://github.com/joiha-steven/vibeblog.git && cd vibeblog
-cp .env.docker.example .env.docker   # fill in Supabase, AUTH_*, SITE_URL, CRON_SECRET
-docker compose up -d --build         # app on :3000 + an hourly cron sidecar
+cp .env.docker.example .env.docker
+node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + service key
+# then fill AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, AUTHORIZED_EMAIL, SITE_URL, CRON_SECRET
+docker compose --env-file .env.docker up -d --build   # app on :3000 + db + rest + cron
 ```
 
-Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/auth/callback/google` (and `<SITE_URL>/api/backup/callback` for Drive backups) on your Google OAuth client. The image needs **no backend env to build** — env is supplied at runtime via `.env.docker`. Storage is selected by `STORAGE_DRIVER=local` (baked into the image); the Vercel path keeps using Blob unchanged.
+Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/auth/callback/google` (and `<SITE_URL>/api/backup/callback` for Drive backups) on your Google OAuth client. The image needs **no backend env to build** — secrets are supplied at runtime. The bundled DB applies `scripts/schema.sql` automatically on first boot. Prefer a managed database? Point `SUPABASE_URL` at any Supabase project and drop the `db`/`rest` services — see [`.env.docker.example`](./.env.docker.example). The Vercel path is unchanged (Supabase + Blob).
 
 </details>
 
@@ -154,8 +156,9 @@ See [`.env.example`](./.env.example). The essentials:
 | `AUTH_SECRET` | ✅ | NextAuth secret — generate with `npx auth secret` |
 | `AUTHORIZED_EMAIL` | ✅ | The only email allowed into `/admin` — your email |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in + optional commenter login) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
-| `SUPABASE_URL` | ✅ | Supabase project API URL — Supabase → Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase `service_role` key (secret, server-only) — same page |
+| `SUPABASE_URL` | ✅ | Supabase project API URL — Supabase → Settings → API. **Docker:** auto-set to the bundled PostgREST (`http://rest:3000`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase `service_role` key (secret, server-only) — same page. **Docker:** generate with `node scripts/docker/gen-keys.mjs` |
+| `POSTGRES_PASSWORD` / `SUPABASE_JWT_SECRET` | ◻️ Docker | Bundled-DB secrets for the local Postgres + PostgREST — produced by `gen-keys.mjs` alongside the key above |
 | `BLOB_READ_WRITE_TOKEN` | ✅ Vercel | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL. **Not used on Docker** (local filesystem driver) |
 | `STORAGE_DRIVER` | ◻️ Docker | `vercel-blob` (default) or `local`. The Docker image bakes in `local`; binaries go to `STORAGE_LOCAL_DIR` (default `/app/uploads`) |
 | `SITE_URL` | ◻️ Docker | Canonical public URL of the instance (Vercel infers this automatically). Used for OG/sitemap/auth callbacks when self-hosting |
@@ -163,7 +166,7 @@ See [`.env.example`](./.env.example). The essentials:
 | `MCP_OAUTH_SECRET` | ◻️ optional | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
 | Turnstile / Facebook keys | ◻️ optional | Comment anti-spam (Cloudflare Turnstile) + Facebook commenter login — **enter these in Admin → Settings** (stored server-side). The matching env vars (`TURNSTILE_*`, `AUTH_FACEBOOK_*`) still work as a fallback |
 
-MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`) — or `.env.docker` when self-hosting; your blog content lives in Supabase + Blob (or the local volume), never in git. The full self-host set is in [`.env.docker.example`](./.env.docker.example).
+MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`) — or `.env.docker` when self-hosting; your blog content lives in Supabase + Blob (or the bundled Postgres + local volume on Docker), never in git. The full self-host set is in [`.env.docker.example`](./.env.docker.example).
 
 ---
 

@@ -49,8 +49,9 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 
 ## Architecture (operational)
 
-- **Text in Supabase Postgres; binaries via the `blob.ts` storage driver** (Vercel Blob by
-  default, local filesystem on Docker/self-host — `STORAGE_DRIVER`). Tables (schema `public`):
+- **Text in Postgres (Supabase on Vercel; a bundled Postgres+PostgREST on Docker — supabase-js
+  unchanged, see Env); binaries via the `blob.ts` storage driver** (Vercel Blob by default, local
+  filesystem on Docker/self-host — `STORAGE_DRIVER`). Tables (schema `public`):
   `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens`
   `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
   `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
@@ -66,8 +67,11 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
   token — `.env.local` + Vercel only. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
   env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`).
   **Self-host (Docker):** `STORAGE_DRIVER=local` + `NEXT_PUBLIC_STORAGE_DRIVER=local` (baked into
-  the image) + `STORAGE_LOCAL_DIR` (volume) + `SITE_URL`; no Blob token. Full set in
-  `.env.docker.example`; build needs no backend env (data layer degrades to empty).
+  the image) + `STORAGE_LOCAL_DIR` (volume) + `SITE_URL`; no Blob token. **No Supabase cloud** — the
+  stack bundles Postgres + PostgREST; `db.ts` strips the `/rest/v1` prefix when `POSTGREST_DIRECT=1`
+  so supabase-js hits the local PostgREST unchanged (`SUPABASE_URL=http://rest:3000`, key from
+  `scripts/docker/gen-keys.mjs`; roles/grants in `docker/initdb/`). Full set in `.env.docker.example`;
+  build needs no backend env (data layer degrades to empty).
 - **Region:** `vercel.json` pins functions + the Blob store to `sin1` (Singapore); OG is edge.
   Detail → `docs/seo-pwa.md`.
 
