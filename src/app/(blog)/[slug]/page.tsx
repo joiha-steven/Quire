@@ -103,13 +103,20 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
-    // In-page jumps shown under the ToC headings (only for sections present here).
+    // ONE in-page jump under the ToC headings: the present section labels joined
+    // (Thẻ / Danh mục / Bình luận), scrolling to the first section that exists.
     const tx = t(language)
-    const tocJumps = [
-      post.tags.length > 0 ? { id: TOC_ANCHORS.tags, label: tx.tagLabel } : null,
-      post.categories.length > 0 ? { id: TOC_ANCHORS.categories, label: tx.categoryLabel } : null,
-      showComments ? { id: TOC_ANCHORS.comments, label: tx.commentsHeading } : null,
-    ].filter((j): j is { id: string; label: string } => j !== null)
+    const metaParts = [
+      post.tags.length > 0 ? tx.tagLabel : null,
+      post.categories.length > 0 ? tx.categoryLabel : null,
+      showComments ? tx.commentsHeading : null,
+    ].filter((p): p is string => p !== null)
+    const metaAnchor = post.tags.length > 0
+      ? TOC_ANCHORS.tags
+      : post.categories.length > 0
+        ? TOC_ANCHORS.categories
+        : TOC_ANCHORS.comments
+    const tocMeta = metaParts.length ? { label: metaParts.join(' / '), anchor: metaAnchor } : undefined
     return (
       <article>
         {features.progressBar && <ReadingProgress />}
@@ -139,7 +146,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {/* The ToC is fixed to the viewport (see Toc.tsx) — left-pinned on desktop,
             a left-edge tab + slide-out on mobile — not anchored here. */}
         <div className="mt-8">
-          {headings.length >= 3 && <Toc headings={headings} title={tx.tocTitle} jumps={tocJumps} />}
+          {headings.length >= 3 && <Toc headings={headings} title={tx.tocTitle} meta={tocMeta} />}
           <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 
