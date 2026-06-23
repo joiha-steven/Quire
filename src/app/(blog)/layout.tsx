@@ -15,7 +15,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
   const showLogo = settings.showLogo && settings.logoUrl
   return (
     <div
-      className="mx-auto flex min-h-screen w-full flex-col px-5"
+      className="mx-auto flex min-h-screen w-full flex-col px-6"
       style={{ maxWidth: settings.contentWidth }}
     >
       {/* Owner CSS, public pages only (admin is never touched). Sanitized in settings.ts. */}

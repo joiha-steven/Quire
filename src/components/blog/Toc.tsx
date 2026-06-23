@@ -1,32 +1,43 @@
 'use client'
 
-// Table of contents for a post. Renders at the top of long articles (>= 3
-// headings). Highlights the section currently in view and scrolls smoothly.
-// Below the headings it links to the in-page tags / categories / comments.
-// Desktop (xl+): pinned to the left of the viewport, always visible.
-// Mobile (< xl): hidden by default behind a left-edge tab; tapping the tab
-// slides the panel out over the content (solid background, so nothing shows
-// through), tapping outside or an item closes it again.
+// Table of contents for a post. Renders only when the post has headings (the
+// page also gates on >= 3). Highlights the section in view and scrolls smoothly.
+// Below the headings, ONE line links to the in-page tags/categories/comments
+// (scroll-only). Collapsible on every viewport via a left-edge handle (no text —
+// the tab shape is self-explanatory): default OPEN on desktop (xl+, pinned so
+// clicks don't dismiss it), default CLOSED on mobile (clicks / outside-tap /
+// Escape dismiss it). Solid bg so the panel always sits cleanly over content.
 import { useEffect, useState } from 'react'
 import type { Heading } from '@/lib/utils'
 
 // In-page anchors the panel jumps to (set on the matching blocks in the post page).
 export const TOC_ANCHORS = { tags: 'post-tags', categories: 'post-categories', comments: 'post-comments' }
 
-type Jump = { id: string; label: string }
-
 export function Toc({
   headings,
   title,
-  jumps,
+  meta,
 }: {
   headings: Heading[]
   title: string
-  // Optional in-page jumps (tags / categories / comments) shown under the headings.
-  jumps: Jump[]
+  // The combined tags/categories/comments jump (label already joined), if any present.
+  meta?: { label: string; anchor: string }
 }) {
   const [active, setActive] = useState<string>('')
-  const [open, setOpen] = useState(false) // mobile slide-out state only
+  const [open, setOpen] = useState(false)
+  const [pinned, setPinned] = useState(false) // xl+: panel stays open, clicks don't close it
+
+  // Default open on desktop, closed on mobile; track the breakpoint live.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)')
+    const apply = () => {
+      setPinned(mq.matches)
+      setOpen(mq.matches)
+    }
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   useEffect(() => {
     const els = headings
@@ -44,13 +55,16 @@ export function Toc({
     return () => obs.disconnect()
   }, [headings])
 
-  // Close the mobile panel on Escape.
+  // Escape closes the floating (non-pinned) panel.
   useEffect(() => {
-    if (!open) return
+    if (!open || pinned) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open])
+  }, [open, pinned])
+
+  // No headings → no panel at all (defence in depth; the page already gates on >= 3).
+  if (!headings.length) return null
 
   function goId(e: React.MouseEvent, id: string) {
     e.preventDefault()
@@ -58,7 +72,7 @@ export function Toc({
     if (!el) return
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     history.replaceState(null, '', `#${id}`)
-    setOpen(false)
+    if (!pinned) setOpen(false)
   }
 
   // Clicking the title scrolls back up to the top of the post.
@@ -66,87 +80,78 @@ export function Toc({
     e.preventDefault()
     window.scrollTo({ top: 0, behavior: 'smooth' })
     history.replaceState(null, '', location.pathname)
-    setOpen(false)
+    if (!pinned) setOpen(false)
   }
-
-  const inner = (
-    <>
-      <button
-        type="button"
-        onClick={goTop}
-        className="mb-2 block text-left font-semibold text-heading transition-opacity hover:opacity-70"
-      >
-        {title}
-      </button>
-      <ul className="space-y-1.5">
-        {headings.map((h) => (
-          <li key={h.id}>
-            <a
-              href={`#${h.id}`}
-              onClick={(e) => goId(e, h.id)}
-              className={`block transition-colors hover:text-heading ${
-                active === h.id ? 'font-medium text-heading' : 'text-meta'
-              }`}
-            >
-              {h.text}
-            </a>
-          </li>
-        ))}
-      </ul>
-      {jumps.length > 0 && (
-        <ul className="mt-4 space-y-1.5">
-          {jumps.map((j) => (
-            <li key={j.id}>
-              <a
-                href={`#${j.id}`}
-                onClick={(e) => goId(e, j.id)}
-                className="block text-meta transition-colors hover:text-heading"
-              >
-                {j.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
-  )
-
-  // Solid background + border so the panel always sits cleanly over the content.
-  const navClass =
-    'max-h-[80vh] overflow-y-auto rounded-xl border border-rule bg-bg p-5 t-small'
 
   return (
     <>
-      {/* Mobile (< xl): left-edge tab, then slide-out panel over the content. */}
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={title}
-        aria-expanded={open}
-        className="fixed top-1/2 left-0 z-20 -translate-y-1/2 rounded-r-lg border border-l-0 border-rule bg-bg px-2 py-4 text-meta transition-opacity hover:opacity-70 xl:hidden"
-      >
-        <span className="t-small [writing-mode:vertical-rl]">{title}</span>
-      </button>
+      {/* Mobile: outside-tap closes the floating panel (transparent, no dim). */}
+      {open && !pinned && <div className="fixed inset-0 z-20 xl:hidden" onClick={() => setOpen(false)} />}
 
-      {open && (
-        // Transparent full-screen catcher closes on outside tap (no dim, so we
-        // never hardcode a non-token colour).
-        <div className="fixed inset-0 z-30 xl:hidden" onClick={() => setOpen(false)}>
+      {/* One flush-left rig: [panel][handle]. Closed = just the handle at the edge. */}
+      <div className="fixed top-1/2 left-0 z-30 flex -translate-y-1/2 items-center">
+        {open && (
           <nav
             aria-label={title}
-            onClick={(e) => e.stopPropagation()}
-            className={`${navClass} absolute top-1/2 left-0 w-64 -translate-y-1/2 border-l-0 shadow-lg`}
+            className="max-h-[80vh] w-60 overflow-y-auto rounded-r-xl border border-l-0 border-rule bg-bg p-5 t-small shadow-lg"
           >
-            {inner}
+            <button
+              type="button"
+              onClick={goTop}
+              className="mb-2 block text-left font-semibold text-heading transition-opacity hover:opacity-70"
+            >
+              {title}
+            </button>
+            <ul className="space-y-1.5">
+              {headings.map((h) => (
+                <li key={h.id}>
+                  <a
+                    href={`#${h.id}`}
+                    onClick={(e) => goId(e, h.id)}
+                    className={`block transition-colors hover:text-heading ${
+                      active === h.id ? 'font-medium text-heading' : 'text-meta'
+                    }`}
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            {meta && (
+              <a
+                href={`#${meta.anchor}`}
+                onClick={(e) => goId(e, meta.anchor)}
+                className="mt-4 block text-meta transition-colors hover:text-heading"
+              >
+                {meta.label}
+              </a>
+            )}
           </nav>
-        </div>
-      )}
+        )}
 
-      {/* Desktop (xl+): pinned to the left edge of the viewport, always visible. */}
-      <div className="fixed top-1/2 left-[50px] z-10 hidden w-60 -translate-y-1/2 xl:block">
-        <nav aria-label={title} className={navClass}>
-          {inner}
-        </nav>
+        {/* Text-free handle: a tab on the screen edge that toggles the panel. */}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={title}
+          aria-expanded={open}
+          className="flex items-center rounded-r-lg border border-l-0 border-rule bg-bg py-5 pr-1 pl-0.5 text-meta transition-colors hover:text-heading"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={open ? 'rotate-180' : ''}
+            aria-hidden
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
       </div>
     </>
   )
