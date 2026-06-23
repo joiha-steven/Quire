@@ -47,8 +47,8 @@
   Only fixed public size left: the 404 numeral.
 - **Reading-optimized defaults (= the Reset target).** Restrained, monotonic heading scale
   (h1 2.0 → h5 1.0, h5 no longer below body), 18px body at ~1.7 leading, ~66-char measure
-  (`contentWidth` 672). Headings get `text-wrap: balance`, `.prose p` gets `text-wrap: pretty`
-  (both progressive). Change the numbers in BOTH `globals.css :root` and `DEFAULT_TYPOGRAPHY`.
+  (`contentWidth` 672). Text wraps normally (no `text-wrap: balance`/`pretty` — both re-broke lines
+  and left a premature right rag). Change the numbers in BOTH `globals.css :root` and `DEFAULT_TYPOGRAPHY`.
 - **Inter is self-hosted** (`public/fonts/inter-{latin,latin-ext,vietnamese}.woff2`,
   variable, declared via `@font-face` + `unicode-range` in `globals.css`; `--font-inter:'Inter'`
   there). **No `next/font/google`** — it fetched at build, which broke offline/CI builds. The OG

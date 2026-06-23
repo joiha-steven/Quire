@@ -160,7 +160,7 @@ p, h1, h2, h3, h4, li, blockquote, a {
 
 /* Heading colour (size/tracking come from the role vars below). No `text-wrap:
    balance` — it shortened lines and made titles wrap too early (premature rag);
-   headings wrap normally. Body paragraphs still use `text-wrap: pretty` below. */
+   headings (and body paragraphs) wrap normally, filling each line to the measure. */
 h1, h2, h3, h4, h5 {
   color: var(--c-heading);
 }
@@ -258,8 +258,9 @@ hr {
 }
 .prose p {
   margin-top: 1.4em;
-  /* Improve the rag and avoid a lone short last line; progressive, safe to ignore. */
-  text-wrap: pretty;
+  /* No `text-wrap: pretty` — Chromium re-breaks the whole paragraph to even the rag,
+     which shortened lines and left too much space on the right. Normal greedy wrap
+     fills each line to the measure. */
 }
 .prose a {
   color: var(--c-link);
