@@ -1,6 +1,20 @@
 # CHANGELOG
 
-## 2026-06-23 (v1.1.0-beta — editable footer + a tiny limited-markdown editor)
+## 2026-06-23 (v1.1.0-beta — motion engine: subtle, token-gated, one switch)
+- **feat: a site-wide motion engine for a calmer, more "app-like" feel.** ONE set of tokens
+  (`--dur-fast/base/slow` + `--ease`) drives every transition/animation across the public site AND
+  admin. A single switch gates all of it: `<html data-motion>` is server-rendered from a new
+  `settings.motion.enabled` (default on; no flash, no client JS), and BOTH `data-motion="off"` and
+  `prefers-reduced-motion` collapse every duration to `0s` — instant, no per-component branching.
+  Toggle in **Admin → Appearance → Rendering**.
+- **What moves (kept subtle):** eased hover/focus/colour changes + a tiny press-squash on buttons;
+  cross-fade page navigations via Next `experimental.viewTransition` + `::view-transition-*(root)`
+  CSS; a gentle scroll-reveal on list cards (`.reveal`). All use cheap `opacity`/`transform` only —
+  **no CLS, no render-blocking, no added client bundle** — and degrade to instant/visible where
+  unsupported (the reveal is guarded behind `@supports (animation-timeline)` + `data-motion='on'`).
+- **chore:** the file-size guard now also exempts the `src/locales/` i18n dictionaries (cohesive
+  DATA manifests, like the already-exempt `types.ts`) — adding UI strings no longer trips the cap.
+  `v1.1.0-beta`.
 - **feat: the site footer is now owner-editable.** New `settings.footer` holds limited inline
   markdown — **bold / italic / underline / link** only — rendered by `lib/inline-md.ts`
   (escape-first like `comment-md`: the whole string is escaped, so only the `<strong>/<em>/<u>/<a>`

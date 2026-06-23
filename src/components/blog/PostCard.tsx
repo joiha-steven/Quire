@@ -13,7 +13,9 @@ export function PostCard({
   showReadingTime?: boolean
 }) {
   return (
-    <article>
+    // `reveal` eases the card in as it scrolls into view (motion engine; fully
+    // visible when motion is off / unsupported — see globals.css).
+    <article className="reveal">
       <h2 className="fs-h2 font-semibold tracking-tight">
         <Link href={`/${post.slug}`} className="hover:text-meta">
           {post.title}

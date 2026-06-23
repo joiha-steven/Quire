@@ -195,6 +195,8 @@ const ja = {
   cardRendering: '文字の表示',
   fontSmoothing: 'フォントの滑らか化（アンチエイリアス）',
   fontSmoothingDesc: '文字の輪郭を滑らかにします。Macでは細く/薄く見えることがあります。オフはブラウザ既定。',
+  motionLabel: 'モーション',
+  motionDesc: 'サイト全体と管理画面の控えめなアニメーション（ページのフェード、ホバー/押下、スクロール表示）。オフで即時。reduced-motion は常に尊重します。',
   overviewTitle: '概要',
   licenseTitle: 'vibeblog はオープンソース（MIT）。ブログの内容はあなたのものです（無断転載禁止）。',
   statPosts: '投稿',

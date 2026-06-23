@@ -145,7 +145,12 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
               <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
             </Card>
             <Card title={t.cardRendering}>
-              <AdvancedFields typography={s.typography} onTypography={(typography) => update({ typography })} />
+              <AdvancedFields
+                typography={s.typography}
+                onTypography={(typography) => update({ typography })}
+                motion={s.motion}
+                onMotion={(motion) => update({ motion })}
+              />
             </Card>
             <Card title={t.customCss}>
               <div className="space-y-1.5">

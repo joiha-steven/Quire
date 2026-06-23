@@ -195,6 +195,8 @@ const vi = {
   cardRendering: 'Hiển thị chữ',
   fontSmoothing: 'Khử răng cưa (anti-aliasing)',
   fontSmoothingDesc: 'Làm mượt viền chữ. Trên Mac có thể trông mảnh/nhạt hơn - tắt thì dùng mặc định trình duyệt.',
+  motionLabel: 'Chuyển động',
+  motionDesc: 'Hiệu ứng tinh tế toàn site + admin (mờ dần khi chuyển trang, hover/bấm, hiện dần khi cuộn). Tắt = tức thì. Luôn tôn trọng prefers-reduced-motion.',
   overviewTitle: 'Tổng quan',
   licenseTitle: 'vibeblog là mã nguồn mở (MIT). Nội dung blog của bạn vẫn là của bạn (giữ toàn quyền).',
   statPosts: 'Bài viết',

@@ -195,6 +195,8 @@ const en = {
   cardRendering: 'Text rendering',
   fontSmoothing: 'Font smoothing (anti-aliasing)',
   fontSmoothingDesc: 'Smooths text edges. Can look lighter/thinner on Mac — off uses the browser default.',
+  motionLabel: 'Motion',
+  motionDesc: 'Subtle animations across the site + admin (page fades, hover/press, scroll reveal). Off = instant. Reduced-motion is always respected.',
   overviewTitle: 'Overview',
   licenseTitle: 'vibeblog is open source under MIT. Your blog content stays yours (all rights reserved).',
   statPosts: 'Posts',

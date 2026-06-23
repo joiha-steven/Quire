@@ -116,7 +116,8 @@
   class="site-footer">`; default keeps the "© {year} {title} · powered by vibeblog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
   **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontUpload`/
-  `TypographyFields`/`AdvancedFields` (font smoothing = "Text rendering") + custom-CSS; **SEO**
+  `TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine
+  toggle → `settings.motion.enabled`) + custom-CSS; **SEO**
   `SeoFields`; **Integrations** `BackupFields` + `McpFields`. `McpFields` is the EXCEPTION to "no own
   state/save": the MCP enable toggle flows through the settings form, but its token manager has its
   own `/api/mcp/tokens` API (plaintext shown once).
