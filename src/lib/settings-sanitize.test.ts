@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeEnabledPalettes } from '@/lib/settings-sanitize'
+import { sanitizeEnabledPalettes, sanitizeComments } from '@/lib/settings-sanitize'
 import { ALL_PALETTE_IDS } from '@/lib/themes'
+
+const COMMENTS_OFF = { enabled: false, turnstile: false, googleAuth: false, facebookAuth: false }
+
+describe('sanitizeComments', () => {
+  it('falls back to defaults for a missing / malformed object', () => {
+    expect(sanitizeComments(undefined, COMMENTS_OFF)).toEqual(COMMENTS_OFF)
+    expect(sanitizeComments('nope', COMMENTS_OFF)).toEqual(COMMENTS_OFF)
+  })
+
+  it('keeps booleans and ignores non-boolean fields', () => {
+    expect(sanitizeComments({ enabled: true, turnstile: 'yes' }, COMMENTS_OFF)).toEqual({
+      ...COMMENTS_OFF,
+      enabled: true,
+    })
+  })
+})
 
 // `enabledPalettes` is the visitor-switcher allow-list. Invariants pinned here:
 // the default is ALWAYS included (so the switcher never goes empty), only known

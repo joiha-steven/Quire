@@ -21,6 +21,7 @@ import { McpFields } from './McpFields'
 import { BackupFields } from './BackupFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FeatureFields } from './FeatureFields'
+import { CommentFields } from './CommentFields'
 import { SeoFields } from './SeoFields'
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
@@ -117,6 +118,9 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
                 relatedCount={s.relatedCount}
                 onRelatedCount={(relatedCount) => update({ relatedCount })}
               />
+            </Card>
+            <Card title={t.cardComments}>
+              <CommentFields comments={s.comments} onChange={(comments) => update({ comments })} />
             </Card>
             <Card title="SEO">
               <SeoFields s={s} update={update} />

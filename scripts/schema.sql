@@ -91,6 +91,30 @@ alter table public.files add column if not exists deleted_at timestamptz;
 create index if not exists files_uploaded_at_idx on public.files (uploaded_at desc);
 create index if not exists files_deleted_at_idx  on public.files (deleted_at);
 
+-- ----- comments (per-post reader comments; text only) ------------------------
+-- `parent_id` is a plain self-reference (NO FK constraint on purpose): purging one
+-- comment must never cascade-delete live replies. The tree is rebuilt in the app,
+-- which re-roots any orphan (parent purged) and renders a deleted-but-still-replied
+-- node as a tombstone. `depth` (0..2) enforces the 3-tier reply limit at WRITE time;
+-- display nesting is recomputed from the actual ancestry present. Soft delete like
+-- every other table (Invariant 6): NULL = live, timestamp = in Trash.
+create table if not exists public.comments (
+  id             bigint generated always as identity primary key,
+  post_slug      text not null,
+  parent_id      bigint,
+  depth          smallint not null default 0 check (depth between 0 and 2),
+  author_name    text not null default '',
+  author_email   text not null default '',  -- admin-only; NEVER sent to the public client
+  author_website text,
+  provider       text not null default 'manual' check (provider in ('manual', 'google', 'facebook')),
+  content        text not null default '',   -- limited markdown source (<=1000 chars), rendered safe on read
+  created_at     timestamptz not null default now(),
+  deleted_at     timestamptz
+);
+create index if not exists comments_post_idx       on public.comments (post_slug, deleted_at, created_at);
+create index if not exists comments_parent_idx     on public.comments (parent_id);
+create index if not exists comments_deleted_at_idx on public.comments (deleted_at);
+
 -- ----- settings (single row, id = 1) -----------------------------------------
 create table if not exists public.settings (
   id   integer primary key default 1 check (id = 1),
@@ -165,6 +189,7 @@ create index if not exists analytics_scroll_path_idx    on public.analytics_scro
 -- ----- RLS: lock every table to server-side (service_role) access only --------
 alter table public.posts            enable row level security;
 alter table public.pages            enable row level security;
+alter table public.comments         enable row level security;
 alter table public.post_revisions   enable row level security;
 alter table public.media            enable row level security;
 alter table public.files            enable row level security;

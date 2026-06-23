@@ -3,7 +3,7 @@
 // store-relative, binaries on Blob. Validation/migration lives in settings-sanitize.ts.
 
 import { cache } from 'react'
-import type { BackupSettings, FeatureSettings, FontSettings, SeoSettings, SiteSettings, TypographySettings } from '@/types'
+import type { BackupSettings, CommentSettings, FeatureSettings, FontSettings, SeoSettings, SiteSettings, TypographySettings } from '@/types'
 import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
 import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
@@ -11,7 +11,7 @@ import { isSiteLang } from '@/locales/langs'
 import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES } from '@/lib/themes'
 import {
   sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp,
-  sanitizeBackups, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
+  sanitizeBackups, sanitizeComments, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
 } from '@/lib/settings-sanitize'
 
 // Re-export so existing importers keep working.
@@ -40,6 +40,13 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   readingTime: true,
   progressBar: true,
   activityLog: true,
+}
+
+export const DEFAULT_COMMENTS: CommentSettings = {
+  enabled: false,
+  turnstile: false,
+  googleAuth: false,
+  facebookAuth: false,
 }
 
 // Per-role type CSS vars on :root (+ optional font-smoothing). Injected after
@@ -93,6 +100,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   customFont: DEFAULT_FONT,
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
+  comments: DEFAULT_COMMENTS,
   mcp: { enabled: false },
   backups: DEFAULT_BACKUPS,
 }
@@ -139,6 +147,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       })(),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
+      comments: sanitizeComments(stored.comments, DEFAULT_COMMENTS),
       mcp: sanitizeMcp(stored.mcp, DEFAULT_SETTINGS.mcp),
       backups: sanitizeBackups(stored.backups, DEFAULT_BACKUPS),
     }
@@ -201,6 +210,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     customFont: sanitizeFont(input.customFont, current.customFont),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
+    comments: sanitizeComments(input.comments, current.comments),
     mcp: sanitizeMcp(input.mcp, current.mcp),
     backups: sanitizeBackups(input.backups, current.backups),
   }

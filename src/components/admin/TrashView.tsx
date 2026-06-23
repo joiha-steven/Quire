@@ -8,12 +8,12 @@
 // source of truth, a global `pending` flag just disables actions mid-request.
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Post, Page, MediaItem, FileItem, ApiResponse } from '@/types'
+import type { Post, Page, MediaItem, FileItem, AdminComment, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { formatDateTimeShort } from '@/lib/utils'
 import { useAdminT } from './I18nProvider'
 
-type Kind = 'posts' | 'pages' | 'media' | 'files'
+type Kind = 'posts' | 'pages' | 'media' | 'files' | 'comments'
 
 // Shared chrome for the two row actions so they can't drift (admin tooling may
 // stay neutral — see Conventions).
@@ -25,11 +25,13 @@ export function TrashView({
   pages,
   media,
   files,
+  comments,
 }: {
   posts: Post[]
   pages: Page[]
   media: MediaItem[]
   files: FileItem[]
+  comments: AdminComment[]
 }) {
   const t = useAdminT()
   const router = useRouter()
@@ -42,12 +44,14 @@ export function TrashView({
     pages: pages.length,
     media: media.length,
     files: files.length,
+    comments: comments.length,
   }
   const tabs: { key: Kind; label: string }[] = [
     { key: 'posts', label: `${t.tabPosts} (${counts.posts})` },
     { key: 'pages', label: `${t.tabPages} (${counts.pages})` },
     { key: 'media', label: `${t.tabImages} (${counts.media})` },
     { key: 'files', label: `${t.tabFiles} (${counts.files})` },
+    { key: 'comments', label: `${t.commentsNavTitle} (${counts.comments})` },
   ]
 
   async function act(kind: Kind, action: 'restore' | 'purge' | 'empty', ids?: string[]): Promise<boolean> {
@@ -116,6 +120,7 @@ export function TrashView({
       {tab === 'pages' && <SlugTable rows={pages} kind="pages" />}
       {tab === 'media' && <MediaTable rows={media} />}
       {tab === 'files' && <FileTable rows={files} />}
+      {tab === 'comments' && <CommentTable rows={comments} />}
     </div>
   )
 
@@ -208,6 +213,26 @@ export function TrashView({
               {f.deletedAt ? formatDateTimeShort(f.deletedAt) : ''}
             </td>
             <Actions kind="files" id={f.url} />
+          </tr>
+        ))}
+      </Shell>
+    )
+  }
+
+  function CommentTable({ rows }: { rows: AdminComment[] }) {
+    if (rows.length === 0) return <Empty />
+    return (
+      <Shell head="">
+        {rows.map((c) => (
+          <tr key={c.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+            <td className="max-w-xs px-4 py-3">
+              <p className="line-clamp-1 font-medium">{c.content}</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">{c.name} · {c.postTitle}</p>
+            </td>
+            <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-500 sm:table-cell dark:text-neutral-400">
+              {c.deletedAt ? formatDateTimeShort(c.deletedAt) : ''}
+            </td>
+            <Actions kind="comments" id={String(c.id)} />
           </tr>
         ))}
       </Shell>

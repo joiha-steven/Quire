@@ -106,6 +106,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | Auth / route 401 / route exposed | `lib/auth.ts`, `lib/api.ts`, `src/middleware.ts`, `api/<route>/route.ts` | `docs/mcp.md` if MCP |
 | Slug / 404 / duplicate URL | `lib/slugs.ts`, `src/app/(blog)/[slug]` | `lib/posts.ts`, `lib/pages.ts` |
 | Trash / soft delete / restore | `lib/posts.ts` (`deleted_at`), `api/trash`, `src/app/admin/trash` | `docs/features.md` |
+| Comments (reader) / not showing / cache | `lib/comments.ts`, `components/blog/Comments.tsx`, `api/comments`, `lib/comment-md.ts` | `docs/features.md` "Comments" |
 | Backup / restore / cron | `docs/backups.md`, `lib/backup.ts`, `lib/gdrive.ts`, `lib/backup-state.ts` | — |
 | Theme / palette / dark / FOUC | `lib/themes.ts`, `src/components/theme/*` | `docs/conventions.md` |
 | Typography / font / layout drift | `docs/conventions.md` FIRST, then the component | — |
@@ -129,6 +130,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `files.ts` | `renderLogo`, `uploadIcon`, `uploadFont`, `getFiles`, `addFilesBatch`, `deleteFile*`, `getSiteIcons` | `files/` prefix = custom font, site icons (`favicon-`/`app-icon-`), attachment library. `deleteFile*` refuse `favicon-`/`app-icon-` |
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss`, `fontToCss` | `React.cache()` only. Holds `themes` + `typography` + `customFont`; migrates legacy shapes; image/font urls store-relative |
 | `themes.ts` | `THEME_PRESETS`, `themesToCss`, `paletteOptions`, … | 6 owner-customizable palettes. `themesToCss` emits EVERY palette's vars. Add one = append to `THEME_PRESETS` |
+| `comments.ts` / `comment-md.ts` | `getCommentTree`, `buildCommentTree`, `addComment`, `countsByPosts`, `renderCommentMarkdown` | Text-only reader comments (off by default). Public tree excludes email, tombstones deleted-but-replied, re-roots orphans. `comment-md` = bold/italic-only, escape-first. Client island fetches no-store → instant, no revalidate |
 | `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getViewTotals`, `isBot` | Cookieless; `visitor` = salted hash of IP+UA (no PII); bots + admin/api + owner skipped. Kept FOREVER |
 | `activity.ts` | `logActivity`, `getActivity`, `clearActivity` | `activity_log`; gated by `features.activityLog`, never throws; called via `after()` from every mutating route |
 | `media-usage.ts` | `findUnusedMedia` | Read-only audit; badges orphans, never deletes |

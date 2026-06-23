@@ -30,6 +30,21 @@ export type Dict = {
   tryAgain: string
   backHome: string
   backToTop: string
+  // comments
+  commentsHeading: string
+  commentsEmpty: string
+  commentName: string
+  commentEmail: string
+  commentEmailNote: string
+  commentWebsite: string
+  commentBody: string
+  commentFormatHint: string
+  commentSubmit: string
+  commentSubmitting: string
+  commentReply: string
+  commentCancel: string
+  commentDeleted: string
+  commentError: string
 }
 
 export type AdminStrings = {
@@ -268,6 +283,23 @@ export type AdminStrings = {
   cardGeneral: string
   cardLayout: string
   cardFeatures: string
+  // comments
+  cardComments: string
+  commentsEnable: string
+  commentsEnableDesc: string
+  commentsNavTitle: string
+  commentsCount: string
+  commentsColContent: string
+  commentsColPost: string
+  commentsColTime: string
+  commentsColName: string
+  commentsColFrom: string
+  commentsColDelete: string
+  commentsConfirmDelete: string
+  commentsEmpty: string
+  commentsFromManual: string
+  commentsFromGoogle: string
+  commentsFromFacebook: string
   // reader-feature toggles
   featSearch: string
   featSearchDesc: string

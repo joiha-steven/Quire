@@ -29,6 +29,20 @@ const en = {
   tryAgain: 'Try again',
   backHome: 'Back home',
   backToTop: 'Back to top',
+  commentsHeading: 'Comments',
+  commentsEmpty: 'No comments yet. Be the first.',
+  commentName: 'Name',
+  commentEmail: 'Email',
+  commentEmailNote: 'Not published',
+  commentWebsite: 'Website (optional)',
+  commentBody: 'Write a comment…',
+  commentFormatHint: '**bold**, *italic*',
+  commentSubmit: 'Post comment',
+  commentSubmitting: 'Posting…',
+  commentReply: 'Reply',
+  commentCancel: 'Cancel',
+  commentDeleted: '[comment deleted]',
+  commentError: 'Could not post your comment. Please try again.',
 } satisfies Dict
 
 export default en

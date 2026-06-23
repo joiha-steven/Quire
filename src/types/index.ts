@@ -182,8 +182,51 @@ export type SiteSettings = {
   customFont: FontSettings // owner-uploaded typeface (Blob files/); '' = bundled Inter
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
+  comments: CommentSettings // reader comment system (off by default)
   mcp: McpSettings // MCP server toggle (tokens are managed separately)
   backups: BackupSettings // Google Drive backup config (secrets live in backup_state)
+}
+
+// Reader comment system. Booleans only — NO secrets here (this object is sent to
+// the admin client). Turnstile / OAuth keys live in env; a toggle is only EFFECTIVE
+// when its env keys are present (the UI flags a toggle that lacks them).
+export type CommentSettings = {
+  enabled: boolean // master switch — when false, no comments are shown or accepted
+  turnstile: boolean // require a Cloudflare Turnstile pass for manual (name/email) comments
+  googleAuth: boolean // offer "Sign in with Google" to commenters
+  facebookAuth: boolean // offer "Sign in with Facebook" to commenters
+}
+
+// Where a comment's identity came from.
+export type CommentProvider = 'manual' | 'google' | 'facebook'
+
+// One comment as sent to the PUBLIC client. Email is NEVER included. A tombstone
+// (`deleted: true`) is a soft-deleted node kept only because it still has live
+// replies — its name/content are blanked. `replies` nest up to 3 tiers.
+export type PublicComment = {
+  id: number
+  parentId: number | null
+  name: string
+  website?: string
+  provider: CommentProvider
+  contentHtml: string // limited markdown, already rendered + sanitized
+  createdAt: string
+  deleted: boolean
+  replies: PublicComment[]
+}
+
+// One comment as shown in the admin table (flat; includes email + post title).
+export type AdminComment = {
+  id: number
+  postSlug: string
+  postTitle: string
+  name: string
+  email: string
+  website?: string
+  provider: CommentProvider
+  content: string // raw markdown source
+  createdAt: string
+  deletedAt?: string
 }
 
 // MCP server settings. Just an on/off switch — the access tokens live in their own

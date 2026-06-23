@@ -29,6 +29,20 @@ const ko = {
   tryAgain: '다시 시도',
   backHome: '홈으로',
   backToTop: '맨 위로',
+  commentsHeading: '댓글',
+  commentsEmpty: '아직 댓글이 없습니다. 첫 댓글을 남겨보세요.',
+  commentName: '이름',
+  commentEmail: '이메일',
+  commentEmailNote: '공개되지 않음',
+  commentWebsite: '웹사이트 (선택)',
+  commentBody: '댓글 작성…',
+  commentFormatHint: '**굵게**, *기울임*',
+  commentSubmit: '댓글 등록',
+  commentSubmitting: '등록 중…',
+  commentReply: '답글',
+  commentCancel: '취소',
+  commentDeleted: '[삭제된 댓글]',
+  commentError: '댓글을 등록하지 못했습니다. 다시 시도해 주세요.',
 } satisfies Dict
 
 export default ko

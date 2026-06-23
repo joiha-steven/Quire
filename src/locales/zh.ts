@@ -29,6 +29,20 @@ const zh = {
   tryAgain: '重试',
   backHome: '返回首页',
   backToTop: '回到顶部',
+  commentsHeading: '评论',
+  commentsEmpty: '暂无评论。来做第一个评论的人吧。',
+  commentName: '姓名',
+  commentEmail: '邮箱',
+  commentEmailNote: '不会公开',
+  commentWebsite: '网站（选填）',
+  commentBody: '写下评论…',
+  commentFormatHint: '**加粗**、*斜体*',
+  commentSubmit: '发表评论',
+  commentSubmitting: '发送中…',
+  commentReply: '回复',
+  commentCancel: '取消',
+  commentDeleted: '[评论已删除]',
+  commentError: '评论发送失败，请重试。',
 } satisfies Dict
 
 export default zh

@@ -9,18 +9,19 @@ import { restorePost, purgePost, emptyPostsTrash } from '@/lib/posts'
 import { restorePage, purgePage, emptyPagesTrash } from '@/lib/pages'
 import { restoreMediaBatch, purgeMediaBatch, emptyMediaTrash } from '@/lib/media'
 import { restoreFilesBatch, purgeFilesBatch, emptyFilesTrash } from '@/lib/files'
+import { restoreComment, purgeComment, emptyCommentsTrash } from '@/lib/comments'
 import { revalidatePost, revalidatePage, revalidateEverything } from '@/lib/revalidate'
 import { logActivity, type ActivityAction } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export const maxDuration = 60 // emptying a large trash may delete many blobs
 
-type Kind = 'posts' | 'pages' | 'media' | 'files'
+type Kind = 'posts' | 'pages' | 'media' | 'files' | 'comments'
 type Action = 'restore' | 'purge' | 'empty'
-const KINDS: Kind[] = ['posts', 'pages', 'media', 'files']
+const KINDS: Kind[] = ['posts', 'pages', 'media', 'files', 'comments']
 const ACTIONS: Action[] = ['restore', 'purge', 'empty']
 // Activity-log uses singular per-kind verbs (matching the existing actions).
-const SINGULAR: Record<Kind, string> = { posts: 'post', pages: 'page', media: 'media', files: 'file' }
+const SINGULAR: Record<Kind, string> = { posts: 'post', pages: 'page', media: 'media', files: 'file', comments: 'comment' }
 
 export async function POST(req: NextRequest): Promise<Response> {
   const start = Date.now()
@@ -73,6 +74,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         if (action === 'restore') await restoreFilesBatch(ids)
         else if (action === 'purge') await purgeFilesBatch(ids)
         else count = await emptyFilesTrash()
+        break
+      case 'comments':
+        // No revalidatePath: the public list is client-fetched (no-store).
+        if (action === 'restore') await Promise.all(ids.map((id) => restoreComment(Number(id))))
+        else if (action === 'purge') await Promise.all(ids.map((id) => purgeComment(Number(id))))
+        else count = await emptyCommentsTrash()
         break
     }
 

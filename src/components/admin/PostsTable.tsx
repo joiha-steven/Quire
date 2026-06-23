@@ -13,7 +13,17 @@ import { useAdminT } from './I18nProvider'
 
 type StatusFilter = 'all' | 'published' | 'draft'
 
-export function PostsTable({ initialPosts, views }: { initialPosts: Post[]; views: Record<string, number> }) {
+export function PostsTable({
+  initialPosts,
+  views,
+  commentCounts,
+  commentsEnabled,
+}: {
+  initialPosts: Post[]
+  views: Record<string, number>
+  commentCounts: Record<string, number>
+  commentsEnabled: boolean
+}) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -94,6 +104,7 @@ export function PostsTable({ initialPosts, views }: { initialPosts: Post[]; view
             <th className="px-4 py-3 font-medium">{t.colTitle}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
             <th className="hidden px-4 py-3 font-medium text-right sm:table-cell">{t.colViews}</th>
+            {commentsEnabled && <th className="hidden px-4 py-3 font-medium text-right sm:table-cell">{t.commentsCount}</th>}
             {/* Date + categories are secondary — hidden on narrow screens */}
             <th className="hidden px-4 py-3 font-medium sm:table-cell">{t.colDate}</th>
             <th className="hidden px-4 py-3 font-medium md:table-cell">{t.colCategories}</th>
@@ -112,6 +123,9 @@ export function PostsTable({ initialPosts, views }: { initialPosts: Post[]; view
                 <StatusPill published={p.status === 'published'} label={p.status === 'published' ? t.statusPublished : t.statusDraft} />
               </td>
               <td className="hidden px-4 py-3 text-right tabular-nums text-neutral-500 sm:table-cell dark:text-neutral-400">{(views[`/${p.slug}`] ?? 0).toLocaleString()}</td>
+              {commentsEnabled && (
+                <td className="hidden px-4 py-3 text-right tabular-nums text-neutral-500 sm:table-cell dark:text-neutral-400">{(commentCounts[p.slug] ?? 0).toLocaleString()}</td>
+              )}
               <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-500 sm:table-cell dark:text-neutral-400">{formatDateTimeShort(p.date)}</td>
               <td className="hidden px-4 py-3 text-neutral-500 md:table-cell dark:text-neutral-400">{p.categories.join(', ')}</td>
               <td className="px-4 py-3">

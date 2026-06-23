@@ -97,3 +97,35 @@
 - Each tab: `grid lg:grid-cols-2 items-start` (explicit columns, NOT CSS `columns`).
 - **Save calls `router.refresh()`** so the admin shell + public header reflect the change
   immediately.
+
+## Comments — `lib/comments.ts`, `components/blog/Comments.tsx`
+
+Text-only reader comments, **off by default** (`settings.comments.enabled`). Phase A ships manual
+identity (name + email + optional website); Turnstile + Google/Facebook login are later phases
+(the `CommentSettings` flags `turnstile`/`googleAuth`/`facebookAuth` already exist, unused in A).
+
+- **Instant, never cached — by design.** The post page stays ISR/static; the comment block is a
+  CLIENT island (`Comments.tsx`) that fetches `/api/comments?post=<slug>` with `no-store`. The
+  route sets `fetchCache = 'force-no-store'` so its DB read is LIVE. A new comment is POSTed, then
+  the island REFETCHES (authoritative, no optimistic reconciliation). **No `revalidatePath` ever
+  runs for a comment** — so commenting never touches the ISR/`revalidate.ts` path. The live count
+  on the page comes from the same fetch, so it can't go stale.
+- **Limited markdown (`comment-md.ts`):** only `**bold**` / `*italic*`. The source is HTML-escaped
+  FIRST, then only `<strong>/<em>/<br>` are injected — no user tag, link, image, or script survives
+  (mirrors Invariant 5). Hard cap 1000 chars (server + client).
+- **3-tier threading.** `depth` (0/1/2) is enforced server-side in `addComment` (a reply needs
+  `parent.depth < 2`); display nesting is rebuilt from the actual ancestry. `buildCommentTree`
+  (pure, tested) re-roots orphans (parent purged) and renders a deleted-but-still-replied node as a
+  blanked **tombstone**; a deleted leaf is pruned.
+- **Privacy:** email is stored but NEVER sent to the public client (separate `PUBLIC_COLS` vs
+  `ADMIN_COLS`); website gets `rel="nofollow ugc noopener"`.
+- **Post rename / purge:** `renameComments` moves comments with the slug; `deleteCommentsForPost`
+  clears them when a post is purged (both wired in `posts.ts`).
+- **Admin:** `/admin/comments` lists live comments (content/post/time/name/from/delete); delete =
+  soft delete via owner-gated `DELETE /api/comments/[id]` → Trash (restore/purge in `TrashView`'s
+  Comments tab). `/admin/content` posts table gains a comment-count column when enabled
+  (`countsByPosts`).
+- **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
+  (6/min). Real spam protection arrives with Turnstile (Phase B).
+- **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
+  (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.
