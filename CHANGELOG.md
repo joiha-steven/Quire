@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.1.8 — 2026-06-23
+- **Admin dotted-grid starts cleanly from the top-left edge** — one full gap of clear space before the
+  first dot (`background-position` `-1px -1px` → `7.5px 7.5px`), no more dot crammed into the corner.
+
 ## v1.1.7 — 2026-06-23
 - **Admin dotted-grid background tuned.** ~30% denser dots (tile `22px` → `15px`); light dots a touch
   dimmer (`0.13` → `0.11`), dark dots a touch clearer (`0.11` → `0.12`).

@@ -496,7 +496,9 @@ hr {
   background-color: #fafafa; /* neutral-50 */
   background-image: radial-gradient(rgba(0, 0, 0, 0.11) 1.2px, transparent 1.2px);
   background-size: 15px 15px;
-  background-position: -1px -1px;
+  /* Origin at the top-left edge, one full gap of clear space, then the first dot
+     (dots are tile-centred, so +7.5px lands the first dot one 15px gap in). */
+  background-position: 7.5px 7.5px;
 }
 .dark .admin-canvas {
   background-color: #0a0a0a; /* neutral-950 */
