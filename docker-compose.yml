@@ -1,0 +1,36 @@
+# Self-host vibeblog: the Next standalone app + a tiny cron sidecar (Vercel Cron
+# does not exist off-platform). Postgres (Supabase) and Google OAuth stay external
+# — set them in .env.docker (copy .env.docker.example). Binaries persist in
+# ./data/uploads; back that folder up alongside your Postgres dump.
+#
+#   cp .env.docker.example .env.docker   # then fill it in
+#   docker compose up -d --build
+
+services:
+  app:
+    build: .
+    image: vibeblog
+    env_file: .env.docker
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data/uploads:/app/uploads
+    restart: unless-stopped
+
+  # Hourly maintenance ping (keep-alive + variant/backup sweep) — the same job
+  # vercel.json runs on Vercel. Calls /api/cron with the CRON_SECRET bearer.
+  cron:
+    image: alpine:3.20
+    depends_on:
+      - app
+    env_file: .env.docker
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache curl >/dev/null
+        while true; do
+          sleep 3600
+          curl -fsS -H "Authorization: Bearer $${CRON_SECRET}" http://app:3000/api/cron >/dev/null \
+            || echo "[cron] ping failed"
+        done
