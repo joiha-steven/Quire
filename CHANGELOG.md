@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v1.1.1 — 2026-06-23 (official release)
+- **First stable cut of the 1.1 line.** Rolls up everything since `v1.1.0-beta`: the admin overhaul
+  (shared UI kit, dotted canvas, 5-tab settings), the reworked post ToC, reader comments incl.
+  optimistic posting + a route loading skeleton, an editable footer with a limited-markdown editor,
+  reading-optimized typography defaults + a reading-time backfill, the site-wide motion engine, and
+  the palette refresh (true-neutral Mono, Sci-Fi replacing Rosé). Detail in the dated entries below.
+- **fix(type): removed `text-wrap: balance`/`pretty`.** Both re-broke whole lines and left too much
+  empty space on the right (titles wrapped early; body looked under-set). Text now wraps normally,
+  filling each line to the measure. Don't reintroduce them.
+
 ## 2026-06-23 (v1.1.0-beta — activity log: errors now recorded + flagged)
 - **feat: the activity log now captures server errors.** `logError` (the central route catch
   handler) schedules `after(() => logActivityError("METHOD /path", message))`, writing an
