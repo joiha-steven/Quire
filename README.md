@@ -13,6 +13,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 ![Tailwind v4](https://img.shields.io/badge/Tailwind_v4-0b1120?logo=tailwindcss&logoColor=38bdf8)
 ![Supabase](https://img.shields.io/badge/Supabase-3ecf8e?logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-self--host-2496ed?logo=docker&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-ready-7c3aed)
 ![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)
 
@@ -32,7 +33,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 An **open-source** (MIT), single-owner blog built for people who just want to **write**. The public site is statically cached so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
 
-All the writing happens in a polished `/admin` (or over MCP). Text lives in **Supabase Postgres**, binaries (images, files, icons) in **Vercel Blob** — no git push to publish, no CMS to wrangle.
+All the writing happens in a polished `/admin` (or over MCP). Text lives in **Supabase Postgres**; binaries (images, files, icons) go through a pluggable storage driver — **Vercel Blob** by default, or the **local filesystem** when you self-host with Docker. No git push to publish, no CMS to wrangle.
 
 | Area | What you get |
 |:---|:---|
@@ -46,8 +47,9 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Su
 | 🤖&nbsp;**MCP** | a remote endpoint that lets an AI agent write & manage the blog with the same rules as the admin |
 | 📱&nbsp;**PWA** | installable, launches standalone |
 | 🔐&nbsp;**Auth** | NextAuth v5 · Google sign-in · single authorized owner · edge-guarded admin/API |
+| 🚀&nbsp;**Deploy** | Vercel + Supabase (+ Vercel Blob), **or** self-host with Docker (local filesystem storage) — same codebase |
 
-> Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel**.
+> Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel** or self-hosted with **Docker**.
 
 **Who it's for** — one person who wants a fast, good-looking, fully self-owned blog, runs it on Vercel + Supabase **or self-hosts it with Docker**, and likes the idea of letting an AI agent help run it.
 **Not for** — multi-author teams / publications needing roles and editorial workflows. vibeblog is single-owner by design (one authorized email); multi-tenant lives in the planned SaaS, not here.
