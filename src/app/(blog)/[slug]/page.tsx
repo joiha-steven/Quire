@@ -19,6 +19,7 @@ import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { Comments } from '@/components/blog/Comments'
+import { getCommentEnv } from '@/lib/comment-env'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
 
@@ -172,7 +173,17 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             <div className="mt-12">
               <hr />
             </div>
-            <Comments postSlug={post.slug} lang={language} />
+            {(() => {
+              const env = getCommentEnv()
+              return (
+                <Comments
+                  postSlug={post.slug}
+                  lang={language}
+                  turnstile={settings.comments.turnstile && env.turnstileConfigured}
+                  turnstileSiteKey={env.turnstileSiteKey}
+                />
+              )
+            })()}
           </>
         )}
       </article>

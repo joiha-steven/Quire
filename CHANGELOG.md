@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — reader comments, Phase B: Cloudflare Turnstile)
+- **feat(comments): optional Cloudflare Turnstile anti-spam for manual comments.** Toggle in
+  Admin → Settings (under Comments). The manual form gates the comment box **behind a Turnstile
+  pass** — the widget appears once name/email are filled, and only then does the message box show.
+  The POST **verifies the token server-side** (siteverify, fail closed). Enforced **only when the
+  toggle is on AND `TURNSTILE_SECRET_KEY` is set**, so turning it on without keys never locks out
+  commenting — the admin row shows a "needs env key" badge (`getCommentEnv()` reports which
+  integrations are wired; the public SITE key is passed to the widget, no secret leaves the server).
+  New `lib/turnstile.ts` + `lib/comment-env.ts` + `components/blog/Turnstile.tsx`; env
+  `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` (`.env.example` + README). `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — reader comments, Phase A: manual identity, instant, no cache)
 - **feat: a text-only reader comment system, off by default (`settings.comments.enabled`).** Phase A
   of three (B = Cloudflare Turnstile, C = Google/Facebook login). What ships now:

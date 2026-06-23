@@ -140,6 +140,7 @@ See [`.env.example`](./.env.example). The essentials:
 | `BLOB_READ_WRITE_TOKEN` | ✅ auto | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL |
 | `CRON_SECRET` | ◻️ optional | Protects `/api/cron` (keep-alive + scheduled backup) — any random string |
 | `MCP_OAUTH_SECRET` | ◻️ optional | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ◻️ optional | Cloudflare Turnstile anti-spam for comments — [Cloudflare → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile). Enable in Admin → Settings |
 
 MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`); your blog content lives in Supabase + Blob, never in git.
 

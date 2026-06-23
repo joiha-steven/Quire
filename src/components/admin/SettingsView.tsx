@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SiteSettings, ApiResponse } from '@/types'
 import type { ThemePreset } from '@/lib/themes'
+import type { CommentEnv } from '@/lib/comment-env'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { formatTime } from '@/lib/utils'
@@ -35,7 +36,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 type Tab = 'general' | 'appearance' | 'advanced'
 
-export function SettingsView({ settings, presets }: { settings: SiteSettings; presets: ThemePreset[] }) {
+export function SettingsView({ settings, presets, commentEnv }: { settings: SiteSettings; presets: ThemePreset[]; commentEnv: CommentEnv }) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -120,7 +121,7 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
               />
             </Card>
             <Card title={t.cardComments}>
-              <CommentFields comments={s.comments} onChange={(comments) => update({ comments })} />
+              <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
             </Card>
             <Card title="SEO">
               <SeoFields s={s} update={update} />
