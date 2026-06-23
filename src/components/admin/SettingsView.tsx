@@ -22,6 +22,7 @@ import { AdvancedFields } from './AdvancedFields'
 import { McpFields } from './McpFields'
 import { BackupFields } from './BackupFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
+import { FooterField } from './FooterField'
 import { FeatureFields } from './FeatureFields'
 import { CommentFields } from './CommentFields'
 import { CommentKeys } from './CommentKeys'
@@ -88,6 +89,10 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
           </Card>
           <Card title={t.cardLayout}>
             <LayoutMenuFields s={s} update={update} />
+            <div className="mt-6 border-t border-neutral-200 pt-5 dark:border-neutral-800">
+              <span className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.footerContent}</span>
+              <FooterField value={s.footer} onChange={(footer) => update({ footer })} />
+            </div>
           </Card>
         </div>
       )}

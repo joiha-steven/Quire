@@ -169,6 +169,17 @@ hr {
   color: var(--c-meta);
 }
 
+/* Owner-authored footer (limited inline markdown). Links underline + warm to the
+   body colour on hover; bold/italic/underline inherit the meta styling. */
+.site-footer a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--dur-fast, 0s) var(--ease, ease);
+}
+.site-footer a:hover {
+  color: var(--c-text);
+}
+
 /* Rendered post body + TipTap editor share these typographic rules.
    Tuned for calm, long-form reading: 18px body, airy but even rhythm. */
 .prose {

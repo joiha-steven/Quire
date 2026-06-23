@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## 2026-06-23 (v1.1.0-beta — reading-optimized typography defaults + remove public hardcode)
+## 2026-06-23 (v1.1.0-beta — editable footer + a tiny limited-markdown editor)
+- **feat: the site footer is now owner-editable.** New `settings.footer` holds limited inline
+  markdown — **bold / italic / underline / link** only — rendered by `lib/inline-md.ts`
+  (escape-first like `comment-md`: the whole string is escaped, so only the `<strong>/<em>/<u>/<a>`
+  we inject can appear; link hrefs are protocol-checked, `javascript:`/`data:` fall back to plain
+  text). `{year}` and `{title}` tokens expand at render. Authored in **Admin → Settings → Site**
+  via `FooterField` (textarea + a B/I/U/Link toolbar that wraps the selection + a live preview).
+  The public layout renders it in `<footer class="site-footer">`; default = the old "© {year}
+  {title} · powered by vibeblog" line. Pinned by `inline-md.test.ts` (render + link-safety + escape
+  + length). i18n in all 6 admin locales. `v1.1.0-beta`.
 - **change(typography): retuned the default type scale for long-form reading** (the Reset target).
   Restrained, monotonic heading scale (h1 2.0 → h5 1.0; h5 was 0.9, *below* body — fixed), body
   leading eased 1.75 → 1.7 for an even grey column, code 1.65 → 1.6, h2 1.4 → 1.5 for clearer

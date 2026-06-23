@@ -174,6 +174,7 @@ export type SiteSettings = {
   relatedCount: number // related posts shown at the end of an article (0 = none)
   excerptLength: number // words auto-used as a post excerpt when none is set
   customCss: string // owner CSS injected into PUBLIC pages only ('' = none)
+  footer: string // footer content: limited inline markdown (bold/italic/underline/link) + {year}/{title} tokens
   menu: MenuItem[] // header navigation links
   themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
   enabledPalettes: string[] // palettes a visitor may switch between (subset of THEME_PRESETS ids); ALWAYS includes themePreset. <2 enabled => the switcher is hidden

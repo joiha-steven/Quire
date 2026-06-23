@@ -116,6 +116,11 @@ export type AdminStrings = {
   tbImage: string
   tbMarkdown: string
   tbReview: string
+  tbBold: string
+  tbItalic: string
+  tbUnderline: string
+  footerContent: string
+  footerHint: string
   editorPlaceholder: string
   // in-body image
   imgAlignLeft: string

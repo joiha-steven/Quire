@@ -92,6 +92,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   relatedCount: 3,
   excerptLength: 50,
   customCss: '',
+  footer: '© {year} {title} · [powered by vibeblog](https://github.com/joiha-steven/vibeblog)',
   menu: [],
   themePreset: DEFAULT_PRESET_ID,
   enabledPalettes: ALL_PALETTE_IDS,
@@ -202,6 +203,9 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     relatedCount: clampNumber(input.relatedCount, 0, 12, current.relatedCount),
     excerptLength: clampNumber(input.excerptLength, 10, 100, current.excerptLength),
     customCss: input.customCss !== undefined ? sanitizeCss(input.customCss) : current.customCss,
+    // Footer is rendered through renderInlineMarkdown (escape-first), so here we only
+    // trim + cap length; markup safety is the renderer's job.
+    footer: typeof input.footer === 'string' ? input.footer.slice(0, 600) : current.footer,
     menu: sanitizeMenu(input.menu, current.menu),
     themePreset,
     enabledPalettes: sanitizeEnabledPalettes(input.enabledPalettes ?? current.enabledPalettes, themePreset),

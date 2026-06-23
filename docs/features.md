@@ -109,6 +109,11 @@
 - **ONE form, ONE save button, FIVE task-based tabs** (`site | content | appearance | seo |
   integrations`; tab state not persisted, but `?tab=` deep-links — the Drive-connect redirect lands
   on `integrations`). One `useState<SiteSettings>` → one PUT `/api/settings`.
+- **Footer is owner-editable** (Site tab, under Layout): `settings.footer` is limited inline markdown
+  (`lib/inline-md.ts` — **bold / italic / underline / link** only, escape-first like `comment-md`,
+  link hrefs protocol-checked) authored via `FooterField` (textarea + B/I/U/Link toolbar + live
+  preview). `{year}`/`{title}` tokens expand at render. The public layout renders it in `<footer
+  class="site-footer">`; default keeps the "© {year} {title} · powered by vibeblog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
   **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontUpload`/
   `TypographyFields`/`AdvancedFields` (font smoothing = "Text rendering") + custom-CSS; **SEO**

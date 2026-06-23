@@ -7,12 +7,14 @@ import { PaletteToggle } from '@/components/theme/PaletteToggle'
 import { HeaderMenu } from '@/components/blog/HeaderMenu'
 import { SearchTrigger } from '@/components/blog/SearchTrigger'
 import { Track } from '@/components/blog/Track'
-
-const REPO_URL = 'https://github.com/joiha-steven/vibeblog'
+import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 
 export default async function BlogLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings()
   const showLogo = settings.showLogo && settings.logoUrl
+  // Owner-authored footer: expand {year}/{title}, then render the limited inline
+  // markdown (escape-first, so it can never inject unsafe markup).
+  const footerHtml = renderInlineMarkdown(expandFooterTokens(settings.footer, settings.title))
   return (
     <div
       className="mx-auto flex min-h-screen w-full flex-col px-8 sm:px-5"
@@ -62,12 +64,10 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
       </header>
       <Track />
       <main className="flex-1 py-4">{children}</main>
-      <footer className="py-12 text-center t-small text-meta">
-        © {new Date().getFullYear()} {settings.title} ·{' '}
-        <a href={REPO_URL} target="_blank" rel="noopener" className="hover:text-text">
-          powered by vibeblog
-        </a>
-      </footer>
+      <footer
+        className="site-footer py-12 text-center t-small text-meta"
+        dangerouslySetInnerHTML={{ __html: footerHtml }}
+      />
     </div>
   )
 }
