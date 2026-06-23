@@ -113,7 +113,7 @@ export function PaletteToggle({
                   apply(p.id)
                   setOpen(false)
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-rule ${
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left t-small hover:bg-rule ${
                   current === p.id ? 'font-semibold text-heading' : 'text-meta'
                 }`}
               >

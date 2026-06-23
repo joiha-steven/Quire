@@ -41,9 +41,14 @@
   `typographyToCss()` into the root layout AFTER `globals.css` (also applies in the admin
   editor `.prose` = WYSIWYG). `smoothing` adds `-webkit-font-smoothing` on `body`.
 - **Where applied:** `.prose` (h1–h5/pre/code/figcaption/table) read the role vars; titles/UI
-  OUTSIDE `.prose` use `.fs-h1…fs-h5` + `.t-small` (every secondary text). H1 = single
-  post/page titles + category/tag headings + draft preview; list cards (`PostCard`) = H2. Only
-  fixed public sizes allowed: the brand wordmark + the 404 numeral.
+  OUTSIDE `.prose` use `.fs-h1…fs-h5` (titles) + `.t-small` (secondary text) + `.t-body`
+  (body-role text outside prose: card excerpts, footer). H1 = single post/page titles +
+  category/tag headings + draft preview; list cards (`PostCard`) = H2; brand wordmark = `.fs-h4`.
+  Only fixed public size left: the 404 numeral.
+- **Reading-optimized defaults (= the Reset target).** Restrained, monotonic heading scale
+  (h1 2.0 → h5 1.0, h5 no longer below body), 18px body at ~1.7 leading, ~66-char measure
+  (`contentWidth` 672). Headings get `text-wrap: balance`, `.prose p` gets `text-wrap: pretty`
+  (both progressive). Change the numbers in BOTH `globals.css :root` and `DEFAULT_TYPOGRAPHY`.
 - **Inter is self-hosted** (`public/fonts/inter-{latin,latin-ext,vietnamese}.woff2`,
   variable, declared via `@font-face` + `unicode-range` in `globals.css`; `--font-inter:'Inter'`
   there). **No `next/font/google`** — it fetched at build, which broke offline/CI builds. The OG
