@@ -1,6 +1,16 @@
 # CHANGELOG
 
-## 2026-06-23 (v1.1.0-beta — motion engine: subtle, token-gated, one switch)
+## 2026-06-23 (v1.1.0-beta — instant comments (optimistic) + route loading skeleton)
+- **feat(comments): a posted comment now appears instantly (optimistic).** It's rendered with the
+  SAME `renderCommentMarkdown` the server uses — so there's no content drift — overlaid on the tree
+  via the new, tested `lib/comment-tree.ts` `mergeOptimisticComments`, then the authoritative refetch
+  replaces it and clears the overlay. A failed POST removes the optimistic comment and shows the
+  error. (Supersedes the old "refetch only" note; the refetch is still the source of truth.) The
+  composer + sign-in buttons moved to `CommentForm.tsx` to keep files focused.
+- **feat: a themed loading skeleton for blog routes** (`(blog)/loading.tsx` + `.skeleton`) for
+  instant feedback on navigation. The subtle pulse follows the motion engine (gated by `data-motion`
+  + `prefers-reduced-motion`), so it degrades to a calm static placeholder; sized to roughly match a
+  post so the swap to real content barely shifts. `v1.1.0-beta`.
 - **feat: a site-wide motion engine for a calmer, more "app-like" feel.** ONE set of tokens
   (`--dur-fast/base/slow` + `--ease`) drives every transition/animation across the public site AND
   admin. A single switch gates all of it: `<html data-motion>` is server-rendered from a new
