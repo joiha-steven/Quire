@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.1.3`
+# vibe**blog** &nbsp;`v1.1.4`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -117,7 +117,7 @@ git clone https://github.com/joiha-steven/vibeblog.git && cd vibeblog
 cp .env.docker.example .env.docker
 node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + service key
 # then fill AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, AUTHORIZED_EMAIL, SITE_URL, CRON_SECRET
-docker compose --env-file .env.docker up -d --build   # app on :3000 + db + rest + cron
+docker compose up -d --build   # app on :3000 + db + rest + cron
 ```
 
 Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/auth/callback/google` (and `<SITE_URL>/api/backup/callback` for Drive backups) on your Google OAuth client. The image needs **no backend env to build** — secrets are supplied at runtime. The bundled DB applies `scripts/schema.sql` automatically on first boot. Prefer a managed database? Point `SUPABASE_URL` at any Supabase project and drop the `db`/`rest` services — see [`.env.docker.example`](./.env.docker.example). The Vercel path is unchanged (Supabase + Blob).

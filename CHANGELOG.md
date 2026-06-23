@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v1.1.4 — 2026-06-23
+- **fix: the no-cloud Docker stack, hardened by a real end-to-end boot test.** Brought the full
+  `docker compose` stack up and fixed three issues a build-only check missed:
+  - **No more `--env-file` footgun.** The compose file no longer uses `${...}` interpolation, so a
+    plain `docker compose up -d` (or any compose command) reads every value straight from
+    `.env.docker` — previously, forgetting `--env-file` silently recreated PostgREST with a blank
+    JWT secret and broke auth. `gen-keys.mjs` now emits `PGPASSWORD` + `PGRST_JWT_SECRET` (the names
+    PostgREST/libpq read directly); the DB URI carries no password.
+  - **ISR cache is writable.** The runner now `mkdir`s + `chown`s `/app/.next/cache` for the `node`
+    user — the standalone image ships `.next/static` as root but never `.next/cache`, so the first
+    request hit `EACCES` trying to write the incremental cache.
+  - **No duplicate env keys.** `.env.docker.example` dropped its empty `POSTGRES_PASSWORD=` /
+    secret placeholders, so `gen-keys.mjs >> .env.docker` appends exactly one of each.
+  Verified live: `service_role` SELECT → 200 and INSERT → 201, `anon` write → 401, the app homepage
+  renders through supabase-js → bundled PostgREST, and `docker compose` runs warning-free.
+
 ## v1.1.3 — 2026-06-23
 - **feat: Docker self-host needs NO cloud — bundled Postgres + PostgREST.** The compose stack now
   ships its own database, so a self-hoster never signs up for Supabase. Because the app only ever

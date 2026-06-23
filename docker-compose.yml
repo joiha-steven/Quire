@@ -5,21 +5,20 @@
 #   cp .env.docker.example .env.docker
 #   node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + key
 #   # then fill AUTH_*, SITE_URL, AUTHORIZED_EMAIL in .env.docker
-#   docker compose --env-file .env.docker up -d --build
+#   docker compose up -d --build
 #
-# The --env-file flag is required: compose reads it for ${...} substitution below
-# (PostgREST's DB URI + JWT secret), AND each service loads it as container env.
+# No ${...} interpolation is used — every value is read straight from .env.docker by
+# the containers — so plain `docker compose <cmd>` works with no --env-file flag.
 
 services:
   # Postgres — the database (was Supabase). Schema + roles are applied once on first
   # init from docker/initdb + the app's own scripts/schema.sql (single source).
   db:
     image: postgres:16-alpine
-    env_file: .env.docker
+    env_file: .env.docker            # POSTGRES_PASSWORD (from gen-keys.mjs)
     environment:
       POSTGRES_DB: vibeblog
       POSTGRES_USER: postgres
-      # POSTGRES_PASSWORD comes from .env.docker (run gen-keys.mjs)
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
       - ./docker/initdb/01_roles.sql:/docker-entrypoint-initdb.d/01_roles.sql:ro
@@ -33,18 +32,19 @@ services:
     restart: unless-stopped
 
   # PostgREST — the REST layer supabase-js talks to (was Supabase's API gateway).
-  # Connects as the superuser (db port is NOT exposed to the host) and SET ROLEs to
-  # the role named in each request's JWT (service_role) or `anon` when there is none.
+  # Reads PGRST_JWT_SECRET + PGPASSWORD straight from .env.docker; connects as the
+  # superuser (db port is NOT exposed to the host) and SET ROLEs to the role named in
+  # each request's JWT (service_role) or `anon` when there is none.
   rest:
     image: postgrest/postgrest:v12.2.3
     depends_on:
       db:
         condition: service_healthy
+    env_file: .env.docker            # PGRST_JWT_SECRET + PGPASSWORD (from gen-keys.mjs)
     environment:
-      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/vibeblog
+      PGRST_DB_URI: postgres://postgres@db:5432/vibeblog   # password via PGPASSWORD
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
     restart: unless-stopped
 
   # The Next.js app. SUPABASE_URL points at the bundled PostgREST; POSTGREST_DIRECT
