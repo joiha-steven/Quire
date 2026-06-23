@@ -21,6 +21,7 @@ const de = {
   searchHint: 'Tippen, um Beiträge zu suchen.',
   searchEmpty: 'Keine passenden Beiträge gefunden.',
   tocTitle: 'Überschriften',
+  tocIndex: 'Inhalt',
   relatedTitle: 'Ähnliche Beiträge',
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',

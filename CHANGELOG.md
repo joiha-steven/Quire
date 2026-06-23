@@ -7,9 +7,12 @@
   the first existing section (scroll-only, via a shared `TOC_ANCHORS` map + `scroll-mt-24` targets).
   The panel is now **collapsible on every viewport** from a **text-free left-edge handle** (the tab
   shape speaks for itself): default **open + pinned on desktop**, default **closed on mobile**
-  (outside-tap / Escape dismiss). It renders **nothing when the post has no headings**, has a solid
-  `bg-bg` background so it never shows content through, and mobile gains a touch more side margin
-  (`px-6`). `v1.1.0-beta`.
+  (outside-tap / Escape dismiss). When a post has **no headings** the header is a plain,
+  non-clickable **"Mục lục"** (`tocIndex`) and only the jump line shows; the panel disappears only
+  when there is nothing at all to show. The **comments** label carries its **count in front**
+  (e.g. "12 Bình luận", server-rendered). Solid `bg-bg` background so it never shows content
+  through; clickable items now get a pointer cursor; phones gain wider side gutters
+  (`px-8 sm:px-5`) so the handle clears the text. `v1.1.0-beta`.
 
 ## 2026-06-23 (v1.1.0-beta — comment integrations: setup help + links in the admin)
 - **feat(admin): each comment integration now shows a one-line setup guide + a link.** Turnstile →

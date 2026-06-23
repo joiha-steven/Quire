@@ -21,6 +21,7 @@ const vi = {
   searchHint: 'Nhập từ khoá để tìm bài viết.',
   searchEmpty: 'Không tìm thấy bài viết phù hợp.',
   tocTitle: 'Tiêu đề',
+  tocIndex: 'Mục lục',
   relatedTitle: 'Bài viết liên quan',
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',

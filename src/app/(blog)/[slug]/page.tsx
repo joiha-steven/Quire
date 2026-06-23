@@ -20,6 +20,7 @@ import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { Comments } from '@/components/blog/Comments'
 import { getCommentEnv } from '@/lib/comment-env'
+import { countsByPosts } from '@/lib/comments'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
 
@@ -104,12 +105,14 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
     // ONE in-page jump under the ToC headings: the present section labels joined
-    // (Thẻ / Danh mục / Bình luận), scrolling to the first section that exists.
+    // (Thẻ / Danh mục / N Bình luận), scrolling to the first section that exists.
+    // The comment count is server-rendered (count as of this render).
     const tx = t(language)
+    const commentCount = showComments ? (await countsByPosts())[post.slug] ?? 0 : 0
     const metaParts = [
       post.tags.length > 0 ? tx.tagLabel : null,
       post.categories.length > 0 ? tx.categoryLabel : null,
-      showComments ? tx.commentsHeading : null,
+      showComments ? (commentCount > 0 ? `${commentCount} ${tx.commentsHeading}` : tx.commentsHeading) : null,
     ].filter((p): p is string => p !== null)
     const metaAnchor = post.tags.length > 0
       ? TOC_ANCHORS.tags
@@ -117,6 +120,8 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         ? TOC_ANCHORS.categories
         : TOC_ANCHORS.comments
     const tocMeta = metaParts.length ? { label: metaParts.join(' / '), anchor: metaAnchor } : undefined
+    // Show the panel for any post that has headings to list OR an in-page jump.
+    const showToc = features.toc && (headings.length > 0 || Boolean(tocMeta))
     return (
       <article>
         {features.progressBar && <ReadingProgress />}
@@ -146,7 +151,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {/* The ToC is fixed to the viewport (see Toc.tsx) — left-pinned on desktop,
             a left-edge tab + slide-out on mobile — not anchored here. */}
         <div className="mt-8">
-          {headings.length >= 3 && <Toc headings={headings} title={tx.tocTitle} meta={tocMeta} />}
+          {showToc && <Toc headings={headings} title={tx.tocTitle} indexTitle={tx.tocIndex} meta={tocMeta} />}
           <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 

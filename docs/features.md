@@ -30,13 +30,16 @@
   `searchPosts` `.textSearch('search', …, {config:'simple'})`). **NOTE:** `simple` is accent-
   *sensitive* — accent-insensitivity comes from the local layer only. Header search =
   `SearchOverlay` (modal); the `/search` route stays for deep links / no-JS.
-- Post page: `ReadingProgress`, `BackToTop`, `Toc` (≥3 H2/H3 — also `return null` if no
-  headings; title click scrolls to top; ONE line under the headings joins the present
-  tags/categories/comments labels and jumps to the first existing section via `TOC_ANCHORS`;
-  collapsible on every viewport from a text-free left-edge handle — default open + pinned on
-  desktop (xl+), default closed + outside-tap/Escape-dismissable on mobile; solid `bg-bg` so it
-  never shows content through; `PostContent` assigns slug ids), `RelatedPosts`
-  (`getRelatedPosts`: shared tags ×2 + categories).
+- Post page: `ReadingProgress`, `BackToTop`, `Toc`, `RelatedPosts` (`getRelatedPosts`: shared
+  tags ×2 + categories).
+- `Toc` shows whenever a post has headings OR an in-page jump (`showToc` in the page; renders
+  nothing otherwise). Header: clickable **"Tiêu đề"** (`tocTitle`) that scrolls to top when there
+  ARE headings, else a plain non-clickable **"Mục lục"** (`tocIndex`). One line under it joins the
+  present tags/categories/comments labels (comments prefixed with their server-rendered count) and
+  jumps to the first existing section via `TOC_ANCHORS` + `scroll-mt-24` targets. Collapsible on
+  every viewport from a text-free left-edge handle — default open + pinned on desktop (xl+), default
+  closed + outside-tap/Escape-dismissable on mobile. Solid `bg-bg`; `PostContent` assigns slug ids.
+  Phones get wider side gutters (`px-8 sm:px-5`) so the handle clears the text.
 - **GOTCHA:** the global unlayered `hr { margin:0 }` beats Tailwind margin utilities — put
   divider spacing on a wrapper div, not on the `<hr>`.
 - **Heading ids are de-duped** (2nd `foo` → `foo-2`): `dedupeHeadingIds` (PostContent) and
