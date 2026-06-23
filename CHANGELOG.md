@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — comment integrations: setup help + links in the admin)
+- **feat(admin): each comment integration now shows a one-line setup guide + a link.** Turnstile →
+  Cloudflare dashboard; Facebook → Meta for Developers (create app, add Facebook Login, redirect
+  `/api/auth/callback/facebook`); Google → a note that it reuses your sign-in and that **letting
+  OUTSIDE readers in requires publishing the OAuth consent screen to "Production"** (in "Testing"
+  only the owner can sign in), with a link to the Google Cloud consent screen. i18n in all 6 admin
+  locales. `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — comments: a too-deep reply is a clean 400, not a 500)
 - **fix(comments): replying past the 3-tier limit (or to a missing parent) now returns 400, not
   500.** Found in a live end-to-end pass on manhhung.me — the depth guard worked but `addComment`
