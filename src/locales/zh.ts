@@ -9,7 +9,7 @@ const zh = {
   pageLabel: '页',
   menu: '菜单',
   palette: '配色',
-  paletteNames: { mono: '单色', sepia: '棕褐', forest: '森林', ocean: '海洋', rose: '玫瑰', amber: '琥珀' },
+  paletteNames: { mono: '单色', sepia: '棕褐', forest: '森林', ocean: '海洋', scifi: '科幻', amber: '琥珀' },
   theme: '主题',
   themeLight: '浅色',
   themeDark: '深色',

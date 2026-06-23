@@ -9,7 +9,7 @@ const de = {
   pageLabel: 'Seite',
   menu: 'Menü',
   palette: 'Farbschema',
-  paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Wald', ocean: 'Ozean', rose: 'Rosé', amber: 'Bernstein' },
+  paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Wald', ocean: 'Ozean', scifi: 'Sci-Fi', amber: 'Bernstein' },
   theme: 'Design',
   themeLight: 'Hell',
   themeDark: 'Dunkel',

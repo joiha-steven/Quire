@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — palettes: true-neutral Mono, drop Rosé, add Sci-Fi)
+- **fix(palette): Mono is now truly hueless.** The old values had a faint warm/blue cast (cream
+  `bg`/`rule`, slightly blue `text`/`meta`), so the menu hover looked tinted. All pure gray now, and
+  `rule` is a touch lighter so the hover reads as a soft, colourless gray.
+- **change(palette): removed Rosé, added Sci-Fi** — a cool graphite surface with an electric-cyan
+  accent (the deep blue-black + bright cyan dark mode is where it shines). Saved settings migrate
+  cleanly: `sanitizeThemes`/`sanitizeEnabledPalettes` keep only known preset ids, so a stored `rose`
+  is dropped and `scifi` seeded on next save. Names localized in all 6 languages. Still 6 palettes.
+
 ## 2026-06-23 (v1.1.0-beta — UI fixes: logo cursor, title wrapping, admin dots)
 - **fix: the header logo/wordmark now shows the pointer (hand) cursor**, not the text caret
   (`cursor-pointer` on the brand link).

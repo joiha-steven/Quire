@@ -9,7 +9,7 @@ const ja = {
   pageLabel: 'ページ',
   menu: 'メニュー',
   palette: 'パレット',
-  paletteNames: { mono: 'モノ', sepia: 'セピア', forest: 'フォレスト', ocean: 'オーシャン', rose: 'ローズ', amber: 'アンバー' },
+  paletteNames: { mono: 'モノ', sepia: 'セピア', forest: 'フォレスト', ocean: 'オーシャン', scifi: 'サイファイ', amber: 'アンバー' },
   theme: 'テーマ',
   themeLight: 'ライト',
   themeDark: 'ダーク',
