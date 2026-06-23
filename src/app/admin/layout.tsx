@@ -4,7 +4,6 @@
 import { redirect } from 'next/navigation'
 import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
-import { enabledPaletteOptions } from '@/lib/themes'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 
@@ -40,15 +39,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AdminI18nProvider lang={language}>
       <div className="min-h-screen bg-neutral-50 md:flex dark:bg-neutral-950">
-        <AdminSidebar
-          lang={language}
-          signOut={signOutAction}
-          palettes={enabledPaletteOptions(settings.themes, settings.enabledPalettes)}
-          defaultPalette={settings.themePreset}
-        />
+        <AdminSidebar lang={language} signOut={signOutAction} />
         {/* Main column right of the sidebar. Full browser width (admin is column-based
-            now); ~100px gutters on desktop, tight padding on mobile. */}
-        <main className="min-w-0 flex-1">
+            now); ~100px gutters on desktop, tight padding on mobile. The dotted-grid
+            canvas sits behind the floating cards (admin-canvas in globals.css). */}
+        <main className="admin-canvas min-w-0 flex-1">
           <div className="w-full px-4 py-6 sm:px-6 lg:px-[100px] lg:py-8">{children}</div>
         </main>
       </div>

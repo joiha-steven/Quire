@@ -61,6 +61,22 @@
 - Time machine: each overwrite snapshots the prior version (`revisions.ts`, keeps 3); restore
   loads it into the editor (non-destructive — current version is snapshotted on next save).
 
+## Admin UI kit — `components/admin/kit.tsx`
+
+- ONE source of truth for shared admin chrome so no page hand-rolls its own (radius /
+  padding / shadow / header size used to drift): `Card` (canonical `CARD` surface),
+  `PageHeader` (the title block every screen reuses — was a copy-pasted `<h1>`),
+  `Tabs` (`underline` for Settings + `segment` for Content/Analytics, one component),
+  `StatCard`, `EmptyState`, and table tokens (`TableFrame` / `THEAD` / `TROW`). Admin is
+  monochrome by design — the kit uses the neutral scale, not public theme tokens.
+- **Dotted canvas:** `<main>` in the admin layout carries `.admin-canvas` (globals.css) —
+  a CSS radial-gradient dot grid (fixed faint neutral per light/dark mode); the sidebar +
+  cards float on solid surfaces above it.
+- **Sidebar (`AdminSidebar`):** the collapse/expand control sits at the TOP next to the
+  wordmark (a compact chrome button, NOT a nav row) so it can't be mistaken for Sign out;
+  Sign out sits alone in the footer under its own divider. Palette selection was REMOVED
+  from the admin chrome — it lives on the public site now; the admin only toggles light/dark.
+
 ## Content dashboard (Admin → content)
 
 - 3 tabs: Bài viết / Trang / Phân loại; "new" hidden on taxonomy.
@@ -77,31 +93,38 @@
   (post/page CRUD, media/file/icon/font, settings, taxonomy, cache.clear, backup.*). Gated by
   `features.activityLog`. Admin → Log (force-dynamic, latest 200, Clear). **Adding a mutating
   route → log it too.**
-- **System panel** (admin Overview, `getSystemInfo()`): hosting/URL/region/env/git + database
+- **Overview (`Overview.tsx`):** stat cards — **Posts / Pages / Comments / Images / Storage**
+  (each links to its section; Comments = sum of `countsByPosts()` when comments are on) — then a
+  **Quick actions** row, a **Recent activity** card (latest 6 from `getActivity`, gated by
+  `features.activityLog`), taxonomy breakdown, and the System panel at the bottom.
+- **System panel** (`getSystemInfo()`): hosting/URL/region/env/git + database
   (Supabase, live reachability) + Blob host + **MCP on/off** + **Backups on** (= enabled AND Drive
-  connected); rows may deep-link. The stat cards split media into **originals / variants / files**
+  connected); rows may deep-link. The Images card splits media into **originals / variants / files**
   (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
   (`getViewTotals`). Detail in the data-layer map (`analytics.ts`).
 
 ## Settings (Admin → settings) — `SettingsView.tsx`
 
-- **ONE form, ONE save button, THREE tabs** (`general | appearance | advanced`; tab state not
-  persisted). One `useState<SiteSettings>` → one PUT `/api/settings`.
-- Controlled field groups (no own state/save): General `SiteFields`/`LayoutMenuFields`/
-  `FeatureFields`/`SeoFields`; Appearance `ThemeFields`/`FontUpload`/`TypographyFields`/
-  `AdvancedFields` (font smoothing = "Text rendering"); Advanced `McpFields` + custom-CSS.
-  `McpFields` is the EXCEPTION to "no own state/save": the MCP enable toggle flows through the
-  settings form, but its token manager has its own `/api/mcp/tokens` API (plaintext shown once).
-- **Palette visibility (`ThemeFields` "Shown to visitors").** `settings.enabledPalettes` is the
-  allow-list a visitor may switch between; each preset card has a checkbox. The DEFAULT palette
-  (`themePreset`) is always shown (its checkbox is locked) so the set is never empty. `enabledPaletteOptions()`
-  filters the public + admin `PaletteToggle`; `PaletteToggle` renders `null` when ≤1 option (the
-  icon disappears). The no-FOUC script ignores a stored palette that is no longer enabled (falls
-  back to the default). Disabled palettes stay fully editable — visibility ≠ customization.
-  Sanitizer (`sanitizeEnabledPalettes`): known ids only, preset order, default forced in; a missing
-  field (legacy settings) = all on. Pinned by `settings-sanitize.test.ts`.
-- Each tab: `grid lg:grid-cols-2 items-start` (explicit columns, NOT CSS `columns`).
+- **ONE form, ONE save button, FIVE task-based tabs** (`site | content | appearance | seo |
+  integrations`; tab state not persisted, but `?tab=` deep-links — the Drive-connect redirect lands
+  on `integrations`). One `useState<SiteSettings>` → one PUT `/api/settings`.
+- Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
+  **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontUpload`/
+  `TypographyFields`/`AdvancedFields` (font smoothing = "Text rendering") + custom-CSS; **SEO**
+  `SeoFields`; **Integrations** `BackupFields` + `McpFields`. `McpFields` is the EXCEPTION to "no own
+  state/save": the MCP enable toggle flows through the settings form, but its token manager has its
+  own `/api/mcp/tokens` API (plaintext shown once).
+- **Palette is FRONTEND-ONLY now** — the admin chrome no longer carries a `PaletteToggle` (only the
+  light/dark toggle). The Appearance tab still sets the site's **default palette** + which palettes
+  readers may switch between (`settings.enabledPalettes`), with a note (`themeAdminNote`) explaining
+  this. The DEFAULT palette (`themePreset`) is always shown (its checkbox is locked) so the set is
+  never empty. `enabledPaletteOptions()` filters the public `PaletteToggle` (renders `null` when ≤1
+  option). The no-FOUC script ignores a stored palette that is no longer enabled (falls back to the
+  default). Disabled palettes stay fully editable — visibility ≠ customization. Sanitizer
+  (`sanitizeEnabledPalettes`): known ids only, preset order, default forced in; a missing field
+  (legacy settings) = all on. Pinned by `settings-sanitize.test.ts`.
+- Tabs lay cards out `grid lg:grid-cols-2 items-start` (explicit columns, NOT CSS `columns`).
 - **Save calls `router.refresh()`** so the admin shell + public header reflect the change
   immediately.
 

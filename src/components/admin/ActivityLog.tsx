@@ -8,6 +8,7 @@ import type { ApiResponse } from '@/types'
 import type { ActivityEntry } from '@/lib/activity'
 import { formatDateTimeShort } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
+import { PageHeader, TableFrame, THEAD } from './kit'
 import { useAdminT } from './I18nProvider'
 
 export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; enabled: boolean }) {
@@ -35,19 +36,21 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">{t.logTitle}</h1>
-        {entries.length > 0 && (
-          <button
-            type="button"
-            onClick={clear}
-            disabled={busy}
-            className="text-sm text-neutral-500 transition-colors hover:text-red-600 disabled:opacity-50 dark:text-neutral-400"
-          >
-            {t.logClear}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={t.logTitle}
+        actions={
+          entries.length > 0 ? (
+            <button
+              type="button"
+              onClick={clear}
+              disabled={busy}
+              className="text-sm text-neutral-500 transition-colors hover:text-red-600 disabled:opacity-50 dark:text-neutral-400"
+            >
+              {t.logClear}
+            </button>
+          ) : undefined
+        }
+      />
 
       {!enabled && (
         <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
@@ -58,9 +61,8 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
       {entries.length === 0 ? (
         <p className="text-sm text-neutral-400 dark:text-neutral-500">{t.logEmpty}</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-left text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400 whitespace-nowrap">
+        <TableFrame>
+            <thead className={THEAD}>
               <tr>
                 <th className="px-4 py-2 font-medium">{t.logColTime}</th>
                 <th className="px-4 py-2 font-medium">{t.logColAction}</th>
@@ -83,8 +85,7 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </TableFrame>
       )}
     </div>
   )

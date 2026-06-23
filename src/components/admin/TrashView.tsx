@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import type { Post, Page, MediaItem, FileItem, AdminComment, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { formatDateTimeShort } from '@/lib/utils'
+import { PageHeader } from './kit'
 import { useAdminT } from './I18nProvider'
 
 type Kind = 'posts' | 'pages' | 'media' | 'files' | 'comments'
@@ -90,8 +91,7 @@ export function TrashView({
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold tracking-tight">{t.trashTitle}</h1>
-      <p className="mb-5 max-w-2xl text-sm text-neutral-500 dark:text-neutral-400">{t.trashHint}</p>
+      <PageHeader title={t.trashTitle} description={t.trashHint} />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">

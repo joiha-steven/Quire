@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — admin overhaul: dotted canvas, shared UI kit, 5-tab settings)
+- **feat(admin): a shared UI kit ends the per-page drift.** New `components/admin/kit.tsx` is the
+  ONE source for admin chrome — `Card` (canonical surface), `PageHeader` (the title block every
+  screen reuses, replacing a copy-pasted `<h1>` on each page), `Tabs` (one component for the
+  `underline` + `segment` styles), `StatCard`, `EmptyState`, and table tokens (`TableFrame`/`THEAD`/
+  `TROW`). Cards were `rounded-2xl p-5` in Settings but `rounded-xl p-4` elsewhere; now uniform.
+  Migrated Overview, Content dashboard, Comments, Trash, Analytics, Activity log + the Media page.
+- **feat(admin): a dotted-grid canvas.** `<main>` carries `.admin-canvas` (globals.css) — a CSS
+  radial-gradient dot grid, fixed faint neutral per light/dark mode; sidebar + cards float above it.
+- **feat(admin): the Overview shows more.** Stat row adds **Comments** (next to Posts/Pages) and
+  every tile links to its section; plus a **Quick actions** row and a **Recent activity** card
+  (latest 6, gated by `features.activityLog`). The System panel moves to the bottom.
+- **feat(admin): Settings regrouped into 5 task-based tabs** — **Site / Content / Appearance / SEO /
+  Integrations** (was General / Appearance / Advanced) — so each tab holds 1–2 cards instead of
+  cramming five. Still ONE form + ONE save. The Drive-connect redirect now lands on `integrations`.
+- **change(admin): the collapse control moved to the top** next to the wordmark (a compact chrome
+  button, not a nav row) so it's no longer mistaken for Sign out, which now sits alone under a divider.
+- **change(admin): palette selection is frontend-only.** The admin chrome dropped its `PaletteToggle`
+  (only light/dark remains); the Appearance tab still sets the site default + reader-switchable
+  palettes, with an in-place note. i18n synced across all 6 admin locales. `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — ToC panel: "Tiêu đề", combined jump, collapsible everywhere)
 - **feat(blog): the post ToC is reworked.** Its title is now **"Tiêu đề"** (Headings) instead of
   "Mục lục"/"Contents" in all 6 locales, and **clicking the title scrolls back to the top**. Under
