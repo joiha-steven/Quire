@@ -28,13 +28,29 @@ export function CommentFields({ comments, env, onChange }: Props) {
         onChange={(enabled) => onChange({ ...comments, enabled })}
       />
       {comments.enabled && (
-        <ToggleRow
-          label={t.commentsTurnstile}
-          desc={t.commentsTurnstileDesc}
-          badge={needsKey(comments.turnstile, env.turnstileConfigured)}
-          checked={comments.turnstile}
-          onChange={(turnstile) => onChange({ ...comments, turnstile })}
-        />
+        <>
+          <ToggleRow
+            label={t.commentsTurnstile}
+            desc={t.commentsTurnstileDesc}
+            badge={needsKey(comments.turnstile, env.turnstileConfigured)}
+            checked={comments.turnstile}
+            onChange={(turnstile) => onChange({ ...comments, turnstile })}
+          />
+          <ToggleRow
+            label={t.commentsGoogleAuth}
+            desc={t.commentsAuthDesc}
+            badge={needsKey(comments.googleAuth, env.googleConfigured)}
+            checked={comments.googleAuth}
+            onChange={(googleAuth) => onChange({ ...comments, googleAuth })}
+          />
+          <ToggleRow
+            label={t.commentsFacebookAuth}
+            desc={t.commentsAuthDesc}
+            badge={needsKey(comments.facebookAuth, env.facebookConfigured)}
+            checked={comments.facebookAuth}
+            onChange={(facebookAuth) => onChange({ ...comments, facebookAuth })}
+          />
+        </>
       )}
     </div>
   )

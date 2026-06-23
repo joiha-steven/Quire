@@ -43,6 +43,10 @@ const zh = {
   commentCancel: '取消',
   commentDeleted: '[评论已删除]',
   commentError: '评论发送失败，请重试。',
+  commentSignInGoogle: '用 Google 登录',
+  commentSignInFacebook: '用 Facebook 登录',
+  commentAs: '评论身份',
+  commentSignOut: '退出登录',
 } satisfies Dict
 
 export default zh

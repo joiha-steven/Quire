@@ -134,13 +134,14 @@ See [`.env.example`](./.env.example). The essentials:
 |---|:---:|---|
 | `AUTH_SECRET` | ✅ | NextAuth secret — generate with `npx auth secret` |
 | `AUTHORIZED_EMAIL` | ✅ | The only email allowed into `/admin` — your email |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in + optional commenter login) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
 | `SUPABASE_URL` | ✅ | Supabase project API URL — Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase `service_role` key (secret, server-only) — same page |
 | `BLOB_READ_WRITE_TOKEN` | ✅ auto | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL |
 | `CRON_SECRET` | ◻️ optional | Protects `/api/cron` (keep-alive + scheduled backup) — any random string |
 | `MCP_OAUTH_SECRET` | ◻️ optional | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ◻️ optional | Cloudflare Turnstile anti-spam for comments — [Cloudflare → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile). Enable in Admin → Settings |
+| `AUTH_FACEBOOK_ID` / `AUTH_FACEBOOK_SECRET` | ◻️ optional | Facebook commenter login — [Meta for Developers](https://developers.facebook.com/) → Facebook Login. Enable in Admin → Settings |
 
 MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`); your blog content lives in Supabase + Blob, never in git.
 

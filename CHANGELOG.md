@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — reader comments, Phase C: Google/Facebook login)
+- **feat(comments): readers can comment with a Google or Facebook account.** Toggles in
+  Admin → Settings (each effective only when its env keys exist — "needs env key" badge). A
+  signed-in commenter sees "Commenting as <name>" + a plain comment box: **no name/email fields and
+  no Turnstile** — the server **trusts the session** (`getCommenter()`) for identity + provider.
+  Logged-out readers still get the manual form **plus** sign-in buttons. Facebook is a new
+  commenter-only NextAuth provider (`AUTH_FACEBOOK_ID/SECRET`); Google doubles as the owner's admin
+  sign-in. The session now carries `name` + `provider` (`next-auth.d.ts` augmentation); the viewer is
+  resolved client-side via `/api/auth/session` since the post page is static. **Signing in to comment
+  does NOT grant admin** — `/admin` stays gated to `AUTHORIZED_EMAIL`. i18n: all 6 public + admin
+  locales. This completes the 3-phase comment system. `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — reader comments, Phase B: Cloudflare Turnstile)
 - **feat(comments): optional Cloudflare Turnstile anti-spam for manual comments.** Toggle in
   Admin → Settings (under Comments). The manual form gates the comment box **behind a Turnstile

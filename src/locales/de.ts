@@ -43,6 +43,10 @@ const de = {
   commentCancel: 'Abbrechen',
   commentDeleted: '[Kommentar gelöscht]',
   commentError: 'Kommentar konnte nicht gesendet werden. Bitte erneut versuchen.',
+  commentSignInGoogle: 'Mit Google anmelden',
+  commentSignInFacebook: 'Mit Facebook anmelden',
+  commentAs: 'Kommentieren als',
+  commentSignOut: 'Abmelden',
 } satisfies Dict
 
 export default de

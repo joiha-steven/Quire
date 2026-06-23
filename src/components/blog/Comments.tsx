@@ -5,9 +5,12 @@
 // next load with NO cache in the way. After a successful post we simply refetch —
 // authoritative + instant, no optimistic reconciliation to get wrong.
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { signIn, signOut } from 'next-auth/react'
 import type { PublicComment, SiteLang } from '@/types'
 import { t, formatDate } from '@/lib/i18n'
 import { Turnstile } from './Turnstile'
+
+type Viewer = { name: string } | null
 
 const MAX = 1000
 const MAX_DEPTH = 2
@@ -28,16 +31,22 @@ export function Comments({
   lang,
   turnstile = false,
   turnstileSiteKey = '',
+  googleAuth = false,
+  facebookAuth = false,
 }: {
   postSlug: string
   lang: SiteLang
   turnstile?: boolean
   turnstileSiteKey?: string
+  googleAuth?: boolean
+  facebookAuth?: boolean
 }) {
   const s = t(lang)
   const [comments, setComments] = useState<PublicComment[]>([])
   const [loaded, setLoaded] = useState(false)
   const [replyTo, setReplyTo] = useState<number | null>(null)
+  const [viewer, setViewer] = useState<Viewer>(null)
+  const oauthOn = googleAuth || facebookAuth
 
   // Fetch the tree (no setState) so callers decide when to commit it to state —
   // keeps setState out of the synchronous effect body (deferred, after await).
@@ -65,6 +74,26 @@ export function Comments({
       active = false
     }
   }, [fetchTree])
+
+  // Identify a signed-in commenter (only when OAuth is offered). The post page is
+  // static, so the viewer is resolved client-side via the NextAuth session endpoint.
+  useEffect(() => {
+    if (!oauthOn) return
+    let active = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/auth/session', { cache: 'no-store' })
+        const json = (await res.json()) as { user?: { name?: string; email?: string } }
+        const u = json?.user
+        if (active && u?.email) setViewer({ name: u.name || u.email })
+      } catch {
+        /* logged out / offline — stay anonymous */
+      }
+    })()
+    return () => {
+      active = false
+    }
+  }, [oauthOn])
 
   // POST a comment; on success refetch the tree and close any reply form.
   const submit = useCallback(
@@ -94,12 +123,28 @@ export function Comments({
       </h2>
 
       <div className="mt-5">
+        {viewer && (
+          <p className="mb-2.5 t-small text-meta">
+            {s.commentAs} <span className="font-semibold text-heading">{viewer.name}</span>
+            {' · '}
+            <button type="button" onClick={() => signOut({ redirectTo: window.location.href })} className="hover:text-heading">
+              {s.commentSignOut}
+            </button>
+          </p>
+        )}
         <CommentForm
           lang={lang}
           onSubmit={(d, tok) => submit(null, d, tok)}
           turnstile={turnstile}
           turnstileSiteKey={turnstileSiteKey}
+          viewer={!!viewer}
         />
+        {!viewer && oauthOn && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {googleAuth && <SignInButton label={s.commentSignInGoogle} provider="google" />}
+            {facebookAuth && <SignInButton label={s.commentSignInFacebook} provider="facebook" />}
+          </div>
+        )}
       </div>
 
       {loaded && comments.length === 0 ? (
@@ -117,6 +162,7 @@ export function Comments({
               onReply={submit}
               turnstile={turnstile}
               turnstileSiteKey={turnstileSiteKey}
+              viewerMode={!!viewer}
             />
           ))}
         </ul>
@@ -134,6 +180,7 @@ function CommentNode({
   onReply,
   turnstile,
   turnstileSiteKey,
+  viewerMode,
 }: {
   comment: PublicComment
   depth: number
@@ -143,6 +190,7 @@ function CommentNode({
   onReply: (parentId: number, draft: Draft, token: string | null) => Promise<boolean>
   turnstile: boolean
   turnstileSiteKey: string
+  viewerMode: boolean
 }) {
   const s = t(lang)
   const canReply = depth < MAX_DEPTH
@@ -189,6 +237,7 @@ function CommentNode({
             onSubmit={(d, tok) => onReply(comment.id, d, tok)}
             turnstile={turnstile}
             turnstileSiteKey={turnstileSiteKey}
+            viewer={viewerMode}
             autoFocus
           />
         </div>
@@ -207,6 +256,7 @@ function CommentNode({
               onReply={onReply}
               turnstile={turnstile}
               turnstileSiteKey={turnstileSiteKey}
+              viewerMode={viewerMode}
             />
           ))}
         </ul>
@@ -215,17 +265,31 @@ function CommentNode({
   )
 }
 
+function SignInButton({ label, provider }: { label: string; provider: 'google' | 'facebook' }) {
+  return (
+    <button
+      type="button"
+      onClick={() => signIn(provider, { callbackUrl: window.location.href })}
+      className="t-small rounded-lg border border-rule px-3 py-2 text-text hover:bg-rule"
+    >
+      {label}
+    </button>
+  )
+}
+
 function CommentForm({
   lang,
   onSubmit,
   turnstile,
   turnstileSiteKey,
+  viewer = false,
   autoFocus,
 }: {
   lang: SiteLang
   onSubmit: (draft: Draft, token: string | null) => Promise<boolean>
   turnstile: boolean
   turnstileSiteKey: string
+  viewer?: boolean
   autoFocus?: boolean
 }) {
   const s = t(lang)
@@ -236,10 +300,11 @@ function CommentForm({
   const set = (k: keyof Draft, v: string) => setDraft((d) => ({ ...d, [k]: v }))
   const onToken = useCallback((tk: string | null) => setToken(tk), [])
 
-  // Turnstile (when on) must be solved before the content step — and identity
-  // must be filled first so the gate is meaningful.
-  const showWidget = turnstile && !!turnstileSiteKey
-  const identityOk = draft.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())
+  // A signed-in viewer needs no identity fields and no Turnstile (the server
+  // trusts the session). Otherwise: name + email, and Turnstile (if on) must be
+  // solved before the content step — identity first so the gate is meaningful.
+  const showWidget = turnstile && !!turnstileSiteKey && !viewer
+  const identityOk = viewer || (!!draft.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()))
   const gateOpen = !showWidget || !!token
   const valid = identityOk && draft.content.trim() && gateOpen
 
@@ -260,30 +325,32 @@ function CommentForm({
 
   return (
     <form onSubmit={handle} className="space-y-2.5">
-      <div className="grid gap-2.5 sm:grid-cols-3">
-        <input
-          className={inputClass}
-          placeholder={s.commentName}
-          value={draft.name}
-          onChange={(e) => set('name', e.target.value)}
-          autoFocus={autoFocus}
-          maxLength={80}
-        />
-        <input
-          className={inputClass}
-          type="email"
-          placeholder={`${s.commentEmail} · ${s.commentEmailNote}`}
-          value={draft.email}
-          onChange={(e) => set('email', e.target.value)}
-          maxLength={120}
-        />
-        <input
-          className={inputClass}
-          placeholder={s.commentWebsite}
-          value={draft.website}
-          onChange={(e) => set('website', e.target.value)}
-        />
-      </div>
+      {!viewer && (
+        <div className="grid gap-2.5 sm:grid-cols-3">
+          <input
+            className={inputClass}
+            placeholder={s.commentName}
+            value={draft.name}
+            onChange={(e) => set('name', e.target.value)}
+            autoFocus={autoFocus}
+            maxLength={80}
+          />
+          <input
+            className={inputClass}
+            type="email"
+            placeholder={`${s.commentEmail} · ${s.commentEmailNote}`}
+            value={draft.email}
+            onChange={(e) => set('email', e.target.value)}
+            maxLength={120}
+          />
+          <input
+            className={inputClass}
+            placeholder={s.commentWebsite}
+            value={draft.website}
+            onChange={(e) => set('website', e.target.value)}
+          />
+        </div>
+      )}
 
       {/* Gate: with Turnstile on, the widget appears once identity is filled and
           must be solved before the comment box is shown. */}

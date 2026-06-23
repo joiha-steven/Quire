@@ -43,6 +43,10 @@ const ja = {
   commentCancel: 'キャンセル',
   commentDeleted: '[削除されたコメント]',
   commentError: 'コメントを送信できませんでした。もう一度お試しください。',
+  commentSignInGoogle: 'Googleでログイン',
+  commentSignInFacebook: 'Facebookでログイン',
+  commentAs: 'コメント投稿者',
+  commentSignOut: 'ログアウト',
 } satisfies Dict
 
 export default ja

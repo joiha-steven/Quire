@@ -43,6 +43,10 @@ const en = {
   commentCancel: 'Cancel',
   commentDeleted: '[comment deleted]',
   commentError: 'Could not post your comment. Please try again.',
+  commentSignInGoogle: 'Sign in with Google',
+  commentSignInFacebook: 'Sign in with Facebook',
+  commentAs: 'Commenting as',
+  commentSignOut: 'Sign out',
 } satisfies Dict
 
 export default en
