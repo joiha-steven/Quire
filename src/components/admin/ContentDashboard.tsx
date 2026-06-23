@@ -13,7 +13,19 @@ import { useAdminT } from './I18nProvider'
 
 type Tab = 'posts' | 'pages' | 'taxonomy'
 
-export function ContentDashboard({ posts, pages, views }: { posts: Post[]; pages: Page[]; views: Record<string, number> }) {
+export function ContentDashboard({
+  posts,
+  pages,
+  views,
+  commentCounts,
+  commentsEnabled,
+}: {
+  posts: Post[]
+  pages: Page[]
+  views: Record<string, number>
+  commentCounts: Record<string, number>
+  commentsEnabled: boolean
+}) {
   const t = useAdminT()
   const [tab, setTab] = useState<Tab>('posts')
 
@@ -50,7 +62,9 @@ export function ContentDashboard({ posts, pages, views }: { posts: Post[]; pages
         )}
       </div>
 
-      {tab === 'posts' && <PostsTable initialPosts={posts} views={views} />}
+      {tab === 'posts' && (
+        <PostsTable initialPosts={posts} views={views} commentCounts={commentCounts} commentsEnabled={commentsEnabled} />
+      )}
       {tab === 'pages' && <PagesTable initialPages={pages} views={views} />}
       {tab === 'taxonomy' && <TaxonomyManager posts={posts} />}
     </div>

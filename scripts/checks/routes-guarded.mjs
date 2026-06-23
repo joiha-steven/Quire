@@ -20,6 +20,7 @@ function isPublicApi(pathname) {
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/track') ||
     pathname.startsWith('/api/search') ||
+    pathname === '/api/comments' ||
     pathname.startsWith('/api/mcp')
   )
 }

@@ -9,6 +9,7 @@ import { db, liveOnly } from '@/lib/db'
 import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible, readingMinutes } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
+import { renameComments, deleteCommentsForPost } from '@/lib/comments'
 import { getSettings } from '@/lib/settings'
 
 // Metadata columns (everything except the heavy `content` body) for list reads.
@@ -198,10 +199,11 @@ export async function savePost(
     .upsert({ ...toRow(post), updated_at: new Date().toISOString() })
   if (error) throw new Error(`savePost: ${error.message}`)
 
-  // Slug changed → drop the old row and move its revisions.
+  // Slug changed → drop the old row and move its revisions + comments.
   if (previousSlug && previousSlug !== post.slug) {
     await db().from('posts').delete().eq('slug', previousSlug)
     await renameRevisions(previousSlug, post.slug)
+    await renameComments(previousSlug, post.slug)
   }
 
   return toMeta(post)
@@ -222,6 +224,7 @@ export async function restorePost(slug: string): Promise<void> {
 export async function purgePost(slug: string): Promise<void> {
   await db().from('posts').delete().eq('slug', slug)
   await deleteRevisions(slug)
+  await deleteCommentsForPost(slug)
 }
 
 // Trashed posts (metadata only), most-recently-deleted first, for the Trash view.

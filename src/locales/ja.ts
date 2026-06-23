@@ -29,6 +29,20 @@ const ja = {
   tryAgain: '再試行',
   backHome: 'ホームに戻る',
   backToTop: 'トップへ戻る',
+  commentsHeading: 'コメント',
+  commentsEmpty: 'まだコメントはありません。最初のコメントを書きましょう。',
+  commentName: '名前',
+  commentEmail: 'メール',
+  commentEmailNote: '公開されません',
+  commentWebsite: 'ウェブサイト（任意）',
+  commentBody: 'コメントを書く…',
+  commentFormatHint: '**太字**、*斜体*',
+  commentSubmit: 'コメントを送信',
+  commentSubmitting: '送信中…',
+  commentReply: '返信',
+  commentCancel: 'キャンセル',
+  commentDeleted: '[削除されたコメント]',
+  commentError: 'コメントを送信できませんでした。もう一度お試しください。',
 } satisfies Dict
 
 export default ja

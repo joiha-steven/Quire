@@ -29,6 +29,20 @@ const de = {
   tryAgain: 'Erneut versuchen',
   backHome: 'Zur Startseite',
   backToTop: 'Nach oben',
+  commentsHeading: 'Kommentare',
+  commentsEmpty: 'Noch keine Kommentare. Sei der Erste.',
+  commentName: 'Name',
+  commentEmail: 'E-Mail',
+  commentEmailNote: 'Nicht veröffentlicht',
+  commentWebsite: 'Website (optional)',
+  commentBody: 'Kommentar schreiben…',
+  commentFormatHint: '**fett**, *kursiv*',
+  commentSubmit: 'Kommentar senden',
+  commentSubmitting: 'Senden…',
+  commentReply: 'Antworten',
+  commentCancel: 'Abbrechen',
+  commentDeleted: '[Kommentar gelöscht]',
+  commentError: 'Kommentar konnte nicht gesendet werden. Bitte erneut versuchen.',
 } satisfies Dict
 
 export default de

@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — reader comments, Phase A: manual identity, instant, no cache)
+- **feat: a text-only reader comment system, off by default (`settings.comments.enabled`).** Phase A
+  of three (B = Cloudflare Turnstile, C = Google/Facebook login). What ships now:
+  - **Public:** a comment block under each post — name + email + optional website, **limited markdown
+    (bold/italic only)**, replies up to **3 tiers**, 1000-char cap. It's a CLIENT island that fetches
+    `/api/comments` with `no-store`; the post page stays ISR, a new comment **shows instantly with no
+    cache in the way and NO `revalidatePath`** (commenting never touches the ISR path).
+  - **Admin → Comments:** every comment (content/post/time/name/from/delete); delete = soft delete →
+    **Trash** (restore/purge in a new Comments tab). Settings → General has an **Enable comments**
+    toggle. The posts table shows a **comment-count column** when enabled.
+  - **Safety:** markdown is escape-first so no link/image/script/raw-HTML survives (Invariant 5);
+    email is stored but NEVER sent to the public client; depth enforced server-side; published-post
+    check + per-IP rate limit; `/api/comments` is the only public-exempt path, `[id]` DELETE stays
+    owner-gated. New table `comments` (+ `schema.sql`). Tests: `comment-md`, `buildCommentTree`,
+    `sanitizeComments`. `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — per-palette visibility; switcher hides when one is left)
 - **feat(appearance): the owner can turn each color palette on/off for visitors.** New
   `settings.enabledPalettes` (allow-list of preset ids). Admin → Appearance shows a "Shown to

@@ -29,6 +29,20 @@ const vi = {
   tryAgain: 'Thử lại',
   backHome: 'Về trang chủ',
   backToTop: 'Lên đầu trang',
+  commentsHeading: 'Bình luận',
+  commentsEmpty: 'Chưa có bình luận. Hãy là người đầu tiên.',
+  commentName: 'Tên',
+  commentEmail: 'Email',
+  commentEmailNote: 'Không hiển thị',
+  commentWebsite: 'Website (không bắt buộc)',
+  commentBody: 'Viết bình luận…',
+  commentFormatHint: '**đậm**, *nghiêng*',
+  commentSubmit: 'Gửi bình luận',
+  commentSubmitting: 'Đang gửi…',
+  commentReply: 'Trả lời',
+  commentCancel: 'Huỷ',
+  commentDeleted: '[bình luận đã xoá]',
+  commentError: 'Không gửi được bình luận. Vui lòng thử lại.',
 } satisfies Dict
 
 export default vi

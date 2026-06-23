@@ -17,6 +17,9 @@ function isPublicApi(pathname: string): boolean {
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/track') ||
     pathname.startsWith('/api/search') ||
+    // ONLY the exact collection endpoint (GET list + POST create) is public; the
+    // admin DELETE at /api/comments/[id] stays owner-gated by the middleware net.
+    pathname === '/api/comments' ||
     pathname.startsWith('/api/mcp')
   )
 }

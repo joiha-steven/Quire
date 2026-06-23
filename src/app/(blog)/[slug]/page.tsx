@@ -18,6 +18,7 @@ import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { Comments } from '@/components/blog/Comments'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
 
@@ -163,6 +164,15 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             <div className="mt-6">
               <RelatedPosts posts={related} lang={language} />
             </div>
+          </>
+        )}
+
+        {settings.comments.enabled && (
+          <>
+            <div className="mt-12">
+              <hr />
+            </div>
+            <Comments postSlug={post.slug} lang={language} />
           </>
         )}
       </article>

@@ -22,6 +22,8 @@ export type ActivityAction =
   | 'mcp.token.create' | 'mcp.token.delete'
   // Google Drive backups (Admin → Settings → Advanced).
   | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
+  // Reader comments (create is public; restore/purge from the admin Trash).
+  | 'comment.create' | 'comment.delete' | 'comment.restore' | 'comment.purge'
 
 export type ActivityEntry = {
   id: number
