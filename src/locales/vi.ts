@@ -9,7 +9,7 @@ const vi = {
   pageLabel: 'Trang',
   menu: 'Menu',
   palette: 'Bảng màu',
-  paletteNames: { mono: 'Đơn sắc', sepia: 'Nâu giấy', forest: 'Rừng xanh', ocean: 'Đại dương', rose: 'Hồng phấn', amber: 'Hổ phách' },
+  paletteNames: { mono: 'Đơn sắc', sepia: 'Nâu giấy', forest: 'Rừng xanh', ocean: 'Đại dương', scifi: 'Viễn tưởng', amber: 'Hổ phách' },
   theme: 'Giao diện',
   themeLight: 'Sáng',
   themeDark: 'Tối',

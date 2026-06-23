@@ -9,7 +9,7 @@ const ko = {
   pageLabel: '페이지',
   menu: '메뉴',
   palette: '색상',
-  paletteNames: { mono: '모노', sepia: '세피아', forest: '포레스트', ocean: '오션', rose: '로즈', amber: '앰버' },
+  paletteNames: { mono: '모노', sepia: '세피아', forest: '포레스트', ocean: '오션', scifi: '사이파이', amber: '앰버' },
   theme: '테마',
   themeLight: '라이트',
   themeDark: '다크',

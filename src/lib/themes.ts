@@ -48,10 +48,12 @@ export const DEFAULT_TYPOGRAPHY: TypographySettings = {
 // Default typeface: none uploaded → the bundled Inter.
 export const DEFAULT_FONT: FontSettings = { family: '', faces: [] }
 
-// Neutral, almost-hueless grayscale — the vibeblog house style.
+// TRUE neutral grayscale — zero hue, the vibeblog house style. (Earlier values had a
+// faint warm/blue cast: bg/rule read as cream, meta/text leaned blue. All pure gray
+// now; `rule` is a touch lighter so the menu hover reads as a soft, colourless gray.)
 const MONO: ThemeSettings = {
-  light: { bg: '#fbfbfa', text: '#26262b', heading: '#14141a', meta: '#8a8a90', link: '#14141a', rule: '#e9e9e4' },
-  dark: { bg: '#0e0e0f', text: '#d4d4d8', heading: '#f1f1f2', meta: '#85858c', link: '#f1f1f2', rule: '#27272a' },
+  light: { bg: '#fcfcfc', text: '#262626', heading: '#121212', meta: '#8c8c8c', link: '#121212', rule: '#ebebeb' },
+  dark: { bg: '#0e0e0e', text: '#d6d6d6', heading: '#f2f2f2', meta: '#888888', link: '#f2f2f2', rule: '#262626' },
 }
 
 // Warm paper + brown ink — classic long-read comfort, terracotta accent.
@@ -72,10 +74,11 @@ const OCEAN: ThemeSettings = {
   dark: { bg: '#0c121a', text: '#c7d2dd', heading: '#e8eef5', meta: '#7c8a98', link: '#6aa9e0', rule: '#202a36' },
 }
 
-// Soft rose + plum — warm and elegant, raspberry accent.
-const ROSE: ThemeSettings = {
-  light: { bg: '#fbf5f5', text: '#3d2f33', heading: '#2a1f24', meta: '#9c8a90', link: '#b14a63', rule: '#efe0e3' },
-  dark: { bg: '#181113', text: '#ddccd0', heading: '#f3e7ea', meta: '#9d8990', link: '#e08aa0', rule: '#2e2226' },
+// Sci-fi — cool graphite surface with an electric cyan accent. Crisp + techy;
+// the dark mode (deep blue-black + bright cyan) is where it really reads as sci-fi.
+const SCIFI: ThemeSettings = {
+  light: { bg: '#f2f5f7', text: '#1e2a33', heading: '#0d161e', meta: '#74828f', link: '#0e8aa0', rule: '#dce4ea' },
+  dark: { bg: '#0a0f15', text: '#c3d2dc', heading: '#e7f1f7', meta: '#71808c', link: '#36cfe0', rule: '#1b2630' },
 }
 
 // Warm-neutral surface with a vivid amber accent — confident and bright.
@@ -90,7 +93,7 @@ export const THEME_PRESETS: ThemePreset[] = [
   { id: 'sepia', name: 'Sepia', theme: SEPIA },
   { id: 'forest', name: 'Forest', theme: FOREST },
   { id: 'ocean', name: 'Ocean', theme: OCEAN },
-  { id: 'rose', name: 'Rosé', theme: ROSE },
+  { id: 'scifi', name: 'Sci-Fi', theme: SCIFI },
   { id: 'amber', name: 'Amber', theme: AMBER },
 ]
 
