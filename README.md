@@ -60,7 +60,7 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 
 Three ways to stand up your own blog — **pick one**. Each ends with a live site at your domain.
 
-<details open>
+<details>
 <summary><b>1️⃣ &nbsp;Do it yourself</b> &nbsp;— ~10 minutes in the dashboards</summary>
 
 <br/>
@@ -76,7 +76,7 @@ Three ways to stand up your own blog — **pick one**. Each ends with a live sit
 
 </details>
 
-<details open>
+<details>
 <summary><b>2️⃣ &nbsp;Hand it to an AI agent</b> &nbsp;— Claude, OpenAI Codex, OpenClaw, Hermes…</summary>
 
 <br/>
