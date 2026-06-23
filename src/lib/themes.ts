@@ -19,19 +19,28 @@ export const TYPE_ROLES: TypeRole[] = ['h1', 'h2', 'h3', 'h4', 'h5', 'body', 'sm
 export const FONT_WEIGHTS = [400, 500, 600, 700] as const
 
 // Default type system (client-safe so the settings UI imports it for reset).
-// Restrained ~1.18 scale off an 18px body: list-card titles (H2) read as headings,
-// single-post/page/category titles step up to H1.
+// Tuned for long-form reading the way fine European book typography is set:
+//  - 18px body (--fs-body 1.125rem) at a ~66-char measure (contentWidth 672) — the
+//    classic 60-75 cpl comfort zone (Bringhurst's ideal ~66).
+//  - Body leading 1.7: airy enough for screens, a touch tighter than the old 1.75
+//    so the column reads as an even grey block rather than spaced-out lines.
+//  - A restrained, monotonic heading scale (h1 2.0 → h5 1.0). Headings stay modest
+//    (books differentiate with weight + whitespace, not size); larger sizes take
+//    tighter leading + a little negative tracking, body/small stay at 0.
+//  - h4 sits just above body; h5 is the small label (was 0.9, below body — fixed).
+// Mirror any change in globals.css :root (the no-JS fallback) AND the table in
+// docs/conventions.md.
 export const DEFAULT_TYPOGRAPHY: TypographySettings = {
   roles: {
-    h1: { size: 1.95, line: 1.2, spacing: -0.02 },
-    h2: { size: 1.4, line: 1.28, spacing: -0.015 },
-    h3: { size: 1.2, line: 1.35, spacing: -0.011 },
+    h1: { size: 2.0, line: 1.2, spacing: -0.02 },
+    h2: { size: 1.5, line: 1.27, spacing: -0.015 },
+    h3: { size: 1.25, line: 1.35, spacing: -0.01 },
     h4: { size: 1.15, line: 1.45, spacing: -0.006 },
-    h5: { size: 0.9, line: 1.5, spacing: 0 },
-    body: { size: 1.125, line: 1.75, spacing: 0 },
+    h5: { size: 1.0, line: 1.5, spacing: 0 },
+    body: { size: 1.125, line: 1.7, spacing: 0 },
     small: { size: 0.875, line: 1.55, spacing: 0 },
     caption: { size: 0.8125, line: 1.5, spacing: 0.003 },
-    code: { size: 0.875, line: 1.65, spacing: 0 },
+    code: { size: 0.875, line: 1.6, spacing: 0 },
   },
   smoothing: false,
 }

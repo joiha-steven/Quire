@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — reading-optimized typography defaults + remove public hardcode)
+- **change(typography): retuned the default type scale for long-form reading** (the Reset target).
+  Restrained, monotonic heading scale (h1 2.0 → h5 1.0; h5 was 0.9, *below* body — fixed), body
+  leading eased 1.75 → 1.7 for an even grey column, code 1.65 → 1.6, h2 1.4 → 1.5 for clearer
+  hierarchy. ~66-char measure (`contentWidth` 672) kept — already in the 60–75 cpl comfort zone.
+  Updated in BOTH `globals.css :root` and `DEFAULT_TYPOGRAPHY`; readers who customized keep theirs.
+- **feat(typography): `text-wrap` polish.** Headings get `text-wrap: balance` (no lone short last
+  line), `.prose p` gets `text-wrap: pretty` (better rag) — both progressive, ignored where unsupported.
+- **refactor: removed the last hardcoded public text sizes.** Brand wordmark `text-lg` → `.fs-h4`;
+  Theme/Palette toggle menu items `text-sm` → `.t-small`; `PostCard` excerpt `leading-relaxed` +
+  inline `font-size` → new `.t-body` utility (body role outside `.prose`). Public size grep is now clean.
+
 ## 2026-06-23 (v1.1.0-beta — admin overhaul: dotted canvas, shared UI kit, 5-tab settings)
 - **feat(admin): a shared UI kit ends the per-page drift.** New `components/admin/kit.tsx` is the
   ONE source for admin chrome — `Card` (canonical surface), `PageHeader` (the title block every

@@ -46,7 +46,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
                 decoding="async"
               />
             ) : (
-              <span className="text-lg font-bold tracking-tight">{settings.title}</span>
+              <span className="fs-h4 font-bold">{settings.title}</span>
             )}
           </Link>
           <div className="flex shrink-0 items-center gap-0.5">

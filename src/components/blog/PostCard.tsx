@@ -26,7 +26,7 @@ export function PostCard({
           : ''}
       </p>
       {post.excerpt && (
-        <p className="mt-3 leading-relaxed text-text" style={{ fontSize: 'var(--fs-body)' }}>
+        <p className="mt-3 t-body text-text">
           {post.excerpt}
         </p>
       )}

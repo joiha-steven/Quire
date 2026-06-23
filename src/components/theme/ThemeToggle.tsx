@@ -90,7 +90,7 @@ export function ThemeToggle({
                   setMode(it.key)
                   setOpen(false)
                 }}
-                className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-rule ${
+                className={`flex w-full items-center justify-between px-3 py-2 text-left t-small hover:bg-rule ${
                   mode === it.key ? 'font-semibold text-heading' : 'text-meta'
                 }`}
               >

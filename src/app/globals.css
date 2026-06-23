@@ -72,15 +72,17 @@
      owner's saved values are injected after this file (a :root override via
      typographyToCss) and win. Roles: h1-h5, body, small (meta/dates/UI),
      caption (figures), code (mono). */
-  --fs-h1: 1.95rem;  --lh-h1: 1.2;   --ls-h1: -0.02em;
-  --fs-h2: 1.4rem;   --lh-h2: 1.28;  --ls-h2: -0.015em;
-  --fs-h3: 1.2rem;   --lh-h3: 1.35;  --ls-h3: -0.011em;
+  /* Defaults mirror DEFAULT_TYPOGRAPHY in lib/themes.ts (the no-JS fallback; the
+     owner's saved scale is injected after this by typographyToCss). Keep in sync. */
+  --fs-h1: 2.0rem;   --lh-h1: 1.2;   --ls-h1: -0.02em;
+  --fs-h2: 1.5rem;   --lh-h2: 1.27;  --ls-h2: -0.015em;
+  --fs-h3: 1.25rem;  --lh-h3: 1.35;  --ls-h3: -0.01em;
   --fs-h4: 1.15rem;  --lh-h4: 1.45;  --ls-h4: -0.006em;
-  --fs-h5: 0.9rem;   --lh-h5: 1.5;   --ls-h5: 0em;
-  --fs-body: 1.125rem; --lh-body: 1.75; --ls-body: 0em;
+  --fs-h5: 1.0rem;   --lh-h5: 1.5;   --ls-h5: 0em;
+  --fs-body: 1.125rem; --lh-body: 1.7; --ls-body: 0em;
   --fs-small: 0.875rem; --lh-small: 1.55; --ls-small: 0em;
   --fs-caption: 0.8125rem; --lh-caption: 1.5; --ls-caption: 0.003em;
-  --fs-code: 0.875rem; --lh-code: 1.65; --ls-code: 0em;
+  --fs-code: 0.875rem; --lh-code: 1.6; --ls-code: 0em;
 }
 :where(.dark) {
   --c-bg: #0e0e0f;
@@ -133,9 +135,12 @@ p, h1, h2, h3, h4, li, blockquote, a {
   overflow-wrap: break-word;
 }
 
-/* Heading colour (size/tracking come from the role vars below). */
+/* Heading colour (size/tracking come from the role vars below). `text-wrap:
+   balance` evens out multi-line headings (no lone short last line) — progressive,
+   ignored where unsupported. */
 h1, h2, h3, h4, h5 {
   color: var(--c-heading);
+  text-wrap: balance;
 }
 
 /* Role utilities — apply a role to text OUTSIDE .prose so every size/line/spacing
@@ -148,6 +153,8 @@ h1, h2, h3, h4, h5 {
 .fs-h4 { font-size: var(--fs-h4); line-height: var(--lh-h4); letter-spacing: var(--ls-h4); }
 .fs-h5 { font-size: var(--fs-h5); line-height: var(--lh-h5); letter-spacing: var(--ls-h5); }
 .t-small { font-size: var(--fs-small); line-height: var(--lh-small); letter-spacing: var(--ls-small); }
+/* Body-role text OUTSIDE .prose (excerpts, footer) — same size/rhythm as running text. */
+.t-body { font-size: var(--fs-body); line-height: var(--lh-body); letter-spacing: var(--ls-body); }
 
 /* One divider style for the whole site: faint, 50% wide, left-aligned. */
 hr {
@@ -218,6 +225,8 @@ hr {
 }
 .prose p {
   margin-top: 1.4em;
+  /* Improve the rag and avoid a lone short last line; progressive, safe to ignore. */
+  text-wrap: pretty;
 }
 .prose a {
   color: var(--c-link);
