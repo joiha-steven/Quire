@@ -23,12 +23,26 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 // - WRITES (POST/PATCH/DELETE/etc.) are `no-store` — never cached.
 export const DB_TAG = 'db'
 const REVALIDATE = 3600
+
+// Self-host (Docker) talks to a BUNDLED PostgREST instead of Supabase's gateway.
+// supabase-js builds `${SUPABASE_URL}/rest/v1/<table>`; bare PostgREST serves tables
+// at `/<table>`, so when POSTGREST_DIRECT=1 we strip the `/rest/v1` prefix here. This
+// keeps the whole data layer (and supabase-js) byte-for-byte identical on both
+// targets — only the URL path differs. Unset on Vercel → hits Supabase unchanged.
+const POSTGREST_DIRECT = process.env.POSTGREST_DIRECT === '1'
+function restTarget(input: RequestInfo | URL): RequestInfo | URL {
+  if (!POSTGREST_DIRECT) return input
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : null
+  return url ? url.replace('/rest/v1', '') : input
+}
+
 function dbFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const target = restTarget(input)
   const method = (init?.method ?? 'GET').toUpperCase()
   if (method === 'GET' || method === 'HEAD') {
-    return fetch(input, { ...init, next: { revalidate: REVALIDATE, tags: [DB_TAG] } })
+    return fetch(target, { ...init, next: { revalidate: REVALIDATE, tags: [DB_TAG] } })
   }
-  return fetch(input, { ...init, cache: 'no-store' })
+  return fetch(target, { ...init, cache: 'no-store' })
 }
 
 let _client: SupabaseClient | undefined

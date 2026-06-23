@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v1.1.3 — 2026-06-23
+- **feat: Docker self-host needs NO cloud — bundled Postgres + PostgREST.** The compose stack now
+  ships its own database, so a self-hoster never signs up for Supabase. Because the app only ever
+  uses Supabase's REST layer (no Supabase Auth/Realtime/Storage), the stack is just **Postgres +
+  PostgREST** (2 light containers): supabase-js points at the local PostgREST and the **entire data
+  layer stays byte-for-byte unchanged**. The only code change is 3 env-gated lines in `db.ts` —
+  when `POSTGREST_DIRECT=1` it strips the `/rest/v1` path prefix so supabase-js reaches bare
+  PostgREST (no proxy container). Postgres applies `scripts/schema.sql` + a role/grant bootstrap
+  (`docker/initdb/`) on first boot; `scripts/docker/gen-keys.mjs` mints the DB password + JWT secret
+  + `service_role` key. Text now lives in `./data/postgres`, binaries in `./data/uploads` — back up
+  those two folders. Managed-DB users can still point `SUPABASE_URL` at a real Supabase and drop the
+  `db`/`rest` services. **Vercel is unchanged** (no `POSTGREST_DIRECT` → hits Supabase as before).
+
 ## v1.1.2 — 2026-06-23
 - **feat: Docker self-host, from the same codebase.** `src/lib/blob.ts` is now a storage facade
   with two drivers picked by `STORAGE_DRIVER`: `vercel-blob` (unchanged default) and `local`

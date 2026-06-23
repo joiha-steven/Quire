@@ -1,24 +1,74 @@
-# Self-host vibeblog: the Next standalone app + a tiny cron sidecar (Vercel Cron
-# does not exist off-platform). Postgres (Supabase) and Google OAuth stay external
-# — set them in .env.docker (copy .env.docker.example). Binaries persist in
-# ./data/uploads; back that folder up alongside your Postgres dump.
+# Fully self-contained vibeblog — NO cloud. Postgres + PostgREST replace Supabase,
+# the local filesystem replaces Vercel Blob, a cron sidecar replaces Vercel Cron.
+# Everything runs on your own host; only Google OAuth (sign-in) reaches the internet.
 #
-#   cp .env.docker.example .env.docker   # then fill it in
-#   docker compose up -d --build
+#   cp .env.docker.example .env.docker
+#   node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + key
+#   # then fill AUTH_*, SITE_URL, AUTHORIZED_EMAIL in .env.docker
+#   docker compose --env-file .env.docker up -d --build
+#
+# The --env-file flag is required: compose reads it for ${...} substitution below
+# (PostgREST's DB URI + JWT secret), AND each service loads it as container env.
 
 services:
+  # Postgres — the database (was Supabase). Schema + roles are applied once on first
+  # init from docker/initdb + the app's own scripts/schema.sql (single source).
+  db:
+    image: postgres:16-alpine
+    env_file: .env.docker
+    environment:
+      POSTGRES_DB: vibeblog
+      POSTGRES_USER: postgres
+      # POSTGRES_PASSWORD comes from .env.docker (run gen-keys.mjs)
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./docker/initdb/01_roles.sql:/docker-entrypoint-initdb.d/01_roles.sql:ro
+      - ./scripts/schema.sql:/docker-entrypoint-initdb.d/02_schema.sql:ro
+      - ./docker/initdb/03_grants.sql:/docker-entrypoint-initdb.d/03_grants.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vibeblog"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # PostgREST — the REST layer supabase-js talks to (was Supabase's API gateway).
+  # Connects as the superuser (db port is NOT exposed to the host) and SET ROLEs to
+  # the role named in each request's JWT (service_role) or `anon` when there is none.
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/vibeblog
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+    restart: unless-stopped
+
+  # The Next.js app. SUPABASE_URL points at the bundled PostgREST; POSTGREST_DIRECT
+  # makes db.ts strip the `/rest/v1` path prefix so supabase-js works unchanged.
   app:
     build: .
     image: vibeblog
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
     env_file: .env.docker
+    environment:
+      SUPABASE_URL: http://rest:3000
+      POSTGREST_DIRECT: "1"
     ports:
       - "3000:3000"
     volumes:
       - ./data/uploads:/app/uploads
     restart: unless-stopped
 
-  # Hourly maintenance ping (keep-alive + variant/backup sweep) — the same job
-  # vercel.json runs on Vercel. Calls /api/cron with the CRON_SECRET bearer.
+  # Hourly maintenance ping (variant/backup sweep) — the job vercel.json runs on
+  # Vercel. Calls /api/cron with the CRON_SECRET bearer.
   cron:
     image: alpine:3.20
     depends_on:

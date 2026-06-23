@@ -73,8 +73,13 @@
 - [ ] Toggle OFF (or disconnect) → the cron no longer creates snapshots
 
 ## Docker self-host (only when shipping the image)
-- [ ] `docker compose up -d --build` boots; the image builds with **no backend env** (data layer
-  degrades to empty), then runs with `.env.docker` supplied
+- [ ] `node scripts/docker/gen-keys.mjs >> .env.docker` then `docker compose --env-file .env.docker
+  up -d --build` boots the full no-cloud stack (app + db + rest + cron); image builds with **no
+  backend env**
+- [ ] First boot applies `scripts/schema.sql` + `docker/initdb` roles/grants; `service_role` JWT
+  reaches every table (sign in, create/list a post) — no PostgREST permission errors in `rest` logs
+- [ ] Text survives a restart: `docker compose down && up -d` keeps posts (volume `./data/postgres`)
+- [ ] Analytics dashboard loads (the `analytics_summary`/`analytics_totals` RPCs resolve via PostgREST)
 - [ ] `STORAGE_DRIVER=local`: uploading an image writes under the `/app/uploads` volume and renders
   at `/uploads/...` (original + thumb + variants); it survives `docker compose down && up`
 - [ ] Large upload (>4.5 MB) succeeds — the browser posts to `/api/media/upload` (no serverless cap)

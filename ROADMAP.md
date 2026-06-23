@@ -28,7 +28,8 @@ Everything else already ports to a plain Node/Docker runtime:
 - `sharp` does all image work (runs natively on Node — no Vercel image service).
 - ISR + `revalidatePath`, the OG route, NextAuth and Markdown (gray-matter) all run
   under `next start` / standalone output.
-- Text content lives in **Supabase Postgres** (any Postgres works for self-host);
+- Text content lives in **Postgres via PostgREST** — the app uses only Supabase's REST
+  layer, so self-host bundles **Postgres + PostgREST** and supabase-js is unchanged;
   binaries are store-relative on Blob (`collapseBlob`/`expandBlob`), so swapping the
   binary backend is mostly resolving a different base URL.
 
@@ -68,10 +69,13 @@ serves files via `app/uploads/[...path]/route.ts`. `scripts/checks/no-direct-blo
 keeps the SDK contained so a self-host build can't silently reach Vercel Blob. The S3
 driver later reused per-tenant in the SaaS as "bring your own bucket" (Phase 7).
 
-### Phase 2 — Docker `[shipped — local FS driver]`
-- `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + cron sidecar). ✅
+### Phase 2 — Docker `[shipped — no-cloud stack]`
+- `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + db + rest + cron). ✅
   The image builds with **no backend env** (data layer degrades to empty), so it is
   portable; env is supplied at runtime via `.env.docker`.
+- **No cloud:** bundled **Postgres + PostgREST** (replaces Supabase) + local FS store
+  (replaces Blob). supabase-js unchanged — `db.ts` strips the `/rest/v1` prefix when
+  `POSTGREST_DIRECT=1`. `scripts/docker/gen-keys.mjs` mints DB password + JWT. ✅
 - Cron: a sidecar pings `/api/cron` hourly (Vercel Cron has no off-platform equivalent). ✅
 - *Still planned:* a GitHub Action that builds + publishes a versioned image to GHCR on
   each release tag, so updating is `docker compose pull && up -d`; optional bundled MinIO
