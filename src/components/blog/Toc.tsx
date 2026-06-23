@@ -16,10 +16,12 @@ export const TOC_ANCHORS = { tags: 'post-tags', categories: 'post-categories', c
 export function Toc({
   headings,
   title,
+  indexTitle,
   meta,
 }: {
   headings: Heading[]
-  title: string
+  title: string // header shown when there ARE headings (click scrolls to top)
+  indexTitle: string // header shown when there are NO headings (plain, not clickable)
   // The combined tags/categories/comments jump (label already joined), if any present.
   meta?: { label: string; anchor: string }
 }) {
@@ -63,8 +65,8 @@ export function Toc({
     return () => window.removeEventListener('keydown', onKey)
   }, [open, pinned])
 
-  // No headings → no panel at all (defence in depth; the page already gates on >= 3).
-  if (!headings.length) return null
+  // Nothing to show at all → no panel (the page gates the same way).
+  if (!headings.length && !meta) return null
 
   function goId(e: React.MouseEvent, id: string) {
     e.preventDefault()
@@ -95,33 +97,43 @@ export function Toc({
             aria-label={title}
             className="max-h-[80vh] w-60 overflow-y-auto rounded-r-xl border border-l-0 border-rule bg-bg p-5 t-small shadow-lg"
           >
-            <button
-              type="button"
-              onClick={goTop}
-              className="mb-2 block text-left font-semibold text-heading transition-opacity hover:opacity-70"
-            >
-              {title}
-            </button>
-            <ul className="space-y-1.5">
-              {headings.map((h) => (
-                <li key={h.id}>
-                  <a
-                    href={`#${h.id}`}
-                    onClick={(e) => goId(e, h.id)}
-                    className={`block transition-colors hover:text-heading ${
-                      active === h.id ? 'font-medium text-heading' : 'text-meta'
-                    }`}
-                  >
-                    {h.text}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {headings.length > 0 ? (
+              // Headings present: clickable header (scrolls to top) + the list.
+              <>
+                <button
+                  type="button"
+                  onClick={goTop}
+                  className="mb-2 block cursor-pointer text-left font-semibold text-heading transition-opacity hover:opacity-70"
+                >
+                  {title}
+                </button>
+                <ul className="space-y-1.5">
+                  {headings.map((h) => (
+                    <li key={h.id}>
+                      <a
+                        href={`#${h.id}`}
+                        onClick={(e) => goId(e, h.id)}
+                        className={`block cursor-pointer transition-colors hover:text-heading ${
+                          active === h.id ? 'font-medium text-heading' : 'text-meta'
+                        }`}
+                      >
+                        {h.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              // No headings: a plain, non-clickable "Mục lục" header.
+              <p className="mb-2 font-semibold text-heading">{indexTitle}</p>
+            )}
             {meta && (
               <a
                 href={`#${meta.anchor}`}
                 onClick={(e) => goId(e, meta.anchor)}
-                className="mt-4 block text-meta transition-colors hover:text-heading"
+                className={`block cursor-pointer text-meta transition-colors hover:text-heading ${
+                  headings.length > 0 ? 'mt-4' : ''
+                }`}
               >
                 {meta.label}
               </a>
@@ -135,7 +147,7 @@ export function Toc({
           onClick={() => setOpen((o) => !o)}
           aria-label={title}
           aria-expanded={open}
-          className="flex items-center rounded-r-lg border border-l-0 border-rule bg-bg py-5 pr-1 pl-0.5 text-meta transition-colors hover:text-heading"
+          className="flex cursor-pointer items-center rounded-r-lg border border-l-0 border-rule bg-bg py-5 pr-1 pl-0.5 text-meta transition-colors hover:text-heading"
         >
           <svg
             width="14"

@@ -22,6 +22,7 @@ export type Dict = {
   searchHint: string
   searchEmpty: string
   tocTitle: string
+  tocIndex: string
   relatedTitle: string
   notFoundTitle: string
   notFoundText: string

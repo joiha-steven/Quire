@@ -21,6 +21,7 @@ const zh = {
   searchHint: '输入关键词搜索文章。',
   searchEmpty: '未找到匹配的文章。',
   tocTitle: '标题',
+  tocIndex: '目录',
   relatedTitle: '相关文章',
   notFoundTitle: '页面未找到',
   notFoundText: '您查找的页面不存在或已被移动。',
