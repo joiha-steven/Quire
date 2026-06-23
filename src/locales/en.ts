@@ -20,7 +20,7 @@ const en = {
   searchPlaceholder: 'Search posts...',
   searchHint: 'Type to search posts.',
   searchEmpty: 'No matching posts found.',
-  tocTitle: 'Contents',
+  tocTitle: 'Headings',
   relatedTitle: 'Related posts',
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',

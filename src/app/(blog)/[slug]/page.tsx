@@ -13,7 +13,7 @@ import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
-import { Toc } from '@/components/blog/Toc'
+import { Toc, TOC_ANCHORS } from '@/components/blog/Toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
@@ -102,6 +102,14 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
     const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
+    const showComments = Boolean(settings.comments.enabled && commentEnv)
+    // In-page jumps shown under the ToC headings (only for sections present here).
+    const tx = t(language)
+    const tocJumps = [
+      post.tags.length > 0 ? { id: TOC_ANCHORS.tags, label: tx.tagLabel } : null,
+      post.categories.length > 0 ? { id: TOC_ANCHORS.categories, label: tx.categoryLabel } : null,
+      showComments ? { id: TOC_ANCHORS.comments, label: tx.commentsHeading } : null,
+    ].filter((j): j is { id: string; label: string } => j !== null)
     return (
       <article>
         {features.progressBar && <ReadingProgress />}
@@ -128,9 +136,10 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
         </p>
 
-        {/* The desktop ToC is fixed to the viewport (see Toc.tsx), not anchored here. */}
+        {/* The ToC is fixed to the viewport (see Toc.tsx) — left-pinned on desktop,
+            a left-edge tab + slide-out on mobile — not anchored here. */}
         <div className="mt-8">
-          {headings.length >= 3 && <Toc headings={headings} title={t(language).tocTitle} />}
+          {headings.length >= 3 && <Toc headings={headings} title={tx.tocTitle} jumps={tocJumps} />}
           <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 
@@ -143,13 +152,13 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             </div>
             <footer className="mt-6 space-y-1 t-small text-meta">
               {post.tags.length > 0 && (
-                <p>
-                  {t(language).tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${termSlug(s)}`)}
+                <p id={TOC_ANCHORS.tags} className="scroll-mt-24">
+                  {tx.tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${termSlug(s)}`)}
                 </p>
               )}
               {post.categories.length > 0 && (
-                <p>
-                  {t(language).categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${termSlug(s)}`)}
+                <p id={TOC_ANCHORS.categories} className="scroll-mt-24">
+                  {tx.categoryLabel}: {taxoLinks(post.categories, (s) => `/category/${termSlug(s)}`)}
                 </p>
               )}
             </footer>
@@ -169,9 +178,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           </>
         )}
 
-        {settings.comments.enabled && commentEnv && (
+        {showComments && commentEnv && (
           <>
-            <div className="mt-12">
+            <div id={TOC_ANCHORS.comments} className="mt-12 scroll-mt-24">
               <hr />
             </div>
             <Comments

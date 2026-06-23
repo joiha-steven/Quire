@@ -237,7 +237,7 @@ const vi = {
   featSearch: 'Tìm kiếm',
   featSearchDesc: 'Icon tìm trên header và trang /search.',
   featToc: 'Mục lục',
-  featTocDesc: 'Khung mục lục bên trái (desktop) cho bài có từ 3 đề mục.',
+  featTocDesc: 'Khung tiêu đề bên trái cho bài có từ 3 đề mục; trên mobile ẩn sau tab mép trái.',
   featRelated: 'Bài viết liên quan',
   featRelatedDesc: 'Gợi ý bài cùng thẻ/danh mục ở cuối bài.',
   featReadingTime: 'Thời gian đọc',

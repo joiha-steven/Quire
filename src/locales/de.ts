@@ -20,7 +20,7 @@ const de = {
   searchPlaceholder: 'Beiträge suchen...',
   searchHint: 'Tippen, um Beiträge zu suchen.',
   searchEmpty: 'Keine passenden Beiträge gefunden.',
-  tocTitle: 'Inhalt',
+  tocTitle: 'Überschriften',
   relatedTitle: 'Ähnliche Beiträge',
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',

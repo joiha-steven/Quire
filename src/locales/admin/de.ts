@@ -237,7 +237,7 @@ const de = {
   featSearch: 'Suche',
   featSearchDesc: 'Such-Symbol im Header und die Seite /search.',
   featToc: 'Inhaltsverzeichnis',
-  featTocDesc: 'Linkes Inhaltsverzeichnis (Desktop) für Beiträge mit 3+ Überschriften.',
+  featTocDesc: 'Linkes Überschriften-Panel für Beiträge mit 3+ Überschriften; auf Mobil hinter einem Rand-Tab einklappbar.',
   featRelated: 'Ähnliche Beiträge',
   featRelatedDesc: 'Schlägt am Ende Beiträge mit gleichen Schlagwörtern/Kategorien vor.',
   featReadingTime: 'Lesezeit',

@@ -237,7 +237,7 @@ const zh = {
   featSearch: '搜索',
   featSearchDesc: '页眉的搜索图标和 /search 页面。',
   featToc: '目录',
-  featTocDesc: '为有 3 个以上标题的文章显示左侧目录（桌面端）。',
+  featTocDesc: '为有 3 个以上标题的文章显示左侧标题面板；移动端收纳在边缘标签后。',
   featRelated: '相关文章',
   featRelatedDesc: '在文末推荐相同标签/分类的文章。',
   featReadingTime: '阅读时间',

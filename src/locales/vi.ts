@@ -20,7 +20,7 @@ const vi = {
   searchPlaceholder: 'Tìm bài viết...',
   searchHint: 'Nhập từ khoá để tìm bài viết.',
   searchEmpty: 'Không tìm thấy bài viết phù hợp.',
-  tocTitle: 'Mục lục',
+  tocTitle: 'Tiêu đề',
   relatedTitle: 'Bài viết liên quan',
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',
