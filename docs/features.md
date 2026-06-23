@@ -100,9 +100,9 @@
 
 ## Comments — `lib/comments.ts`, `components/blog/Comments.tsx`
 
-Text-only reader comments, **off by default** (`settings.comments.enabled`). Manual identity
-(name + email + optional website) + optional Cloudflare Turnstile; Google/Facebook login is a later
-phase (the `CommentSettings.facebookAuth`/`googleAuth` flags exist, unused until then).
+Text-only reader comments, **off by default** (`settings.comments.enabled`). Identity is either
+manual (name + email + optional website, optionally behind Cloudflare Turnstile) or a signed-in
+Google/Facebook account.
 
 - **Instant, never cached — by design.** The post page stays ISR/static; the comment block is a
   CLIENT island (`Comments.tsx`) that fetches `/api/comments?post=<slug>` with `no-store`. The
@@ -134,5 +134,14 @@ phase (the `CommentSettings.facebookAuth`/`googleAuth` flags exist, unused until
   manual form gates the comment box **behind the Turnstile pass** (widget appears once name/email are
   filled). The POST verifies the token server-side via siteverify (fail closed). Tokens are
   single-use → the form re-arms after each post.
+- **Google / Facebook login (`auth.ts`).** Toggles `settings.comments.googleAuth` / `facebookAuth`;
+  each provider loads in NextAuth only when its env keys exist (Google = the owner's admin sign-in
+  too; Facebook is commenter-only). The session carries `name` + `provider` (`next-auth.d.ts`
+  augments `Session`/`JWT`). The island resolves the viewer client-side via `/api/auth/session`
+  (the post page is static), shows "Commenting as …" + a comment box (no name/email/Turnstile) when
+  signed in, else sign-in buttons (`signIn` from `next-auth/react`, `callbackUrl` = current page).
+  The POST **trusts the session** for a logged-in commenter (`getCommenter()`): identity +
+  provider come from it, Turnstile + manual validation are skipped. A signed-in commenter is NOT an
+  admin — `isAuthorized` still gates `/admin` to `AUTHORIZED_EMAIL` only.
 - **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
   (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.

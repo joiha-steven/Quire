@@ -45,6 +45,10 @@ export type Dict = {
   commentCancel: string
   commentDeleted: string
   commentError: string
+  commentSignInGoogle: string
+  commentSignInFacebook: string
+  commentAs: string
+  commentSignOut: string
 }
 
 export type AdminStrings = {
@@ -290,6 +294,9 @@ export type AdminStrings = {
   commentsTurnstile: string
   commentsTurnstileDesc: string
   commentsNeedsKey: string
+  commentsGoogleAuth: string
+  commentsFacebookAuth: string
+  commentsAuthDesc: string
   commentsNavTitle: string
   commentsCount: string
   commentsColContent: string
