@@ -57,22 +57,25 @@ So the roadmap is feature work on a sound base, not a rewrite.
 
 ## Phases
 
-### Phase 1 — Storage adapter `[planned]`
-Turn `src/lib/blob.ts` (today the single I/O point) into an interface with adapters
-selected by env var:
-- **Vercel Blob** (current behaviour, default on Vercel)
-- **S3-compatible** (MinIO / R2 / B2) — default for self-host
-- **Local filesystem** (single volume, smallest setups)
+### Phase 1 — Storage adapter `[shipped — Vercel Blob + local filesystem]`
+`src/lib/blob.ts` is now a facade selecting a driver by `STORAGE_DRIVER`:
+- **Vercel Blob** (current behaviour, default on Vercel) ✅
+- **Local filesystem** (single volume, served under `/uploads`) ✅ — default for self-host
+- **S3-compatible** (MinIO / R2 / B2) — *still planned*; same interface, drop-in driver
 
-Public-URL resolution is the main work (Vercel Blob has public URLs; S3/FS need a
-public bucket or a proxy route). Foundation for Docker - and later reused per-tenant in
-the SaaS as "bring your own bucket" (Phase 7), so a tenant's media can live in their own
-R2/S3.
+Public-URL resolution was the main work: Vercel Blob has public URLs; the local driver
+serves files via `app/uploads/[...path]/route.ts`. `scripts/checks/no-direct-blob.mjs`
+keeps the SDK contained so a self-host build can't silently reach Vercel Blob. The S3
+driver later reused per-tenant in the SaaS as "bring your own bucket" (Phase 7).
 
-### Phase 2 — Docker `[planned, needs Phase 1]`
-- `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + optional MinIO).
-- GitHub Actions builds and publishes a versioned image to GHCR on each release tag.
-- Updating is `docker compose pull && up -d` (or Watchtower for auto-update).
+### Phase 2 — Docker `[shipped — local FS driver]`
+- `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + cron sidecar). ✅
+  The image builds with **no backend env** (data layer degrades to empty), so it is
+  portable; env is supplied at runtime via `.env.docker`.
+- Cron: a sidecar pings `/api/cron` hourly (Vercel Cron has no off-platform equivalent). ✅
+- *Still planned:* a GitHub Action that builds + publishes a versioned image to GHCR on
+  each release tag, so updating is `docker compose pull && up -d`; optional bundled MinIO
+  once the S3 driver lands.
 
 One codebase, one CI: the same source produces both the Vercel deploy and the Docker
 image — there is no second version to maintain.

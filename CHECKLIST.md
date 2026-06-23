@@ -72,6 +72,18 @@
 - [ ] Restore (on a throwaway/staging site) replaces content from the snapshot; a pre-restore snapshot is created first
 - [ ] Toggle OFF (or disconnect) → the cron no longer creates snapshots
 
+## Docker self-host (only when shipping the image)
+- [ ] `docker compose up -d --build` boots; the image builds with **no backend env** (data layer
+  degrades to empty), then runs with `.env.docker` supplied
+- [ ] `STORAGE_DRIVER=local`: uploading an image writes under the `/app/uploads` volume and renders
+  at `/uploads/...` (original + thumb + variants); it survives `docker compose down && up`
+- [ ] Large upload (>4.5 MB) succeeds — the browser posts to `/api/media/upload` (no serverless cap)
+- [ ] Deleting then purging media removes the files from the volume (no orphaned binaries)
+- [ ] The cron sidecar reaches `/api/cron` hourly with the `CRON_SECRET` bearer (keep-alive + sweep)
+- [ ] Backup "Back up now" produces a `.tar.gz` whose `blob/` holds the volume's files (driver read)
+- [ ] OG card: a post's featured image + custom font load (absolute `<SITE_URL>/uploads/...` URLs)
+- [ ] The Vercel deploy is unaffected: no `STORAGE_DRIVER` set there → still Vercel Blob
+
 ## Admin nav (collapsible left sidebar)
 - [ ] Desktop: sticky left sidebar with icons; active route highlighted; controls pinned at the bottom
 - [ ] Collapse toggle → icon-only rail; state persists across navigation (localStorage); tooltips show

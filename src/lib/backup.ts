@@ -9,7 +9,7 @@ import os from 'node:os'
 import path from 'node:path'
 import * as tar from 'tar'
 import { db } from '@/lib/db'
-import { blobUrl, listBlobs, uploadFile } from '@/lib/blob'
+import { readBlob, listBlobs, uploadFile } from '@/lib/blob'
 import { getSettings } from '@/lib/settings'
 import { getBackupState, setFolderId, recordRun, type BackupState } from '@/lib/backup-state'
 import { accessToken, ensureFolder, listSnapshots, uploadSnapshot, deleteSnapshot, downloadSnapshot, type DriveFile } from '@/lib/gdrive'
@@ -50,14 +50,13 @@ async function buildArchive(): Promise<{ file: string; size: number }> {
   }
   await fs.writeFile(path.join(work, 'db.json'), JSON.stringify({ version: 1, createdAt: new Date().toISOString(), tables }))
 
-  // 2) Copy every blob binary (immutable; fetched from the public store URL).
+  // 2) Copy every blob binary via the storage driver (Vercel fetches the public
+  //    URL; local reads disk) — so a snapshot works under either backend.
   const blobs = await listBlobs()
   for (const b of blobs) {
-    const res = await fetch(blobUrl(b.pathname))
-    if (!res.ok) throw new Error(`fetch blob ${b.pathname}: ${res.status}`)
     const dest = path.join(work, 'blob', b.pathname)
     await fs.mkdir(path.dirname(dest), { recursive: true })
-    await fs.writeFile(dest, Buffer.from(await res.arrayBuffer()))
+    await fs.writeFile(dest, await readBlob(b.pathname))
   }
   await fs.writeFile(path.join(work, 'manifest.json'), JSON.stringify({ blobs: blobs.map((b) => ({ pathname: b.pathname, size: b.size })) }))
 

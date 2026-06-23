@@ -12,5 +12,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     env: { BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_teststore_secretabc' },
+    // Only the source tree: `output: 'standalone'` copies test files into
+    // `.next/standalone`, which vitest would otherwise pick up and fail to resolve.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })

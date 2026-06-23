@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v1.1.2 — 2026-06-23
+- **feat: Docker self-host, from the same codebase.** `src/lib/blob.ts` is now a storage facade
+  with two drivers picked by `STORAGE_DRIVER`: `vercel-blob` (unchanged default) and `local`
+  (filesystem). The local driver (`blob-local.ts`) writes binaries to a mounted volume and serves
+  them at `/uploads` (`app/uploads/[...path]`). The browser upload path mirrors this via
+  `NEXT_PUBLIC_STORAGE_DRIVER`: off Vercel the bytes are POSTed to a server route
+  (`/api/media/upload`, `/api/files/attach`) instead of client-direct-to-store — a Node host has
+  no 4.5 MB body cap. Ships `Dockerfile` + `docker-compose.yml` (app + an hourly cron sidecar that
+  pings `/api/cron`) + `.env.docker.example`; `next.config` gains `output: 'standalone'`. The image
+  builds with **no backend env** (the data layer already degrades to empty), so it stays portable.
+  **The Vercel deploy is byte-for-byte unchanged** — it ignores the Dockerfile and keeps Vercel Blob.
+- **feat: backup is storage-driver aware.** `backup.ts` reads each blob through the driver
+  (`readBlob`) instead of self-fetching the public URL, so a snapshot works under the local driver
+  too. Google Drive stays the only backup target.
+- **chore: `check:no-direct-blob`** added to `check:all` — `@vercel/blob` may be imported only by
+  `blob.ts` (and `@vercel/blob/client` only by the client-upload files), so a self-host build can't
+  silently depend on the Vercel SDK.
+
 ## v1.1.1 — 2026-06-23 (stable)
 - **First STABLE release since `v1.0.15`** (`v1.1.0-beta` was a prerelease, not a stable cut). Rolls
   up everything since v1.0.15:
