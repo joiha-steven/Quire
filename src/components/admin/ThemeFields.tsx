@@ -41,39 +41,56 @@ function PresetCard({
   editing,
   isDefault,
   defaultLabel,
+  shown,
+  shownLabel,
   onPick,
+  onToggleShown,
 }: {
   name: string
   theme: ThemeSettings
   editing: boolean
   isDefault: boolean
   defaultLabel: string
+  shown: boolean // listed in the visitor's palette switcher
+  shownLabel: string
   onPick: () => void
+  onToggleShown: () => void
 }) {
   // No borders: the selected palette reads via full opacity + a bold name; the
-  // rest sit dimmed until hovered.
+  // rest sit dimmed until hovered. A hidden (not-shown) palette dims further so
+  // it reads as "off" at a glance — but stays fully editable.
+  const dim = editing ? '' : shown ? 'opacity-40 hover:opacity-100' : 'opacity-25 hover:opacity-100'
   return (
-    <button
-      type="button"
-      onClick={onPick}
-      aria-pressed={editing}
-      className={`group block w-full text-left transition ${editing ? '' : 'opacity-40 hover:opacity-100'}`}
-    >
-      <div className="flex h-11 overflow-hidden rounded-lg">
-        <MiniMode c={theme.light} />
-        <MiniMode c={theme.dark} />
-      </div>
-      <div className="mt-1.5 flex items-center justify-between gap-1 px-0.5">
-        <span className={`text-xs ${editing ? 'font-semibold text-neutral-900 dark:text-white' : 'font-medium text-neutral-500 dark:text-neutral-400'}`}>
-          {name}
-        </span>
-        {isDefault && (
-          <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
-            {defaultLabel}
+    <div className={`group transition ${dim}`}>
+      <button type="button" onClick={onPick} aria-pressed={editing} className="block w-full text-left">
+        <div className="flex h-11 overflow-hidden rounded-lg">
+          <MiniMode c={theme.light} />
+          <MiniMode c={theme.dark} />
+        </div>
+        <div className="mt-1.5 flex items-center justify-between gap-1 px-0.5">
+          <span className={`text-xs ${editing ? 'font-semibold text-neutral-900 dark:text-white' : 'font-medium text-neutral-500 dark:text-neutral-400'}`}>
+            {name}
           </span>
-        )}
-      </div>
-    </button>
+          {isDefault && (
+            <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
+              {defaultLabel}
+            </span>
+          )}
+        </div>
+      </button>
+      {/* Visibility toggle. The default palette is always shown (locked), so the
+          visitor never ends up with zero palettes. */}
+      <label className={`mt-1 flex items-center gap-1.5 px-0.5 text-xs ${isDefault ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600' : 'cursor-pointer text-neutral-500 dark:text-neutral-400'}`}>
+        <input
+          type="checkbox"
+          checked={shown}
+          disabled={isDefault}
+          onChange={onToggleShown}
+          className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600"
+        />
+        {shownLabel}
+      </label>
+    </div>
   )
 }
 
@@ -132,21 +149,31 @@ type Props = {
   presets: ThemePreset[]
   themes: Record<string, ThemeSettings>
   defaultId: string
+  enabled: string[]
   onChangeThemes: (themes: Record<string, ThemeSettings>) => void
   onSetDefault: (id: string) => void
+  onChangeEnabled: (ids: string[]) => void
 }
 
-export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetDefault }: Props) {
+export function ThemeFields({ presets, themes, defaultId, enabled, onChangeThemes, onSetDefault, onChangeEnabled }: Props) {
   const t = useAdminT()
   // Which palette is being edited (local UI state — start at the visitor default).
   const [editingId, setEditingId] = useState(defaultId)
   const theme = themes[editingId] ?? getPreset(editingId).theme
   const builtin = getPreset(editingId).theme
+  const enabledSet = new Set(enabled)
 
   const setColor = (mode: keyof ThemeSettings, key: ColorKey, value: string) =>
     onChangeThemes({ ...themes, [editingId]: { ...theme, [mode]: { ...theme[mode], [key]: value } } })
   const resetMode = (mode: keyof ThemeSettings) =>
     onChangeThemes({ ...themes, [editingId]: { ...theme, [mode]: { ...builtin[mode] } } })
+  // Flip one palette's visibility; the default is always kept on (preset order).
+  const toggleShown = (id: string) => {
+    const on = new Set(enabledSet)
+    on.has(id) ? on.delete(id) : on.add(id)
+    on.add(defaultId)
+    onChangeEnabled(presets.filter((p) => on.has(p.id)).map((p) => p.id))
+  }
 
   return (
     <div className="space-y-4">
@@ -163,7 +190,10 @@ export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetD
               editing={p.id === editingId}
               isDefault={p.id === defaultId}
               defaultLabel={t.themeDefault}
+              shown={enabledSet.has(p.id)}
+              shownLabel={t.paletteShown}
               onPick={() => setEditingId(p.id)}
+              onToggleShown={() => toggleShown(p.id)}
             />
           ))}
         </div>
@@ -179,6 +209,7 @@ export function ThemeFields({ presets, themes, defaultId, onChangeThemes, onSetD
             </button>
           )}
         </div>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.paletteVisibilityHint}</p>
       </div>
 
       <ModeBox

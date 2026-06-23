@@ -133,8 +133,10 @@ export function SettingsView({ settings, presets }: { settings: SiteSettings; pr
                 presets={presets}
                 themes={s.themes}
                 defaultId={s.themePreset}
+                enabled={s.enabledPalettes}
                 onChangeThemes={(themes) => update({ themes })}
                 onSetDefault={(themePreset) => update({ themePreset })}
+                onChangeEnabled={(enabledPalettes) => update({ enabledPalettes })}
               />
             </Card>
           </div>

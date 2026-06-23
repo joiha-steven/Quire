@@ -6,8 +6,11 @@ import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, 
 import { blobOrigin } from '@/lib/blob'
 
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
-// palette is baked into :root, so only set data-palette when one is stored.
-const NO_FOUC = `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p)d.setAttribute('data-palette',p)}catch(e){}})();`
+// palette is baked into :root, so only set data-palette when a stored palette is
+// still ENABLED — a palette the owner has since hidden falls back to the default.
+function noFouc(enabled: string[]): string {
+  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p)}catch(e){}})();`
+}
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -46,7 +49,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset, typography, customFont } = await getSettings()
+  const { language, themes, themePreset, enabledPalettes, typography, customFont } = await getSettings()
   const blob = blobOrigin()
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   return (
@@ -64,7 +67,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
         {/* Owner type scale → fs/lh/ls vars (overrides globals.css) + custom @font-face. */}
         <style dangerouslySetInnerHTML={{ __html: typographyToCss(typography) + fontToCss(customFont) }} />
-        <script dangerouslySetInnerHTML={{ __html: NO_FOUC }} />
+        <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes) }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>

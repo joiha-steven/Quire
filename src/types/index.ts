@@ -176,6 +176,7 @@ export type SiteSettings = {
   customCss: string // owner CSS injected into PUBLIC pages only ('' = none)
   menu: MenuItem[] // header navigation links
   themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
+  enabledPalettes: string[] // palettes a visitor may switch between (subset of THEME_PRESETS ids); ALWAYS includes themePreset. <2 enabled => the switcher is hidden
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
   typography: TypographySettings // type scale + reading rhythm → CSS vars (--fs-*, --lh-body, --ls-body)
   customFont: FontSettings // owner-uploaded typeface (Blob files/); '' = bundled Inter

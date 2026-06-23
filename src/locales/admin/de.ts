@@ -142,6 +142,8 @@ const de = {
   themePresetHint: 'Jede Palette hat eigene Farben. Wähle eine zum Bearbeiten; Besucher können die Palette auf der Seite wechseln und sehen deine Änderungen. Zurücksetzen stellt die Standardfarben dieser Palette wieder her.',
   themeDefault: 'Standard',
   themeSetDefault: 'Als Standard',
+  paletteShown: 'Für Besucher sichtbar',
+  paletteVisibilityHint: 'Deaktiviere eine Palette, um sie aus dem Besucher-Umschalter auszublenden. Die Standardpalette bleibt aktiv. Bleibt nur eine Palette übrig, verschwindet der Umschalter.',
   modeLight: 'Heller Modus',
   modeDark: 'Dunkler Modus',
   colorBg: 'Hintergrund',

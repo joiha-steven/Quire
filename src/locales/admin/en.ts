@@ -142,6 +142,8 @@ const en = {
   themePresetHint: 'Each palette has its own colors. Pick one to edit; visitors can switch palettes on the site and see your edits. Reset restores that palette’s built-in colors.',
   themeDefault: 'Default',
   themeSetDefault: 'Set as default',
+  paletteShown: 'Shown to visitors',
+  paletteVisibilityHint: 'Uncheck a palette to hide it from the visitor switcher. The default stays on. With only one palette left, the switch button disappears.',
   modeLight: 'Light mode',
   modeDark: 'Dark mode',
   colorBg: 'Background',

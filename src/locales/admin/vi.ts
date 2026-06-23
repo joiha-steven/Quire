@@ -142,6 +142,8 @@ const vi = {
   themePresetHint: 'Mỗi bảng có màu riêng. Chọn một bảng để sửa; khách có thể đổi bảng ngoài trang và thấy bản bạn đã sửa. Đặt lại sẽ về màu gốc của bảng đó.',
   themeDefault: 'Mặc định',
   themeSetDefault: 'Đặt làm mặc định',
+  paletteShown: 'Hiện cho khách',
+  paletteVisibilityHint: 'Bỏ chọn một bảng để ẩn nó khỏi nút đổi bảng của khách. Bảng mặc định luôn bật. Khi chỉ còn một bảng, nút đổi giao diện sẽ biến mất.',
   modeLight: 'Chế độ sáng',
   modeDark: 'Chế độ tối',
   colorBg: 'Nền',
