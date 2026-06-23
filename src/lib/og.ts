@@ -6,11 +6,13 @@ import type { SiteSettings } from '@/types'
 // One typeface everywhere — incl. the OG image. When the owner uploaded a custom
 // font, pass its URL so the card renders in that face too (the route fetches it,
 // Inter stays the glyph fallback). Pick the weight nearest 600 (the card weight).
-function ogFontParam(settings: SiteSettings, p: URLSearchParams): void {
+function ogFontParam(settings: SiteSettings, base: string, p: URLSearchParams): void {
   const faces = settings.customFont.faces
   if (!faces.length) return
   const pick = [...faces].sort((a, b) => Math.abs(a.weight - 600) - Math.abs(b.weight - 600))[0]
-  if (pick?.url) p.set('font', pick.url)
+  // Absolutize: the local driver yields `/uploads/...` refs, but the edge OG route
+  // can only fetch absolute URLs. No-op for an already-absolute Vercel Blob URL.
+  if (pick?.url) p.set('font', new URL(pick.url, base).toString())
 }
 
 export function ogImageUrl(
@@ -22,11 +24,12 @@ export function ogImageUrl(
   const bg = opts.featuredImage || ogFallbackImage || ''
   if (ogImage) {
     const p = new URLSearchParams({ title: opts.title, site: settings.title })
-    if (bg) p.set('bg', bg)
-    ogFontParam(settings, p)
+    if (bg) p.set('bg', new URL(bg, base).toString())
+    ogFontParam(settings, base, p)
     return `${base}/og?${p.toString()}`
   }
-  return bg || undefined
+  // Dynamic OG off → the image itself is the og:image; it must be absolute.
+  return bg ? new URL(bg, base).toString() : undefined
 }
 
 // Hostname only (no protocol/path) for the OG card's domain line, e.g.
@@ -54,9 +57,9 @@ export function ogCardUrl(
   const { ogImage, ogFallbackImage } = settings.seo
   if (ogImage) {
     const p = new URLSearchParams({ title: opts.title, site: opts.site })
-    if (ogFallbackImage) p.set('bg', ogFallbackImage)
-    ogFontParam(settings, p)
+    if (ogFallbackImage) p.set('bg', new URL(ogFallbackImage, base).toString())
+    ogFontParam(settings, base, p)
     return `${base}/og?${p.toString()}`
   }
-  return ogFallbackImage || undefined
+  return ogFallbackImage ? new URL(ogFallbackImage, base).toString() : undefined
 }

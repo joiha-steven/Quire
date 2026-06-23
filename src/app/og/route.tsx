@@ -41,7 +41,10 @@ export async function GET(req: Request): Promise<Response> {
   if (fontUrl) {
     try {
       const u = new URL(fontUrl)
-      if (u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com')) {
+      // SSRF guard: only the Vercel Blob store host, or this site's own origin (the
+      // local storage driver serves the font from /uploads on the same origin).
+      const sameOrigin = u.origin === new URL(req.url).origin
+      if ((u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com')) || sameOrigin) {
         custom = await fetch(u).then((r) => (r.ok ? r.arrayBuffer() : null))
       }
     } catch {

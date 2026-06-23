@@ -4,7 +4,9 @@
 
 - **What it is.** A full-site snapshot to the owner's Google Drive: one self-contained
   `.tar.gz` = `db.json` (every text table except `backup_state`) + `blob/<pathname>` (every
-  binary) + `manifest.json`. Built in `/tmp` then resumable-uploaded into a `vibeblog-backups`
+  binary, read through the storage driver via `readBlob` — Vercel fetches the public URL, the
+  local driver reads disk, so a snapshot works on either backend) + `manifest.json`. Built in
+  `/tmp` then resumable-uploaded into a `vibeblog-backups`
   Drive folder. Runs on a schedule (cron, every `settings.backups.intervalDays`, default 4) or
   the "Back up now" button; retention keeps the newest `settings.backups.keep` (default 4).
 - **Auth is SEPARATE from sign-in.** A dedicated `drive.file` OAuth flow (reuses the Google

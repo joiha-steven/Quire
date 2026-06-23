@@ -1,13 +1,25 @@
-// Thin @vercel/blob wrapper — BINARIES ONLY. Text lives in Postgres (db.ts). Image
-// refs stored store-relative + re-expanded on read so the store can change without
-// rewriting content.
+// Binary storage facade — BINARIES ONLY. Text lives in Postgres (db.ts). Image
+// refs are stored store-relative (e.g. `media/x.webp`) and re-expanded on read so
+// the store can change without rewriting content (Invariant 3).
+//
+// Two drivers, picked by STORAGE_DRIVER:
+//   - 'vercel-blob' (default) — Vercel Blob, browser uploads straight to the store.
+//   - 'local'                 — files on disk (Docker / self-host), served under
+//                                /uploads by app/uploads/[...path]/route.ts.
+// Pure URL/rewrite helpers below stay filesystem-free; the IO helpers dispatch to
+// the local driver via a dynamic import() so node:fs never reaches a client bundle.
+// This is the ONLY file allowed to import `@vercel/blob` (enforced by
+// scripts/checks/no-direct-blob.mjs) — everything else goes through this facade.
 
 import { put, del, list } from '@vercel/blob'
 
+const LOCAL = process.env.STORAGE_DRIVER === 'local'
+const LOCAL_BASE = '/uploads' // serving-route prefix; also the public URL prefix
+
+// --- Vercel Blob base URL (pure) -------------------------------------------------
 // Token: vercel_blob_rw_<storeId>_<secret> → host <storeId>.public.blob...
-// Cached at module scope (constant per deployment).
 let _blobBase: string | undefined
-function blobBase(): string {
+function vercelBase(): string {
   if (_blobBase) return _blobBase
   const token = process.env.BLOB_READ_WRITE_TOKEN ?? ''
   const m = token.match(/^vercel_blob_rw_([^_]+)_/)
@@ -17,48 +29,60 @@ function blobBase(): string {
   return _blobBase
 }
 
-// Deterministic public URL for a pathname (no API call). Also THE public media URL.
-export function blobUrl(pathname: string): string {
-  return `${blobBase()}/${pathname}`
+// Host/prefix matcher for collapse: any Vercel Blob store host OR the local
+// `/uploads/` prefix (with or without an origin) → content stays portable across a
+// provider/host change (so a Vercel→local restore keeps rendering).
+const STORE_PREFIX_RE = /https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/|(?:https?:\/\/[^/]+)?\/uploads\//gi
+
+// Expand store-relative `media/`/`files/` refs to `${base}/...` (idempotent;
+// external links + body text outside link/src/href positions untouched).
+function expandWith(base: string, s: string): string {
+  if (/^(media|files)\//.test(s)) return `${base}/${s}`
+  return s
+    .replace(/(\]\()(media\/[^)\s]+)/g, (_m, a, p) => `${a}${base}/${p}`)
+    .replace(/((?:src|href)=["'])(media\/[^"']+)/g, (_m, a, p) => `${a}${base}/${p}`)
 }
 
-// Public media origin (for a <link rel="preconnect">), or '' when unavailable.
+// --- Public URL helpers (pure) ---------------------------------------------------
+
+// Deterministic public URL for a pathname (no API call). THE public media URL.
+export function blobUrl(pathname: string): string {
+  return LOCAL ? `${LOCAL_BASE}/${pathname}` : `${vercelBase()}/${pathname}`
+}
+
+// Public media origin (for a <link rel="preconnect">). Empty for local (same
+// origin → no preconnect) or when the Blob base is unavailable.
 export function blobOrigin(): string {
+  if (LOCAL) return ''
   try {
-    return blobBase()
+    return vercelBase()
   } catch {
     return ''
   }
 }
 
-// Matches any Vercel Blob store host (a provider change needs only a new token).
-function blobHostRe(): RegExp {
-  return /https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//gi
-}
-
-// Persist form: strip the store host → store-relative pathname. Idempotent; works
-// on a bare value or a markdown body.
+// Persist form: strip the store host/prefix → store-relative pathname. Idempotent.
 export function collapseBlob(s: string): string {
-  return s.replace(blobHostRe(), '')
+  return s.replace(STORE_PREFIX_RE, '')
 }
 
-// Render form: pathname → absolute Blob URL. Idempotent; external links untouched.
+// Render form: pathname → public URL. Idempotent; external links untouched.
 export function expandBlob(s: string): string {
+  if (LOCAL) return expandWith(LOCAL_BASE, s)
   let base: string
   try {
-    base = blobBase()
+    base = vercelBase()
   } catch {
     return s
   }
-  // Whole value is a blob pathname: media (uploads) or files (favicon / app icon).
-  if (/^(media|files)\//.test(s)) return `${base}/${s}`
-  return s // markdown body: only expand media refs in link / src / href positions
-    .replace(/(\]\()(media\/[^)\s]+)/g, (_m, a, p) => `${a}${base}/${p}`)
-    .replace(/((?:src|href)=["'])(media\/[^"']+)/g, (_m, a, p) => `${a}${base}/${p}`)
+  return expandWith(base, s)
 }
 
-// List every blob (pathname + size), following pagination. Used for site stats.
+// --- IO helpers (server-only; local driver lazy-loaded) --------------------------
+
+// List every blob (pathname + size). Used for site stats and backups.
 export async function listBlobs(): Promise<{ pathname: string; size: number }[]> {
+  if (LOCAL) return (await import('./blob-local')).list()
   const out: { pathname: string; size: number }[] = []
   let cursor: string | undefined
   try {
@@ -74,13 +98,14 @@ export async function listBlobs(): Promise<{ pathname: string; size: number }[]>
   }
 }
 
-// Upload a binary file (media) and return its public URL.
+// Upload a binary and return its public URL.
 export async function uploadFile(
   pathname: string,
   body: ArrayBuffer | Buffer,
   contentType: string,
 ): Promise<string> {
   try {
+    if (LOCAL) return (await import('./blob-local')).put(pathname, body)
     const { url } = await put(pathname, body, {
       access: 'public',
       addRandomSuffix: false,
@@ -96,17 +121,30 @@ export async function uploadFile(
   }
 }
 
-// Delete a blob by its public URL.
-export async function deleteByUrl(url: string): Promise<void> {
+// Read a binary back by pathname (used by the backup builder). Local reads disk;
+// Vercel fetches the immutable public URL.
+export async function readBlob(pathname: string): Promise<Buffer> {
+  if (LOCAL) return (await import('./blob-local')).read(pathname)
+  const res = await fetch(blobUrl(pathname))
+  if (!res.ok) throw new Error(`fetch blob ${pathname}: ${res.status}`)
+  return Buffer.from(await res.arrayBuffer())
+}
+
+// Delete a blob by pathname. No-op when missing (idempotent).
+export async function deleteByPathname(pathname: string): Promise<void> {
   try {
-    await del(url)
+    if (LOCAL) {
+      await (await import('./blob-local')).del(pathname)
+      return
+    }
+    await del(blobUrl(pathname))
   } catch (error) {
-    console.error(`[ERROR] blob.deleteByUrl(${url}): ${(error as Error).message}`)
+    console.error(`[ERROR] blob.deleteByPathname(${pathname}): ${(error as Error).message}`)
     throw error
   }
 }
 
-// Delete a blob by pathname. No-op when missing (del is idempotent).
-export async function deleteByPathname(pathname: string): Promise<void> {
-  await deleteByUrl(blobUrl(pathname))
+// Delete a blob by its public URL.
+export async function deleteByUrl(url: string): Promise<void> {
+  await deleteByPathname(collapseBlob(url))
 }

@@ -100,6 +100,15 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
   pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
   store / region / provider needs only a token change, no content rewrite. (Used to
   move the store to **Singapore (`sin1`)** — see `vercel.json`; functions run there too.)
+- **One storage facade, two drivers (`STORAGE_DRIVER`)** → because refs are store-relative,
+  `blob.ts` can swap the *backend* without touching content. Default `vercel-blob` (browser
+  uploads straight to the store); `local` writes to a mounted volume and serves it under
+  `/uploads`, which is what the Docker / self-host image runs. The browser upload path mirrors
+  this (`NEXT_PUBLIC_STORAGE_DRIVER`): off Vercel the bytes are POSTed to a server route (no
+  client-direct-to-store, and a Node host has no 4.5 MB body cap). `no-direct-blob` keeps the
+  Vercel SDK contained so a self-host build can't silently depend on it. **One codebase, no fork:**
+  Vercel ignores the `Dockerfile`; the image needs no backend env to build (the data layer
+  degrades to empty), so the same source ships both targets.
 - **100% Markdown, raw HTML escaped** → safe, portable content; videos are bare URLs
   embedded at render, not stored iframes.
 - **Responsive images, encoding deferred to save** → jpg/png uploads keep the

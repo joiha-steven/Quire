@@ -40,7 +40,7 @@ request, not scope creep.
 **4. Goal-driven execution — define success criteria, then loop until verified.** Recast a task
 as something checkable ("fix the bug" → "I reproduce it, then it's gone"); state a brief plan with
 a verify step. **Definition of Done — a change is DONE only when `npm run check:all` exits 0**
-(typecheck + lint + `check:routes`/`check:filesize`/`check:no-any` + the `npm test` seam net;
+(typecheck + lint + `check:routes`/`check:filesize`/`check:no-any`/`check:no-direct-blob` + the `npm test` seam net;
 offline, no creds). No "it compiles" exception; if a change touches behaviour not in `check:all`,
 add a test for it IN THE SAME commit. Seams pin load-bearing invariants only (see Invariants), NOT
 broad coverage; a release batch also runs `npm run build` + the `audit/` procedure + manual checks
@@ -49,7 +49,8 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 
 ## Architecture (operational)
 
-- **Text in Supabase Postgres; binaries in Vercel Blob.** Tables (schema `public`):
+- **Text in Supabase Postgres; binaries via the `blob.ts` storage driver** (Vercel Blob by
+  default, local filesystem on Docker/self-host — `STORAGE_DRIVER`). Tables (schema `public`):
   `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens`
   `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
   `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
@@ -64,6 +65,9 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 - **Env:** `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret, server-only) + the Blob
   token — `.env.local` + Vercel only. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
   env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`).
+  **Self-host (Docker):** `STORAGE_DRIVER=local` + `NEXT_PUBLIC_STORAGE_DRIVER=local` (baked into
+  the image) + `STORAGE_LOCAL_DIR` (volume) + `SITE_URL`; no Blob token. Full set in
+  `.env.docker.example`; build needs no backend env (data layer degrades to empty).
 - **Region:** `vercel.json` pins functions + the Blob store to `sin1` (Singapore); OG is edge.
   Detail → `docs/seo-pwa.md`.
 
@@ -101,7 +105,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 
 | Symptom / area | Read these first | Read more if needed |
 |---|---|---|
-| Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts`, `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
+| Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts` (+ `lib/blob-local.ts`, `app/uploads/[...path]` for the local driver), `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
 | Cache / stale / content not updating / ISR | `lib/revalidate.ts`, `lib/db.ts`, `lib/posts.ts` | ARCHITECTURE "Request flow" |
 | Auth / route 401 / route exposed | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO db), `api/<route>/route.ts` | `docs/mcp.md` if MCP |
 | Slug / 404 / duplicate URL | `lib/slugs.ts`, `src/app/(blog)/[slug]` | `lib/posts.ts`, `lib/pages.ts` |
@@ -122,7 +126,7 @@ Terse role per file; the authoritative detail is the code comments.
 | File | Key exports | Role |
 |---|---|---|
 | `db.ts` | `db()` | Server-only `service_role` client; GET reads cache-eligible + tagged `db`, writes `no-store`. ALL text access goes through here |
-| `blob.ts` | `blobUrl`, `uploadFile`, `deleteByUrl/Pathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | Binaries only; deterministic URLs (never `list()` to read); `collapse/expand` = store-relative refs |
+| `blob.ts` | `blobUrl`, `uploadFile`, `readBlob`, `deleteByUrl/Pathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | Binaries only; facade over a driver picked by `STORAGE_DRIVER` — `vercel-blob` (default) or `local` (fs, served at `/uploads` via `blob-local.ts` + `app/uploads/[...path]`). Deterministic URLs (never `list()` to read); `collapse/expand` = store-relative refs. ONLY file allowed to import `@vercel/blob` (`check:no-direct-blob`) |
 | `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads `React.cache()` only. `savePost` snapshots prior version + stores `readingMinutes`. `updateTerm` renames (merges on collision) / removes a term across EVERY post |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors `posts.ts` |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions/slug (`post_revisions` jsonb, store-relative). Re-slugged on rename, removed on delete |

@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker / self-host image (`.next/standalone`).
+  // Inert on Vercel, which ignores it. The build needs no backend: the data layer
+  // degrades to empty on a missing DB (posts/pages readIndex catch), so
+  // `generateStaticParams` returns [] and pages render on-demand once env is supplied.
+  output: 'standalone',
   images: {
     remotePatterns: [
       {

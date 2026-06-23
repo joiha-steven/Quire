@@ -1,6 +1,6 @@
 {
   "name": "vibeblog",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "license": "MIT",
   "browserslist": [
@@ -20,9 +20,10 @@
     "check:routes": "node scripts/checks/routes-guarded.mjs",
     "check:filesize": "node scripts/checks/file-size.mjs",
     "check:no-any": "node scripts/checks/no-any.mjs",
+    "check:no-direct-blob": "node scripts/checks/no-direct-blob.mjs",
     "check:token-bust": "node scripts/checks/token-no-public-bust.mjs",
     "check:consistency:live": "node scripts/checks/consistency.mjs",
-    "check:all": "npm run typecheck && npm run lint && npm run check:routes && npm run check:filesize && npm run check:no-any && npm run check:token-bust && npm test"
+    "check:all": "npm run typecheck && npm run lint && npm run check:routes && npm run check:filesize && npm run check:no-any && npm run check:no-direct-blob && npm run check:token-bust && npm test"
   },
   "engines": {
     "node": ">=20.9"

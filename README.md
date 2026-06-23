@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.1.1`
+# vibe**blog** &nbsp;`v1.1.2`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -49,14 +49,14 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Su
 
 > Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel**.
 
-**Who it's for** — one person who wants a fast, good-looking, fully self-owned blog, is happy on Vercel + Supabase (Docker self-host is on the [Roadmap](./ROADMAP.md)), and likes the idea of letting an AI agent help run it.
+**Who it's for** — one person who wants a fast, good-looking, fully self-owned blog, runs it on Vercel + Supabase **or self-hosts it with Docker**, and likes the idea of letting an AI agent help run it.
 **Not for** — multi-author teams / publications needing roles and editorial workflows. vibeblog is single-owner by design (one authorized email); multi-tenant lives in the planned SaaS, not here.
 
 ---
 
 ## 🚀 Get your own copy
 
-Two ways to stand up your own blog — **pick one**. Both end with a live site at your domain.
+Three ways to stand up your own blog — **pick one**. Each ends with a live site at your domain.
 
 <details open>
 <summary><b>1️⃣ &nbsp;Do it yourself</b> &nbsp;— ~10 minutes in the dashboards</summary>
@@ -103,8 +103,25 @@ Deploy my own copy of github.com/joiha-steven/vibeblog:
 
 </details>
 
+<details>
+<summary><b>3️⃣ &nbsp;Self-host with Docker</b> &nbsp;— your own server, no Vercel</summary>
+
+<br/>
+
+Runs the Next standalone server as a plain container. **No Vercel Blob** — binaries use the local filesystem driver and live in a mounted volume (`./data/uploads`); back that folder up next to your Postgres dump. Postgres (Supabase or self-hosted Supabase) and Google OAuth stay external, same as the Vercel path.
+
+```bash
+git clone https://github.com/joiha-steven/vibeblog.git && cd vibeblog
+cp .env.docker.example .env.docker   # fill in Supabase, AUTH_*, SITE_URL, CRON_SECRET
+docker compose up -d --build         # app on :3000 + an hourly cron sidecar
+```
+
+Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/auth/callback/google` (and `<SITE_URL>/api/backup/callback` for Drive backups) on your Google OAuth client. The image needs **no backend env to build** — env is supplied at runtime via `.env.docker`. Storage is selected by `STORAGE_DRIVER=local` (baked into the image); the Vercel path keeps using Blob unchanged.
+
+</details>
+
 > [!TIP]
-> Two `vercel.json` knobs to make yours: `regions` (defaults to `sin1`/Singapore — set your nearest) and `maxDuration: 60` for uploads (the free Hobby plan caps function time, so trim it or upgrade to Pro for big photos).
+> **Vercel:** two `vercel.json` knobs to make yours — `regions` (defaults to `sin1`/Singapore — set your nearest) and `maxDuration: 60` for uploads (the free Hobby plan caps function time, so trim it or upgrade to Pro for big photos). **Docker:** large uploads have no 4.5 MB cap (the browser posts straight to the server), so big photos just work.
 
 ---
 
@@ -137,12 +154,14 @@ See [`.env.example`](./.env.example). The essentials:
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in + optional commenter login) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
 | `SUPABASE_URL` | ✅ | Supabase project API URL — Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase `service_role` key (secret, server-only) — same page |
-| `BLOB_READ_WRITE_TOKEN` | ✅ auto | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL |
-| `CRON_SECRET` | ◻️ optional | Protects `/api/cron` (keep-alive + scheduled backup) — any random string |
+| `BLOB_READ_WRITE_TOKEN` | ✅ Vercel | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL. **Not used on Docker** (local filesystem driver) |
+| `STORAGE_DRIVER` | ◻️ Docker | `vercel-blob` (default) or `local`. The Docker image bakes in `local`; binaries go to `STORAGE_LOCAL_DIR` (default `/app/uploads`) |
+| `SITE_URL` | ◻️ Docker | Canonical public URL of the instance (Vercel infers this automatically). Used for OG/sitemap/auth callbacks when self-hosting |
+| `CRON_SECRET` | ◻️ optional | Protects `/api/cron` (keep-alive + scheduled backup) — any random string. On Docker the cron sidecar sends it |
 | `MCP_OAUTH_SECRET` | ◻️ optional | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
 | Turnstile / Facebook keys | ◻️ optional | Comment anti-spam (Cloudflare Turnstile) + Facebook commenter login — **enter these in Admin → Settings** (stored server-side). The matching env vars (`TURNSTILE_*`, `AUTH_FACEBOOK_*`) still work as a fallback |
 
-MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`); your blog content lives in Supabase + Blob, never in git.
+MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`) — or `.env.docker` when self-hosting; your blog content lives in Supabase + Blob (or the local volume), never in git. The full self-host set is in [`.env.docker.example`](./.env.docker.example).
 
 ---
 
@@ -171,7 +190,7 @@ Point the same Supabase + Blob at local, and add `http://localhost:3000/api/auth
 
 ## 🗺️ Roadmap
 
-Docker self-host (pluggable S3/MinIO/local storage), publishing from Markdown note apps (Obsidian → Craft), and optional AI assist in the editor. See [`ROADMAP.md`](./ROADMAP.md).
+Docker self-host shipped (local filesystem storage); next up: an S3/MinIO storage driver + a published GHCR image, publishing from Markdown note apps (Obsidian → Craft), and optional AI assist in the editor. See [`ROADMAP.md`](./ROADMAP.md).
 
 ---
 
