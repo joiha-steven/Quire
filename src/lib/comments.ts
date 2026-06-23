@@ -11,6 +11,10 @@ import { renderCommentMarkdown } from '@/lib/comment-md'
 export const MAX_COMMENT_LEN = 1000
 const MAX_DEPTH = 2 // depth 0,1,2 => 3 reply tiers
 
+// Bad-input errors from addComment (empty body, missing parent, too-deep reply).
+// The route maps these to 400; anything else is a real 500.
+export class CommentInputError extends Error {}
+
 // A row as stored (snake_case). Email is selected ONLY by admin reads.
 export type CommentRow = {
   id: number
@@ -107,7 +111,7 @@ export type NewComment = {
 // Returns the new node ready to render (single, no replies). Throws on bad input.
 export async function addComment(input: NewComment): Promise<PublicComment> {
   const content = input.content.trim().slice(0, MAX_COMMENT_LEN)
-  if (!content) throw new Error('empty content')
+  if (!content) throw new CommentInputError('Comment cannot be empty')
 
   let depth = 0
   let postSlug = input.postSlug
@@ -118,8 +122,8 @@ export async function addComment(input: NewComment): Promise<PublicComment> {
       .eq('id', input.parentId)
       .maybeSingle()
     const p = parent as Pick<CommentRow, 'post_slug' | 'depth' | 'deleted_at'> | null
-    if (!p || p.deleted_at !== null) throw new Error('parent not found')
-    if (p.depth >= MAX_DEPTH) throw new Error('max reply depth reached')
+    if (!p || p.deleted_at !== null) throw new CommentInputError('Comment not found')
+    if (p.depth >= MAX_DEPTH) throw new CommentInputError('Maximum reply depth reached')
     depth = p.depth + 1
     postSlug = p.post_slug // a reply always belongs to the parent's post
   }

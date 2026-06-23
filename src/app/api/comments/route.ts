@@ -8,7 +8,7 @@
 
 import type { NextRequest } from 'next/server'
 import { after } from 'next/server'
-import { getCommentTree, addComment, MAX_COMMENT_LEN } from '@/lib/comments'
+import { getCommentTree, addComment, CommentInputError, MAX_COMMENT_LEN } from '@/lib/comments'
 import { getPost } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
 import { getCommenter } from '@/lib/auth'
@@ -114,7 +114,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       identity = { name, email, website, provider: 'manual' }
     }
 
-    const created = await addComment({ postSlug, parentId, ...identity, content })
+    let created
+    try {
+      created = await addComment({ postSlug, parentId, ...identity, content })
+    } catch (error) {
+      // Bad input (missing parent, too-deep reply) → 400, not a 500.
+      if (error instanceof CommentInputError) return fail(error.message, 400)
+      throw error
+    }
     after(() => logActivity('comment.create', postSlug))
     logRequest(req, 200, start)
     return ok({ comment: created })

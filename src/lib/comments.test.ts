@@ -1,5 +1,28 @@
-import { describe, it, expect } from 'vitest'
-import { buildCommentTree, type CommentRow } from '@/lib/comments'
+import { describe, it, expect, vi } from 'vitest'
+
+// Mock the data layer so addComment's parent lookup is controllable. `liveOnly`
+// is a pass-through; `insert` returns a minimal row (only reached on success).
+const hoisted = vi.hoisted(() => ({
+  parent: null as { post_slug: string; depth: number; deleted_at: string | null } | null,
+}))
+vi.mock('@/lib/db', () => ({
+  liveOnly: <T>(q: T): T => q,
+  db: () => ({
+    from: () => ({
+      select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: hoisted.parent }) }) }),
+      insert: () => ({
+        select: () => ({
+          single: () =>
+            Promise.resolve({
+              data: { id: 9, parent_id: 1, author_name: 'x', author_website: null, provider: 'manual', content: 'c', created_at: 't', deleted_at: null },
+            }),
+        }),
+      }),
+    }),
+  }),
+}))
+
+import { buildCommentTree, addComment, CommentInputError, type CommentRow } from '@/lib/comments'
 
 // Build a row with sane defaults; override what each case needs.
 function row(p: Partial<CommentRow> & { id: number }): CommentRow {
@@ -56,5 +79,23 @@ describe('buildCommentTree', () => {
     // id 2 references parent 99 which is not in the set -> treated as a root.
     const tree = buildCommentTree([row({ id: 1 }), row({ id: 2, parent_id: 99, depth: 1 })])
     expect(tree.map((c) => c.id).sort()).toEqual([1, 2])
+  })
+})
+
+describe('addComment input guards', () => {
+  const base = { postSlug: 'hello', name: 'A', email: 'a@b.co', provider: 'manual' as const, content: 'hi' }
+
+  it('rejects a reply past the 3-tier limit with a CommentInputError', async () => {
+    hoisted.parent = { post_slug: 'hello', depth: 2, deleted_at: null } // already at the deepest tier
+    await expect(addComment({ ...base, parentId: 1 })).rejects.toBeInstanceOf(CommentInputError)
+  })
+
+  it('rejects a reply to a missing/deleted parent', async () => {
+    hoisted.parent = null
+    await expect(addComment({ ...base, parentId: 1 })).rejects.toBeInstanceOf(CommentInputError)
+  })
+
+  it('rejects empty content', async () => {
+    await expect(addComment({ ...base, parentId: null, content: '   ' })).rejects.toBeInstanceOf(CommentInputError)
   })
 })
