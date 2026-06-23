@@ -1,11 +1,20 @@
 # CHANGELOG
 
-## v1.1.1 — 2026-06-23 (official release)
-- **First stable cut of the 1.1 line.** Rolls up everything since `v1.1.0-beta`: the admin overhaul
-  (shared UI kit, dotted canvas, 5-tab settings), the reworked post ToC, reader comments incl.
-  optimistic posting + a route loading skeleton, an editable footer with a limited-markdown editor,
-  reading-optimized typography defaults + a reading-time backfill, the site-wide motion engine, and
-  the palette refresh (true-neutral Mono, Sci-Fi replacing Rosé). Detail in the dated entries below.
+## v1.1.1 — 2026-06-23 (stable)
+- **First STABLE release since `v1.0.15`** (`v1.1.0-beta` was a prerelease, not a stable cut). Rolls
+  up everything since v1.0.15:
+  - **Reader comments** — manual/instant (no cache), optional Cloudflare Turnstile, Google/Facebook
+    commenter login, admin-managed keys, and **optimistic posting** + a route loading skeleton.
+  - **Admin overhaul** — shared UI kit, dotted canvas, 5-tab settings; the **activity log** now also
+    records server errors.
+  - **Reworked post ToC** — "Tiêu đề" header, in-page jumps, collapsible on every viewport.
+  - **Editable footer** with a tiny bold/italic/underline/link markdown editor.
+  - **Reading-optimized typography defaults** + read time now on every list post (backfill).
+  - **Site-wide motion engine** — subtle, token-gated, one admin switch; respects reduced-motion.
+  - **Palette refresh** — true-neutral Mono, **Sci-Fi** replaces Rosé; per-palette visibility.
+  - **Hardening** — one-command `check:all` + seam tests, single-source `liveOnly` soft-delete,
+    force-no-store admin reads, iOS notch progress-bar fix.
+  - Detail in the dated entries below.
 - **fix(type): removed `text-wrap: balance`/`pretty`.** Both re-broke whole lines and left too much
   empty space on the right (titles wrapped early; body looked under-set). Text now wraps normally,
   filling each line to the measure. Don't reintroduce them.
