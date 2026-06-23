@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.1.7 — 2026-06-23
+- **Admin dotted-grid background tuned.** ~30% denser dots (tile `22px` → `15px`); light dots a touch
+  dimmer (`0.13` → `0.11`), dark dots a touch clearer (`0.11` → `0.12`).
+
 ## v1.1.6 — 2026-06-23
 - **In-page ToC meta drops the comment count.** The label is just `Comments` (`Tags / Categories /
   Comments`), no number — the count lived on the ISR-cached page so it was always stale; the
