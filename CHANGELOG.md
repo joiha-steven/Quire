@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — comments: a too-deep reply is a clean 400, not a 500)
+- **fix(comments): replying past the 3-tier limit (or to a missing parent) now returns 400, not
+  500.** Found in a live end-to-end pass on manhhung.me — the depth guard worked but `addComment`
+  threw a generic `Error` that fell through to the 500 handler. It now throws a typed
+  `CommentInputError` the route maps to 400 with a clear message. Pinned by `comments.test.ts`
+  (depth-limit / missing-parent / empty-body guards). `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — comment integration keys move into the admin)
 - **feat: Turnstile + Facebook keys are entered in Admin → Settings, not env.** The optional comment
   integrations no longer need a Vercel redeploy to configure. Keys are SECRETS, kept in a new
