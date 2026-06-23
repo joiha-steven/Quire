@@ -330,13 +330,10 @@ export type AdminStrings = {
   commentsColPost: string
   commentsColTime: string
   commentsColName: string
-  commentsColFrom: string
+  commentsColIp: string
   commentsColDelete: string
   commentsConfirmDelete: string
   commentsEmpty: string
-  commentsFromManual: string
-  commentsFromGoogle: string
-  commentsFromFacebook: string
   // reader-feature toggles
   featSearch: string
   featSearchDesc: string

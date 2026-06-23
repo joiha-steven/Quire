@@ -24,6 +24,8 @@ export type CommentRow = {
   author_name: string
   author_email?: string
   author_website: string | null
+  author_ip?: string | null
+  author_country?: string | null
   provider: string
   content: string
   created_at: string
@@ -104,6 +106,8 @@ export type NewComment = {
   website?: string
   provider: CommentProvider
   content: string
+  ip?: string // client IP, stored for admin moderation (never shown publicly)
+  country?: string // ISO 3166-1 alpha-2 from the edge, if available
 }
 
 // Insert a comment. Validates the parent (must exist, be live, same post, depth <
@@ -137,6 +141,8 @@ export async function addComment(input: NewComment): Promise<PublicComment> {
       author_name: input.name,
       author_email: input.email,
       author_website: input.website || null,
+      author_ip: input.ip || null,
+      author_country: input.country || null,
       provider: input.provider,
       content,
     })
@@ -183,7 +189,7 @@ export const countsByPosts = cache(async (): Promise<Record<string, number>> => 
 
 // ---- admin reads (flat, include email + post title) --------------------------
 
-const ADMIN_COLS = 'id,post_slug,author_name,author_email,author_website,provider,content,created_at,deleted_at'
+const ADMIN_COLS = 'id,post_slug,author_name,author_email,author_website,author_ip,author_country,provider,content,created_at,deleted_at'
 
 // Map post slugs -> titles so the admin table can show which post a comment is on.
 async function titlesFor(slugs: string[]): Promise<Record<string, string>> {
@@ -205,6 +211,8 @@ function toAdmin(row: CommentRow, titles: Record<string, string>): AdminComment 
     website: row.author_website || undefined,
     provider: asProvider(row.provider),
     content: row.content,
+    ip: row.author_ip || undefined,
+    country: row.author_country || undefined,
     createdAt: row.created_at,
     deletedAt: row.deleted_at ?? undefined,
   }

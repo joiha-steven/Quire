@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v1.1.5 — 2026-06-23
+- **Admin Comments table reworked.** The content cell now clamps to two lines and click-toggles to
+  the full comment (click again to collapse) — per row, so replies (flat rows) expand independently.
+  The post-title cell wraps instead of truncating, so long rows are no longer cut off. The **From**
+  (provider) column is replaced by an **IP** column showing the commenter IP with the ISO country
+  code in parens (`1.2.3.4 (VN)`); pre-feature rows show `—`.
+- **Comments now persist the commenter IP + country** (`author_ip` / `author_country`, new nullable
+  columns) — captured at submit (country is best-effort from the Vercel edge, blank off-platform).
+  Admin-only: NEVER included in the public comment tree.
+- **fix: in-page ToC meta shows the comment count as `Comments (N)`** (was `N Comments`); still hidden
+  entirely at 0 (`Tags / Categories / Comments`). The count is part of the ISR-cached post page, so it
+  refreshes on the next revalidation (≤1h) or when the post is next edited — not instantly on a new comment.
+
 ## v1.1.4 — 2026-06-23
 - **fix: the no-cloud Docker stack, hardened by a real end-to-end boot test.** Brought the full
   `docker compose` stack up and fixed three issues a build-only check missed:
