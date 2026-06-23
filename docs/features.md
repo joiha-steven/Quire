@@ -165,12 +165,16 @@ Google/Facebook account.
   `ADMIN_COLS`); website gets `rel="nofollow ugc noopener"`.
 - **Post rename / purge:** `renameComments` moves comments with the slug; `deleteCommentsForPost`
   clears them when a post is purged (both wired in `posts.ts`).
-- **Admin:** `/admin/comments` lists live comments (content/post/time/name/from/delete); delete =
-  soft delete via owner-gated `DELETE /api/comments/[id]` → Trash (restore/purge in `TrashView`'s
-  Comments tab). `/admin/content` posts table gains a comment-count column when enabled
-  (`countsByPosts`).
+- **Admin:** `/admin/comments` lists live comments (content/post/time/name/IP/delete); the content
+  cell is clamped to two lines and click-toggles to the full text per row (replies are flat rows, so
+  each toggles on its own). The IP column shows the captured commenter IP with the ISO country code
+  in parens (`1.2.3.4 (VN)`) — country is best-effort from the Vercel edge (`x-vercel-ip-country`),
+  blank off-platform, and pre-feature rows show `—`. Delete = soft delete via owner-gated
+  `DELETE /api/comments/[id]` → Trash (restore/purge in `TrashView`'s Comments tab). `/admin/content`
+  posts table gains a comment-count column when enabled (`countsByPosts`).
 - **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
-  (6/min).
+  (6/min). The same IP (+ country) is persisted on the row (`author_ip`/`author_country`) for admin
+  moderation — admin-only, NEVER sent to the public comment tree.
 - **Integration keys live in the ADMIN, not (just) env (`lib/integration-keys.ts`).** Turnstile +
   Facebook keys are SECRETS, kept in the server-only `integration_keys` table (single row), set via
   Admin → Settings (`CommentKeys.tsx` → owner-gated `POST /api/comments/keys`) — NEVER in

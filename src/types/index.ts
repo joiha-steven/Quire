@@ -227,6 +227,8 @@ export type AdminComment = {
   website?: string
   provider: CommentProvider
   content: string // raw markdown source
+  ip?: string // commenter IP captured at submit (empty for pre-feature rows)
+  country?: string // ISO 3166-1 alpha-2 from the edge (empty off-Vercel)
   createdAt: string
   deletedAt?: string
 }

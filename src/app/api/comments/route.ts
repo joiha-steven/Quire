@@ -76,6 +76,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
+    // Country is best-effort from the edge (Vercel only); absent off-platform.
+    const country = (req.headers.get('x-vercel-ip-country') ?? '').trim()
     if (rateLimited(ip)) {
       logRequest(req, 429, start)
       return fail('Too many comments — slow down a moment', 429)
@@ -116,7 +118,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     let created
     try {
-      created = await addComment({ postSlug, parentId, ...identity, content })
+      created = await addComment({ postSlug, parentId, ...identity, content, ip: ip === 'unknown' ? '' : ip, country })
     } catch (error) {
       // Bad input (missing parent, too-deep reply) → 400, not a 500.
       if (error instanceof CommentInputError) return fail(error.message, 400)

@@ -106,6 +106,8 @@ create table if not exists public.comments (
   author_name    text not null default '',
   author_email   text not null default '',  -- admin-only; NEVER sent to the public client
   author_website text,
+  author_ip      text,                       -- admin-only; client IP captured at submit
+  author_country text,                       -- admin-only; ISO 3166-1 alpha-2 from the edge
   provider       text not null default 'manual' check (provider in ('manual', 'google', 'facebook')),
   content        text not null default '',   -- limited markdown source (<=1000 chars), rendered safe on read
   created_at     timestamptz not null default now(),

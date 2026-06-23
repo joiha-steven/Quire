@@ -106,14 +106,14 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
     // ONE in-page jump under the ToC headings: the present section labels joined
-    // (Thẻ / Danh mục / N Bình luận), scrolling to the first section that exists.
+    // (Tags / Categories / Comments (N)), scrolling to the first section that exists.
     // The comment count is server-rendered (count as of this render).
     const tx = t(language)
     const commentCount = showComments ? (await countsByPosts())[post.slug] ?? 0 : 0
     const metaParts = [
       post.tags.length > 0 ? tx.tagLabel : null,
       post.categories.length > 0 ? tx.categoryLabel : null,
-      showComments ? (commentCount > 0 ? `${commentCount} ${tx.commentsHeading}` : tx.commentsHeading) : null,
+      showComments ? (commentCount > 0 ? `${tx.commentsHeading} (${commentCount})` : tx.commentsHeading) : null,
     ].filter((p): p is string => p !== null)
     const metaAnchor = post.tags.length > 0
       ? TOC_ANCHORS.tags
