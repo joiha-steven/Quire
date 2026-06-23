@@ -73,9 +73,9 @@
 - [ ] Toggle OFF (or disconnect) → the cron no longer creates snapshots
 
 ## Docker self-host (only when shipping the image)
-- [ ] `node scripts/docker/gen-keys.mjs >> .env.docker` then `docker compose --env-file .env.docker
-  up -d --build` boots the full no-cloud stack (app + db + rest + cron); image builds with **no
-  backend env**
+- [ ] `node scripts/docker/gen-keys.mjs >> .env.docker` then `docker compose up -d --build` boots
+  the full no-cloud stack (app + db + rest + cron); image builds with **no backend env**, and no
+  compose `${...}` interpolation warnings appear (every value is read from `.env.docker`)
 - [ ] First boot applies `scripts/schema.sql` + `docker/initdb` roles/grants; `service_role` JWT
   reaches every table (sign in, create/list a post) — no PostgREST permission errors in `rest` logs
 - [ ] Text survives a restart: `docker compose down && up -d` keeps posts (volume `./data/postgres`)

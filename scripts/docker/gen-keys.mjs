@@ -1,9 +1,12 @@
-// Generate the secrets for the bundled (no-cloud) Docker stack:
-//   - POSTGRES_PASSWORD          — the superuser password for the local Postgres
-//   - SUPABASE_JWT_SECRET        — HS256 secret PostgREST verifies tokens with
-//   - SUPABASE_SERVICE_ROLE_KEY  — a JWT (role=service_role) the app authenticates with
-// The JWT is signed with SUPABASE_JWT_SECRET, so the two MUST stay paired.
-// Usage:  node scripts/docker/gen-keys.mjs >> .env.docker   (then fill the rest)
+// Generate the secrets for the bundled (no-cloud) Docker stack. Every value is
+// consumed DIRECTLY by a container's env (no compose ${...} interpolation), so
+// plain `docker compose up -d` works — no --env-file flag, nothing to break.
+//   POSTGRES_PASSWORD          superuser password Postgres sets on first init
+//   PGPASSWORD                 same value, so PostgREST's libpq can connect
+//   PGRST_JWT_SECRET           HS256 secret PostgREST verifies tokens with
+//   SUPABASE_SERVICE_ROLE_KEY  the app's JWT (role=service_role), signed with it
+// PGRST_JWT_SECRET and the JWT MUST stay paired (the JWT is signed with it).
+// Usage:  node scripts/docker/gen-keys.mjs >> .env.docker
 import { createHmac, randomBytes } from 'node:crypto'
 
 const b64url = (buf) => Buffer.from(buf).toString('base64url')
@@ -25,7 +28,8 @@ process.stdout.write(
   [
     '# --- bundled-stack secrets (generated; keep private) ---',
     `POSTGRES_PASSWORD=${pgPassword}`,
-    `SUPABASE_JWT_SECRET=${jwtSecret}`,
+    `PGPASSWORD=${pgPassword}`,
+    `PGRST_JWT_SECRET=${jwtSecret}`,
     `SUPABASE_SERVICE_ROLE_KEY=${sign({ role: 'service_role', iss: 'vibeblog' })}`,
     '',
   ].join('\n'),
