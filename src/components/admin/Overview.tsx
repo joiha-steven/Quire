@@ -1,7 +1,11 @@
 'use client'
 
-// Admin home dashboard: stat cards + taxonomy breakdown + running version.
-import { formatBytes } from '@/lib/utils'
+// Admin home dashboard: stat cards (posts, pages, comments, media, storage) +
+// quick actions + recent activity + taxonomy breakdown + a System reference panel.
+import Link from 'next/link'
+import type { ActivityEntry } from '@/lib/activity'
+import { formatBytes, formatDateTimeShort } from '@/lib/utils'
+import { Card, PageHeader, StatCard } from './kit'
 import { useAdminT } from './I18nProvider'
 
 type Taxo = { name: string; count: number }
@@ -34,30 +38,22 @@ const PILL =
 type Props = {
   posts: number
   pages: number
+  comments: number
   originals: number
   variants: number
   files: number
   totalBytes: number
   categories: Taxo[]
   tags: Taxo[]
+  recent: ActivityEntry[]
+  activityEnabled: boolean
   version: string
   system: SystemInfo
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="text-2xl font-bold tracking-tight">{value}</div>
-      <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{label}</div>
-      {sub && <div className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{sub}</div>}
-    </div>
-  )
-}
-
 function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty: string }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="mb-3 text-sm font-bold">{title}</h2>
+    <Card title={title}>
       {items.length === 0 ? (
         <p className="text-sm text-neutral-400 dark:text-neutral-500">{empty}</p>
       ) : (
@@ -75,7 +71,66 @@ function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty
           ))}
         </ul>
       )}
-    </div>
+    </Card>
+  )
+}
+
+// Quick actions — the few things the owner reaches for most, one click from home.
+function QuickActions() {
+  const t = useAdminT()
+  const actions = [
+    { href: '/admin/editor', label: t.newPost },
+    { href: '/admin/page-editor', label: t.newPage },
+    { href: '/admin/media', label: t.navMedia },
+    { href: '/admin/settings', label: t.navSettings },
+  ]
+  return (
+    <Card title={t.quickTitle}>
+      <div className="flex flex-wrap gap-2">
+        {actions.map((a) => (
+          <Link
+            key={a.href}
+            href={a.href}
+            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          >
+            {a.label}
+          </Link>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+// Recent activity — the last few admin mutations, linking to the full log.
+function RecentActivity({ recent, enabled }: { recent: ActivityEntry[]; enabled: boolean }) {
+  const t = useAdminT()
+  return (
+    <Card
+      title={t.recentActivity}
+      actions={
+        <Link href="/admin/log" className="text-xs text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200">
+          {t.recentViewAll}
+        </Link>
+      }
+    >
+      {!enabled || recent.length === 0 ? (
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">{t.logEmpty}</p>
+      ) : (
+        <ul className="space-y-2">
+          {recent.map((e) => (
+            <li key={e.id} className="flex items-center gap-2 text-sm">
+              <span className="shrink-0 rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                {e.action}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-neutral-600 dark:text-neutral-300">{e.detail}</span>
+              <span className="shrink-0 whitespace-nowrap text-xs text-neutral-400 dark:text-neutral-500">
+                {formatDateTimeShort(e.at)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   )
 }
 
@@ -97,8 +152,7 @@ function SystemCard({ system }: { system: SystemInfo }) {
     { label: t.sysBackup, value: system.backupOn ? t.sysOn : t.sysOff, ok: system.backupOn || undefined },
   ]
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="mb-3 text-sm font-bold">{t.sysTitle}</h2>
+    <Card title={t.sysTitle}>
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {rows.map((r) => (
           <div key={r.label} className="flex items-baseline justify-between gap-3 border-b border-neutral-100 py-1 dark:border-neutral-800/60">
@@ -120,50 +174,45 @@ function SystemCard({ system }: { system: SystemInfo }) {
           </div>
         ))}
       </dl>
-    </div>
+    </Card>
   )
 }
 
-export function Overview({ posts, pages, originals, variants, files, totalBytes, categories, tags, version, system }: Props) {
+export function Overview({
+  posts, pages, comments, originals, variants, files, totalBytes,
+  categories, tags, recent, activityEnabled, version, system,
+}: Props) {
   const t = useAdminT()
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">{t.overviewTitle}</h1>
-        {/* Version + license pills share ONE class so they can't drift. The MIT
-            pill links to the LICENSE — the platform code is open source (the blog
-            content it publishes is the owner's, all rights reserved). */}
-        <div className="flex items-center gap-2">
-          <a
-            href="https://github.com/joiha-steven/vibeblog"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={PILL}
-          >
-            vibeblog v{version}
-          </a>
-          <a
-            href="https://github.com/joiha-steven/vibeblog/blob/main/LICENSE"
-            target="_blank"
-            rel="noopener noreferrer"
-            title={t.licenseTitle}
-            className={PILL}
-          >
-            MIT
-          </a>
-        </div>
-      </div>
+      <PageHeader
+        title={t.overviewTitle}
+        actions={
+          // Version + license pills share ONE class so they can't drift. The MIT
+          // pill links to the LICENSE — the platform code is open source (the blog
+          // content it publishes is the owner's, all rights reserved).
+          <>
+            <a href="https://github.com/joiha-steven/vibeblog" target="_blank" rel="noopener noreferrer" className={PILL}>
+              vibeblog v{version}
+            </a>
+            <a href="https://github.com/joiha-steven/vibeblog/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title={t.licenseTitle} className={PILL}>
+              MIT
+            </a>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label={t.statPosts} value={posts} />
-        <StatCard label={t.statPages} value={pages} />
-        <StatCard
-          label={t.statMedia}
-          value={originals}
-          sub={`${variants} ${t.statVariants} · ${files} ${t.statFiles}`}
-        />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard label={t.statPosts} value={posts} href="/admin/content" />
+        <StatCard label={t.statPages} value={pages} href="/admin/content" />
+        <StatCard label={t.statComments} value={comments} href="/admin/comments" />
+        <StatCard label={t.statMedia} value={originals} sub={`${variants} ${t.statVariants} · ${files} ${t.statFiles}`} href="/admin/media" />
         <StatCard label={t.statStorage} value={formatBytes(totalBytes)} />
       </div>
+
+      <QuickActions />
+
+      <RecentActivity recent={recent} enabled={activityEnabled} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <TaxoList title={`${t.statCategories} (${categories.length})`} items={categories} empty={t.statEmpty} />

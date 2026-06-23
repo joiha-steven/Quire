@@ -1,9 +1,9 @@
 'use client'
 
-// Settings screen: ONE form, ONE save button, split into three tabs — General,
-// Appearance, Advanced. All settings live in a single state object and are saved
-// together via PUT /api/settings (which merges). Cards keep uniform chrome; each
-// tab lays them out in a top-aligned, length-balanced grid on desktop.
+// Settings screen: ONE form, ONE save button, split into FIVE task-based tabs —
+// Site, Content, Appearance, SEO, Integrations. All settings live in a single state
+// object and are saved together via PUT /api/settings (which merges). Cards share
+// the kit chrome; each tab lays them out in a top-aligned, length-balanced grid.
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SiteSettings, ApiResponse } from '@/types'
@@ -12,6 +12,7 @@ import type { CommentEnv } from '@/lib/comment-env'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { formatTime } from '@/lib/utils'
+import { Card, PageHeader, Tabs, type TabItem } from './kit'
 import { useAdminT } from './I18nProvider'
 import { SiteFields } from './SiteFields'
 import { ThemeFields } from './ThemeFields'
@@ -26,16 +27,8 @@ import { CommentFields } from './CommentFields'
 import { CommentKeys } from './CommentKeys'
 import { SeoFields } from './SeoFields'
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-neutral-200 bg-white shadow-sm p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="mb-4 text-base font-bold tracking-tight">{title}</h2>
-      {children}
-    </section>
-  )
-}
-
-type Tab = 'general' | 'appearance' | 'advanced'
+type Tab = 'site' | 'content' | 'appearance' | 'seo' | 'integrations'
+const TAB_IDS: Tab[] = ['site', 'content', 'appearance', 'seo', 'integrations']
 
 export function SettingsView({ settings, presets, commentEnv }: { settings: SiteSettings; presets: ThemePreset[]; commentEnv: CommentEnv }) {
   const t = useAdminT()
@@ -44,10 +37,10 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
   const [s, setS] = useState<SiteSettings>(settings)
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
-  // Open the tab named by ?tab= (the Drive-connect redirect lands on advanced);
+  // Open the tab named by ?tab= (the Drive-connect redirect lands on integrations);
   // admin is force-dynamic so the param is consistent server/client (no mismatch).
   const tabParam = useSearchParams().get('tab')
-  const [tab, setTab] = useState<Tab>(tabParam === 'appearance' || tabParam === 'advanced' ? tabParam : 'general')
+  const [tab, setTab] = useState<Tab>((TAB_IDS as string[]).includes(tabParam ?? '') ? (tabParam as Tab) : 'site')
 
   const update = (partial: Partial<SiteSettings>) => setS((prev) => ({ ...prev, ...partial }))
 
@@ -73,69 +66,61 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
     }
   }
 
-  const TABS: { id: Tab; label: string }[] = [
-    { id: 'general', label: t.tabGeneral },
-    { id: 'appearance', label: t.tabAppearance },
-    { id: 'advanced', label: t.tabAdvanced },
+  const TABS: TabItem<Tab>[] = [
+    { key: 'site', label: t.tabSite },
+    { key: 'content', label: t.tabContent },
+    { key: 'appearance', label: t.tabAppearance },
+    { key: 'seo', label: t.tabSeo },
+    { key: 'integrations', label: t.tabIntegrations },
   ]
 
   return (
     <div className="pb-24">
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.settingsTitle}</h1>
+      <PageHeader title={t.settingsTitle} />
 
-      {/* Tab bar — one shared chip style so the three never drift. */}
-      <div className="mb-6 flex flex-wrap gap-1 border-b border-neutral-200 dark:border-neutral-800">
-        {TABS.map((tb) => (
-          <button
-            key={tb.id}
-            type="button"
-            onClick={() => setTab(tb.id)}
-            aria-pressed={tab === tb.id}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition ${
-              tab === tb.id
-                ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white'
-                : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-            }`}
-          >
-            {tb.label}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={TABS} value={tab} onChange={setTab} variant="underline" className="mb-6" />
 
-      {tab === 'general' && (
+      {/* Site: identity + navigation/layout. */}
+      {tab === 'site' && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <Card title={t.cardGeneral}>
-              <SiteFields s={s} update={update} />
-            </Card>
-            <Card title={t.cardLayout}>
-              <LayoutMenuFields s={s} update={update} />
-            </Card>
-          </div>
-          <div className="space-y-6">
-            <Card title={t.cardFeatures}>
-              <FeatureFields
-                features={s.features}
-                onChange={(features) => update({ features })}
-                relatedCount={s.relatedCount}
-                onRelatedCount={(relatedCount) => update({ relatedCount })}
-              />
-            </Card>
-            <Card title={t.cardComments}>
-              <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
-              <CommentKeys comments={s.comments} env={commentEnv} />
-            </Card>
-            <Card title="SEO">
-              <SeoFields s={s} update={update} />
-            </Card>
-          </div>
+          <Card title={t.cardGeneral}>
+            <SiteFields s={s} update={update} />
+          </Card>
+          <Card title={t.cardLayout}>
+            <LayoutMenuFields s={s} update={update} />
+          </Card>
         </div>
       )}
 
+      {/* Content: reading features + reader comments. */}
+      {tab === 'content' && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <Card title={t.cardFeatures}>
+            <FeatureFields
+              features={s.features}
+              onChange={(features) => update({ features })}
+              relatedCount={s.relatedCount}
+              onRelatedCount={(relatedCount) => update({ relatedCount })}
+            />
+          </Card>
+          <Card title={t.cardComments}>
+            <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
+            <CommentKeys comments={s.comments} env={commentEnv} />
+          </Card>
+        </div>
+      )}
+
+      {/* Appearance: theme colours, font, type scale, rendering, custom CSS. */}
       {tab === 'appearance' && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <div className="space-y-6">
             <Card title={t.navAppearance}>
+              {/* Palette selection now lives on the PUBLIC site only — the admin
+                  chrome just toggles light/dark. This sets the site's default + which
+                  palettes readers can switch between. */}
+              <p className="mb-4 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500 dark:bg-neutral-800/60 dark:text-neutral-400">
+                {t.themeAdminNote}
+              </p>
               <ThemeFields
                 presets={presets}
                 themes={s.themes}
@@ -157,30 +142,40 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
             <Card title={t.cardRendering}>
               <AdvancedFields typography={s.typography} onTypography={(typography) => update({ typography })} />
             </Card>
+            <Card title={t.customCss}>
+              <div className="space-y-1.5">
+                <textarea
+                  value={s.customCss}
+                  onChange={(e) => update({ customCss: e.target.value })}
+                  rows={10}
+                  spellCheck={false}
+                  placeholder={'.prose h2 { letter-spacing: -0.01em }'}
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                />
+                <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
+              </div>
+            </Card>
           </div>
         </div>
       )}
 
-      {tab === 'advanced' && (
+      {/* SEO: search + social metadata. */}
+      {tab === 'seo' && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <Card title="SEO">
+            <SeoFields s={s} update={update} />
+          </Card>
+        </div>
+      )}
+
+      {/* Integrations: Google Drive backups + MCP server. */}
+      {tab === 'integrations' && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.backupTitle}>
             <BackupFields backups={s.backups} onChange={(backups) => update({ backups })} />
           </Card>
           <Card title={t.cardMcp}>
             <McpFields mcp={s.mcp} onChange={(mcp) => update({ mcp })} />
-          </Card>
-          <Card title={t.customCss}>
-            <div className="space-y-1.5">
-              <textarea
-                value={s.customCss}
-                onChange={(e) => update({ customCss: e.target.value })}
-                rows={10}
-                spellCheck={false}
-                placeholder={'.prose h2 { letter-spacing: -0.01em }'}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-              />
-              <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
-            </div>
           </Card>
         </div>
       )}

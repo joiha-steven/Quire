@@ -234,10 +234,13 @@ export type AdminStrings = {
   colorLink: string
   colorRule: string
   resetDefault: string
-  // settings tabs
-  tabGeneral: string
+  // settings tabs (task-based)
+  tabSite: string
+  tabContent: string
   tabAppearance: string
-  tabAdvanced: string
+  tabSeo: string
+  tabIntegrations: string
+  themeAdminNote: string
   // typography (per-role type system)
   cardTypography: string
   typographyHint: string
@@ -277,6 +280,7 @@ export type AdminStrings = {
   licenseTitle: string
   statPosts: string
   statPages: string
+  statComments: string
   statMedia: string
   statVariants: string
   statFiles: string
@@ -284,6 +288,10 @@ export type AdminStrings = {
   statCategories: string
   statTags: string
   statEmpty: string
+  // overview: quick actions + recent activity
+  quickTitle: string
+  recentActivity: string
+  recentViewAll: string
   // settings cards
   cardGeneral: string
   cardLayout: string

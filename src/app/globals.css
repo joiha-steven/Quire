@@ -446,6 +446,20 @@ hr {
   pointer-events: none;
 }
 
+/* Admin canvas: dotted-grid background behind the floating panels (sidebar +
+   cards sit on solid surfaces above it). Admin chrome is monochrome by design, so
+   the dot colour is a fixed faint neutral per mode (NOT a public theme token). */
+.admin-canvas {
+  background-color: #fafafa; /* neutral-50 */
+  background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: -1px -1px;
+}
+.dark .admin-canvas {
+  background-color: #0a0a0a; /* neutral-950 */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
 /* Native colour picker (admin theme): strip the default inner padding/border so
    the swatch is one clean, obviously-clickable colour chip — clicking it opens
    the browser's full colour picker (2D area + hue + HEX). */

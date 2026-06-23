@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { PostsTable } from './PostsTable'
 import { PagesTable } from './PagesTable'
 import { TaxonomyManager } from './TaxonomyManager'
+import { PageHeader, Tabs } from './kit'
 import { useAdminT } from './I18nProvider'
 
 type Tab = 'posts' | 'pages' | 'taxonomy'
@@ -37,24 +38,10 @@ export function ContentDashboard({
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.dashboardTitle}</h1>
+      <PageHeader title={t.dashboardTitle} />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
-          {tabs.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setTab(item.key)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                tab === item.key
-                  ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white'
-                  : 'text-neutral-500'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <Tabs tabs={tabs} value={tab} onChange={setTab} variant="segment" />
         {tab !== 'taxonomy' && (
           <Link href={tab === 'posts' ? '/admin/editor' : '/admin/page-editor'}>
             <Button>{tab === 'posts' ? t.newPost : t.newPage}</Button>

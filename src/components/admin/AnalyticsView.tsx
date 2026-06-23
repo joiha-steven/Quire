@@ -6,6 +6,7 @@
 // already dynamic.
 import Link from 'next/link'
 import type { AnalyticsSummary } from '@/lib/analytics'
+import { PageHeader } from './kit'
 import { useAdminT } from './I18nProvider'
 
 const RANGES = [1, 7, 30, 365] as const
@@ -19,22 +20,24 @@ export function AnalyticsView({ data, range }: { data: AnalyticsSummary; range: 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">{t.analyticsTitle}</h1>
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
-          {RANGES.map((r) => (
-            <Link
-              key={r}
-              href={`/admin/analytics?range=${r}`}
-              className={`rounded-md px-3 py-1 text-sm font-medium ${
-                r === range ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500'
-              }`}
-            >
-              {rangeLabel[r]}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title={t.analyticsTitle}
+        actions={
+          <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+            {RANGES.map((r) => (
+              <Link
+                key={r}
+                href={`/admin/analytics?range=${r}`}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+                  r === range ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                }`}
+              >
+                {rangeLabel[r]}
+              </Link>
+            ))}
+          </div>
+        }
+      />
 
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.analyticsPrivacyNote}</p>
 

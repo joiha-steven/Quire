@@ -6,6 +6,7 @@ import { useState } from 'react'
 import type { AdminComment, ApiResponse, CommentProvider } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { formatDateTimeShort } from '@/lib/utils'
+import { PageHeader, TableFrame, THEAD, TROW, EmptyState } from './kit'
 import { useAdminT } from './I18nProvider'
 
 function providerLabel(p: CommentProvider, t: ReturnType<typeof useAdminT>): string {
@@ -35,18 +36,17 @@ export function CommentsTable({ initial }: { initial: AdminComment[] }) {
   if (rows.length === 0) {
     return (
       <div>
-        <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.commentsNavTitle}</h1>
-        <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.commentsEmpty}</p>
+        <PageHeader title={t.commentsNavTitle} />
+        <EmptyState title={t.commentsEmpty} />
       </div>
     )
   }
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">{t.commentsNavTitle}</h1>
-      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <table className="w-full text-sm">
-          <thead className="whitespace-nowrap border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
+      <PageHeader title={t.commentsNavTitle} />
+      <TableFrame>
+          <thead className={THEAD}>
             <tr>
               <th className="px-4 py-3 font-medium">{t.commentsColContent}</th>
               <th className="hidden px-4 py-3 font-medium md:table-cell">{t.commentsColPost}</th>
@@ -58,7 +58,7 @@ export function CommentsTable({ initial }: { initial: AdminComment[] }) {
           </thead>
           <tbody>
             {rows.map((c) => (
-              <tr key={c.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+              <tr key={c.id} className={TROW}>
                 <td className="max-w-xs px-4 py-3">
                   <p className="line-clamp-2 text-neutral-700 dark:text-neutral-300">{c.content}</p>
                 </td>
@@ -91,8 +91,7 @@ export function CommentsTable({ initial }: { initial: AdminComment[] }) {
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
+      </TableFrame>
     </div>
   )
 }

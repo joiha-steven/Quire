@@ -2,9 +2,14 @@
 
 // Admin navigation as a LEFT SIDEBAR that collapses between icon+label and
 // icon-only (desktop), persisted in localStorage. On mobile it's a slim top bar
-// with a hamburger drawer (always icon+label). Every item shares SIDEBAR_NAV so
+// with a hamburger drawer (always icon+label). Every nav item shares SIDEBAR_NAV so
 // the rail reads as one uniform set. Monochrome by design (admin tooling stays on
 // the neutral scale — no hardcoded accent colors).
+//
+// LAYOUT INTENT: the collapse/expand control lives at the TOP next to the wordmark
+// (a compact chrome button, NOT a nav row) so it can't be mistaken for Sign out;
+// Sign out sits alone in the footer under its own divider (the "account" cluster).
+// Palette selection is FRONTEND-ONLY now — the admin chrome only toggles light/dark.
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, type ReactNode } from 'react'
@@ -13,7 +18,6 @@ import { useAdminT } from './I18nProvider'
 import { SIDEBAR_NAV, SIDEBAR_NAV_ACTIVE } from './headerActions'
 import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
-import { PaletteToggle, type PaletteOption } from '@/components/theme/PaletteToggle'
 import {
   IconHome, IconAnalytics, IconContent, IconComment, IconMedia, IconTrash, IconSettings,
   IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft,
@@ -24,13 +28,9 @@ const STORE_KEY = 'vb-admin-nav-collapsed'
 export function AdminSidebar({
   lang,
   signOut,
-  palettes,
-  defaultPalette,
 }: {
   lang: SiteLang
   signOut: () => Promise<void>
-  palettes: PaletteOption[]
-  defaultPalette: string
 }) {
   const t = useAdminT()
   const pathname = usePathname()
@@ -103,36 +103,43 @@ export function AdminSidebar({
     </>
   )
 
-  // Footer controls: text rows when expanded, icon-only when collapsed (uniform
-  // within the cluster). Palette/theme have their own icon variant.
+  // Footer controls: appearance (light/dark) + cache, then Sign out alone under a
+  // divider so it reads as the "account" cluster (never confused with collapse).
   const controls = (c: boolean): ReactNode => (
     <>
-      <PaletteToggle
-        lang={lang}
-        palettes={palettes}
-        defaultId={defaultPalette}
-        variant={c ? 'icon' : 'text'}
-        triggerClassName={c ? undefined : rowClass(false)}
-        label={c ? undefined : t.navAppearance}
-      />
       <ThemeToggle lang={lang} variant={c ? 'icon' : 'text'} triggerClassName={c ? undefined : rowClass(false)} />
       <CacheButton className={rowClass(c)} icon={c ? <IconCache /> : undefined} collapsed={c} />
-      <form action={signOut} className="contents">
-        <button className={rowClass(c)} title={c ? t.signOut : undefined}>
-          {c ? <IconSignOut /> : <span>{t.signOut}</span>}
-        </button>
-      </form>
-      <button type="button" onClick={toggleCollapsed} className={rowClass(c)} title={c ? t.navExpand : t.navCollapse} aria-label={c ? t.navExpand : t.navCollapse}>
-        <span className={`grid place-items-center transition-transform ${c ? 'rotate-180' : ''}`}><IconChevronLeft /></span>
-        {!c && <span className="truncate">{t.navCollapse}</span>}
-      </button>
+      <div className="mt-1 border-t border-neutral-200 pt-1 dark:border-neutral-800">
+        <form action={signOut} className="contents">
+          <button className={rowClass(c)} title={c ? t.signOut : undefined}>
+            <IconSignOut />
+            {!c && <span className="truncate">{t.signOut}</span>}
+          </button>
+        </form>
+      </div>
     </>
   )
 
-  const brand = (c: boolean): ReactNode => (
+  // Wordmark, plus the compact collapse/expand button (desktop top row only). The
+  // chevron points the direction it will move the rail; rotates when collapsed.
+  const wordmark = (c: boolean): ReactNode => (
     <Link href="/admin" onClick={close} className="flex h-9 items-center px-3 text-xl leading-none tracking-tight">
       {c ? <span className="font-bold">vb</span> : <>vibe<span className="font-bold">blog</span></>}
     </Link>
+  )
+
+  const collapseBtn = (
+    <button
+      type="button"
+      onClick={toggleCollapsed}
+      title={collapsed ? t.navExpand : t.navCollapse}
+      aria-label={collapsed ? t.navExpand : t.navCollapse}
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+    >
+      <span className={`grid place-items-center transition-transform ${collapsed ? 'rotate-180' : ''}`}>
+        <IconChevronLeft />
+      </span>
+    </button>
   )
 
   return (
@@ -143,14 +150,18 @@ export function AdminSidebar({
           collapsed ? 'md:w-16' : 'md:w-52'
         }`}
       >
-        {brand(collapsed)}
+        {/* Top: wordmark + collapse control. Stacked when collapsed (no room for a row). */}
+        <div className={collapsed ? 'flex flex-col items-center gap-2' : 'flex items-center justify-between'}>
+          {wordmark(collapsed)}
+          {collapseBtn}
+        </div>
         <nav className="mt-4 flex flex-col gap-1">{navItems(collapsed)}</nav>
         <div className="mt-auto flex flex-col gap-1 border-t border-neutral-200 pt-3 dark:border-neutral-800">{controls(collapsed)}</div>
       </aside>
 
       {/* Mobile: top bar + drawer (always icon+label) */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
-        {brand(false)}
+        {wordmark(false)}
         <button
           type="button"
           className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"

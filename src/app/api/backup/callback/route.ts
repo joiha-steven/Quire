@@ -11,9 +11,9 @@ import { logRequest, logError, requireOwner } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 
-// Bounce back to the Advanced settings tab with a result flag for a toast.
+// Bounce back to the Integrations settings tab with a result flag for a toast.
 function back(origin: string, result: 'connected' | 'error'): Response {
-  return Response.redirect(`${origin}/admin/settings?tab=advanced&backup=${result}`, 302)
+  return Response.redirect(`${origin}/admin/settings?tab=integrations&backup=${result}`, 302)
 }
 
 export async function GET(req: NextRequest): Promise<Response> {

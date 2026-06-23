@@ -6,6 +6,8 @@ import { getPageIndex } from '@/lib/pages'
 import { listBlobs, blobOrigin } from '@/lib/blob'
 import { getSettings } from '@/lib/settings'
 import { getBackupState } from '@/lib/backup-state'
+import { countsByPosts } from '@/lib/comments'
+import { getActivity } from '@/lib/activity'
 import { db } from '@/lib/db'
 import { Overview, type SystemInfo } from '@/components/admin/Overview'
 
@@ -73,12 +75,18 @@ function tally(values: string[]): { name: string; count: number }[] {
 }
 
 export default async function AdminHome() {
-  const [posts, pages, blobs, system] = await Promise.all([
+  const settings = await getSettings()
+  const commentsOn = settings.comments.enabled
+  const activityOn = settings.features.activityLog
+  const [posts, pages, blobs, system, commentCounts, recent] = await Promise.all([
     getIndex(),
     getPageIndex(),
     listBlobs(),
     getSystemInfo(),
+    commentsOn ? countsByPosts() : Promise.resolve({} as Record<string, number>),
+    activityOn ? getActivity(6) : Promise.resolve([]),
   ])
+  const commentsTotal = Object.values(commentCounts).reduce((sum, n) => sum + n, 0)
 
   // Media blobs split into originals vs derived variants (thumb + -1024/-1600
   // AVIF/WebP, named by convention), plus the files/ attachment+icon+font blobs.
@@ -93,12 +101,15 @@ export default async function AdminHome() {
     <Overview
       posts={posts.length}
       pages={pages.length}
+      comments={commentsTotal}
       originals={originalCount}
       variants={variantCount}
       files={fileCount}
       totalBytes={totalBytes}
       categories={tally(posts.flatMap((p) => p.categories))}
       tags={tally(posts.flatMap((p) => p.tags))}
+      recent={recent}
+      activityEnabled={activityOn}
       version={pkg.version}
       system={system}
     />
