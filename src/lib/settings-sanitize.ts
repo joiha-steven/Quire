@@ -65,6 +65,18 @@ export function sanitizeThemes(input: unknown, base: Record<string, ThemeSetting
   return out
 }
 
+// Palettes offered to visitors: keep only known preset ids, in preset order, and
+// ALWAYS include the default (it must stay selectable). A non-array (missing field,
+// e.g. legacy settings) means "all on"; an empty/garbage array collapses to just
+// the default — which hides the switcher (one option). Invariant for `enabledPalettes`.
+export function sanitizeEnabledPalettes(input: unknown, defaultId: string): string[] {
+  const def = isPresetId(defaultId) ? defaultId : DEFAULT_PRESET_ID
+  if (!Array.isArray(input)) return THEME_PRESETS.map((p) => p.id)
+  const want = new Set(input.filter((x): x is string => typeof x === 'string'))
+  want.add(def)
+  return THEME_PRESETS.map((p) => p.id).filter((id) => want.has(id))
+}
+
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback)
 
 export function sanitizeSeo(input: unknown, fallback: SeoSettings): SeoSettings {

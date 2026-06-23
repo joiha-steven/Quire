@@ -142,6 +142,8 @@ const ko = {
   themePresetHint: '팔레트마다 색상이 독립적입니다. 편집할 팔레트를 선택하세요. 방문자는 사이트에서 팔레트를 바꿀 수 있고 수정 내용이 반영됩니다. 재설정하면 해당 팔레트의 기본 색상으로 되돌립니다.',
   themeDefault: '기본',
   themeSetDefault: '기본으로 설정',
+  paletteShown: '방문자에게 표시',
+  paletteVisibilityHint: '팔레트의 체크를 해제하면 방문자 전환 메뉴에서 숨겨집니다. 기본 팔레트는 항상 켜져 있습니다. 팔레트가 하나만 남으면 전환 버튼이 사라집니다.',
   modeLight: '라이트 모드',
   modeDark: '다크 모드',
   colorBg: '배경',

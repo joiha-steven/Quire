@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — per-palette visibility; switcher hides when one is left)
+- **feat(appearance): the owner can turn each color palette on/off for visitors.** New
+  `settings.enabledPalettes` (allow-list of preset ids). Admin → Appearance shows a "Shown to
+  visitors" checkbox per palette; the default palette is locked on so the set is never empty.
+  The public + admin palette switcher lists only enabled palettes (`enabledPaletteOptions`), and
+  **`PaletteToggle` renders nothing when ≤1 palette is enabled** — so a one-palette site has no
+  theme-switch icon at all. The no-FOUC script ignores a stored palette that is no longer enabled
+  (falls back to the default, no flash). Disabled palettes remain fully editable. Migration-safe:
+  legacy settings with no `enabledPalettes` read as "all on" (`sanitizeEnabledPalettes`, pinned by
+  `settings-sanitize.test.ts`). `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — soft-delete filter is enforced in one place)
 - **refactor: `liveOnly()` (in `lib/db.ts`) is the single home of the soft-delete predicate.**
   Every live read of a soft-deletable table (posts/pages/media/files) now wraps its query in

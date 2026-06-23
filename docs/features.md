@@ -86,6 +86,14 @@
   `AdvancedFields` (font smoothing = "Text rendering"); Advanced `McpFields` + custom-CSS.
   `McpFields` is the EXCEPTION to "no own state/save": the MCP enable toggle flows through the
   settings form, but its token manager has its own `/api/mcp/tokens` API (plaintext shown once).
+- **Palette visibility (`ThemeFields` "Shown to visitors").** `settings.enabledPalettes` is the
+  allow-list a visitor may switch between; each preset card has a checkbox. The DEFAULT palette
+  (`themePreset`) is always shown (its checkbox is locked) so the set is never empty. `enabledPaletteOptions()`
+  filters the public + admin `PaletteToggle`; `PaletteToggle` renders `null` when ≤1 option (the
+  icon disappears). The no-FOUC script ignores a stored palette that is no longer enabled (falls
+  back to the default). Disabled palettes stay fully editable — visibility ≠ customization.
+  Sanitizer (`sanitizeEnabledPalettes`): known ids only, preset order, default forced in; a missing
+  field (legacy settings) = all on. Pinned by `settings-sanitize.test.ts`.
 - Each tab: `grid lg:grid-cols-2 items-start` (explicit columns, NOT CSS `columns`).
 - **Save calls `router.refresh()`** so the admin shell + public header reflect the change
   immediately.

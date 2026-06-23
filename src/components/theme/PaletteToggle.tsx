@@ -87,6 +87,9 @@ export function PaletteToggle({
   const currentName = palettes.find((p) => p.id === current)
   const triggerText = label ?? (currentName ? nameOf(currentName) : s.palette)
 
+  // Nothing to switch between: hide the control entirely (owner enabled ≤1 palette).
+  if (palettes.length <= 1) return null
+
   return (
     <div className="relative">
       <button

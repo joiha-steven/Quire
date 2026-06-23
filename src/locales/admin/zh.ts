@@ -142,6 +142,8 @@ const zh = {
   themePresetHint: '每个配色都有独立颜色。选择要编辑的配色；访客可在站点切换配色并看到你的修改。重置将恢复该配色的内置颜色。',
   themeDefault: '默认',
   themeSetDefault: '设为默认',
+  paletteShown: '对访客显示',
+  paletteVisibilityHint: '取消勾选某个配色，即可在访客的切换菜单中隐藏它。默认配色始终保留。仅剩一个配色时，切换按钮会消失。',
   modeLight: '浅色模式',
   modeDark: '深色模式',
   colorBg: '背景',

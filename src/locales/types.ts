@@ -203,6 +203,8 @@ export type AdminStrings = {
   themePresetHint: string
   themeDefault: string
   themeSetDefault: string
+  paletteShown: string
+  paletteVisibilityHint: string
   modeLight: string
   modeDark: string
   colorBg: string

@@ -4,7 +4,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
-import { paletteOptions } from '@/lib/themes'
+import { enabledPaletteOptions } from '@/lib/themes'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 
@@ -43,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <AdminSidebar
           lang={language}
           signOut={signOutAction}
-          palettes={paletteOptions(settings.themes)}
+          palettes={enabledPaletteOptions(settings.themes, settings.enabledPalettes)}
           defaultPalette={settings.themePreset}
         />
         {/* Main column right of the sidebar. Full browser width (admin is column-based

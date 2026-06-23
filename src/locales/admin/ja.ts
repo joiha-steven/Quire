@@ -142,6 +142,8 @@ const ja = {
   themePresetHint: 'パレットごとに色が独立しています。編集するパレットを選択。訪問者はサイトでパレットを切り替えでき、編集が反映されます。リセットでそのパレットの初期色に戻します。',
   themeDefault: '既定',
   themeSetDefault: '既定にする',
+  paletteShown: '訪問者に表示',
+  paletteVisibilityHint: 'パレットのチェックを外すと、訪問者の切り替えメニューから非表示になります。既定のパレットは常に有効です。残りが1つだけになると、切り替えボタンは消えます。',
   modeLight: 'ライトモード',
   modeDark: 'ダークモード',
   colorBg: '背景',

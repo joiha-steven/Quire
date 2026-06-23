@@ -8,9 +8,9 @@ import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
 import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES } from '@/lib/themes'
 import {
-  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeSeo, sanitizeFeatures, sanitizeMcp,
+  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp,
   sanitizeBackups, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
 } from '@/lib/settings-sanitize'
 
@@ -87,6 +87,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   customCss: '',
   menu: [],
   themePreset: DEFAULT_PRESET_ID,
+  enabledPalettes: ALL_PALETTE_IDS,
   themes: defaultThemes(),
   typography: DEFAULT_TYPOGRAPHY,
   customFont: DEFAULT_FONT,
@@ -129,6 +130,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       excerptLength: clampNumber(stored.excerptLength, 10, 100, DEFAULT_SETTINGS.excerptLength),
       customCss: sanitizeCss(stored.customCss),
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
+      enabledPalettes: sanitizeEnabledPalettes(stored.enabledPalettes, isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID),
       themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
       typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
       customFont: (() => {
@@ -169,6 +171,10 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoRenderHeight = rendered?.height ?? 0
   }
 
+  // The (possibly new) default palette — used both as `themePreset` and as the
+  // always-included member of `enabledPalettes`.
+  const themePreset = isPresetId(input.themePreset) ? input.themePreset : current.themePreset
+
   const next: SiteSettings = {
     language: isSiteLang(input.language) ? input.language : current.language,
     title: (input.title ?? current.title).trim() || DEFAULT_SETTINGS.title,
@@ -188,7 +194,8 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     excerptLength: clampNumber(input.excerptLength, 10, 100, current.excerptLength),
     customCss: input.customCss !== undefined ? sanitizeCss(input.customCss) : current.customCss,
     menu: sanitizeMenu(input.menu, current.menu),
-    themePreset: isPresetId(input.themePreset) ? input.themePreset : current.themePreset,
+    themePreset,
+    enabledPalettes: sanitizeEnabledPalettes(input.enabledPalettes ?? current.enabledPalettes, themePreset),
     themes: sanitizeThemes(input.themes, current.themes),
     typography: sanitizeTypography(input.typography, current.typography),
     customFont: sanitizeFont(input.customFont, current.customFont),
