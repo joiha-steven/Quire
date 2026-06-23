@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.1.6 — 2026-06-23
+- **In-page ToC meta drops the comment count.** The label is just `Comments` (`Tags / Categories /
+  Comments`), no number — the count lived on the ISR-cached page so it was always stale; the
+  authoritative count is in `/admin/comments`.
+
 ## v1.1.5 — 2026-06-23
 - **Admin Comments table reworked.** The content cell now clamps to two lines and click-toggles to
   the full comment (click again to collapse) — per row, so replies (flat rows) expand independently.
