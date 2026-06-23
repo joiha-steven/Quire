@@ -103,7 +103,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 |---|---|---|
 | Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts`, `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
 | Cache / stale / content not updating / ISR | `lib/revalidate.ts`, `lib/db.ts`, `lib/posts.ts` | ARCHITECTURE "Request flow" |
-| Auth / route 401 / route exposed | `lib/auth.ts`, `lib/api.ts`, `src/middleware.ts`, `api/<route>/route.ts` | `docs/mcp.md` if MCP |
+| Auth / route 401 / route exposed | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO db), `api/<route>/route.ts` | `docs/mcp.md` if MCP |
 | Slug / 404 / duplicate URL | `lib/slugs.ts`, `src/app/(blog)/[slug]` | `lib/posts.ts`, `lib/pages.ts` |
 | Trash / soft delete / restore | `lib/posts.ts` (`deleted_at`), `api/trash`, `src/app/admin/trash` | `docs/features.md` |
 | Comments (reader) / not showing / cache | `lib/comments.ts`, `components/blog/Comments.tsx`, `api/comments`, `lib/comment-md.ts` | `docs/features.md` "Comments" |
@@ -131,6 +131,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss`, `fontToCss` | `React.cache()` only. Holds `themes` + `typography` + `customFont`; migrates legacy shapes; image/font urls store-relative |
 | `themes.ts` | `THEME_PRESETS`, `themesToCss`, `paletteOptions`, … | 6 owner-customizable palettes. `themesToCss` emits EVERY palette's vars. Add one = append to `THEME_PRESETS` |
 | `comments.ts` / `comment-md.ts` | `getCommentTree`, `buildCommentTree`, `addComment`, `countsByPosts`, `renderCommentMarkdown` | Text-only reader comments (off by default). Public tree excludes email, tombstones deleted-but-replied, re-roots orphans. `comment-md` = bold/italic-only, escape-first. Client island fetches no-store → instant, no revalidate |
+| `integration-keys.ts` / `comment-env.ts` | `getIntegrationKeys`, `getIntegrationStatus`, `saveIntegrationKeys`, `getCommentEnv` | SERVER-ONLY Turnstile/Facebook secrets in `integration_keys` table (env fallback), set in admin — like `backup_state`, NEVER in `settings.data`. `getCommentEnv` (async) = which comment integrations are usable + public site key |
 | `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getViewTotals`, `isBot` | Cookieless; `visitor` = salted hash of IP+UA (no PII); bots + admin/api + owner skipped. Kept FOREVER |
 | `activity.ts` | `logActivity`, `getActivity`, `clearActivity` | `activity_log`; gated by `features.activityLog`, never throws; called via `after()` from every mutating route |
 | `media-usage.ts` | `findUnusedMedia` | Read-only audit; badges orphans, never deletes |

@@ -100,6 +100,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const headings = features.toc ? extractHeadings(post.content) : []
     const minutes = readingMinutes(post.content)
     const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
+    const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     return (
       <article>
@@ -168,24 +169,19 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           </>
         )}
 
-        {settings.comments.enabled && (
+        {settings.comments.enabled && commentEnv && (
           <>
             <div className="mt-12">
               <hr />
             </div>
-            {(() => {
-              const env = getCommentEnv()
-              return (
-                <Comments
-                  postSlug={post.slug}
-                  lang={language}
-                  turnstile={settings.comments.turnstile && env.turnstileConfigured}
-                  turnstileSiteKey={env.turnstileSiteKey}
-                  googleAuth={settings.comments.googleAuth && env.googleConfigured}
-                  facebookAuth={settings.comments.facebookAuth && env.facebookConfigured}
-                />
-              )
-            })()}
+            <Comments
+              postSlug={post.slug}
+              lang={language}
+              turnstile={settings.comments.turnstile && commentEnv.turnstileConfigured}
+              turnstileSiteKey={commentEnv.turnstileSiteKey}
+              googleAuth={settings.comments.googleAuth && commentEnv.googleConfigured}
+              facebookAuth={settings.comments.facebookAuth && commentEnv.facebookConfigured}
+            />
           </>
         )}
       </article>

@@ -4,8 +4,9 @@
 // check. Public / self-authed endpoints are allow-listed so they keep working
 // without an owner session (analytics beacon, search, cron, the MCP transport).
 
-import { NextResponse } from 'next/server'
-import { auth, isAuthorized } from '@/lib/auth'
+import { NextResponse, type NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+import { isAuthorized } from '@/lib/auth-shared'
 
 // Paths that handle their own auth (bearer token, CRON_SECRET, PKCE) or are public
 // reads, so they must NOT require an owner session. Note: /api/mcp covers the MCP
@@ -24,9 +25,13 @@ function isPublicApi(pathname: string): boolean {
   )
 }
 
-export default auth((req) => {
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  if (isAuthorized(req.auth?.user?.email)) return // owner → proceed
+  // Read + verify the NextAuth JWT directly (no provider config, no DB) so this
+  // stays edge-safe even though the full auth config reads keys from Postgres.
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET, secureCookie: req.nextUrl.protocol === 'https:' })
+  const email = typeof token?.email === 'string' ? token.email : null
+  if (isAuthorized(email)) return // owner → proceed
 
   // Admin UI → bounce to sign-in (mirrors the /admin layout guard).
   if (pathname.startsWith('/admin')) {
@@ -38,7 +43,7 @@ export default auth((req) => {
   if (pathname.startsWith('/api') && !isPublicApi(pathname)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-})
+}
 
 export const config = {
   matcher: ['/admin/:path*', '/api/:path*'],

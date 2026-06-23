@@ -127,21 +127,26 @@ Google/Facebook account.
   (`countsByPosts`).
 - **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
   (6/min).
+- **Integration keys live in the ADMIN, not (just) env (`lib/integration-keys.ts`).** Turnstile +
+  Facebook keys are SECRETS, kept in the server-only `integration_keys` table (single row), set via
+  Admin → Settings (`CommentKeys.tsx` → owner-gated `POST /api/comments/keys`) — NEVER in
+  `settings.data`. An env var of the same name is a fallback. `getCommentEnv()` (async) reports which
+  integrations are usable (booleans) + the public Turnstile site key. Google stays env-only (it's
+  also the owner's admin sign-in — putting it in the admin would deadlock the owner's own login).
 - **Cloudflare Turnstile (`lib/turnstile.ts`, `Turnstile.tsx`).** Toggle `settings.comments.turnstile`;
-  **enforced only when the toggle is on AND `TURNSTILE_SECRET_KEY` exists** (`turnstileConfigured()`),
-  so toggling on without keys never locks out commenting (the admin row shows a "needs env key"
-  badge — `getCommentEnv()` reports presence; the SITE key is public and passed to the widget). The
-  manual form gates the comment box **behind the Turnstile pass** (widget appears once name/email are
-  filled). The POST verifies the token server-side via siteverify (fail closed). Tokens are
-  single-use → the form re-arms after each post.
-- **Google / Facebook login (`auth.ts`).** Toggles `settings.comments.googleAuth` / `facebookAuth`;
-  each provider loads in NextAuth only when its env keys exist (Google = the owner's admin sign-in
-  too; Facebook is commenter-only). The session carries `name` + `provider` (`next-auth.d.ts`
-  augments `Session`/`JWT`). The island resolves the viewer client-side via `/api/auth/session`
-  (the post page is static), shows "Commenting as …" + a comment box (no name/email/Turnstile) when
-  signed in, else sign-in buttons (`signIn` from `next-auth/react`, `callbackUrl` = current page).
-  The POST **trusts the session** for a logged-in commenter (`getCommenter()`): identity +
-  provider come from it, Turnstile + manual validation are skipped. A signed-in commenter is NOT an
-  admin — `isAuthorized` still gates `/admin` to `AUTHORIZED_EMAIL` only.
+  **enforced only when the toggle is on AND a Turnstile secret exists**, so toggling on without keys
+  never locks out commenting (the admin row shows a "needs keys" badge + the key inputs appear right
+  below). The manual form gates the comment box **behind the Turnstile pass**; the POST verifies the
+  token server-side via siteverify (fail closed). Tokens are single-use → the form re-arms after each post.
+- **Google / Facebook login (`auth.ts`).** Toggles `settings.comments.googleAuth` / `facebookAuth`.
+  NextAuth config is a FUNCTION so providers read keys at runtime: Google from env, **Facebook from
+  the `integration_keys` table** (env fallback). This runs in Node only — the **edge middleware reads
+  the JWT directly via `getToken`** (`auth-shared.ts` holds the pure `isAuthorized`), so the Supabase
+  client never enters the edge bundle. The session carries `name` + `provider` (`next-auth.d.ts`
+  augments `Session`/`JWT`). The island resolves the viewer client-side via `/api/auth/session` (the
+  post page is static): signed in → "Commenting as …" + a plain box (no name/email/Turnstile); else
+  sign-in buttons (`signIn` from `next-auth/react`). The POST **trusts the session** (`getCommenter()`)
+  for a logged-in commenter. A signed-in commenter is NOT an admin — `isAuthorized` still gates
+  `/admin` to `AUTHORIZED_EMAIL` only.
 - **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
   (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.

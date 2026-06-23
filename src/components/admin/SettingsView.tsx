@@ -23,6 +23,7 @@ import { BackupFields } from './BackupFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FeatureFields } from './FeatureFields'
 import { CommentFields } from './CommentFields'
+import { CommentKeys } from './CommentKeys'
 import { SeoFields } from './SeoFields'
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
@@ -122,6 +123,7 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
             </Card>
             <Card title={t.cardComments}>
               <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
+              <CommentKeys comments={s.comments} env={commentEnv} />
             </Card>
             <Card title="SEO">
               <SeoFields s={s} update={update} />

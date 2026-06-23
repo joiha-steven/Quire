@@ -156,6 +156,19 @@ create table if not exists public.backup_state (
   constraint backup_state_singleton check (id = 1)
 );
 
+-- ----- integration_keys (server-only secrets for OPTIONAL comment features) ---
+-- Single row (id=1). Turnstile + Facebook keys the owner enters in Admin →
+-- Settings. SECRET — like backup_state, NEVER read into settings.data / the
+-- client payload. Env vars of the same name still work as a fallback.
+create table if not exists public.integration_keys (
+  id                   int primary key default 1 check (id = 1),
+  turnstile_site_key   text,
+  turnstile_secret_key text,
+  facebook_id          text,
+  facebook_secret      text,
+  constraint integration_keys_singleton check (id = 1)
+);
+
 -- ----- activity_log ----------------------------------------------------------
 create table if not exists public.activity_log (
   id     bigint generated always as identity primary key,
@@ -195,6 +208,7 @@ alter table public.media            enable row level security;
 alter table public.files            enable row level security;
 alter table public.settings         enable row level security;
 alter table public.backup_state     enable row level security;
+alter table public.integration_keys enable row level security;
 alter table public.mcp_tokens       enable row level security;
 alter table public.activity_log     enable row level security;
 alter table public.analytics_events enable row level security;

@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-06-23 (v1.1.0-beta — comment integration keys move into the admin)
+- **feat: Turnstile + Facebook keys are entered in Admin → Settings, not env.** The optional comment
+  integrations no longer need a Vercel redeploy to configure. Keys are SECRETS, kept in a new
+  server-only `integration_keys` table (single row) — like `backup_state`, **never in
+  `settings.data`** — set via an owner-gated `POST /api/comments/keys` (`CommentKeys.tsx`). Env vars
+  of the same name still work as a fallback. **Google stays env-only** (it's the owner's admin
+  sign-in — moving it to the admin would deadlock the owner's own login); its toggle just shows the
+  "Sign in with Google" button, now clearly described as *letting outside readers sign in*.
+- **refactor(auth): NextAuth config is a function so Facebook reads its keys from the DB at runtime;
+  the edge middleware now reads the JWT via `getToken`** (new `lib/auth-shared.ts` holds the pure
+  `isAuthorized`), so the Supabase client never enters the edge bundle. `getCommentEnv()` is now
+  async (reads the key store). Behaviour-preserving for existing env-based setups. `schema.sql`
+  updated; `v1.1.0-beta`.
+
 ## 2026-06-23 (v1.1.0-beta — reader comments, Phase C: Google/Facebook login)
 - **feat(comments): readers can comment with a Google or Facebook account.** Toggles in
   Admin → Settings (each effective only when its env keys exist — "needs env key" badge). A

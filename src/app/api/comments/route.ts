@@ -12,7 +12,8 @@ import { getCommentTree, addComment, MAX_COMMENT_LEN } from '@/lib/comments'
 import { getPost } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
 import { getCommenter } from '@/lib/auth'
-import { verifyTurnstile, turnstileConfigured } from '@/lib/turnstile'
+import { verifyTurnstile } from '@/lib/turnstile'
+import { getCommentEnv } from '@/lib/comment-env'
 import { isPublicallyVisible } from '@/lib/utils'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError } from '@/lib/api'
@@ -106,7 +107,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       const website = cleanWebsite(body.website)
       if (!name || name.length > 80) return fail('A name (under 80 chars) is required', 400)
       if (!EMAIL_RE.test(email) || email.length > 120) return fail('A valid email is required', 400)
-      if (comments.turnstile && turnstileConfigured()) {
+      const { turnstileConfigured } = await getCommentEnv()
+      if (comments.turnstile && turnstileConfigured) {
         if (!(await verifyTurnstile(turnstileToken, ip))) return fail('Verification failed — please try again', 400)
       }
       identity = { name, email, website, provider: 'manual' }

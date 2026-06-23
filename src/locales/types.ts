@@ -297,6 +297,13 @@ export type AdminStrings = {
   commentsGoogleAuth: string
   commentsFacebookAuth: string
   commentsAuthDesc: string
+  commentsKeySite: string
+  commentsKeySecret: string
+  commentsKeyFbId: string
+  commentsKeyFbSecret: string
+  commentsKeySave: string
+  commentsKeySaved: string
+  commentsKeySet: string
   commentsNavTitle: string
   commentsCount: string
   commentsColContent: string

@@ -9,21 +9,27 @@ import type { Provider } from 'next-auth/providers'
 import type { CommentProvider } from '@/types'
 import Google from 'next-auth/providers/google'
 import Facebook from 'next-auth/providers/facebook'
+import { isAuthorized } from '@/lib/auth-shared'
+import { getIntegrationKeys } from '@/lib/integration-keys'
 
-// Normalize for comparison: email is case-insensitive in practice and providers
-// may return a different case / stray whitespace than what's configured.
-const normalizeEmail = (e?: string | null): string => (e ?? '').trim().toLowerCase()
-const AUTHORIZED_EMAIL = normalizeEmail(process.env.AUTHORIZED_EMAIL)
+// Re-export so existing importers (`@/lib/auth`) keep working.
+export { isAuthorized } from '@/lib/auth-shared'
 
-// Each provider loads only when its credentials are configured. Google is the
-// owner's admin sign-in AND a commenter option; Facebook is commenter-only.
-const providers: Provider[] = []
-if (process.env.AUTH_GOOGLE_ID) providers.push(Google)
-if (process.env.AUTH_FACEBOOK_ID) providers.push(Facebook)
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers,
-  callbacks: {
+// Config is a FUNCTION so the commenter providers can read runtime keys: Google
+// from env (it's also the owner's admin sign-in), Facebook from the admin-managed
+// `integration_keys` table (env of the same name is a fallback). This runs in
+// Node only — the edge middleware reads the JWT directly (see middleware.ts), so
+// it never pulls the Supabase client into the edge bundle.
+export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
+  const providers: Provider[] = []
+  if (process.env.AUTH_GOOGLE_ID) providers.push(Google)
+  const { facebookId, facebookSecret } = await getIntegrationKeys()
+  if (facebookId && facebookSecret) {
+    providers.push(Facebook({ clientId: facebookId, clientSecret: facebookSecret }))
+  }
+  return {
+    providers,
+    callbacks: {
     // Persist email + name + which provider onto the JWT so the session can
     // expose a commenter's identity (the comment POST trusts it for OAuth users).
     async jwt({ token, account, profile }) {
@@ -32,19 +38,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (profile?.name) token.name = profile.name
       return token
     },
-    async session({ session, token }) {
-      if (session.user && typeof token.email === 'string') session.user.email = token.email
-      if (session.user && typeof token.name === 'string') session.user.name = token.name
-      if (typeof token.provider === 'string') session.provider = token.provider
-      return session
+      async session({ session, token }) {
+        if (session.user && typeof token.email === 'string') session.user.email = token.email
+        if (session.user && typeof token.name === 'string') session.user.name = token.name
+        if (typeof token.provider === 'string') session.provider = token.provider
+        return session
+      },
     },
-  },
+  }
 })
-
-// True only for the configured owner. Safe to call with a null session.
-export function isAuthorized(email?: string | null): boolean {
-  return AUTHORIZED_EMAIL !== '' && normalizeEmail(email) === AUTHORIZED_EMAIL
-}
 
 // Resolve the signed-in commenter's identity (anyone, not just the owner), or
 // null when logged out. The comment POST trusts this for OAuth comments.
