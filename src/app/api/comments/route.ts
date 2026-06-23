@@ -11,6 +11,7 @@ import { after } from 'next/server'
 import { getCommentTree, addComment, MAX_COMMENT_LEN } from '@/lib/comments'
 import { getPost } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
+import { getCommenter } from '@/lib/auth'
 import { verifyTurnstile, turnstileConfigured } from '@/lib/turnstile'
 import { isPublicallyVisible } from '@/lib/utils'
 import { logActivity } from '@/lib/activity'
@@ -81,30 +82,37 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const postSlug = typeof body.postSlug === 'string' ? body.postSlug.trim() : ''
-    const name = typeof body.name === 'string' ? body.name.trim() : ''
-    const email = typeof body.email === 'string' ? body.email.trim() : ''
     const content = typeof body.content === 'string' ? body.content.trim() : ''
     const parentId = typeof body.parentId === 'number' ? body.parentId : null
-    const website = cleanWebsite(body.website)
     const turnstileToken = typeof body.turnstileToken === 'string' ? body.turnstileToken : ''
 
-    // Validate. Manual identity in Phase A: name + valid email required.
-    if (!name || name.length > 80) return fail('A name (under 80 chars) is required', 400)
-    if (!EMAIL_RE.test(email) || email.length > 120) return fail('A valid email is required', 400)
     if (!content) return fail('Comment cannot be empty', 400)
     if (content.length > MAX_COMMENT_LEN) return fail(`Comment must be under ${MAX_COMMENT_LEN} characters`, 400)
-
-    // Cloudflare Turnstile — enforced only when the owner toggle is on AND the
-    // secret exists (toggling on without keys never locks out commenting).
-    if (comments.turnstile && turnstileConfigured()) {
-      if (!(await verifyTurnstile(turnstileToken, ip))) return fail('Verification failed — please try again', 400)
-    }
 
     // Only accept comments on a published, publicly-visible post.
     const post = await getPost(postSlug)
     if (!post || !isPublicallyVisible(post.status, post.date)) return fail('Post not found', 404)
 
-    const created = await addComment({ postSlug, parentId, name, email, website, provider: 'manual', content })
+    // Identity: a signed-in commenter (Google/Facebook) is TRUSTED — their
+    // name/email/provider come from the session, no Turnstile. Otherwise it's a
+    // manual comment: name + valid email required, Turnstile enforced if on.
+    const commenter = await getCommenter()
+    let identity: { name: string; email: string; website: string; provider: 'manual' | 'google' | 'facebook' }
+    if (commenter) {
+      identity = { name: commenter.name.slice(0, 80), email: commenter.email, website: '', provider: commenter.provider }
+    } else {
+      const name = typeof body.name === 'string' ? body.name.trim() : ''
+      const email = typeof body.email === 'string' ? body.email.trim() : ''
+      const website = cleanWebsite(body.website)
+      if (!name || name.length > 80) return fail('A name (under 80 chars) is required', 400)
+      if (!EMAIL_RE.test(email) || email.length > 120) return fail('A valid email is required', 400)
+      if (comments.turnstile && turnstileConfigured()) {
+        if (!(await verifyTurnstile(turnstileToken, ip))) return fail('Verification failed — please try again', 400)
+      }
+      identity = { name, email, website, provider: 'manual' }
+    }
+
+    const created = await addComment({ postSlug, parentId, ...identity, content })
     after(() => logActivity('comment.create', postSlug))
     logRequest(req, 200, start)
     return ok({ comment: created })

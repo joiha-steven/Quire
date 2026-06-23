@@ -181,6 +181,8 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
                   lang={language}
                   turnstile={settings.comments.turnstile && env.turnstileConfigured}
                   turnstileSiteKey={env.turnstileSiteKey}
+                  googleAuth={settings.comments.googleAuth && env.googleConfigured}
+                  facebookAuth={settings.comments.facebookAuth && env.facebookConfigured}
                 />
               )
             })()}

@@ -43,6 +43,10 @@ const ko = {
   commentCancel: '취소',
   commentDeleted: '[삭제된 댓글]',
   commentError: '댓글을 등록하지 못했습니다. 다시 시도해 주세요.',
+  commentSignInGoogle: 'Google로 로그인',
+  commentSignInFacebook: 'Facebook으로 로그인',
+  commentAs: '댓글 작성자',
+  commentSignOut: '로그아웃',
 } satisfies Dict
 
 export default ko
