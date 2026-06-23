@@ -49,11 +49,14 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset, enabledPalettes, typography, customFont } = await getSettings()
+  const { language, themes, themePreset, enabledPalettes, typography, customFont, motion } = await getSettings()
   const blob = blobOrigin()
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
+  // data-motion is server-rendered from settings (site-wide), so the motion engine
+  // is on/off at first paint — no flash, no client JS. CSS also forces it off under
+  // prefers-reduced-motion. All durations collapse to 0s when off (globals.css).
   return (
-    <html lang={language} className="h-full">
+    <html lang={language} data-motion={motion.enabled ? 'on' : 'off'} className="h-full">
       <body className="min-h-full">
         {/* Preload the Latin Inter subset (needed by almost every page) — no swap flash. */}
         <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />

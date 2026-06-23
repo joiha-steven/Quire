@@ -10,7 +10,7 @@ import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
 import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES } from '@/lib/themes'
 import {
-  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp,
+  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp, sanitizeMotion,
   sanitizeBackups, sanitizeComments, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
 } from '@/lib/settings-sanitize'
 
@@ -103,6 +103,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   features: DEFAULT_FEATURES,
   comments: DEFAULT_COMMENTS,
   mcp: { enabled: false },
+  motion: { enabled: true },
   backups: DEFAULT_BACKUPS,
 }
 
@@ -216,6 +217,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     features: sanitizeFeatures(input.features, current.features),
     comments: sanitizeComments(input.comments, current.comments),
     mcp: sanitizeMcp(input.mcp, current.mcp),
+    motion: sanitizeMotion(input.motion, current.motion),
     backups: sanitizeBackups(input.backups, current.backups),
   }
   // Persist image refs store-relative (collapse); keep `next` absolute for the client.

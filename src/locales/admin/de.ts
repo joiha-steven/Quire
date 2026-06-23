@@ -195,6 +195,8 @@ const de = {
   cardRendering: 'Textdarstellung',
   fontSmoothing: 'Kantenglättung (Anti-Aliasing)',
   fontSmoothingDesc: 'Glättet die Textkanten. Kann auf dem Mac dünner/heller wirken — aus nutzt die Browser-Vorgabe.',
+  motionLabel: 'Bewegung',
+  motionDesc: 'Dezente Animationen auf Website + Admin (Seiten-Fades, Hover/Klick, Scroll-Einblendung). Aus = sofort. Reduced-Motion wird stets beachtet.',
   overviewTitle: 'Übersicht',
   licenseTitle: 'vibeblog ist Open Source (MIT). Deine Blog-Inhalte bleiben dein (alle Rechte vorbehalten).',
   statPosts: 'Beiträge',

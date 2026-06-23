@@ -89,6 +89,19 @@
   `text-heading`, `text-meta`, `text-link`, `border-rule`). Every line/border + faint surface
   (code blocks, hovers, banners) uses `--c-rule`. Admin tooling may stay neutral.
 
+## Motion — one engine, token-gated (HARD RULES)
+
+- **Every transition/animation reads the motion tokens** `--dur-fast/base/slow` + `--ease`
+  (globals.css `:root`). NEVER hardcode a `ms`/`s` duration or an easing in CSS or inline styles.
+- **ONE switch gates ALL motion.** `<html data-motion>` is server-rendered from `settings.motion.enabled`
+  (no flash, no client JS); `:root[data-motion='off']` AND `@media (prefers-reduced-motion: reduce)`
+  zero every `--dur-*`, so everything becomes instant with no per-component branching. Toggle in
+  Admin → Appearance → Rendering. Don't add a second motion gate.
+- **Cheap properties only** (`opacity`/`transform`/colour) so motion never causes CLS or jank; entrance
+  effects must default to fully-visible (e.g. `.reveal` is gated behind `@supports (animation-timeline)`
+  + `data-motion='on'`) so unsupported browsers / motion-off never hide content. Page nav cross-fade =
+  Next `experimental.viewTransition` + `::view-transition-*(root)` CSS (progressive; cuts where unsupported).
+
 ## Scripts — `scripts/`
 
 `node --env-file=.env.local scripts/<name>.mjs [--dry]` — idempotent.

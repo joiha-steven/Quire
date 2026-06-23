@@ -83,6 +83,29 @@
   --fs-small: 0.875rem; --lh-small: 1.55; --ls-small: 0em;
   --fs-caption: 0.8125rem; --lh-caption: 1.5; --ls-caption: 0.003em;
   --fs-code: 0.875rem; --lh-code: 1.6; --ls-code: 0em;
+  /* Motion engine tokens — the ONE source for every transition/animation timing.
+     Subtle + quick (native-app feel, not flashy). Everything references these, so
+     the toggle + reduced-motion (below) collapse all motion by zeroing them. */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1); /* gentle ease-out */
+}
+
+/* ONE switch for all motion. `data-motion="off"` (owner toggle, server-rendered)
+   OR prefers-reduced-motion zeroes every duration → transitions/animations become
+   instant, no per-component branching. Keep this the only place motion is gated. */
+:root[data-motion='off'] {
+  --dur-fast: 0s;
+  --dur-base: 0s;
+  --dur-slow: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0s;
+    --dur-base: 0s;
+    --dur-slow: 0s;
+  }
 }
 :where(.dark) {
   --c-bg: #0e0e0f;
@@ -499,4 +522,68 @@ input[type='color']::-webkit-color-swatch {
 input[type='color']::-moz-color-swatch {
   border: none;
   border-radius: 0.5rem;
+}
+
+/* ===========================================================================
+   Motion engine — behaviour. All timings come from the --dur and --ease tokens,
+   so the data-motion toggle + prefers-reduced-motion (which zero those tokens)
+   turn EVERYTHING here instant with no per-rule branching. Transitions fire only
+   on state change (never on first paint), so this adds no CLS and no render cost.
+   =========================================================================== */
+
+/* Interactive chrome eases its colour/opacity/transform changes (hover, focus,
+   theme swap, press). Element selectors only, so Tailwind transition-* utilities
+   on a component still win where set. */
+a,
+button,
+summary,
+[role='button'],
+input,
+select,
+textarea {
+  transition:
+    color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    opacity var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+/* Tactile press feedback on buttons (not links/inputs) — a tiny, quick squash. */
+button:not(:disabled):active,
+[role='button']:not([aria-disabled='true']):active {
+  transform: scale(0.97);
+}
+
+/* Cross-fade page navigations (Next View Transitions). Tied to the same tokens,
+   so it's instant when motion is off / reduced. Unsupported browsers just cut. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease);
+}
+
+/* Scroll-reveal: content eases in as it enters the viewport. Pure CSS (compositor,
+   off main-thread). GUARDED so it only ever HIDES content where it can also reveal
+   it: needs scroll-timeline support, motion on, and no reduced-motion preference —
+   otherwise `.reveal` is just a normal, fully-visible element (no blank state). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    :root[data-motion='on'] .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

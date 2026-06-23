@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
   // left static routes on the ~5min default. 30 is the lowest value Next accepts.
   experimental: {
     staleTimes: { dynamic: 0, static: 30 },
+    // Cross-fade client navigations via the View Transitions API (CSS-only, tied to
+    // the motion tokens in globals.css). Progressive: browsers without support just
+    // cut as before. No render-blocking, no added client bundle.
+    viewTransition: true,
   },
   // Baseline security headers on every route. HSTS is added by Vercel; these
   // cover clickjacking, MIME sniffing, referrer leakage, and feature access.

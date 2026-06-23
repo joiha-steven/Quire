@@ -195,6 +195,8 @@ const ko = {
   cardRendering: '텍스트 렌더링',
   fontSmoothing: '글꼴 스무딩(안티앨리어싱)',
   fontSmoothingDesc: '글자 가장자리를 부드럽게 합니다. Mac에서는 더 얇게/연하게 보일 수 있습니다 — 끄면 브라우저 기본값.',
+  motionLabel: '모션',
+  motionDesc: '사이트와 관리자 전반의 은은한 애니메이션(페이지 페이드, 호버/누름, 스크롤 표시). 끄면 즉시. reduced-motion은 항상 존중합니다.',
   overviewTitle: '개요',
   licenseTitle: 'vibeblog은 오픈소스(MIT)입니다. 블로그 내용은 작성자 소유입니다(모든 권리 보유).',
   statPosts: '게시물',

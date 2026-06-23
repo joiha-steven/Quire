@@ -280,6 +280,8 @@ export type AdminStrings = {
   cardRendering: string
   fontSmoothing: string
   fontSmoothingDesc: string
+  motionLabel: string
+  motionDesc: string
   // overview
   overviewTitle: string
   licenseTitle: string

@@ -185,6 +185,7 @@ export type SiteSettings = {
   features: FeatureSettings // reader-facing feature toggles
   comments: CommentSettings // reader comment system (off by default)
   mcp: McpSettings // MCP server toggle (tokens are managed separately)
+  motion: MotionSettings // site-wide motion/animation engine toggle
   backups: BackupSettings // Google Drive backup config (secrets live in backup_state)
 }
 
@@ -234,6 +235,12 @@ export type AdminComment = {
 // `mcp_tokens` table (hashed), managed from Admin → Settings → Advanced.
 export type McpSettings = {
   enabled: boolean // when false, /api/mcp + the OAuth flow are disabled
+}
+
+// Motion engine: ONE site-wide switch for all UI animation (public + admin). When
+// off (or under prefers-reduced-motion) every motion duration collapses to 0s.
+export type MotionSettings = {
+  enabled: boolean
 }
 
 // Google Drive backup config (non-secret, lives in settings.data). The Drive
