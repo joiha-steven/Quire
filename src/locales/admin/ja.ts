@@ -237,7 +237,7 @@ const ja = {
   featSearch: '検索',
   featSearchDesc: 'ヘッダーの検索アイコンと /search ページ。',
   featToc: '目次',
-  featTocDesc: '見出しが3つ以上の記事に左側の目次（デスクトップ）を表示。',
+  featTocDesc: '見出しが3つ以上の記事に左側の見出しパネルを表示。モバイルでは端のタブに格納。',
   featRelated: '関連記事',
   featRelatedDesc: '記事の末尾に同じタグ/カテゴリーの記事を提案。',
   featReadingTime: '読了時間',

@@ -20,7 +20,7 @@ const ja = {
   searchPlaceholder: '投稿を検索...',
   searchHint: 'キーワードを入力して投稿を検索します。',
   searchEmpty: '一致する投稿が見つかりません。',
-  tocTitle: '目次',
+  tocTitle: '見出し',
   relatedTitle: '関連記事',
   notFoundTitle: 'ページが見つかりません',
   notFoundText: 'お探しのページは存在しないか、移動されました。',

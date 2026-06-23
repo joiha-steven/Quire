@@ -237,7 +237,7 @@ const en = {
   featSearch: 'Search',
   featSearchDesc: 'Search icon in the header and the /search page.',
   featToc: 'Table of contents',
-  featTocDesc: 'Left-side ToC (desktop) for posts with 3+ headings.',
+  featTocDesc: 'Left-side headings panel for posts with 3+ headings; collapsible behind an edge tab on mobile.',
   featRelated: 'Related posts',
   featRelatedDesc: 'Suggests posts sharing tags/categories at the end.',
   featReadingTime: 'Reading time',

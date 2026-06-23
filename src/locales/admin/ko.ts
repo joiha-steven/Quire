@@ -237,7 +237,7 @@ const ko = {
   featSearch: '검색',
   featSearchDesc: '헤더의 검색 아이콘과 /search 페이지.',
   featToc: '목차',
-  featTocDesc: '제목이 3개 이상인 게시물에 왼쪽 목차 표시(데스크톱).',
+  featTocDesc: '제목이 3개 이상인 게시물에 왼쪽 제목 패널 표시; 모바일에서는 가장자리 탭에 접힘.',
   featRelated: '관련 게시물',
   featRelatedDesc: '게시물 끝에 같은 태그/카테고리의 글을 추천합니다.',
   featReadingTime: '읽기 시간',
