@@ -94,6 +94,11 @@
   (post/page CRUD, media/file/icon/font, settings, taxonomy, cache.clear, backup.*). Gated by
   `features.activityLog`. Admin → Log (force-dynamic, latest 200, Clear). **Adding a mutating
   route → log it too.**
+- **Error log (same table):** `logError` (`lib/api.ts`) — called from every route catch — also
+  schedules `after(() => logActivityError("METHOD /path", message))`, recording an `error`-action
+  entry (gated by the same toggle). So unexpected server failures show up in the log, rendered with
+  a red badge in `ActivityLog.tsx`. Only genuine errors land here (validation 400s use `fail()`, not
+  `logError`).
 - **Overview (`Overview.tsx`):** stat cards — **Posts / Pages / Comments / Images / Storage**
   (each links to its section; Comments = sum of `countsByPosts()` when comments are on) — then a
   **Quick actions** row, a **Recent activity** card (latest 6 from `getActivity`, gated by

@@ -24,6 +24,8 @@ export type ActivityAction =
   | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
   // Reader comments (create is public; restore/purge from the admin Trash).
   | 'comment.create' | 'comment.delete' | 'comment.restore' | 'comment.purge'
+  // Server errors (unexpected failures from API routes) — the error log.
+  | 'error'
 
 export type ActivityEntry = {
   id: number
@@ -40,6 +42,18 @@ export async function logActivity(action: ActivityAction, detail = ''): Promise<
     await db().from('activity_log').insert({ action, detail: detail.slice(0, 500) })
   } catch (error) {
     console.error(`[ERROR] activity.logActivity(${action}): ${(error as Error).message}`)
+  }
+}
+
+// Record an unexpected server error as an `error` entry (the error log). Gated by
+// the same toggle; never throws. `context` is e.g. "POST /api/posts/foo".
+export async function logActivityError(context: string, message: string): Promise<void> {
+  try {
+    const { features } = await getSettings()
+    if (!features.activityLog) return
+    await db().from('activity_log').insert({ action: 'error', detail: `${context} — ${message}`.slice(0, 500) })
+  } catch (error) {
+    console.error(`[ERROR] activity.logActivityError: ${(error as Error).message}`)
   }
 }
 
