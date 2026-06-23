@@ -1,13 +1,15 @@
 # CHANGELOG
 
-## 2026-06-23 (v1.1.0-beta — ToC panel: "Tiêu đề", in-page jumps, mobile slide-out)
+## 2026-06-23 (v1.1.0-beta — ToC panel: "Tiêu đề", combined jump, collapsible everywhere)
 - **feat(blog): the post ToC is reworked.** Its title is now **"Tiêu đề"** (Headings) instead of
   "Mục lục"/"Contents" in all 6 locales, and **clicking the title scrolls back to the top**. Under
-  the heading list it now links to the **in-page tags / categories / comments** (scroll-only, via a
-  shared `TOC_ANCHORS` map + `scroll-mt-24` targets on those blocks). Desktop keeps the left-pinned,
-  always-visible panel; **mobile now gets it too** — hidden by default behind a left-edge tab that
-  slides the panel out over the content. The panel now has a solid `bg-bg` background (+ shadow on
-  mobile) so it always sits cleanly over the content instead of letting text show through. `v1.1.0-beta`.
+  the headings, **one line** joins the present **tags / categories / comments** labels and jumps to
+  the first existing section (scroll-only, via a shared `TOC_ANCHORS` map + `scroll-mt-24` targets).
+  The panel is now **collapsible on every viewport** from a **text-free left-edge handle** (the tab
+  shape speaks for itself): default **open + pinned on desktop**, default **closed on mobile**
+  (outside-tap / Escape dismiss). It renders **nothing when the post has no headings**, has a solid
+  `bg-bg` background so it never shows content through, and mobile gains a touch more side margin
+  (`px-6`). `v1.1.0-beta`.
 
 ## 2026-06-23 (v1.1.0-beta — comment integrations: setup help + links in the admin)
 - **feat(admin): each comment integration now shows a one-line setup guide + a link.** Turnstile →

@@ -30,11 +30,13 @@
   `searchPosts` `.textSearch('search', …, {config:'simple'})`). **NOTE:** `simple` is accent-
   *sensitive* — accent-insensitivity comes from the local layer only. Header search =
   `SearchOverlay` (modal); the `/search` route stays for deep links / no-JS.
-- Post page: `ReadingProgress`, `BackToTop`, `Toc` (≥3 H2/H3; title click scrolls to top;
-  under the headings it links to the in-page tags/categories/comments via `TOC_ANCHORS`;
-  left-pinned + always visible on desktop, hidden behind a left-edge tab + slide-out on
-  mobile; solid `bg-bg` so it never shows content through; `PostContent` assigns slug ids),
-  `RelatedPosts` (`getRelatedPosts`: shared tags ×2 + categories).
+- Post page: `ReadingProgress`, `BackToTop`, `Toc` (≥3 H2/H3 — also `return null` if no
+  headings; title click scrolls to top; ONE line under the headings joins the present
+  tags/categories/comments labels and jumps to the first existing section via `TOC_ANCHORS`;
+  collapsible on every viewport from a text-free left-edge handle — default open + pinned on
+  desktop (xl+), default closed + outside-tap/Escape-dismissable on mobile; solid `bg-bg` so it
+  never shows content through; `PostContent` assigns slug ids), `RelatedPosts`
+  (`getRelatedPosts`: shared tags ×2 + categories).
 - **GOTCHA:** the global unlayered `hr { margin:0 }` beats Tailwind margin utilities — put
   divider spacing on a wrapper div, not on the `<hr>`.
 - **Heading ids are de-duped** (2nd `foo` → `foo-2`): `dedupeHeadingIds` (PostContent) and
