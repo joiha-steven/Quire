@@ -494,13 +494,13 @@ hr {
    the dot colour is a fixed faint neutral per mode (NOT a public theme token). */
 .admin-canvas {
   background-color: #fafafa; /* neutral-50 */
-  background-image: radial-gradient(rgba(0, 0, 0, 0.13) 1.2px, transparent 1.2px);
-  background-size: 22px 22px;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.11) 1.2px, transparent 1.2px);
+  background-size: 15px 15px;
   background-position: -1px -1px;
 }
 .dark .admin-canvas {
   background-color: #0a0a0a; /* neutral-950 */
-  background-image: radial-gradient(rgba(255, 255, 255, 0.11) 1.2px, transparent 1.2px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
 }
 
 /* Native colour picker (admin theme): strip the default inner padding/border so
