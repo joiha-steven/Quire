@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { PublicComment, SiteLang } from '@/types'
 import { t, formatDate } from '@/lib/i18n'
+import { Turnstile } from './Turnstile'
 
 const MAX = 1000
 const MAX_DEPTH = 2
@@ -22,7 +23,17 @@ function countVisible(nodes: PublicComment[]): number {
 const inputClass =
   't-small w-full rounded-lg border border-rule bg-bg px-3 py-2 text-text outline-none focus:border-heading'
 
-export function Comments({ postSlug, lang }: { postSlug: string; lang: SiteLang }) {
+export function Comments({
+  postSlug,
+  lang,
+  turnstile = false,
+  turnstileSiteKey = '',
+}: {
+  postSlug: string
+  lang: SiteLang
+  turnstile?: boolean
+  turnstileSiteKey?: string
+}) {
   const s = t(lang)
   const [comments, setComments] = useState<PublicComment[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -57,11 +68,11 @@ export function Comments({ postSlug, lang }: { postSlug: string; lang: SiteLang 
 
   // POST a comment; on success refetch the tree and close any reply form.
   const submit = useCallback(
-    async (parentId: number | null, draft: Draft): Promise<boolean> => {
+    async (parentId: number | null, draft: Draft, token: string | null): Promise<boolean> => {
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ postSlug, parentId, ...draft }),
+        body: JSON.stringify({ postSlug, parentId, ...draft, turnstileToken: token }),
       }).catch(() => null)
       if (!res || !res.ok) return false
       const json = await res.json().catch(() => null)
@@ -83,7 +94,12 @@ export function Comments({ postSlug, lang }: { postSlug: string; lang: SiteLang 
       </h2>
 
       <div className="mt-5">
-        <CommentForm lang={lang} onSubmit={(d) => submit(null, d)} />
+        <CommentForm
+          lang={lang}
+          onSubmit={(d, tok) => submit(null, d, tok)}
+          turnstile={turnstile}
+          turnstileSiteKey={turnstileSiteKey}
+        />
       </div>
 
       {loaded && comments.length === 0 ? (
@@ -99,6 +115,8 @@ export function Comments({ postSlug, lang }: { postSlug: string; lang: SiteLang 
               replyTo={replyTo}
               setReplyTo={setReplyTo}
               onReply={submit}
+              turnstile={turnstile}
+              turnstileSiteKey={turnstileSiteKey}
             />
           ))}
         </ul>
@@ -114,13 +132,17 @@ function CommentNode({
   replyTo,
   setReplyTo,
   onReply,
+  turnstile,
+  turnstileSiteKey,
 }: {
   comment: PublicComment
   depth: number
   lang: SiteLang
   replyTo: number | null
   setReplyTo: (id: number | null) => void
-  onReply: (parentId: number, draft: Draft) => Promise<boolean>
+  onReply: (parentId: number, draft: Draft, token: string | null) => Promise<boolean>
+  turnstile: boolean
+  turnstileSiteKey: string
 }) {
   const s = t(lang)
   const canReply = depth < MAX_DEPTH
@@ -162,7 +184,13 @@ function CommentNode({
 
       {replyTo === comment.id && canReply && (
         <div className="mt-3">
-          <CommentForm lang={lang} onSubmit={(d) => onReply(comment.id, d)} autoFocus />
+          <CommentForm
+            lang={lang}
+            onSubmit={(d, tok) => onReply(comment.id, d, tok)}
+            turnstile={turnstile}
+            turnstileSiteKey={turnstileSiteKey}
+            autoFocus
+          />
         </div>
       )}
 
@@ -177,6 +205,8 @@ function CommentNode({
               replyTo={replyTo}
               setReplyTo={setReplyTo}
               onReply={onReply}
+              turnstile={turnstile}
+              turnstileSiteKey={turnstileSiteKey}
             />
           ))}
         </ul>
@@ -188,29 +218,44 @@ function CommentNode({
 function CommentForm({
   lang,
   onSubmit,
+  turnstile,
+  turnstileSiteKey,
   autoFocus,
 }: {
   lang: SiteLang
-  onSubmit: (draft: Draft) => Promise<boolean>
+  onSubmit: (draft: Draft, token: string | null) => Promise<boolean>
+  turnstile: boolean
+  turnstileSiteKey: string
   autoFocus?: boolean
 }) {
   const s = t(lang)
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
   const set = (k: keyof Draft, v: string) => setDraft((d) => ({ ...d, [k]: v }))
+  const onToken = useCallback((tk: string | null) => setToken(tk), [])
 
-  const valid = draft.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()) && draft.content.trim()
+  // Turnstile (when on) must be solved before the content step — and identity
+  // must be filled first so the gate is meaningful.
+  const showWidget = turnstile && !!turnstileSiteKey
+  const identityOk = draft.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())
+  const gateOpen = !showWidget || !!token
+  const valid = identityOk && draft.content.trim() && gateOpen
 
   async function handle(e: React.FormEvent) {
     e.preventDefault()
     if (!valid || busy) return
     setBusy(true)
     setError(false)
-    const okied = await onSubmit({ ...draft, content: draft.content.slice(0, MAX) })
+    const okied = await onSubmit({ ...draft, content: draft.content.slice(0, MAX) }, token)
     setBusy(false)
-    if (okied) setDraft(EMPTY)
-    else setError(true)
+    if (okied) {
+      setDraft(EMPTY)
+      setToken(null) // tokens are single-use — force a fresh solve for the next one
+    } else {
+      setError(true)
+    }
   }
 
   return (
@@ -239,24 +284,33 @@ function CommentForm({
           onChange={(e) => set('website', e.target.value)}
         />
       </div>
-      <textarea
-        className={`${inputClass} min-h-[6rem] resize-y`}
-        placeholder={s.commentBody}
-        value={draft.content}
-        onChange={(e) => set('content', e.target.value.slice(0, MAX))}
-      />
-      <div className="flex items-center justify-between gap-3">
-        <span className="t-small text-meta">
-          {s.commentFormatHint} · {draft.content.length}/{MAX}
-        </span>
-        <button
-          type="submit"
-          disabled={!valid || busy}
-          className="t-small rounded-lg border border-heading bg-heading px-4 py-2 font-medium text-bg transition-opacity disabled:opacity-40"
-        >
-          {busy ? s.commentSubmitting : s.commentSubmit}
-        </button>
-      </div>
+
+      {/* Gate: with Turnstile on, the widget appears once identity is filled and
+          must be solved before the comment box is shown. */}
+      {showWidget && !gateOpen ? (
+        identityOk && <Turnstile siteKey={turnstileSiteKey} onToken={onToken} />
+      ) : (
+        <>
+          <textarea
+            className={`${inputClass} min-h-[6rem] resize-y`}
+            placeholder={s.commentBody}
+            value={draft.content}
+            onChange={(e) => set('content', e.target.value.slice(0, MAX))}
+          />
+          <div className="flex items-center justify-between gap-3">
+            <span className="t-small text-meta">
+              {s.commentFormatHint} · {draft.content.length}/{MAX}
+            </span>
+            <button
+              type="submit"
+              disabled={!valid || busy}
+              className="t-small rounded-lg border border-heading bg-heading px-4 py-2 font-medium text-bg transition-opacity disabled:opacity-40"
+            >
+              {busy ? s.commentSubmitting : s.commentSubmit}
+            </button>
+          </div>
+        </>
+      )}
       {error && <p className="t-small text-meta">{s.commentError}</p>}
     </form>
   )

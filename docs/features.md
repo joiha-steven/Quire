@@ -100,9 +100,9 @@
 
 ## Comments — `lib/comments.ts`, `components/blog/Comments.tsx`
 
-Text-only reader comments, **off by default** (`settings.comments.enabled`). Phase A ships manual
-identity (name + email + optional website); Turnstile + Google/Facebook login are later phases
-(the `CommentSettings` flags `turnstile`/`googleAuth`/`facebookAuth` already exist, unused in A).
+Text-only reader comments, **off by default** (`settings.comments.enabled`). Manual identity
+(name + email + optional website) + optional Cloudflare Turnstile; Google/Facebook login is a later
+phase (the `CommentSettings.facebookAuth`/`googleAuth` flags exist, unused until then).
 
 - **Instant, never cached — by design.** The post page stays ISR/static; the comment block is a
   CLIENT island (`Comments.tsx`) that fetches `/api/comments?post=<slug>` with `no-store`. The
@@ -126,6 +126,13 @@ identity (name + email + optional website); Turnstile + Google/Facebook login ar
   Comments tab). `/admin/content` posts table gains a comment-count column when enabled
   (`countsByPosts`).
 - **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
-  (6/min). Real spam protection arrives with Turnstile (Phase B).
+  (6/min).
+- **Cloudflare Turnstile (`lib/turnstile.ts`, `Turnstile.tsx`).** Toggle `settings.comments.turnstile`;
+  **enforced only when the toggle is on AND `TURNSTILE_SECRET_KEY` exists** (`turnstileConfigured()`),
+  so toggling on without keys never locks out commenting (the admin row shows a "needs env key"
+  badge — `getCommentEnv()` reports presence; the SITE key is public and passed to the widget). The
+  manual form gates the comment box **behind the Turnstile pass** (widget appears once name/email are
+  filled). The POST verifies the token server-side via siteverify (fail closed). Tokens are
+  single-use → the form re-arms after each post.
 - **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
   (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.

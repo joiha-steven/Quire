@@ -287,6 +287,9 @@ export type AdminStrings = {
   cardComments: string
   commentsEnable: string
   commentsEnableDesc: string
+  commentsTurnstile: string
+  commentsTurnstileDesc: string
+  commentsNeedsKey: string
   commentsNavTitle: string
   commentsCount: string
   commentsColContent: string

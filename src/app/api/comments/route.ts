@@ -11,6 +11,7 @@ import { after } from 'next/server'
 import { getCommentTree, addComment, MAX_COMMENT_LEN } from '@/lib/comments'
 import { getPost } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
+import { verifyTurnstile, turnstileConfigured } from '@/lib/turnstile'
 import { isPublicallyVisible } from '@/lib/utils'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError } from '@/lib/api'
@@ -85,12 +86,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     const content = typeof body.content === 'string' ? body.content.trim() : ''
     const parentId = typeof body.parentId === 'number' ? body.parentId : null
     const website = cleanWebsite(body.website)
+    const turnstileToken = typeof body.turnstileToken === 'string' ? body.turnstileToken : ''
 
     // Validate. Manual identity in Phase A: name + valid email required.
     if (!name || name.length > 80) return fail('A name (under 80 chars) is required', 400)
     if (!EMAIL_RE.test(email) || email.length > 120) return fail('A valid email is required', 400)
     if (!content) return fail('Comment cannot be empty', 400)
     if (content.length > MAX_COMMENT_LEN) return fail(`Comment must be under ${MAX_COMMENT_LEN} characters`, 400)
+
+    // Cloudflare Turnstile — enforced only when the owner toggle is on AND the
+    // secret exists (toggling on without keys never locks out commenting).
+    if (comments.turnstile && turnstileConfigured()) {
+      if (!(await verifyTurnstile(turnstileToken, ip))) return fail('Verification failed — please try again', 400)
+    }
 
     // Only accept comments on a published, publicly-visible post.
     const post = await getPost(postSlug)

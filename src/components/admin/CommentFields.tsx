@@ -1,18 +1,24 @@
 'use client'
 
-// Controlled comment-system toggles. Parent owns state + save. Phase A ships the
-// master on/off switch; Turnstile + Google/Facebook login toggles are added later.
+// Controlled comment-system toggles. Parent owns state + save. The master switch
+// is always shown; the integration toggles (Turnstile, Google/Facebook login)
+// appear once comments are on. Each integration is only EFFECTIVE when its env
+// keys exist (`env`); the row shows a "needs key" badge otherwise.
 import type { CommentSettings } from '@/types'
+import type { CommentEnv } from '@/lib/comment-env'
 import { ToggleRow } from '@/components/ui/Switch'
 import { useAdminT } from './I18nProvider'
 
 type Props = {
   comments: CommentSettings
+  env: CommentEnv
   onChange: (c: CommentSettings) => void
 }
 
-export function CommentFields({ comments, onChange }: Props) {
+export function CommentFields({ comments, env, onChange }: Props) {
   const t = useAdminT()
+  // Flag a toggle whose env keys are missing (so it won't actually take effect).
+  const needsKey = (on: boolean, configured: boolean) => (on && !configured ? t.commentsNeedsKey : undefined)
   return (
     <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       <ToggleRow
@@ -21,6 +27,15 @@ export function CommentFields({ comments, onChange }: Props) {
         checked={comments.enabled}
         onChange={(enabled) => onChange({ ...comments, enabled })}
       />
+      {comments.enabled && (
+        <ToggleRow
+          label={t.commentsTurnstile}
+          desc={t.commentsTurnstileDesc}
+          badge={needsKey(comments.turnstile, env.turnstileConfigured)}
+          checked={comments.turnstile}
+          onChange={(turnstile) => onChange({ ...comments, turnstile })}
+        />
+      )}
     </div>
   )
 }
