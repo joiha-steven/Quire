@@ -21,7 +21,6 @@ import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { Comments } from '@/components/blog/Comments'
 import { getCommentEnv } from '@/lib/comment-env'
-import { countsByPosts } from '@/lib/comments'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
 
@@ -106,14 +105,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
     // ONE in-page jump under the ToC headings: the present section labels joined
-    // (Tags / Categories / Comments (N)), scrolling to the first section that exists.
-    // The comment count is server-rendered (count as of this render).
+    // (Tags / Categories / Comments), scrolling to the first section that exists.
     const tx = t(language)
-    const commentCount = showComments ? (await countsByPosts())[post.slug] ?? 0 : 0
     const metaParts = [
       post.tags.length > 0 ? tx.tagLabel : null,
       post.categories.length > 0 ? tx.categoryLabel : null,
-      showComments ? (commentCount > 0 ? `${tx.commentsHeading} (${commentCount})` : tx.commentsHeading) : null,
+      showComments ? tx.commentsHeading : null,
     ].filter((p): p is string => p !== null)
     const metaAnchor = post.tags.length > 0
       ? TOC_ANCHORS.tags
