@@ -31,7 +31,8 @@
   *sensitive* — accent-insensitivity comes from the local layer only. Header search =
   `SearchOverlay` (modal); the `/search` route stays for deep links / no-JS.
 - Post page: `ReadingProgress`, `BackToTop`, `Toc`, `RelatedPosts` (`getRelatedPosts`: shared
-  tags ×2 + categories).
+  tags ×2 + categories). Blog routes show a themed skeleton while loading (`(blog)/loading.tsx` +
+  `.skeleton`, motion-engine-gated).
 - `Toc` shows whenever a post has headings OR an in-page jump (`showToc` in the page; renders
   nothing otherwise). Header: clickable **"Tiêu đề"** (`tocTitle`) that scrolls to top when there
   ARE headings, else a plain non-clickable **"Mục lục"** (`tocIndex`). One line under it joins the
@@ -141,11 +142,13 @@ manual (name + email + optional website, optionally behind Cloudflare Turnstile)
 Google/Facebook account.
 
 - **Instant, never cached — by design.** The post page stays ISR/static; the comment block is a
-  CLIENT island (`Comments.tsx`) that fetches `/api/comments?post=<slug>` with `no-store`. The
-  route sets `fetchCache = 'force-no-store'` so its DB read is LIVE. A new comment is POSTed, then
-  the island REFETCHES (authoritative, no optimistic reconciliation). **No `revalidatePath` ever
-  runs for a comment** — so commenting never touches the ISR/`revalidate.ts` path. The live count
-  on the page comes from the same fetch, so it can't go stale.
+  CLIENT island (`Comments.tsx`; the composer + sign-in buttons live in `CommentForm.tsx`) that
+  fetches `/api/comments?post=<slug>` with `no-store`. The route sets `fetchCache = 'force-no-store'`
+  so its DB read is LIVE. A new comment is POSTed and shown **optimistically** — rendered with the
+  SAME `renderCommentMarkdown` the server uses (no content drift) and overlaid via
+  `mergeOptimisticComments` (`lib/comment-tree.ts`, tested) — then an authoritative REFETCH replaces
+  it and clears the overlay (a failed POST removes the optimistic comment + shows the error). **No
+  `revalidatePath` ever runs for a comment.** The live count comes from the same fetch + overlay.
 - **Limited markdown (`comment-md.ts`):** only `**bold**` / `*italic*`. The source is HTML-escaped
   FIRST, then only `<strong>/<em>/<br>` are injected — no user tag, link, image, or script survives
   (mirrors Invariant 5). Hard cap 1000 chars (server + client).
