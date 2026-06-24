@@ -39,10 +39,11 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Writable dirs for the unprivileged node user: the binary store, and the ISR
-# incremental cache (standalone copies .next/static as root, but never ships
-# .next/cache — Next creates it at runtime and must be able to write there).
-RUN mkdir -p /app/uploads /app/.next/cache && chown -R node:node /app/uploads /app/.next/cache
+# Writable dirs for the unprivileged node user: the binary store, and the whole
+# .next tree. Next 16 writes its prerender/segment cache under .next/server/app/*
+# (not just .next/cache) at runtime, but standalone copies .next as root — so the
+# runtime user must own all of .next, else ISR revalidation fails with EACCES.
+RUN mkdir -p /app/uploads /app/.next/cache && chown -R node:node /app/uploads /app/.next
 USER node
 
 EXPOSE 3000

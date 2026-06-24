@@ -1,6 +1,18 @@
 # CHANGELOG
 
-## v1.1.8 — 2026-06-23
+## v1.1.9 — 2026-06-24 (Docker self-host: fix fresh-install file permissions)
+- **fix(docker): media uploads + ISR cache now work on a fresh self-host install.** The image runs
+  as the unprivileged `node` user (uid 1000), but two paths were root-owned and unwritable, so a
+  clean `docker compose up` failed at runtime:
+  - **ISR/prerender cache** — Next 16 writes its segment cache under `.next/server/app/*` (not just
+    `.next/cache`); the Dockerfile only chowned `.next/cache`, so revalidation failed with `EACCES`.
+    Now `chown`s the whole `/app/.next` tree.
+  - **Uploaded binaries** — Docker creates the `./data/uploads` bind mount as root, shadowing the
+    image's chown, so posting an image/file failed with `EACCES`. Added a one-shot `init-uploads`
+    service that fixes ownership (uid 1000) before the app starts.
+- **chore: keep the bundled Docker stack's `./data/` out of git and lint.** Added `/data/` to
+  `.gitignore` and `data/**` to the ESLint ignores so a `docker compose up` (which writes
+  root-owned Postgres data there) no longer dirties the tree or breaks `npm run lint`.
 - **Admin dotted-grid starts cleanly from the top-left edge** — one full gap of clear space before the
   first dot (`background-position` `-1px -1px` → `7.5px 7.5px`), no more dot crammed into the corner.
 

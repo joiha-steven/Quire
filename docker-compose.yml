@@ -47,6 +47,17 @@ services:
       PGRST_DB_ANON_ROLE: anon
     restart: unless-stopped
 
+  # One-shot: make the bind-mounted uploads dir writable by the app's `node` user
+  # (uid 1000). Docker creates host bind-mounts as root, shadowing the image's
+  # chown, so without this media uploads fail with EACCES. Runs as root, fixes
+  # ownership, exits; the app waits for it to complete.
+  init-uploads:
+    image: alpine:3.20
+    volumes:
+      - ./data/uploads:/uploads
+    entrypoint: ["/bin/sh", "-c", "chown -R 1000:1000 /uploads"]
+    restart: "no"
+
   # The Next.js app. SUPABASE_URL points at the bundled PostgREST; POSTGREST_DIRECT
   # makes db.ts strip the `/rest/v1` path prefix so supabase-js works unchanged.
   app:
@@ -57,6 +68,8 @@ services:
         condition: service_healthy
       rest:
         condition: service_started
+      init-uploads:
+        condition: service_completed_successfully
     env_file: .env.docker
     environment:
       SUPABASE_URL: http://rest:3000
