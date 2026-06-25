@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { ActivityEntry } from '@/lib/activity'
 import { formatBytes, formatDateTimeShort } from '@/lib/utils'
 import { Card, PageHeader, StatCard } from './kit'
+import { DashboardWidgets, type DashboardData } from './DashboardWidgets'
 import { useAdminT } from './I18nProvider'
 
 type Taxo = { name: string; count: number }
@@ -49,6 +50,7 @@ type Props = {
   activityEnabled: boolean
   version: string
   system: SystemInfo
+  dashboard: DashboardData
 }
 
 function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty: string }) {
@@ -180,7 +182,7 @@ function SystemCard({ system }: { system: SystemInfo }) {
 
 export function Overview({
   posts, pages, comments, originals, variants, files, totalBytes,
-  categories, tags, recent, activityEnabled, version, system,
+  categories, tags, recent, activityEnabled, version, system, dashboard,
 }: Props) {
   const t = useAdminT()
   return (
@@ -209,6 +211,8 @@ export function Overview({
         <StatCard label={t.statMedia} value={originals} sub={`${variants} ${t.statVariants} · ${files} ${t.statFiles}`} href="/admin/media" />
         <StatCard label={t.statStorage} value={formatBytes(totalBytes)} />
       </div>
+
+      <DashboardWidgets data={dashboard} />
 
       <QuickActions />
 
