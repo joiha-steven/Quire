@@ -163,6 +163,9 @@ export type AdminStrings = {
   tabImages: string
   tabFiles: string
   mediaTitle: string
+  galleryPickTitle: string
+  galleryPickHint: string
+  galleryAdd: string
   copyUrl: string
   download: string
   downloadOriginal: string

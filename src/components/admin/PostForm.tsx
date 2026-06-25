@@ -179,17 +179,17 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
     if (okSaved) notify(successMsg)
   }
 
+  // Single pick (image / featured). Gallery uses multi-select -> onPickedMany.
   function onPicked(url: string) {
-    if (picker === 'featured') {
-      update({ featuredImage: url })
-      setPicker(null)
-    } else if (picker === 'gallery') {
-      // Keep the picker open so several images can be added to one gallery in a row.
-      editorApi.current?.insertGallery(url)
-    } else {
-      editorApi.current?.insertImage(url)
-      setPicker(null)
-    }
+    if (picker === 'featured') update({ featuredImage: url })
+    else editorApi.current?.insertImage(url)
+    setPicker(null)
+  }
+
+  // Gallery: insert every chosen image as a #grid item (they group into a grid).
+  function onPickedMany(urls: string[]) {
+    urls.forEach((u) => editorApi.current?.insertGallery(u))
+    setPicker(null)
   }
 
   // Load an overwritten version back into the editor (slug + date stay current).
@@ -290,7 +290,13 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
       </div>
 
       {picker && (
-        <MediaLibrary mode="picker" onSelect={onPicked} onClose={() => setPicker(null)} />
+        <MediaLibrary
+          mode="picker"
+          multi={picker === 'gallery'}
+          onSelect={onPicked}
+          onSelectMany={onPickedMany}
+          onClose={() => setPicker(null)}
+        />
       )}
 
       {timeMachine && savedSlug && (
