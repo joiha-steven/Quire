@@ -1,5 +1,6 @@
-// Admin home: at-a-glance stats (posts, pages, media, storage, taxonomy, version)
-// plus a System panel (hosting/region/env/commit, database + storage).
+// Admin home: at-a-glance stats (posts, pages, media, storage, taxonomy, version),
+// dashboard widgets (30-day traffic, most-viewed posts, needs-attention), and a
+// System panel (hosting/region/env/commit, database + storage).
 import pkg from '../../../package.json'
 import { getIndex } from '@/lib/posts'
 import { getPageIndex } from '@/lib/pages'
@@ -8,8 +9,11 @@ import { getSettings } from '@/lib/settings'
 import { getBackupState } from '@/lib/backup-state'
 import { countsByPosts } from '@/lib/comments'
 import { getActivity } from '@/lib/activity'
+import { getAnalytics, getViewTotals } from '@/lib/analytics'
+import { findUnusedMedia } from '@/lib/media-usage'
 import { db } from '@/lib/db'
 import { Overview, type SystemInfo } from '@/components/admin/Overview'
+import type { DashboardData } from '@/components/admin/DashboardWidgets'
 
 // Gather the running-system facts shown in the Overview "System" panel. Best-effort:
 // a DB hiccup just flips the status flag, it never breaks the dashboard. Each fact
@@ -78,15 +82,43 @@ export default async function AdminHome() {
   const settings = await getSettings()
   const commentsOn = settings.comments.enabled
   const activityOn = settings.features.activityLog
-  const [posts, pages, blobs, system, commentCounts, recent] = await Promise.all([
+  const [posts, pages, blobs, system, commentCounts, recent, analytics30, viewTotals, unusedMedia] = await Promise.all([
     getIndex(),
     getPageIndex(),
     listBlobs(),
     getSystemInfo(),
     commentsOn ? countsByPosts() : Promise.resolve({} as Record<string, number>),
     activityOn ? getActivity(6) : Promise.resolve([]),
+    getAnalytics(30, 'day'),
+    getViewTotals(),
+    findUnusedMedia(),
   ])
   const commentsTotal = Object.values(commentCounts).reduce((sum, n) => sum + n, 0)
+
+  // Dashboard widgets (traffic, top posts, needs-attention). Top posts maps the
+  // all-time view totals (keyed by "/slug") back to titles, keeping only paths
+  // that are real posts/pages. Drafts = unpublished posts + pages.
+  const titleBySlug = new Map<string, string>()
+  for (const p of posts) titleBySlug.set(p.slug, p.title)
+  for (const p of pages) titleBySlug.set(p.slug, p.title)
+  const topPosts = Object.entries(viewTotals)
+    .map(([path, views]) => ({ slug: path.replace(/^\//, ''), views }))
+    .filter((x) => titleBySlug.has(x.slug))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 5)
+    .map((x) => ({ slug: x.slug, views: x.views, title: titleBySlug.get(x.slug) ?? x.slug }))
+  const drafts =
+    posts.filter((p) => p.status !== 'published').length + pages.filter((p) => p.status !== 'published').length
+  const dashboard: DashboardData = {
+    traffic: {
+      views30: analytics30.totalViews,
+      visitors30: analytics30.uniqueVisitors,
+      views7: analytics30.daily.slice(-7).reduce((sum, d) => sum + d.views, 0),
+      spark: analytics30.daily.map((d) => d.views),
+    },
+    topPosts,
+    needs: { drafts, unusedMedia: unusedMedia.length },
+  }
 
   // Media blobs split into originals vs derived variants (thumb + -1024/-1600
   // AVIF/WebP, named by convention), plus the files/ attachment+icon+font blobs.
@@ -112,6 +144,7 @@ export default async function AdminHome() {
       activityEnabled={activityOn}
       version={pkg.version}
       system={system}
+      dashboard={dashboard}
     />
   )
 }

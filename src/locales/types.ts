@@ -295,6 +295,18 @@ export type AdminStrings = {
   statCategories: string
   statTags: string
   statEmpty: string
+  // overview: dashboard widgets (traffic, top posts, needs-attention)
+  dashTraffic: string
+  dashViewAnalytics: string
+  dashViews30: string
+  dashVisitors30: string
+  dashViews7: string
+  dashTopPosts: string
+  dashTopEmpty: string
+  dashNeedsAttention: string
+  dashAllClear: string
+  dashDrafts: string
+  dashUnusedMedia: string
   // overview: quick actions + recent activity
   quickTitle: string
   recentActivity: string
