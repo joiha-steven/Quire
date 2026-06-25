@@ -182,10 +182,12 @@ create index if not exists activity_log_at_idx on public.activity_log (at desc);
 
 -- ----- analytics_events (one row per page view; no PII — visitor is a salted hash) -
 create table if not exists public.analytics_events (
-  id         bigint generated always as identity primary key,
-  path       text not null,
-  visitor    text not null,
-  created_at timestamptz not null default now()
+  id            bigint generated always as identity primary key,
+  path          text not null,
+  visitor       text not null,
+  referrer_host text,                         -- external referrer host (no path/query); null = direct/internal
+  country       text,                          -- ISO 3166-1 alpha-2 from the edge, if available
+  created_at    timestamptz not null default now()
 );
 create index if not exists analytics_events_created_idx on public.analytics_events (created_at);
 create index if not exists analytics_events_path_idx    on public.analytics_events (path);
@@ -217,11 +219,16 @@ alter table public.analytics_events enable row level security;
 alter table public.analytics_scroll enable row level security;
 
 -- ----- RPC: analytics summary for the admin dashboard ------------------------
--- since   = window start; top_n = how many top pages; bucket = 'hour' (24h range) or 'day'.
+-- since   = window start; top_n = how many top pages; bucket = 'hour' (24h range)
+-- or 'day'; prev_since = start of the PREVIOUS window [prev_since, since) used for
+-- the period-over-period trend (null -> no trend). Also returns new/returning
+-- visitor counts and the top referrer hosts + countries (group B). The old 3-arg
+-- signature is dropped in the same migration so calls stay unambiguous.
 create or replace function public.analytics_summary(
   since timestamptz,
   top_n integer default 10,
-  bucket text default 'day'
+  bucket text default 'day',
+  prev_since timestamptz default null
 )
 returns jsonb
 language sql
@@ -259,6 +266,36 @@ as $$
         group by date_trunc(bucket, created_at)
         order by date_trunc(bucket, created_at)
       ) d
+    ), '[]'::jsonb),
+    -- Previous window [prev_since, since) for the trend; null when prev_since is null.
+    'prevViews', (select count(*) from public.analytics_events
+                    where prev_since is not null and created_at >= prev_since and created_at < since),
+    'prevVisitors', (select count(distinct visitor) from public.analytics_events
+                       where prev_since is not null and created_at >= prev_since and created_at < since),
+    -- A visitor in the window who also has an event before `since` is "returning".
+    'returningVisitors', (
+      select count(distinct e.visitor) from public.analytics_events e
+      where e.created_at >= since
+        and exists (select 1 from public.analytics_events p
+                      where p.visitor = e.visitor and p.created_at < since)
+    ),
+    'topReferrers', coalesce((
+      select jsonb_agg(jsonb_build_object('host', host, 'views', views))
+      from (
+        select referrer_host as host, count(*)::int as views
+        from public.analytics_events
+        where created_at >= since and referrer_host is not null and referrer_host <> ''
+        group by referrer_host order by count(*) desc limit top_n
+      ) r
+    ), '[]'::jsonb),
+    'topCountries', coalesce((
+      select jsonb_agg(jsonb_build_object('country', country, 'views', views))
+      from (
+        select country, count(*)::int as views
+        from public.analytics_events
+        where created_at >= since and country is not null and country <> ''
+        group by country order by count(*) desc limit top_n
+      ) c
     ), '[]'::jsonb)
   );
 $$;

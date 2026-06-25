@@ -100,7 +100,11 @@
   a red badge in `ActivityLog.tsx`. Only genuine errors land here (validation 400s use `fail()`, not
   `logError`).
 - **Overview (`Overview.tsx`):** stat cards — **Posts / Pages / Comments / Images / Storage**
-  (each links to its section; Comments = sum of `countsByPosts()` when comments are on) — then a
+  (each links to its section; Comments = sum of `countsByPosts()` when comments are on) — then the
+  **dashboard widgets** (`DashboardWidgets.tsx`): a **Traffic** card (30-day views + visitors with an
+  inline sparkline + last-7-days, from `getAnalytics(30)`), **Most viewed** (top 5 posts/pages by
+  all-time views, `getViewTotals` mapped to titles), and **Needs attention** (draft + unused-media
+  counts; no "pending comments" — comments publish on submit, there is no moderation queue). Then a
   **Quick actions** row, a **Recent activity** card (latest 6 from `getActivity`, gated by
   `features.activityLog`), taxonomy breakdown, and the System panel at the bottom.
 - **System panel** (`getSystemInfo()`): hosting/URL/region/env/git + database
@@ -108,7 +112,12 @@
   connected); rows may deep-link. The Images card splits media into **originals / variants / files**
   (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
-  (`getViewTotals`). Detail in the data-layer map (`analytics.ts`).
+  (`getViewTotals`). Shows total views + unique visitors (with **period-over-period trend** and a
+  **new-vs-returning** split), avg read depth, a daily bar series, **top pages by title**, and **top
+  referrers + countries**, plus a **CSV export** of the daily series. The trend / new-returning /
+  referrer / country sections need the `analytics-deepening` migration
+  (`scripts/migrations/2026-06-25-analytics-deepening.sql`); until it is applied the data layer falls
+  back to the base shape and those sections stay hidden. Detail in the data-layer map (`analytics.ts`).
 
 ## Settings (Admin → settings) — `SettingsView.tsx`
 

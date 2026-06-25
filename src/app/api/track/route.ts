@@ -13,7 +13,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Never count the owner's own visits to the public site — the beacon is
     // same-origin so it carries the session cookie; skip when it's the owner.
     if (await requireOwner()) return new Response(null, { status: 204 })
-    const body = (await req.json().catch(() => ({}))) as { path?: unknown; depth?: unknown }
+    const body = (await req.json().catch(() => ({}))) as { path?: unknown; depth?: unknown; referrer?: unknown }
     const path = typeof body.path === 'string' ? body.path : ''
     if (path) {
       const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
@@ -24,7 +24,11 @@ export async function POST(req: NextRequest): Promise<Response> {
         const depth = body.depth
         after(() => recordScroll(path, depth, ip, ua))
       } else {
-        after(() => recordView(path, ip, ua))
+        // Source attribution: referrer host (external only, set by the beacon on
+        // session entry) + country from the edge. Both best-effort, privacy-light.
+        const referrer = typeof body.referrer === 'string' ? body.referrer.slice(0, 255) : ''
+        const country = (req.headers.get('x-vercel-ip-country') ?? '').trim()
+        after(() => recordView(path, ip, ua, referrer, country))
       }
     }
   } catch {

@@ -6,9 +6,12 @@
 //   an opaque token used to count uniques. The salt is the server `AUTH_SECRET`,
 //   so the token is stable enough for accurate unique counts but useless outside
 //   this instance.
-// - One row per view. Aggregation (totals / top pages / daily series) is done in
-//   Postgres via the `analytics_summary` RPC (see the migration), so the admin
-//   page is one round-trip regardless of volume.
+// - One row per view, plus two privacy-light source fields: the external referrer
+//   HOST only (never the full URL/path/query; '' for direct/internal) and the
+//   ISO country code from the edge. No IP, no fingerprint. Aggregation (totals /
+//   top pages / daily series / trend / new-vs-returning / top referrers + countries)
+//   is done in Postgres via the `analytics_summary` RPC, so the admin page is one
+//   round-trip regardless of volume.
 // - Bots are dropped by user-agent. Admin/API paths are never tracked, and the
 //   owner's own visits are excluded in the route (requireOwner).
 // - Retention: events are kept FOREVER (no purge) — the owner wants the full history.
@@ -21,12 +24,22 @@ import { db } from '@/lib/db'
 
 export type TopPage = { path: string; views: number; visitors: number; avgDepth: number }
 export type DailyPoint = { day: string; views: number; visitors: number }
+export type TopReferrer = { host: string; views: number }
+export type TopCountry = { country: string; views: number }
 export type AnalyticsSummary = {
   totalViews: number
   uniqueVisitors: number
   avgReadDepth: number
   topPages: TopPage[]
   daily: DailyPoint[]
+  // Optional — present only once the analytics-deepening migration is applied
+  // (scripts/migrations/2026-06-25-analytics-deepening.sql). The UI hides each
+  // section until its data shows up, so pre-migration the page still works.
+  prevViews?: number
+  prevVisitors?: number
+  returningVisitors?: number
+  topReferrers?: TopReferrer[]
+  topCountries?: TopCountry[]
 }
 
 const EMPTY: AnalyticsSummary = { totalViews: 0, uniqueVisitors: 0, avgReadDepth: 0, topPages: [], daily: [] }
@@ -56,12 +69,26 @@ function normalizePath(raw: string): string | null {
 }
 
 // Record one page view. Never throws (analytics must not break a page load).
-export async function recordView(rawPath: string, ip: string, ua: string): Promise<void> {
+// referrerHost = external referrer host only (no path/query; '' = direct/internal);
+// country = ISO-3166 alpha-2 from the edge. Both are privacy-light and best-effort.
+export async function recordView(
+  rawPath: string,
+  ip: string,
+  ua: string,
+  referrerHost = '',
+  country = '',
+): Promise<void> {
   try {
     if (isBot(ua)) return
     const path = normalizePath(rawPath)
     if (!path) return
-    await db().from('analytics_events').insert({ path, visitor: visitorHash(ip, ua) })
+    const base = { path, visitor: visitorHash(ip, ua) }
+    // Try with the group-B columns; if they don't exist yet (pre-migration) the
+    // insert errors, so we retry the base row — a view is never lost.
+    const { error } = await db()
+      .from('analytics_events')
+      .insert({ ...base, referrer_host: referrerHost || null, country: country || null })
+    if (error) await db().from('analytics_events').insert(base)
   } catch (error) {
     console.error(`[ERROR] analytics.recordView: ${(error as Error).message}`)
   }
@@ -84,8 +111,13 @@ export async function recordScroll(rawPath: string, depth: number, ip: string, u
 // ('hour' for the 24h view, 'day' otherwise). One RPC round-trip; empty on failure.
 export async function getAnalytics(days: number, bucket: 'hour' | 'day' = 'day'): Promise<AnalyticsSummary> {
   try {
-    const since = new Date(Date.now() - days * 86_400_000).toISOString()
-    const { data, error } = await db().rpc('analytics_summary', { since, top_n: 10, bucket })
+    const sinceMs = Date.now() - days * 86_400_000
+    const since = new Date(sinceMs).toISOString()
+    const prevSince = new Date(sinceMs - days * 86_400_000).toISOString() // the window just before `since`
+    // Try the extended RPC (trend + new/returning + referrers/countries); fall
+    // back to the base 3-arg shape if the deepening migration isn't applied yet.
+    let { data, error } = await db().rpc('analytics_summary', { since, top_n: 10, bucket, prev_since: prevSince })
+    if (error) ({ data, error } = await db().rpc('analytics_summary', { since, top_n: 10, bucket }))
     if (error || !data) {
       if (error) console.error(`[ERROR] analytics.getAnalytics: ${error.message}`)
       return EMPTY

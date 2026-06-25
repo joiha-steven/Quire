@@ -18,6 +18,26 @@ function toCsv(data: AnalyticsSummary): string {
   return ['date,views,visitors', ...data.daily.map((d) => `${d.day},${d.views},${d.visitors}`)].join('\n')
 }
 
+// Period-over-period change vs the previous window. Null when there is no prior
+// data (pre-migration, or a zero baseline) — the arrow simply doesn't render.
+function Trend({ cur, prev }: { cur: number; prev?: number }) {
+  if (prev == null || prev === 0) return null
+  const pct = Math.round(((cur - prev) / prev) * 100)
+  if (pct === 0) return null
+  const up = pct > 0
+  return (
+    <span className={`ml-2 align-middle text-xs font-medium ${up ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+      {up ? '▲' : '▼'} {Math.abs(pct)}%
+    </span>
+  )
+}
+
+// Flag emoji from an ISO 3166-1 alpha-2 code (regional indicators); '' if invalid.
+function flag(cc: string): string {
+  if (!/^[A-Za-z]{2}$/.test(cc)) return ''
+  return String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
+}
+
 export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary; range: Range; titles: Record<string, string> }) {
   const t = useAdminT()
   const rangeLabel: Record<Range, string> = { 1: t.analyticsRange24h, 7: t.analyticsRange7, 30: t.analyticsRange30, 365: t.analyticsRange365 }
@@ -69,12 +89,25 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
-          <div className="text-3xl font-bold tracking-tight">{data.totalViews.toLocaleString()}</div>
+          <div className="text-3xl font-bold tracking-tight">
+            {data.totalViews.toLocaleString()}
+            <Trend cur={data.totalViews} prev={data.prevViews} />
+          </div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsViews}</div>
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
-          <div className="text-3xl font-bold tracking-tight">{data.uniqueVisitors.toLocaleString()}</div>
+          <div className="text-3xl font-bold tracking-tight">
+            {data.uniqueVisitors.toLocaleString()}
+            <Trend cur={data.uniqueVisitors} prev={data.prevVisitors} />
+          </div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsVisitors}</div>
+          {data.returningVisitors != null && (
+            <div className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
+              {t.analyticsNew} <span className="tabular-nums">{Math.max(0, data.uniqueVisitors - data.returningVisitors).toLocaleString()}</span>
+              {' · '}
+              {t.analyticsReturning} <span className="tabular-nums">{data.returningVisitors.toLocaleString()}</span>
+            </div>
+          )}
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="text-3xl font-bold tracking-tight">{data.avgReadDepth}%</div>
@@ -129,6 +162,41 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
               })}
             </ul>
           </div>
+
+          {/* Top referrers + countries — populated only after the analytics-
+              deepening migration; each card hides until it has data. */}
+          {((data.topReferrers?.length ?? 0) > 0 || (data.topCountries?.length ?? 0) > 0) && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {(data.topReferrers?.length ?? 0) > 0 && (
+                <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                  <h2 className="mb-3 text-sm font-bold">{t.analyticsTopReferrers}</h2>
+                  <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                    {data.topReferrers!.map((r) => (
+                      <li key={r.host} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                        <span className="min-w-0 truncate text-neutral-700 dark:text-neutral-200" title={r.host}>{r.host}</span>
+                        <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">{r.views.toLocaleString()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {(data.topCountries?.length ?? 0) > 0 && (
+                <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                  <h2 className="mb-3 text-sm font-bold">{t.analyticsTopCountries}</h2>
+                  <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                    {data.topCountries!.map((c) => (
+                      <li key={c.country} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                        <span className="min-w-0 truncate text-neutral-700 dark:text-neutral-200">
+                          {flag(c.country)} {c.country}
+                        </span>
+                        <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">{c.views.toLocaleString()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
