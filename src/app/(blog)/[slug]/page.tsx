@@ -18,6 +18,7 @@ import { TOC_ANCHORS } from '@/lib/toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
+import { Lightbox } from '@/components/blog/Lightbox'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { Comments } from '@/components/blog/Comments'
 import { getCommentEnv } from '@/lib/comment-env'
@@ -125,6 +126,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {features.progressBar && <ReadingProgress />}
         <BackToTop label={t(language).backToTop} />
         <ScrollDepth />
+        <Lightbox lang={language} />
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({
@@ -211,6 +213,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     return (
       <article>
         <h1 className="fs-h1 font-semibold tracking-tight">{page.title}</h1>
+        <Lightbox lang={language} />
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
