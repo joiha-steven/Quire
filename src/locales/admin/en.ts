@@ -308,6 +308,8 @@ const en = {
   analyticsVisitors: 'Visitors',
   analyticsTopPages: 'Top pages',
   analyticsAvgDepth: 'Avg. read depth',
+  analyticsExportCsv: 'Export CSV',
+  analyticsPeak: 'Peak',
   analyticsRange24h: '24 hours',
   analyticsRange7: '7 days',
   analyticsRange30: '30 days',

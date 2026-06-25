@@ -308,6 +308,8 @@ const zh = {
   analyticsVisitors: '访客',
   analyticsTopPages: '热门页面',
   analyticsAvgDepth: '平均阅读深度',
+  analyticsExportCsv: '导出 CSV',
+  analyticsPeak: '峰值',
   analyticsRange24h: '24 小时',
   analyticsRange7: '7 天',
   analyticsRange30: '30 天',

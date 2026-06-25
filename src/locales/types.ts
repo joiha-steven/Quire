@@ -384,6 +384,8 @@ export type AdminStrings = {
   analyticsVisitors: string
   analyticsTopPages: string
   analyticsAvgDepth: string
+  analyticsExportCsv: string
+  analyticsPeak: string
   analyticsRange24h: string
   analyticsRange7: string
   analyticsRange30: string

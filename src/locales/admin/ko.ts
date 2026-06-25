@@ -308,6 +308,8 @@ const ko = {
   analyticsVisitors: '방문자',
   analyticsTopPages: '인기 페이지',
   analyticsAvgDepth: '평균 읽은 비율',
+  analyticsExportCsv: 'CSV 내보내기',
+  analyticsPeak: '최고',
   analyticsRange24h: '24시간',
   analyticsRange7: '7일',
   analyticsRange30: '30일',
