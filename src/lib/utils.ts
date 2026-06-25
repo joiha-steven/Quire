@@ -97,6 +97,9 @@ export function extractHeadings(markdown: string): Heading[] {
     const text = m[2].replace(/[*_`]/g, '').trim()
     if (!text) continue
     const base = slugify(text)
+    // No anchorable slug (e.g. "## !!!") → not a ToC entry; matches PostContent
+    // emitting no id, so the two heading walks stay in sync.
+    if (!base) continue
     const n = counts.get(base) ?? 0
     counts.set(base, n + 1)
     out.push({ id: n === 0 ? base : `${base}-${n + 1}`, text, level: m[1].length as 2 | 3 })
