@@ -308,6 +308,8 @@ const vi = {
   analyticsVisitors: 'Người xem',
   analyticsTopPages: 'Trang xem nhiều',
   analyticsAvgDepth: 'Độ đọc trung bình',
+  analyticsExportCsv: 'Xuất CSV',
+  analyticsPeak: 'Cao nhất',
   analyticsRange24h: '24 giờ',
   analyticsRange7: '7 ngày',
   analyticsRange30: '30 ngày',

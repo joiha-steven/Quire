@@ -308,6 +308,8 @@ const ja = {
   analyticsVisitors: '訪問者',
   analyticsTopPages: '人気ページ',
   analyticsAvgDepth: '平均読了率',
+  analyticsExportCsv: 'CSVエクスポート',
+  analyticsPeak: 'ピーク',
   analyticsRange24h: '24時間',
   analyticsRange7: '7日間',
   analyticsRange30: '30日間',
