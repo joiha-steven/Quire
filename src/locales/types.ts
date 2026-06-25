@@ -128,6 +128,7 @@ export type AdminStrings = {
   imgAlignRight: string
   imgSizeColumn: string
   imgSizeWide: string
+  imgGrid: string
   captionPlaceholder: string
   // post settings panel
   slug: string

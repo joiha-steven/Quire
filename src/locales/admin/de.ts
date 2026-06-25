@@ -63,6 +63,7 @@ const de = {
   imgAlignRight: 'Rechts',
   imgSizeColumn: 'Spalte',
   imgSizeWide: 'Breit (+30%)',
+  imgGrid: 'Raster',
   captionPlaceholder: 'Bildunterschrift',
   slug: 'Slug (URL)',
   publishDate: 'Veröffentlichungsdatum',

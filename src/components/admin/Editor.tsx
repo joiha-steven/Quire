@@ -3,7 +3,7 @@
 // TipTap markdown editor with a compact toolbar.
 // Marks/nodes: bold, italic, underline, strike, inline code, H1-H5, bullet +
 // numbered + task lists, quote, code block, horizontal rule, link, image
-// (align + wide), GFM tables, and video (paste a YouTube/Vimeo/TikTok URL).
+// (align + wide + grid gallery), GFM tables, and video (paste a YouTube/Vimeo/TikTok URL).
 // Drag an image file in -> auto-uploads -> inserts at the drop point. A Markdown/Review
 // toggle swaps the formatted view for the raw Markdown source.
 import { useEffect, useRef, useState } from 'react'

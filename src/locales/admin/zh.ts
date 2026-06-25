@@ -63,6 +63,7 @@ const zh = {
   imgAlignRight: '右对齐',
   imgSizeColumn: '列宽',
   imgSizeWide: '加宽 (+30%)',
+  imgGrid: '网格',
   captionPlaceholder: '图片说明',
   slug: '别名 (URL)',
   publishDate: '发布日期',

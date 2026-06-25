@@ -63,6 +63,7 @@ const ja = {
   imgAlignRight: '右',
   imgSizeColumn: 'カラム',
   imgSizeWide: 'ワイド (+30%)',
+  imgGrid: 'グリッド',
   captionPlaceholder: '画像キャプション',
   slug: 'スラッグ (URL)',
   publishDate: '公開日',

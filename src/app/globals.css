@@ -428,6 +428,24 @@ hr {
     margin-right: auto;
   }
 }
+/* Gallery: a run of #grid images becomes a responsive grid (auto-fit columns).
+   Each item stays a normal <figure> so captions still work; the grid owns the
+   spacing, so the per-figure margins are reset. Images crop to a uniform square
+   for a tidy mosaic. */
+.prose .gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin: 1.9em 0;
+}
+.prose .gallery figure {
+  margin: 0;
+  width: 100%;
+}
+.prose .gallery figure img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {
   margin-top: 0.6em;

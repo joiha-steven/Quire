@@ -63,6 +63,7 @@ const en = {
   imgAlignRight: 'Right',
   imgSizeColumn: 'Column',
   imgSizeWide: 'Wide (+30%)',
+  imgGrid: 'Grid',
   captionPlaceholder: 'Image caption',
   slug: 'Slug (URL)',
   publishDate: 'Publish date',
