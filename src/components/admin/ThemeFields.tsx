@@ -170,7 +170,8 @@ export function ThemeFields({ presets, themes, defaultId, enabled, onChangeTheme
   // Flip one palette's visibility; the default is always kept on (preset order).
   const toggleShown = (id: string) => {
     const on = new Set(enabledSet)
-    on.has(id) ? on.delete(id) : on.add(id)
+    if (on.has(id)) on.delete(id)
+    else on.add(id)
     on.add(defaultId)
     onChangeEnabled(presets.filter((p) => on.has(p.id)).map((p) => p.id))
   }
