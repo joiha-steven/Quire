@@ -10,7 +10,6 @@ import { getBackupState } from '@/lib/backup-state'
 import { countsByPosts } from '@/lib/comments'
 import { getActivity } from '@/lib/activity'
 import { getAnalytics, getViewTotals } from '@/lib/analytics'
-import { findUnusedMedia } from '@/lib/media-usage'
 import { db } from '@/lib/db'
 import { Overview, type SystemInfo } from '@/components/admin/Overview'
 import type { DashboardData } from '@/components/admin/DashboardWidgets'
@@ -82,7 +81,7 @@ export default async function AdminHome() {
   const settings = await getSettings()
   const commentsOn = settings.comments.enabled
   const activityOn = settings.features.activityLog
-  const [posts, pages, blobs, system, commentCounts, recent, analytics30, viewTotals, unusedMedia] = await Promise.all([
+  const [posts, pages, blobs, system, commentCounts, recent, analytics30, viewTotals] = await Promise.all([
     getIndex(),
     getPageIndex(),
     listBlobs(),
@@ -91,13 +90,14 @@ export default async function AdminHome() {
     activityOn ? getActivity(6) : Promise.resolve([]),
     getAnalytics(30, 'day'),
     getViewTotals(),
-    findUnusedMedia(),
   ])
   const commentsTotal = Object.values(commentCounts).reduce((sum, n) => sum + n, 0)
 
   // Dashboard widgets (traffic, top posts, needs-attention). Top posts maps the
   // all-time view totals (keyed by "/slug") back to titles, keeping only paths
-  // that are real posts/pages. Drafts = unpublished posts + pages.
+  // that are real posts/pages. Drafts = unpublished posts + pages. (Unused-media
+  // is intentionally NOT here — it's an O(posts) per-row content scan, far too
+  // heavy for the home; it stays an on-demand check on the Media page.)
   const titleBySlug = new Map<string, string>()
   for (const p of posts) titleBySlug.set(p.slug, p.title)
   for (const p of pages) titleBySlug.set(p.slug, p.title)
@@ -117,7 +117,7 @@ export default async function AdminHome() {
       spark: analytics30.daily.map((d) => d.views),
     },
     topPosts,
-    needs: { drafts, unusedMedia: unusedMedia.length },
+    needs: { drafts },
   }
 
   // Media blobs split into originals vs derived variants (thumb + -1024/-1600

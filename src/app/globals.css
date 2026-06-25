@@ -434,9 +434,25 @@ hr {
    for a tidy mosaic. */
 .prose .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.5rem;
   margin: 1.9em 0;
+}
+/* Column count is chosen in groupGalleries() from the image count. */
+.prose .gallery-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.prose .gallery-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.prose .gallery-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+/* On phones, 3/4-column galleries collapse to 2 so tiles stay tappable. */
+@media (max-width: 640px) {
+  .prose .gallery-cols-3,
+  .prose .gallery-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 .prose .gallery figure {
   margin: 0;

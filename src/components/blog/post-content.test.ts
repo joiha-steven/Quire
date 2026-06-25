@@ -64,23 +64,30 @@ describe('markdown render — structure', () => {
     expect(html).toContain('<figcaption>A small cat</figcaption>')
   })
 
-  it('groups 2+ consecutive #grid images into one .gallery', async () => {
+  it('groups 2+ consecutive #grid images into one .gallery, cols by count', async () => {
     const html = await render('![a](media/a.jpg#grid)\n\n![b](media/b.jpg#grid)\n\n![c](media/c.jpg#grid)')
-    expect(html).toContain('<div class="gallery">')
-    // exactly one gallery wrapper holding all three grid figures
-    expect(html.match(/<div class="gallery">/g)).toHaveLength(1)
+    // exactly one gallery wrapper, 3 images -> 3 columns, holding all three figures
+    expect(html).toContain('<div class="gallery gallery-cols-3">')
+    expect(html.match(/<div class="gallery /g)).toHaveLength(1)
     expect(html.match(/<figure class="img-grid">/g)).toHaveLength(3)
+  })
+
+  it('uses a 2-column grid for a 4-image gallery (2×2)', async () => {
+    const html = await render(
+      '![a](a.jpg#grid)\n\n![b](b.jpg#grid)\n\n![c](c.jpg#grid)\n\n![d](d.jpg#grid)',
+    )
+    expect(html).toContain('<div class="gallery gallery-cols-2">')
   })
 
   it('leaves a lone #grid image as a normal figure (no gallery wrapper)', async () => {
     const html = await render('![solo](media/a.jpg#grid)')
-    expect(html).not.toContain('<div class="gallery">')
+    expect(html).not.toContain('class="gallery')
     expect(html).toContain('<figure class="img-grid">')
   })
 
   it('does not group plain (non-grid) images into a gallery', async () => {
     const html = await render('![a](media/a.jpg)\n\n![b](media/b.jpg)')
-    expect(html).not.toContain('<div class="gallery">')
+    expect(html).not.toContain('class="gallery')
   })
 })
 

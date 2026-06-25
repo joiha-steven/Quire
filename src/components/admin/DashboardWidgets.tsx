@@ -15,7 +15,8 @@ export type DashboardData = {
   topPosts: { title: string; slug: string; views: number }[]
   // Counts the owner may want to act on. Comments have no moderation queue in
   // this app (publish-on-submit + soft-delete), so there is no "pending" here.
-  needs: { drafts: number; unusedMedia: number }
+  // Unused-media is deliberately excluded — too heavy to compute on every load.
+  needs: { drafts: number }
 }
 
 // Tiny inline sparkline — no chart lib. Scales to the busiest day; uses
@@ -100,10 +101,7 @@ function TopPostsCard({ posts }: { posts: DashboardData['topPosts'] }) {
 
 function NeedsAttentionCard({ needs }: { needs: DashboardData['needs'] }) {
   const t = useAdminT()
-  const items = [
-    { label: t.dashDrafts, count: needs.drafts, href: '/admin/content' },
-    { label: t.dashUnusedMedia, count: needs.unusedMedia, href: '/admin/media' },
-  ]
+  const items = [{ label: t.dashDrafts, count: needs.drafts, href: '/admin/content' }]
   const allClear = items.every((i) => i.count === 0)
   return (
     <Card title={t.dashNeedsAttention}>

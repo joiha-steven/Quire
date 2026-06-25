@@ -89,10 +89,23 @@ function imgClasses(frag: string): string {
   return tokens.includes('wide') ? `${align} img-wide` : align
 }
 
+// Column count for a gallery of N images — Jetpack-like: small sets get one row,
+// 4 squares to a 2×2, larger sets settle at 3 then 4 columns.
+function galleryCols(n: number): number {
+  if (n <= 3) return n // 2 -> 2, 3 -> 3
+  if (n === 4) return 2 // 2×2
+  if (n <= 9) return 3 // 5–9 -> 3 across
+  return 4 // 10+ -> 4 across
+}
+
 // Wrap a run of 2+ consecutive `#grid` figures (separated only by whitespace)
-// into one `.gallery` grid container. A lone grid image stays a normal figure.
+// into one `.gallery` grid container, with a column count chosen from how many
+// images are in the run. A lone grid image stays a normal figure.
 function groupGalleries(html: string): string {
-  return html.replace(/(?:<figure class="img-grid">[\s\S]*?<\/figure>\s*){2,}/g, (run) => `<div class="gallery">${run.trim()}</div>`)
+  return html.replace(/(?:<figure class="img-grid">[\s\S]*?<\/figure>\s*){2,}/g, (run) => {
+    const count = (run.match(/<figure class="img-grid">/g) ?? []).length
+    return `<div class="gallery gallery-cols-${galleryCols(count)}">${run.trim()}</div>`
+  })
 }
 
 // <picture> (AVIF/WebP @1024/1600) ONLY for raster originals with confirmed

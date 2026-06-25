@@ -230,7 +230,6 @@ const de = {
   dashNeedsAttention: 'Zu erledigen',
   dashAllClear: 'Alles erledigt.',
   dashDrafts: 'Entwürfe',
-  dashUnusedMedia: 'Ungenutzte Medien',
   quickTitle: 'Schnellaktionen',
   recentActivity: 'Letzte Aktivität',
   recentViewAll: 'Alle ansehen',
