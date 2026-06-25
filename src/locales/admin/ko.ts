@@ -63,6 +63,7 @@ const ko = {
   imgAlignRight: '오른쪽',
   imgSizeColumn: '본문 너비',
   imgSizeWide: '넓게 (+30%)',
+  imgGrid: '그리드',
   captionPlaceholder: '이미지 설명',
   slug: '슬러그 (URL)',
   publishDate: '게시 날짜',

@@ -63,6 +63,7 @@ const vi = {
   imgAlignRight: 'Phải',
   imgSizeColumn: 'Khung',
   imgSizeWide: 'Lớn (+30%)',
+  imgGrid: 'Lưới',
   captionPlaceholder: 'Chú thích ảnh',
   slug: 'Đường dẫn (slug)',
   publishDate: 'Ngày đăng',

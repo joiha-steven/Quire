@@ -82,8 +82,17 @@ export type ImageDims = Map<string, { width: number; height: number }>
 function imgClasses(frag: string): string {
   // Exact hyphen tokens so `#bright` can't match `right`: left|right|wide|left-wide|right-wide.
   const tokens = frag.split('-')
+  // `#grid` marks a gallery item; groupGalleries() wraps consecutive ones. The
+  // grid owns layout, so align/wide are ignored for a grid item.
+  if (tokens.includes('grid')) return 'img-grid'
   const align = tokens.includes('left') ? 'img-left' : tokens.includes('right') ? 'img-right' : 'img-center'
   return tokens.includes('wide') ? `${align} img-wide` : align
+}
+
+// Wrap a run of 2+ consecutive `#grid` figures (separated only by whitespace)
+// into one `.gallery` grid container. A lone grid image stays a normal figure.
+function groupGalleries(html: string): string {
+  return html.replace(/(?:<figure class="img-grid">[\s\S]*?<\/figure>\s*){2,}/g, (run) => `<div class="gallery">${run.trim()}</div>`)
 }
 
 // <picture> (AVIF/WebP @1024/1600) ONLY for raster originals with confirmed
@@ -148,7 +157,7 @@ export async function PostContent({
   // Intrinsic width/height per collapsed pathname (for CLS-free rendering).
   imageDims?: ImageDims
 }) {
-  const parsed = dedupeHeadingIds(buildVideos(buildFigures(await marked.parse(markdown), readyOriginals, imageDims)))
+  const parsed = dedupeHeadingIds(buildVideos(groupGalleries(buildFigures(await marked.parse(markdown), readyOriginals, imageDims))))
   const html = await highlightBlocks(parsed)
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }
