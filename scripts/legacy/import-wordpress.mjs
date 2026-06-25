@@ -1,4 +1,4 @@
-// Import a WordPress export (WXR .xml) into vibeblog's Blob store.
+// Import a WordPress export (WXR .xml) into Quire Blog's Blob store.
 //
 // Converts each published/draft post -> posts/{slug}.md (+ posts/_index.json)
 // and each page -> pages/{slug}.md (+ pages/_index.json). HTML body is converted
@@ -34,7 +34,7 @@ const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', 
 td.use(gfm)
 
 // WordPress wraps captioned images in <figure><img><figcaption>…</figcaption>.
-// vibeblog stores the caption in the image alt (it renders the figcaption from
+// Quire Blog stores the caption in the image alt (it renders the figcaption from
 // alt), so fold the caption INTO the alt instead of leaving it as a separate
 // italic paragraph below the image. (Classic [caption] shortcodes that aren't
 // real <figure> nodes are mopped up afterwards by fix-import-captions.mjs.)

@@ -1,4 +1,4 @@
--- vibeblog — full Postgres schema (Supabase).
+-- quire — full Postgres schema (Supabase).
 -- Run this ONCE on a fresh Supabase project to create every table, index, and RPC
 -- the app needs. Paste it into the Supabase SQL Editor (Dashboard → SQL Editor →
 -- New query → Run), or pipe it through psql with your connection string.

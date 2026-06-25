@@ -76,7 +76,7 @@ export function fontToCss(f: FontSettings): string {
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   language: 'en',
-  title: 'vibeblog',
+  title: 'Quire Blog',
   description: '',
   siteUrl: '',
   logoUrl: '',
@@ -92,7 +92,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   relatedCount: 3,
   excerptLength: 50,
   customCss: '',
-  footer: '© {year} {title} · [powered by vibeblog](https://github.com/joiha-steven/vibeblog)',
+  footer: '© {year} {title} · [powered by Quire Blog](https://github.com/joiha-steven/Quire)',
   menu: [],
   themePreset: DEFAULT_PRESET_ID,
   enabledPalettes: ALL_PALETTE_IDS,

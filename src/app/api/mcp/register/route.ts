@@ -22,7 +22,7 @@ export async function POST(req: Request): Promise<Response> {
     : []
   return Response.json(
     {
-      client_id: 'vibeblog-mcp',
+      client_id: 'quire-mcp',
       client_id_issued_at: Math.floor(Date.now() / 1000),
       token_endpoint_auth_method: 'none',
       grant_types: ['authorization_code'],

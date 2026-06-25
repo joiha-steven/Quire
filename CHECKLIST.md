@@ -66,7 +66,7 @@
 ## Backups (Google Drive, optional)
 - [ ] One-time: Google Drive API enabled on the `AUTH_GOOGLE_ID` Cloud project + `https://<domain>/api/backup/callback` added as an Authorized redirect URI
 - [ ] "Connect Google Drive" → consent → returns to Settings → Advanced showing **connected**
-- [ ] "Back up now" creates a `.tar.gz` in the Drive `vibeblog-backups` folder; it appears in the list with a size
+- [ ] "Back up now" creates a `.tar.gz` in the Drive `quire-backups` folder; it appears in the list with a size
 - [ ] The refresh token never appears in the client: `GET /api/settings` / page source has no Drive token (only enabled/interval/keep)
 - [ ] Retention: with N snapshots > `keep`, a new run prunes to the newest `keep`
 - [ ] Restore (on a throwaway/staging site) replaces content from the snapshot; a pre-restore snapshot is created first

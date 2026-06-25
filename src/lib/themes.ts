@@ -48,7 +48,7 @@ export const DEFAULT_TYPOGRAPHY: TypographySettings = {
 // Default typeface: none uploaded → the bundled Inter.
 export const DEFAULT_FONT: FontSettings = { family: '', faces: [] }
 
-// TRUE neutral grayscale — zero hue, the vibeblog house style. (Earlier values had a
+// TRUE neutral grayscale — zero hue, the Quire Blog house style. (Earlier values had a
 // faint warm/blue cast: bg/rule read as cream, meta/text leaned blue. All pure gray
 // now; `rule` is a touch lighter so the menu hover reads as a soft, colourless gray.)
 const MONO: ThemeSettings = {

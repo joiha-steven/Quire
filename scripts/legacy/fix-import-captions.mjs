@@ -2,7 +2,7 @@
 //
 // WordPress captions came across as a standalone *italic* paragraph right BELOW
 // the image, while the image's own caption slot (its markdown alt) kept the
-// filename. vibeblog renders the caption from the alt, so this moves each
+// filename. Quire Blog renders the caption from the alt, so this moves each
 // trailing italic paragraph INTO the image alt and deletes the paragraph. The
 // italic disappears for free (figcaption is upright).
 //

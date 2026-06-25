@@ -17,7 +17,7 @@ export function backupRedirectUri(settings: SiteSettings): string {
 }
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
-const FOLDER_NAME = 'vibeblog-backups'
+const FOLDER_NAME = 'quire-backups'
 
 function creds(): { id: string; secret: string } {
   const id = process.env.AUTH_GOOGLE_ID

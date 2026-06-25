@@ -41,7 +41,7 @@ export function isBot(ua: string): boolean {
 // Stable per-visitor token: salted hash of IP + UA. The salt never leaves the
 // server, and the raw IP/UA are discarded — only this 16-byte hex is stored.
 function visitorHash(ip: string, ua: string): string {
-  const salt = process.env.AUTH_SECRET ?? 'vibeblog'
+  const salt = process.env.AUTH_SECRET ?? 'quire'
   return createHash('sha256').update(`${salt}|${ip}|${ua}`).digest('hex').slice(0, 32)
 }
 

@@ -43,7 +43,7 @@ export function SiteFields({ s, update }: Props) {
         <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.siteLanguageHint}</p>
       </div>
 
-      <Input label={t.siteTitle} value={s.title} onChange={(e) => update({ title: e.target.value })} placeholder="vibeblog" />
+      <Input label={t.siteTitle} value={s.title} onChange={(e) => update({ title: e.target.value })} placeholder="Quire Blog" />
 
       <Textarea
         label={t.siteDescription}

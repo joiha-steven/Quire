@@ -198,7 +198,7 @@ const vi = {
   motionLabel: 'Chuyển động',
   motionDesc: 'Hiệu ứng tinh tế toàn site + admin (mờ dần khi chuyển trang, hover/bấm, hiện dần khi cuộn). Tắt = tức thì. Luôn tôn trọng prefers-reduced-motion.',
   overviewTitle: 'Tổng quan',
-  licenseTitle: 'vibeblog là mã nguồn mở (MIT). Nội dung blog của bạn vẫn là của bạn (giữ toàn quyền).',
+  licenseTitle: 'Quire Blog là mã nguồn mở (MIT). Nội dung blog của bạn vẫn là của bạn (giữ toàn quyền).',
   statPosts: 'Bài viết',
   statPages: 'Trang',
   statComments: 'Bình luận',

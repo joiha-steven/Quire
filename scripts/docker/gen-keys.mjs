@@ -30,7 +30,7 @@ process.stdout.write(
     `POSTGRES_PASSWORD=${pgPassword}`,
     `PGPASSWORD=${pgPassword}`,
     `PGRST_JWT_SECRET=${jwtSecret}`,
-    `SUPABASE_SERVICE_ROLE_KEY=${sign({ role: 'service_role', iss: 'vibeblog' })}`,
+    `SUPABASE_SERVICE_ROLE_KEY=${sign({ role: 'service_role', iss: 'quire' })}`,
     '',
   ].join('\n'),
 )

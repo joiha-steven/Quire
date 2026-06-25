@@ -192,10 +192,10 @@ export function Overview({
           // pill links to the LICENSE — the platform code is open source (the blog
           // content it publishes is the owner's, all rights reserved).
           <>
-            <a href="https://github.com/joiha-steven/vibeblog" target="_blank" rel="noopener noreferrer" className={PILL}>
-              vibeblog v{version}
+            <a href="https://github.com/joiha-steven/Quire" target="_blank" rel="noopener noreferrer" className={PILL}>
+              <span className="font-semibold">quire</span>blog v{version}
             </a>
-            <a href="https://github.com/joiha-steven/vibeblog/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title={t.licenseTitle} className={PILL}>
+            <a href="https://github.com/joiha-steven/Quire/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title={t.licenseTitle} className={PILL}>
               MIT
             </a>
           </>

@@ -19,7 +19,7 @@ import { revalidateEverything } from '@/lib/revalidate'
 // secret inside a backup, and restoring it would clobber the live connection).
 const TABLES = ['settings', 'posts', 'pages', 'post_revisions', 'media', 'files', 'mcp_tokens', 'activity_log', 'analytics_events', 'analytics_scroll'] as const
 
-const SNAPSHOT_PREFIX = 'vibeblog-'
+const SNAPSHOT_PREFIX = 'quire-'
 
 // Content-type by extension for re-uploading blobs on restore.
 const MIME: Record<string, string> = {
@@ -68,7 +68,7 @@ async function buildArchive(): Promise<{ file: string; size: number }> {
   return { file, size }
 }
 
-// Snapshot file name from the current time, e.g. vibeblog-2026-06-22T1530.tar.gz.
+// Snapshot file name from the current time, e.g. quire-2026-06-22T1530.tar.gz.
 function snapshotName(): string {
   const iso = new Date().toISOString().replace(/:\d\d\.\d+Z$/, '').replace(/:/g, '')
   return `${SNAPSHOT_PREFIX}${iso}.tar.gz`

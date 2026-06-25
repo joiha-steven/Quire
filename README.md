@@ -1,6 +1,6 @@
 <div align="center">
 
-# vibe**blog** &nbsp;`v1.1.9`
+# **quire**blog &nbsp;`v1.1.9`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -23,7 +23,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 <br/>
 
-<img src="docs/demo.jpg" alt="vibeblog admin dashboard and reading view" width="900">
+<img src="docs/demo.jpg" alt="Quire Blog admin dashboard and reading view" width="900">
 
 </div>
 
@@ -52,7 +52,7 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 > Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel** or self-hosted with **Docker**.
 
 **Who it's for** — one person who wants a fast, good-looking, fully self-owned blog, runs it on Vercel + Supabase **or self-hosts it with Docker**, and likes the idea of letting an AI agent help run it.
-**Not for** — multi-author teams / publications needing roles and editorial workflows. vibeblog is single-owner by design (one authorized email); multi-tenant lives in the planned SaaS, not here.
+**Not for** — multi-author teams / publications needing roles and editorial workflows. Quire Blog is single-owner by design (one authorized email); multi-tenant lives in the planned SaaS, not here.
 
 ---
 
@@ -84,7 +84,7 @@ Three ways to stand up your own blog — **pick one**. Each ends with a live sit
 Give an agent **Vercel + Supabase + GitHub access** (tokens / CLI / MCP), then paste:
 
 ```text
-Deploy my own copy of github.com/joiha-steven/vibeblog:
+Deploy my own copy of github.com/joiha-steven/Quire:
 1. Fork the repo to my account.
 2. Create a Supabase project and run scripts/schema.sql in its SQL editor.
 3. Create a Vercel project from the fork; add a Vercel Blob store (this sets BLOB_READ_WRITE_TOKEN).
@@ -113,7 +113,7 @@ Deploy my own copy of github.com/joiha-steven/vibeblog:
 **Fully self-contained — no cloud accounts.** The stack bundles **Postgres + PostgREST** (replaces Supabase) and the **local filesystem** store (replaces Vercel Blob), plus a cron sidecar. Everything runs on your host; only Google sign-in reaches the internet. Data lives in `./data/postgres` (text) + `./data/uploads` (binaries) — back up those two folders.
 
 ```bash
-git clone https://github.com/joiha-steven/vibeblog.git && cd vibeblog
+git clone https://github.com/joiha-steven/Quire.git && cd Quire
 cp .env.docker.example .env.docker
 node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + service key
 # then fill AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, AUTHORIZED_EMAIL, SITE_URL, CRON_SECRET
@@ -131,14 +131,14 @@ Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/au
 
 ## 🤖 Let an AI agent write & publish (MCP)
 
-vibeblog ships a remote **MCP** server, so a second AI agent can run your blog — drafting, editing, tagging, and **publishing straight to the live site**. No git, no deploy: content goes into Supabase + Blob through the same data layer (and same slug/revision/soft-delete rules) the admin uses.
+Quire Blog ships a remote **MCP** server, so a second AI agent can run your blog — drafting, editing, tagging, and **publishing straight to the live site**. No git, no deploy: content goes into Supabase + Blob through the same data layer (and same slug/revision/soft-delete rules) the admin uses.
 
 1. **Turn it on** — *Admin → Settings → Advanced → MCP*, generate a named token (shown **once**, hashed at rest, expires in 180 days).
 2. **Connect your agent** to the endpoint `https://<your-domain>/api/mcp` with `Authorization: Bearer <token>` (OAuth connectors are supported too).
 3. **Prompt it**, e.g.:
 
 ```text
-Using the vibeblog MCP server, write a 600-word post titled
+Using the Quire Blog MCP server, write a 600-word post titled
 "What I learned shipping a blog with an AI agent", give it the tags
 "ai" and "writing", set a friendly excerpt, and publish it.
 ```
@@ -173,7 +173,7 @@ MCP tokens and the Google Drive backup connection are **created in the admin**, 
 ## 🧑‍💻 Run locally (optional)
 
 ```bash
-git clone https://github.com/joiha-steven/vibeblog.git && cd vibeblog
+git clone https://github.com/joiha-steven/Quire.git && cd Quire
 npm install
 cp .env.example .env.local        # fill in the values above
 npx auth secret                   # AUTH_SECRET
@@ -204,6 +204,6 @@ Docker self-host shipped (local filesystem storage); next up: an S3/MinIO storag
 Two separate layers — keep them distinct:
 
 - **Code (this repo) — [MIT](./LICENSE).** Free and open source: use, modify, redistribute, or sell it for any purpose, **no obligation to credit** (MIT only asks the license text travels with copies of the source). Fork it and run your own blog.
-- **Content — © all rights reserved.** The writing published *with* vibeblog (articles, images on an operator's site, e.g. manhhung.me) belongs to its author, is **not** covered by MIT, does not live in this repo, and may not be reused without permission.
+- **Content — © all rights reserved.** The writing published *with* Quire Blog (articles, images on an operator's site, e.g. manhhung.me) belongs to its author, is **not** covered by MIT, does not live in this repo, and may not be reused without permission.
 
 > In short: the **software** is open for anyone; the **author's writing** is not.

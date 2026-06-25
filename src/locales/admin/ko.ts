@@ -198,7 +198,7 @@ const ko = {
   motionLabel: '모션',
   motionDesc: '사이트와 관리자 전반의 은은한 애니메이션(페이지 페이드, 호버/누름, 스크롤 표시). 끄면 즉시. reduced-motion은 항상 존중합니다.',
   overviewTitle: '개요',
-  licenseTitle: 'vibeblog은 오픈소스(MIT)입니다. 블로그 내용은 작성자 소유입니다(모든 권리 보유).',
+  licenseTitle: 'Quire Blog은 오픈소스(MIT)입니다. 블로그 내용은 작성자 소유입니다(모든 권리 보유).',
   statPosts: '게시물',
   statPages: '페이지',
   statComments: '댓글',

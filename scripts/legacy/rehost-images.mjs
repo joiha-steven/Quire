@@ -1,4 +1,4 @@
-// Rehost external images referenced in imported content onto vibeblog's Blob.
+// Rehost external images referenced in imported content onto Quire Blog's Blob.
 //
 // Scans every posts/*.md and pages/*.md in Blob for image URLs on a given host,
 // downloads each (browser-like headers, to pass bot protection), optimizes it

@@ -1,4 +1,4 @@
-# vibeblog self-host image. Builds the Next standalone server (output: 'standalone')
+# quire self-host image. Builds the Next standalone server (output: 'standalone')
 # and runs it as a plain Node process — no Vercel. Storage is the local filesystem
 # driver (STORAGE_DRIVER=local); binaries live in a mounted /app/uploads volume.
 # The build needs NO backend env: the data layer degrades to empty when the DB is

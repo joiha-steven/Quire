@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# vibeblog — operating notes
+# Quire Blog — operating notes
 
 Public, open-source blog platform. **Zero personal data in this repo.** Real
 credentials live only in the gitignored `.env.local` and on Vercel (`vercel env

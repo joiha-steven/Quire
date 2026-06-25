@@ -198,7 +198,7 @@ const en = {
   motionLabel: 'Motion',
   motionDesc: 'Subtle animations across the site + admin (page fades, hover/press, scroll reveal). Off = instant. Reduced-motion is always respected.',
   overviewTitle: 'Overview',
-  licenseTitle: 'vibeblog is open source under MIT. Your blog content stays yours (all rights reserved).',
+  licenseTitle: 'Quire Blog is open source under MIT. Your blog content stays yours (all rights reserved).',
   statPosts: 'Posts',
   statPages: 'Pages',
   statComments: 'Comments',

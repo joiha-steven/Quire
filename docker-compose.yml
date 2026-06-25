@@ -1,4 +1,4 @@
-# Fully self-contained vibeblog — NO cloud. Postgres + PostgREST replace Supabase,
+# Fully self-contained Quire Blog — NO cloud. Postgres + PostgREST replace Supabase,
 # the local filesystem replaces Vercel Blob, a cron sidecar replaces Vercel Cron.
 # Everything runs on your own host; only Google OAuth (sign-in) reaches the internet.
 #
@@ -17,7 +17,7 @@ services:
     image: postgres:16-alpine
     env_file: .env.docker            # POSTGRES_PASSWORD (from gen-keys.mjs)
     environment:
-      POSTGRES_DB: vibeblog
+      POSTGRES_DB: quire
       POSTGRES_USER: postgres
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
@@ -25,7 +25,7 @@ services:
       - ./scripts/schema.sql:/docker-entrypoint-initdb.d/02_schema.sql:ro
       - ./docker/initdb/03_grants.sql:/docker-entrypoint-initdb.d/03_grants.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d vibeblog"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d quire"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -42,7 +42,7 @@ services:
         condition: service_healthy
     env_file: .env.docker            # PGRST_JWT_SECRET + PGPASSWORD (from gen-keys.mjs)
     environment:
-      PGRST_DB_URI: postgres://postgres@db:5432/vibeblog   # password via PGPASSWORD
+      PGRST_DB_URI: postgres://postgres@db:5432/quire   # password via PGPASSWORD
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: anon
     restart: unless-stopped
@@ -62,7 +62,7 @@ services:
   # makes db.ts strip the `/rest/v1` path prefix so supabase-js works unchanged.
   app:
     build: .
-    image: vibeblog
+    image: quire
     depends_on:
       db:
         condition: service_healthy

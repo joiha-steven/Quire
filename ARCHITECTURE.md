@@ -1,6 +1,6 @@
 # Architecture
 
-A fresh-reader map of vibeblog: the mental model, how a request flows, and the
+A fresh-reader map of Quire Blog: the mental model, how a request flows, and the
 *why* behind the main decisions. Operational rules, invariants, and a per-area DEBUG
 ROUTER live in [`CLAUDE.md`](./CLAUDE.md); per-area detail lives in [`docs/`](./docs/)
 (conventions, features, seo-pwa, mcp, backups).
@@ -16,7 +16,7 @@ is the public site, `src/app/admin` is the owner console. Post/page bodies are
 
 ## Data model
 
-Postgres (project `vibeblog`, ap-southeast-1), schema `public`:
+Postgres (project `quire`, ap-southeast-1), schema `public`:
 
 ```
 posts            slug PK · title · date · status · categories[] · tags[] · featured_image

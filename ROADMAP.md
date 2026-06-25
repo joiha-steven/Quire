@@ -1,20 +1,20 @@
 # Roadmap
 
-Direction for vibeblog beyond the current single-owner, Vercel-hosted blog. This is
+Direction for Quire Blog beyond the current single-owner, Vercel-hosted blog. This is
 a planning document — nothing here is built yet unless its status says so. Operational
 detail for shipped features lives in [`CLAUDE.md`](./CLAUDE.md); the *why* of the
 current design is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Goal
 
-Make vibeblog something other people can actually run and live in - not just the
+Make Quire Blog something other people can actually run and live in - not just the
 author's personal instance. Near-term tracks:
 
 1. Run anywhere: **Vercel or Docker**, from one codebase.
 2. Publish from a **Markdown note app** (Obsidian, then Craft).
 3. Optional **AI assist** in the editor (titles, tags, drafting, images).
 
-Long horizon (after Docker ships): a **free multi-tenant SaaS** at `vibeblog.app`
+Long horizon (after Docker ships): a **free multi-tenant SaaS** at `quire.app`
 (see Phase 7). The whole point of the SaaS is the *opposite* of lock-in - it is "the
 same open-source app, hosted for you", and any blog exports to a single snapshot that
 re-installs on Docker or a Vercel + Supabase stack with one button. Hosted is a
@@ -96,7 +96,7 @@ it to post fields (for the note-app plugins below), rehosting embedded images.
 
 ### Phase 4 — Obsidian, then Craft `[planned, needs Phase 3]`
 - **Obsidian plugin**: a command that POSTs the active note (frontmatter + body) and
-  its attachments to the ingest API. vibeblog already stores exactly this format.
+  its attachments to the ingest API. Quire Blog already stores exactly this format.
 - **Craft**: best-effort — Markdown export → paste-import in admin, or pull via the
   Craft API where possible.
 
@@ -153,7 +153,7 @@ go through `src/locales/` (+ admin) like everything else.
 
 ### Phase 7 — Multi-tenant SaaS `[planned, needs Docker (Phases 1-2)]`
 
-A **free, hosted** vibeblog at `vibeblog.app`: same open-source app, run for you. Built
+A **free, hosted** Quire Blog at `quire.app`: same open-source app, run for you. Built
 only AFTER Docker ships, so every hosted blog has a guaranteed eject path - hosted is a
 convenience, not a trap (see "No lock-in" in Decisions locked). This is the **model-A**
 choice: one shared stack, many blogs, isolated by `tenant_id` (true multi-tenant, not
@@ -175,8 +175,8 @@ deploy-per-user). It is a large rewrite of the data layer, accepted deliberately
 
 **Auth & routing:**
 - Open signup, owner-per-tenant (replaces the single `AUTHORIZED_EMAIL`).
-- Wildcard `*.vibeblog.app`; middleware resolves the tenant from the host. Admin at
-  `app.vibeblog.app`. Custom domains via the Vercel Domains API + automated SSL.
+- Wildcard `*.quire.app`; middleware resolves the tenant from the host. Admin at
+  `app.quire.app`. Custom domains via the Vercel Domains API + automated SSL.
 
 **Portability backbone (the headline promise):**
 - Reuse Backup/Restore as the universal interchange format. **Export** = the tenant's

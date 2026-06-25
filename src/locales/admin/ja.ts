@@ -198,7 +198,7 @@ const ja = {
   motionLabel: 'モーション',
   motionDesc: 'サイト全体と管理画面の控えめなアニメーション（ページのフェード、ホバー/押下、スクロール表示）。オフで即時。reduced-motion は常に尊重します。',
   overviewTitle: '概要',
-  licenseTitle: 'vibeblog はオープンソース（MIT）。ブログの内容はあなたのものです（無断転載禁止）。',
+  licenseTitle: 'Quire Blog はオープンソース（MIT）。ブログの内容はあなたのものです（無断転載禁止）。',
   statPosts: '投稿',
   statPages: 'ページ',
   statComments: 'コメント',

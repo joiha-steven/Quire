@@ -119,7 +119,7 @@
   (`lib/inline-md.ts` — **bold / italic / underline / link** only, escape-first like `comment-md`,
   link hrefs protocol-checked) authored via `FooterField` (textarea + B/I/U/Link toolbar + live
   preview). `{year}`/`{title}` tokens expand at render. The public layout renders it in `<footer
-  class="site-footer">`; default keeps the "© {year} {title} · powered by vibeblog" line.
+  class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
   **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontUpload`/
   `TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine

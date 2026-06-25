@@ -198,7 +198,7 @@ const zh = {
   motionLabel: '动效',
   motionDesc: '全站与后台的细微动画（页面淡入、悬停/按压、滚动显现）。关闭即即时。始终遵循 reduced-motion。',
   overviewTitle: '概览',
-  licenseTitle: 'vibeblog 是开源软件（MIT）。你的博客内容归你所有（保留所有权利）。',
+  licenseTitle: 'Quire Blog 是开源软件（MIT）。你的博客内容归你所有（保留所有权利）。',
   statPosts: '文章',
   statPages: '页面',
   statComments: '评论',
