@@ -116,8 +116,15 @@ export type AdminStrings = {
   // toolbar
   promptLink: string
   tbList: string
+  tbListNumbered: string
+  tbTask: string
+  tbQuote: string
+  tbCodeBlock: string
+  tbDivider: string
   tbLink: string
   tbImage: string
+  tbGallery: string
+  tbTable: string
   tbMarkdown: string
   tbReview: string
   tbBold: string

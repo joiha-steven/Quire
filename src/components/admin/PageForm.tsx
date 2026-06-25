@@ -16,7 +16,7 @@ import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
 
 type Props = { initial?: PageWithContent; contentWidth: number }
-type PickTarget = 'editor' | 'featured'
+type PickTarget = 'editor' | 'gallery' | 'featured'
 
 function toDraft(initial?: PageWithContent): PageDraft {
   return {
@@ -151,9 +151,16 @@ export function PageForm({ initial, contentWidth }: Props) {
   }
 
   function onPicked(url: string) {
-    if (picker === 'featured') update({ featuredImage: url })
-    else editorApi.current?.insertImage(url)
-    setPicker(null)
+    if (picker === 'featured') {
+      update({ featuredImage: url })
+      setPicker(null)
+    } else if (picker === 'gallery') {
+      // Keep the picker open so several images can be added to one gallery in a row.
+      editorApi.current?.insertGallery(url)
+    } else {
+      editorApi.current?.insertImage(url)
+      setPicker(null)
+    }
   }
 
   async function uploadInline(file: File): Promise<string | null> {
@@ -181,6 +188,7 @@ export function PageForm({ initial, contentWidth }: Props) {
           onChange={(md) => { contentRef.current = md }}
           onDirty={() => setDirty(true)}
           onPickImage={() => setPicker('editor')}
+          onPickGallery={() => setPicker('gallery')}
           onUploadFile={uploadInline}
           apiRef={editorApi}
           contentWidth={contentWidth}
