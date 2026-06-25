@@ -47,7 +47,10 @@ marked.use({
     // (kept in sync with extractHeadings).
     heading(token: Tokens.Heading) {
       const inner = this.parser.parseInline(token.tokens)
-      const id = token.depth === 2 || token.depth === 3 ? ` id="${slugify(token.text)}"` : ''
+      // Only H2/H3 get anchors; a heading that slugifies to "" (e.g. "### !!!")
+      // gets no id rather than an invalid id="" (kept in sync with extractHeadings).
+      const slug = token.depth === 2 || token.depth === 3 ? slugify(token.text) : ''
+      const id = slug ? ` id="${slug}"` : ''
       return `<h${token.depth}${id}>${inner}</h${token.depth}>\n`
     },
     // Sanitize link hrefs (drop javascript:/data:/vbscript:); marked no longer does.

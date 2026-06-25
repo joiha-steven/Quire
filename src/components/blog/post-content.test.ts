@@ -45,6 +45,13 @@ describe('markdown render — structure', () => {
     expect(html).toContain('id="repeat-2"')
   })
 
+  it('omits the id (not id="") for a heading that slugifies to empty', async () => {
+    const html = await render('## !!!\n\n## Real One')
+    expect(html).toContain('<h2>!!!</h2>')
+    expect(html).not.toContain('id=""')
+    expect(html).toContain('<h2 id="real-one">')
+  })
+
   it('turns a standalone YouTube URL into a responsive iframe embed', async () => {
     const html = await render('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
     expect(html).toContain('<div class="video-embed">')
@@ -66,5 +73,14 @@ describe('markdown render — ToC anchors stay in sync', () => {
     const tocIds = extractHeadings(md).map((h) => h.id)
     expect(renderedIds).toEqual(tocIds)
     expect(renderedIds).toEqual(['foo', 'foo-2', 'bar'])
+  })
+
+  it('skips an unanchorable heading in both the render and the ToC', async () => {
+    const md = '## Intro\n\n## ???\n\n## Outro'
+    const html = await render(md)
+    const renderedIds = [...html.matchAll(/<h[23] id="([^"]+)"/g)].map((m) => m[1])
+    const tocIds = extractHeadings(md).map((h) => h.id)
+    expect(renderedIds).toEqual(tocIds)
+    expect(renderedIds).toEqual(['intro', 'outro'])
   })
 })
