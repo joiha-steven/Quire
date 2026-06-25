@@ -279,22 +279,23 @@ as $$
         and exists (select 1 from public.analytics_events p
                       where p.visitor = e.visitor and p.created_at < since)
     ),
+    -- Referrers + countries count DISTINCT VISITORS (one person = 1), not views.
     'topReferrers', coalesce((
-      select jsonb_agg(jsonb_build_object('host', host, 'views', views))
+      select jsonb_agg(jsonb_build_object('host', host, 'visitors', visitors))
       from (
-        select referrer_host as host, count(*)::int as views
+        select referrer_host as host, count(distinct visitor)::int as visitors
         from public.analytics_events
         where created_at >= since and referrer_host is not null and referrer_host <> ''
-        group by referrer_host order by count(*) desc limit top_n
+        group by referrer_host order by count(distinct visitor) desc limit top_n
       ) r
     ), '[]'::jsonb),
     'topCountries', coalesce((
-      select jsonb_agg(jsonb_build_object('country', country, 'views', views))
+      select jsonb_agg(jsonb_build_object('country', country, 'visitors', visitors))
       from (
-        select country, count(*)::int as views
+        select country, count(distinct visitor)::int as visitors
         from public.analytics_events
         where created_at >= since and country is not null and country <> ''
-        group by country order by count(*) desc limit top_n
+        group by country order by count(distinct visitor) desc limit top_n
       ) c
     ), '[]'::jsonb)
   );

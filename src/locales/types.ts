@@ -405,6 +405,10 @@ export type AdminStrings = {
   analyticsReturning: string
   analyticsTopReferrers: string
   analyticsTopCountries: string
+  analyticsColPage: string
+  analyticsColDepth: string
+  analyticsColSource: string
+  analyticsColCountry: string
   analyticsRange24h: string
   analyticsRange7: string
   analyticsRange30: string
