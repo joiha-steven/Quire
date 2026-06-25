@@ -162,7 +162,7 @@
   text). `{year}` and `{title}` tokens expand at render. Authored in **Admin → Settings → Site**
   via `FooterField` (textarea + a B/I/U/Link toolbar that wraps the selection + a live preview).
   The public layout renders it in `<footer class="site-footer">`; default = the old "© {year}
-  {title} · powered by vibeblog" line. Pinned by `inline-md.test.ts` (render + link-safety + escape
+  {title} · powered by Quire Blog" line. Pinned by `inline-md.test.ts` (render + link-safety + escape
   + length). i18n in all 6 admin locales. `v1.1.0-beta`.
 - **change(typography): retuned the default type scale for long-form reading** (the Reset target).
   Restrained, monotonic heading scale (h1 2.0 → h5 1.0; h5 was 0.9, *below* body — fixed), body
@@ -806,7 +806,7 @@ delete is recoverable via a Trash.
   the read-modify-write of the manifest is now a single atomic upsert. New `src/lib/db.ts`
   (server-only `service_role` client; reads cache-eligible for ISR, writes `no-store`).
   A Postgres `tsvector` column is in place for future body search. Schema lives in the
-  `vibeblog` Supabase project (ap-southeast-1). `v0.9.11`.
+  `Quire Blog` Supabase project (ap-southeast-1). `v0.9.11`.
 - **perf(save): display-variant (AVIF/WebP) encoding moved OFF the save request.** `savePost`/
   `savePage` return immediately after the DB write; `finalizeContentMedia` runs in the
   background via `after()` (the original always renders meanwhile). An hourly Vercel Cron
@@ -845,8 +845,8 @@ delete is recoverable via a Trash.
   wipe it on a transient read failure), and sweep the original + thumb + all four display
   variants for any raster (regardless of the stored `variants` flag). `v0.9.6`.
 - **chore: version in README title + repo link on the Overview pill.** The README H1 now
-  carries the version (`# vibeblog (v0.9.x)`, kept in sync on each bump), and the admin
-  Overview version pill links to the repo root (`/vibeblog`) instead of the releases page.
+  carries the version (`# Quire Blog (v0.9.x)`, kept in sync on each bump), and the admin
+  Overview version pill links to the repo root (`/quire`) instead of the releases page.
   `v0.9.5`.
 - **feat(theme): polish the palette pickers + localize palette names.** Admin Settings →
   Appearance: the preset cards are more compact and spaced out, borderless — the selected
@@ -955,19 +955,19 @@ delete is recoverable via a Trash.
 - **fix(admin): mobile-friendly content tables.** Secondary columns now hide on small screens
   (posts: date `sm`, categories `md`; pages: slug `sm`) so Title + Status + actions always fit
   and the status pill never wraps awkwardly. The tab + new-post row wraps on mobile too
-- **fix(admin): header alignment + bigger logo.** The `vibeblog` wordmark, its `v0.x.y` badge
+- **fix(admin): header alignment + bigger logo.** The `Quire Blog` wordmark, its `v0.x.y` badge
   and the menu now share one vertically-centred line (was baseline-misaligned)
 - **fix(admin): header polish.** Wordmark enlarged to logo size (`text-xl`); the version
   (`v0.7.5`) sits next to it and links to GitHub releases (replaces the removed footer link).
   Every header item now shares a fixed-height (`h-9`) `ADMIN_NAV` box so the row stays
   perfectly aligned on one line (fixes the recurring "menu not lined up" drift)
 - **feat(admin): cleaner, responsive header + no footer.** The admin top bar is now one
-  uniform row of text links: a `vibeblog` wordmark (bold `blog`) replaces the old bold
+  uniform row of text links: a `Quire Blog` wordmark (bold `blog`) replaces the old bold
   "Quản trị" brand; the first nav link is now **Trang chủ** (was "Quản trị"). The three
   right-side controls (theme, clear-cache, sign-out) are styled as the SAME text links as the
   menu — no longer button-shaped — and the theme control shows the applied theme as a **word**
   instead of a sun/moon icon. On mobile the whole menu collapses behind a **hamburger** toggle
-  instead of spilling inline. Removed the `vibeblog vX · changelog` admin footer. New
+  instead of spilling inline. Removed the `Quire Blog vX · changelog` admin footer. New
   `AdminHeader` client component; `ADMIN_NAV` shared style; `ThemeToggle` gains `variant='text'`;
   `CacheButton` gains a `className`. Locale key `navAdmin` → `navHome` (all 6 languages)
 - **feat(seo): richer robots.txt policy.** Replaces the bare allow-all with three groups:
