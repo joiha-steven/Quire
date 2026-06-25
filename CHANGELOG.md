@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## v1.2.0 — 2026-06-25 (Rebrand to Quire + admin dashboard, deeper analytics, galleries & lightbox)
+- **Renamed the project to Quire (a.k.a. Quire Blog).** Brand, wordmark (`quire`**blog**), package
+  name, Docker/Postgres/MCP identifiers, GitHub URLs and the Drive backup folder (`quire-backups`)
+  all moved over; the `vibeblog-private` creds repo keeps its name.
+- **Admin Overview is now a dashboard.** A **Traffic** card (30-day views + visitors with a
+  sparkline + last-7-days), **Most viewed** posts (top 5 by all-time views, by title), and a
+  **Needs attention** card (draft count). Comments have no moderation queue, so there is no
+  "pending" item.
+- **Deeper analytics.** Period-over-period **trend** (▲/▼) on views + visitors, a **new-vs-returning**
+  split, **top pages** as a labelled Page/Views/Visitors/Depth table, **top referrers + countries**
+  (counted by **distinct visitor** — one person = 1, not page views; country shows a flag), and a
+  **CSV export** of the daily series. The trend / new-returning / referrer / country sections need a
+  one-time DB migration (`scripts/migrations/2026-06-25-analytics-deepening.sql` then
+  `…-analytics-fix-visitor-counts.sql`); until applied, the data layer falls back and those sections
+  stay hidden.
+- **Image galleries.** Mark images `#grid` (a toolbar **Gallery** button with a multi-select picker,
+  or the per-image **Grid** toggle) and consecutive ones render as a **smart CSS grid** — the column
+  count adapts to the image count (2→2, 3→3, 4→2×2, 5–9→3, 10+→4; collapses to 2 on phones).
+- **Image lightbox.** Clicking any post/page image opens a full-size overlay with prev/next, keyboard
+  nav (←/→/Esc), a counter and the caption.
+- **Editor fixes.** Drag-dropped images insert at the drop point (not the end of the post); existing
+  links can be edited (the toolbar prefills the href; clearing it removes the link); clearer toolbar
+  labels (text for Table / list / quote / code / divider instead of bare icons).
+- **Faster admin home.** Dropped a per-post content scan (`findUnusedMedia`, hundreds of serial
+  queries) from the dashboard — it stays an on-demand check on the Media page.
+- **fix(toc):** a heading that slugifies to nothing (e.g. `## !!!`) no longer emits an invalid
+  `id=""`; it gets no anchor and is skipped from the ToC.
+
 ## v1.1.9 — 2026-06-24 (Docker self-host: fix fresh-install file permissions)
 - **fix(docker): media uploads + ISR cache now work on a fresh self-host install.** The image runs
   as the unprivileged `node` user (uid 1000), but two paths were root-owned and unwritable, so a
