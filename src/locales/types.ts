@@ -321,7 +321,6 @@ export type AdminStrings = {
   dashNeedsAttention: string
   dashAllClear: string
   dashDrafts: string
-  dashUnusedMedia: string
   // overview: quick actions + recent activity
   quickTitle: string
   recentActivity: string

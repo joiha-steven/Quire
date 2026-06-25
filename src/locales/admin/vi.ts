@@ -230,7 +230,6 @@ const vi = {
   dashNeedsAttention: 'Cần chú ý',
   dashAllClear: 'Mọi thứ gọn gàng.',
   dashDrafts: 'Bản nháp',
-  dashUnusedMedia: 'Media chưa dùng',
   quickTitle: 'Thao tác nhanh',
   recentActivity: 'Hoạt động gần đây',
   recentViewAll: 'Xem tất cả',

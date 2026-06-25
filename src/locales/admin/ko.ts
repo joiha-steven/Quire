@@ -230,7 +230,6 @@ const ko = {
   dashNeedsAttention: '확인 필요',
   dashAllClear: '모두 처리됨.',
   dashDrafts: '초안',
-  dashUnusedMedia: '미사용 미디어',
   quickTitle: '빠른 작업',
   recentActivity: '최근 활동',
   recentViewAll: '전체 보기',

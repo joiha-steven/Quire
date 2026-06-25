@@ -230,7 +230,6 @@ const zh = {
   dashNeedsAttention: '待处理',
   dashAllClear: '一切就绪。',
   dashDrafts: '草稿',
-  dashUnusedMedia: '未使用的媒体',
   quickTitle: '快捷操作',
   recentActivity: '最近活动',
   recentViewAll: '查看全部',

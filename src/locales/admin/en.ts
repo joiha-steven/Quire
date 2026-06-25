@@ -230,7 +230,6 @@ const en = {
   dashNeedsAttention: 'Needs attention',
   dashAllClear: 'All caught up.',
   dashDrafts: 'Drafts',
-  dashUnusedMedia: 'Unused media',
   quickTitle: 'Quick actions',
   recentActivity: 'Recent activity',
   recentViewAll: 'View all',

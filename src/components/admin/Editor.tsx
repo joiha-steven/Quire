@@ -81,7 +81,7 @@ type Props = {
   contentWidth: number
 }
 
-const BTN = 'shrink-0 rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
+const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
 
 function Toolbar({
   editor,
@@ -98,25 +98,24 @@ function Toolbar({
 }) {
   const t = useAdminT()
   const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
-  const sep = <span className="mx-1 h-5 w-px shrink-0 bg-neutral-200" />
+  const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
   const toggle = (
-    <button type="button" onClick={onToggleRaw} className={`${BTN} font-medium text-neutral-600`}>
+    <button type="button" onClick={onToggleRaw} className={`${BTN} ml-auto font-medium text-neutral-600`}>
       {raw ? t.tbReview : t.tbMarkdown}
     </button>
   )
   // In Markdown source mode the formatting buttons don't apply to plain text.
   if (raw) {
     return (
-      <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="sticky top-0 z-10 flex items-center rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
         {toggle}
       </div>
     )
   }
-  // One non-wrapping row: the format buttons scroll horizontally if they don't
-  // fit (no ugly line wrap); the Markdown/Review toggle stays pinned on the right.
+  // Wrap to a second row when the buttons don't fit — a horizontal scrollbar here
+  // fights the browser's own scrollbar, so wrapping is the lesser evil.
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-2 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
         <strong>B</strong>
       </button>
@@ -198,7 +197,6 @@ function Toolbar({
       >
         {t.tbTable}
       </button>
-      </div>
       {toggle}
     </div>
   )

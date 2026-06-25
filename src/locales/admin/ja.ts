@@ -230,7 +230,6 @@ const ja = {
   dashNeedsAttention: '要対応',
   dashAllClear: 'すべて対応済み。',
   dashDrafts: '下書き',
-  dashUnusedMedia: '未使用のメディア',
   quickTitle: 'クイック操作',
   recentActivity: '最近のアクティビティ',
   recentViewAll: 'すべて表示',
