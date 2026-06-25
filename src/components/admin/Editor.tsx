@@ -4,7 +4,7 @@
 // Marks/nodes: bold, italic, underline, strike, inline code, H1-H5, bullet +
 // numbered + task lists, quote, code block, horizontal rule, link, image
 // (align + wide), GFM tables, and video (paste a YouTube/Vimeo/TikTok URL).
-// Drag an image file in -> auto-uploads -> inserts at cursor. A Markdown/Review
+// Drag an image file in -> auto-uploads -> inserts at the drop point. A Markdown/Review
 // toggle swaps the formatted view for the raw Markdown source.
 import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
@@ -162,8 +162,15 @@ function Toolbar({
       <button
         type="button"
         onClick={() => {
-          const url = window.prompt(t.promptLink)
-          if (url) editor.chain().focus().setLink({ href: url }).run()
+          // Prefill the existing href so an old link can be edited (not just
+          // created). extendMarkRange covers the whole link when the cursor is
+          // merely inside it — no need to first select the linked text.
+          const prev = (editor.getAttributes('link').href as string | undefined) ?? ''
+          const url = window.prompt(t.promptLink, prev)
+          if (url === null) return // cancelled — leave the link untouched
+          const range = editor.chain().focus().extendMarkRange('link')
+          if (url === '') range.unsetLink().run() // cleared the URL -> remove the link
+          else range.setLink({ href: url }).run()
         }}
         className={cls(editor.isActive('link'))}
       >
@@ -236,14 +243,21 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
         const files = Array.from(event.dataTransfer?.files ?? []).filter((f) => f.type.startsWith('image/'))
         if (files.length === 0) return false
         event.preventDefault()
+        // Capture WHERE the image was dropped now — uploads are async, so by the
+        // time they resolve the text cursor has wandered (the image used to land
+        // at the stale cursor, i.e. the end of the post). Insert at the drop point.
+        let pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos
         // Upload sequentially so multiple dropped images insert in order.
         ;(async () => {
           for (const file of files) {
             const url = await onUploadFile(file)
-            if (url) {
-              const alt = file.name.replace(/\.[a-z0-9]+$/i, '')
-              editorRef.current?.chain().focus().setImage({ src: url, alt }).run()
-            }
+            const ed = editorRef.current
+            if (!url || !ed) continue
+            const alt = file.name.replace(/\.[a-z0-9]+$/i, '')
+            const chain = pos == null ? ed.chain().focus() : ed.chain().focus(pos)
+            chain.setImage({ src: url, alt }).run()
+            // Advance past the just-inserted image so the next one lands after it.
+            pos = ed.state.selection.to
           }
         })()
         return true
