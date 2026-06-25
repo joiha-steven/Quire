@@ -2,7 +2,9 @@
 
 // Media grid. Two modes:
 // - 'page'   : full library; click a thumbnail to zoom, plus copy-URL / delete.
-// - 'picker' : modal for choosing an image (calls onSelect with the URL).
+// - 'picker' : modal for choosing an image (calls onSelect with the URL). With
+//   `multi`, tiles toggle a selection (checkbox + ring) and an "Add (N)" button
+//   returns them all via onSelectMany — used to build a gallery in one go.
 import { useEffect, useRef, useState } from 'react'
 import type { MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
@@ -13,13 +15,15 @@ import { useAdminT } from './I18nProvider'
 
 type Props = {
   mode?: 'page' | 'picker'
+  multi?: boolean
   onSelect?: (url: string) => void
+  onSelectMany?: (urls: string[]) => void
   onClose?: () => void
 }
 
 const PAGE = 50 // render this many, then load more on scroll (keeps it light)
 
-export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
+export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectMany, onClose }: Props) {
   const t = useAdminT()
   const { notify } = useToast()
   const [items, setItems] = useState<MediaItem[]>([])
@@ -167,20 +171,27 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
         {filtered.slice(0, visible).map((m) => (
-          <figure key={m.url} className="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-            {mode === 'page' && (
+          <figure
+            key={m.url}
+            className={`relative overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 ${
+              (mode === 'page' || multi) && selected.has(m.url)
+                ? 'border-blue-500 ring-2 ring-blue-500'
+                : 'border-neutral-200 dark:border-neutral-800'
+            }`}
+          >
+            {(mode === 'page' || multi) && (
               <input
                 type="checkbox"
                 checked={selected.has(m.url)}
                 onChange={() => toggleSelect(m.url)}
                 aria-label={m.filename}
-                className="absolute left-1.5 top-1.5 z-10 h-4 w-4 accent-neutral-700 dark:accent-neutral-300"
+                className="absolute left-1.5 top-1.5 z-10 h-4 w-4 accent-blue-600 dark:accent-blue-400"
               />
             )}
             <button
               type="button"
-              // Page mode: click to zoom. Picker mode: click to select.
-              onClick={() => (mode === 'picker' ? onSelect?.(m.url) : setZoom(m))}
+              // Page mode: click to zoom. Picker: click to select (toggle in multi).
+              onClick={() => (mode === 'picker' ? (multi ? toggleSelect(m.url) : onSelect?.(m.url)) : setZoom(m))}
               className="relative block aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -316,11 +327,21 @@ export function MediaLibrary({ mode = 'page', onSelect, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl bg-white p-5 dark:bg-neutral-900">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{t.mediaTitle}</h2>
-          <Button variant="ghost" onClick={onClose}>
-            {t.close}
-          </Button>
+          <h2 className="text-lg font-bold">{multi ? t.galleryPickTitle : t.mediaTitle}</h2>
+          <div className="flex items-center gap-2">
+            {multi && selected.size > 0 && (
+              <Button onClick={() => onSelectMany?.([...selected])}>
+                {t.galleryAdd} ({selected.size})
+              </Button>
+            )}
+            <Button variant="ghost" onClick={onClose}>
+              {t.close}
+            </Button>
+          </div>
         </div>
+        {multi && (
+          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">{t.galleryPickHint}</p>
+        )}
         <div className="overflow-y-auto">{body}</div>
       </div>
     </div>

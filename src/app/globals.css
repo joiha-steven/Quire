@@ -446,6 +446,20 @@ hr {
   aspect-ratio: 1 / 1;
   object-fit: cover;
 }
+/* Editor preview: the TipTap editor has no .gallery wrapper (grouping happens on
+   publish), so make #grid figures flow side-by-side as thumbnails — a gallery
+   reads as columns in the editor too, not a vertical stack. Scoped to .ProseMirror
+   so the published page is unaffected. */
+.ProseMirror figure.img-grid {
+  display: inline-block;
+  width: 31%;
+  margin: 0 1.5% 0.5rem 0;
+  vertical-align: top;
+}
+.ProseMirror figure.img-grid img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {
   margin-top: 0.6em;
