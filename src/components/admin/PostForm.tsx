@@ -22,7 +22,7 @@ type Props = {
   contentWidth: number
 }
 
-type PickTarget = 'editor' | 'featured'
+type PickTarget = 'editor' | 'gallery' | 'featured'
 
 // ISO -> value for <input type="datetime-local"> in local time.
 function isoToLocal(iso: string): string {
@@ -180,9 +180,16 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   }
 
   function onPicked(url: string) {
-    if (picker === 'featured') update({ featuredImage: url })
-    else editorApi.current?.insertImage(url)
-    setPicker(null)
+    if (picker === 'featured') {
+      update({ featuredImage: url })
+      setPicker(null)
+    } else if (picker === 'gallery') {
+      // Keep the picker open so several images can be added to one gallery in a row.
+      editorApi.current?.insertGallery(url)
+    } else {
+      editorApi.current?.insertImage(url)
+      setPicker(null)
+    }
   }
 
   // Load an overwritten version back into the editor (slug + date stay current).
@@ -241,6 +248,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
           onChange={(md) => { contentRef.current = md }}
           onDirty={() => setDirty(true)}
           onPickImage={() => setPicker('editor')}
+          onPickGallery={() => setPicker('gallery')}
           onUploadFile={uploadInline}
           apiRef={editorApi}
           contentWidth={contentWidth}

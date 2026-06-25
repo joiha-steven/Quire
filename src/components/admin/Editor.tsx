@@ -23,6 +23,9 @@ import { useAdminT } from './I18nProvider'
 
 export type EditorApi = {
   insertImage: (url: string) => void
+  // Insert an image as a gallery item (#grid) — consecutive ones group into a
+  // CSS grid on the public side. The picker stays open so several can be added.
+  insertGallery: (url: string) => void
   // Serialize the current document to Markdown on demand (used at save time, so
   // a save always captures the latest text even mid-debounce).
   getMarkdown: () => string
@@ -71,6 +74,7 @@ type Props = {
   // serializing the whole document on each keystroke.
   onDirty: () => void
   onPickImage: () => void
+  onPickGallery: () => void
   onUploadFile: (file: File) => Promise<string | null>
   apiRef: React.MutableRefObject<EditorApi | null>
   // Width of the public single-post column, so typing mirrors the live layout.
@@ -82,11 +86,13 @@ const BTN = 'shrink-0 rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:
 function Toolbar({
   editor,
   onPickImage,
+  onPickGallery,
   raw,
   onToggleRaw,
 }: {
   editor: TiptapEditor
   onPickImage: () => void
+  onPickGallery: () => void
   raw: boolean
   onToggleRaw: () => void
 }) {
@@ -147,19 +153,19 @@ function Toolbar({
         • {t.tbList}
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cls(editor.isActive('orderedList'))}>
-        1.
+        1. {t.tbListNumbered}
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleTaskList().run()} className={cls(editor.isActive('taskList'))}>
-        ☑
+        ☑ {t.tbTask}
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cls(editor.isActive('blockquote'))}>
-        ❝
+        ❝ {t.tbQuote}
       </button>
       <button type="button" onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={cls(editor.isActive('codeBlock'))}>
-        {'</>'}
+        {'</>'} {t.tbCodeBlock}
       </button>
       <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={cls(false)}>
-        ―
+        ― {t.tbDivider}
       </button>
       {sep}
       <button
@@ -182,13 +188,15 @@ function Toolbar({
       <button type="button" onClick={onPickImage} className={cls(false)}>
         {t.tbImage}
       </button>
+      <button type="button" onClick={onPickGallery} className={cls(false)}>
+        {t.tbGallery}
+      </button>
       <button
         type="button"
-       
         onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
         className={cls(false)}
       >
-        ▦
+        {t.tbTable}
       </button>
       </div>
       {toggle}
@@ -196,7 +204,7 @@ function Toolbar({
   )
 }
 
-export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploadFile, apiRef, contentWidth }: Props) {
+export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickGallery, onUploadFile, apiRef, contentWidth }: Props) {
   const t = useAdminT()
   // Markdown source view: edit the raw markdown directly (still saves live).
   const [raw, setRaw] = useState(false)
@@ -304,6 +312,9 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
     apiRef.current = {
       insertImage: (url: string) =>
         editor.chain().focus().setImage({ src: url, alt: captionFromUrl(url) }).run(),
+      // Gallery item: empty alt for a clean mosaic; '#grid' groups consecutive ones.
+      insertGallery: (url: string) =>
+        editor.chain().focus().setImage({ src: `${url}#grid`, alt: '' }).run(),
       // In raw mode the textarea is the source of truth; otherwise serialize live.
       getMarkdown: () => (rawRef.current ? rawTextRef.current : readMarkdown(editor)),
       // Load a full document, leaving raw mode so the formatted view shows it.
@@ -338,7 +349,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onUploa
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <Toolbar editor={editor} onPickImage={onPickImage} raw={raw} onToggleRaw={toggleRaw} />
+      <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} />
       {/* Center the writing column at the public single-post width so what you
           type wraps exactly like the published article. */}
       <div className="mx-auto w-full" style={{ maxWidth: contentWidth }}>
