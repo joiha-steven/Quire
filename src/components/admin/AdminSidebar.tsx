@@ -124,7 +124,7 @@ export function AdminSidebar({
   // chevron points the direction it will move the rail; rotates when collapsed.
   const wordmark = (c: boolean): ReactNode => (
     <Link href="/admin" onClick={close} className="flex h-9 items-center px-3 text-xl leading-none tracking-tight">
-      {c ? <span className="font-bold">vb</span> : <>vibe<span className="font-bold">blog</span></>}
+      {c ? <span className="font-bold">qb</span> : <><span className="font-bold">quire</span>blog</>}
     </Link>
   )
 
