@@ -31,6 +31,10 @@ export type Dict = {
   tryAgain: string
   backHome: string
   backToTop: string
+  // image lightbox
+  lightboxPrev: string
+  lightboxNext: string
+  lightboxClose: string
   // comments
   commentsHeading: string
   commentsEmpty: string
