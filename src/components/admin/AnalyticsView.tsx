@@ -143,24 +143,34 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
             )}
           </div>
 
-          {/* Top pages — by post/page title where known, the bare path otherwise. */}
-          <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          {/* Top pages — by post/page title where known, the bare path otherwise.
+              A real table with labelled columns so the numbers are unambiguous. */}
+          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
             <h2 className="mb-3 text-sm font-bold">{t.analyticsTopPages}</h2>
-            <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
-              {data.topPages.map((p) => {
-                const label = titles[p.path] ?? p.path
-                return (
-                  <li key={p.path} className="flex items-center justify-between gap-3 py-1.5 text-sm">
-                    <a href={p.path} target="_blank" rel="noopener noreferrer" className="min-w-0 truncate text-neutral-700 hover:underline dark:text-neutral-200" title={p.path}>
-                      {label}
-                    </a>
-                    <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">
-                      {p.views.toLocaleString()} · {p.visitors.toLocaleString()} · {p.avgDepth}%
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-100 text-xs font-medium text-neutral-400 dark:border-neutral-800/60 dark:text-neutral-500">
+                  <th className="py-1.5 text-left font-medium">{t.analyticsColPage}</th>
+                  <th className="py-1.5 pl-3 text-right font-medium">{t.analyticsViews}</th>
+                  <th className="py-1.5 pl-3 text-right font-medium">{t.analyticsVisitors}</th>
+                  <th className="py-1.5 pl-3 text-right font-medium">{t.analyticsColDepth}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                {data.topPages.map((p) => (
+                  <tr key={p.path}>
+                    <td className="max-w-0 py-1.5 pr-3">
+                      <a href={p.path} target="_blank" rel="noopener noreferrer" className="block truncate text-neutral-700 hover:underline dark:text-neutral-200" title={p.path}>
+                        {titles[p.path] ?? p.path}
+                      </a>
+                    </td>
+                    <td className="py-1.5 pl-3 text-right tabular-nums text-neutral-600 dark:text-neutral-300">{p.views.toLocaleString()}</td>
+                    <td className="py-1.5 pl-3 text-right tabular-nums text-neutral-600 dark:text-neutral-300">{p.visitors.toLocaleString()}</td>
+                    <td className="py-1.5 pl-3 text-right tabular-nums text-neutral-500 dark:text-neutral-400">{p.avgDepth}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {/* Top referrers + countries — populated only after the analytics-
@@ -170,11 +180,15 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
               {(data.topReferrers?.length ?? 0) > 0 && (
                 <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
                   <h2 className="mb-3 text-sm font-bold">{t.analyticsTopReferrers}</h2>
+                  <div className="mb-1 flex items-center justify-between text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                    <span>{t.analyticsColSource}</span>
+                    <span>{t.analyticsVisitors}</span>
+                  </div>
                   <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     {data.topReferrers!.map((r) => (
                       <li key={r.host} className="flex items-center justify-between gap-3 py-1.5 text-sm">
                         <span className="min-w-0 truncate text-neutral-700 dark:text-neutral-200" title={r.host}>{r.host}</span>
-                        <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">{r.views.toLocaleString()}</span>
+                        <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">{r.visitors.toLocaleString()}</span>
                       </li>
                     ))}
                   </ul>
@@ -183,13 +197,17 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
               {(data.topCountries?.length ?? 0) > 0 && (
                 <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-4 dark:border-neutral-800 dark:bg-neutral-900">
                   <h2 className="mb-3 text-sm font-bold">{t.analyticsTopCountries}</h2>
+                  <div className="mb-1 flex items-center justify-between text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                    <span>{t.analyticsColCountry}</span>
+                    <span>{t.analyticsVisitors}</span>
+                  </div>
                   <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     {data.topCountries!.map((c) => (
                       <li key={c.country} className="flex items-center justify-between gap-3 py-1.5 text-sm">
                         <span className="min-w-0 truncate text-neutral-700 dark:text-neutral-200">
                           {flag(c.country)} {c.country}
                         </span>
-                        <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">{c.views.toLocaleString()}</span>
+                        <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400">{c.visitors.toLocaleString()}</span>
                       </li>
                     ))}
                   </ul>

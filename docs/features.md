@@ -113,8 +113,9 @@
   (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
   (`getViewTotals`). Shows total views + unique visitors (with **period-over-period trend** and a
-  **new-vs-returning** split), avg read depth, a daily bar series, **top pages by title**, and **top
-  referrers + countries**, plus a **CSV export** of the daily series. The trend / new-returning /
+  **new-vs-returning** split), avg read depth, a daily bar series, **top pages by title** (a
+  labelled Page/Views/Visitors/Depth table), and **top referrers + countries** (counted by
+  **distinct visitor**, one person = 1 — not page views), plus a **CSV export** of the daily series. The trend / new-returning /
   referrer / country sections need the `analytics-deepening` migration
   (`scripts/migrations/2026-06-25-analytics-deepening.sql`); until it is applied the data layer falls
   back to the base shape and those sections stay hidden. Detail in the data-layer map (`analytics.ts`).

@@ -24,8 +24,8 @@ import { db } from '@/lib/db'
 
 export type TopPage = { path: string; views: number; visitors: number; avgDepth: number }
 export type DailyPoint = { day: string; views: number; visitors: number }
-export type TopReferrer = { host: string; views: number }
-export type TopCountry = { country: string; views: number }
+export type TopReferrer = { host: string; visitors: number }
+export type TopCountry = { country: string; visitors: number }
 export type AnalyticsSummary = {
   totalViews: number
   uniqueVisitors: number
