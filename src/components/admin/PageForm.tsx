@@ -13,6 +13,7 @@ import { uploadImages } from '@/lib/upload-client'
 import { Editor, type EditorApi } from './Editor'
 import { PageSettings, type PageDraft } from './PageSettings'
 import { MediaLibrary } from './MediaLibrary'
+import { useLocalDraft } from './useLocalDraft'
 import { useAdminT } from './I18nProvider'
 
 type Props = { initial?: PageWithContent; contentWidth: number }
@@ -38,6 +39,13 @@ export function PageForm({ initial, contentWidth }: Props) {
   const [picker, setPicker] = useState<PickTarget | null>(null)
   const [dirty, setDirty] = useState(false)
   const [savedSlug, setSavedSlug] = useState<string | null>(initial?.slug ?? null)
+  // Local (offline) autosave — keyed per page so drafts don't clobber each other.
+  const {
+    recovered: localRecovered,
+    save: saveLocal,
+    clear: clearLocal,
+    dismiss: dismissLocal,
+  } = useLocalDraft<PageDraft>(`quire:draft:page:${initial?.slug ?? 'new'}`)
 
   const slugTouched = useRef(Boolean(initial?.slug))
   const currentSlug = useRef<string | null>(initial?.slug ?? null)
@@ -96,6 +104,7 @@ export function PageForm({ initial, contentWidth }: Props) {
         setSavedSlug(json.data.slug)
         setSavedAt(new Date().toISOString())
         setDirty(false)
+        clearLocal() // the server now has it — drop the local recovery copy
         window.history.replaceState(null, '', `/admin/page-editor/${json.data.slug}`)
         // Drop the client Router Cache so the save shows on the next navigation.
         router.refresh()
@@ -107,7 +116,7 @@ export function PageForm({ initial, contentWidth }: Props) {
         setSaving(false)
       }
     },
-    [notify, t, router],
+    [notify, t, router, clearLocal],
   )
 
   const enqueueSave = useCallback(
@@ -120,13 +129,17 @@ export function PageForm({ initial, contentWidth }: Props) {
     [doPersist],
   )
 
-  // Auto-save once a minute when there are unsaved changes.
+  // Local (offline) autosave: stash unsaved edits in localStorage every few
+  // seconds. Crucially this NEVER writes to the server, so editing a published
+  // page can't push half-finished text live — only Save/Publish does that.
   useEffect(() => {
     const id = setInterval(() => {
-      if (dirtyRef.current) void enqueueSave()
-    }, 60_000)
+      if (!dirtyRef.current) return
+      const content = editorApi.current?.getMarkdown() ?? contentRef.current
+      saveLocal({ ...draftRef.current, content })
+    }, 8_000)
     return () => clearInterval(id)
-  }, [enqueueSave])
+  }, [saveLocal])
 
   // Warn before leaving with unsaved changes.
   useEffect(() => {
@@ -159,8 +172,21 @@ export function PageForm({ initial, contentWidth }: Props) {
 
   // Gallery: insert every chosen image as a #grid item (they group into a grid).
   function onPickedMany(urls: string[]) {
-    urls.forEach((u) => editorApi.current?.insertGallery(u))
+    editorApi.current?.insertGalleryMany(urls)
     setPicker(null)
+  }
+
+  // Pull a recovered local snapshot back into the form (slug stays current).
+  function restoreLocal() {
+    if (!localRecovered) return
+    const d = localRecovered.data
+    setDraft(d)
+    draftRef.current = d
+    editorApi.current?.setMarkdown(d.content)
+    contentRef.current = d.content
+    setDirty(true)
+    clearLocal()
+    notify(t.revisionLoaded)
   }
 
   async function uploadInline(file: File): Promise<string | null> {
@@ -181,6 +207,22 @@ export function PageForm({ initial, contentWidth }: Props) {
         placeholder={t.titlePlaceholder}
         className="mb-6 w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
       />
+
+      {localRecovered && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
+          <span className="text-amber-800 dark:text-amber-200">
+            {t.localDraftFound} · {formatTime(localRecovered.at)}
+          </span>
+          <div className="flex gap-2">
+            <button type="button" onClick={restoreLocal} className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700">
+              {t.localDraftRestore}
+            </button>
+            <button type="button" onClick={dismissLocal} className="rounded-md px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-500/20">
+              {t.localDraftDiscard}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <Editor

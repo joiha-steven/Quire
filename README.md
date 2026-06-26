@@ -1,6 +1,6 @@
 <div align="center">
 
-# **quire**blog &nbsp;`v1.2.0`
+# **quire**blog &nbsp;`v1.2.1`
 
 **An AI-operated personal blog platform.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -37,7 +37,7 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 
 | Area | What you get |
 |:---|:---|
-| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · responsive `sharp` images (original + AVIF/WebP variants) · 3-version time machine · 60s autosave |
+| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · responsive `sharp` images (original + AVIF/WebP variants) · 3-version time machine · offline local autosave |
 | 🎨&nbsp;**Look** | 6 customizable light+dark palettes · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · upload a custom font per weight |
 | 🌍&nbsp;**i18n** | Admin + site in `en · vi · de · ja · zh · ko` |
 | 🔍&nbsp;**Reading** | instant local + Postgres full-text search · ToC · related posts · reading time · progress bar |

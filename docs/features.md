@@ -58,7 +58,13 @@
 - StarterKit + underline, inline code, bullet/numbered/**task** lists (GFM `- [ ]`), quote,
   code block, hr, link, captioned image, GFM tables, video. `tiptap-markdown` serializes all.
   **GOTCHA:** list items wrap content in `<p>`; `.prose li > p{margin:0}` keeps them tight.
-- Autosave every 60s while dirty (chained behind any in-flight save); warns on unload.
+- **Local (offline) autosave** (`useLocalDraft.ts`): unsaved edits are stashed in `localStorage`
+  every 8s while dirty — NEVER to the server, so editing a *published* post can't push
+  half-finished text live; only Save/Publish writes to the server. On return, a snapshot that
+  outlived its session (crash / closed tab / dropped connection clears nothing) surfaces a
+  "restore / discard" bar; a successful server save clears it. `beforeunload` still warns.
+- Gallery insert adds all picked images in ONE `insertContent` (a per-image loop leaves only the
+  last — `setImage` selects the node it inserts, so the next insert replaces it).
 - Time machine: each overwrite snapshots the prior version (`revisions.ts`, keeps 3); restore
   loads it into the editor (non-destructive — current version is snapshotted on next save).
 

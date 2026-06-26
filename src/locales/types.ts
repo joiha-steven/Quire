@@ -113,6 +113,10 @@ export type AdminStrings = {
   savedDraft: string
   published: string
   imageUploadFailed: string
+  // local (offline) autosave recovery bar
+  localDraftFound: string
+  localDraftRestore: string
+  localDraftDiscard: string
   // toolbar
   promptLink: string
   tbList: string

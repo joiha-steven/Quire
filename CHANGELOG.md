@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v1.2.1 — 2026-06-26 (Editor fixes: offline autosave + multi-image gallery)
+- **Autosave no longer publishes.** The old once-a-minute autosave wrote to the server using the
+  post's current status — so editing a *published* post silently pushed half-finished text live.
+  Autosave is now **local-only**: unsaved edits are stashed in `localStorage` every 8s and never
+  reach the server until you click Save/Publish. Because it's local it also survives a dropped
+  connection (a server autosave can't). On return, a "restore / discard" bar offers any recovered
+  draft; a successful save clears it.
+- **Gallery insert kept only the last image.** Picking several images for a gallery inserted them
+  one-by-one, and each `setImage` replaced the previously-inserted (selected) node — so only one
+  survived. All picked images now insert in a single transaction.
+
 ## v1.2.0 — 2026-06-25 (Rebrand to Quire + admin dashboard, deeper analytics, galleries & lightbox)
 - **Renamed the project to Quire (a.k.a. Quire Blog).** Brand, wordmark (`quire`**blog**), package
   name, Docker/Postgres/MCP identifiers, GitHub URLs and the Drive backup folder (`quire-backups`)
