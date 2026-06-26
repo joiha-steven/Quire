@@ -1,84 +1,51 @@
 # CHANGELOG
 
-## v1.2.6 — 2026-06-26 (Bubble menu follows light/dark)
-- **The selection bubble now themes with light/dark** like the toolbar. It was a fixed dark chip —
-  too harsh on a light page and nearly invisible against the dark editor. Now a white chip in light
-  mode, a `neutral-800` chip in dark, with matching button + separator colours.
+## v1.2.6 — 2026-06-26 (Quire 1.2: rebrand, dashboard, deeper analytics, galleries, lightbox & reworked editor)
+Consolidates the whole 1.2.0–1.2.6 line into one entry.
 
-## v1.2.5 — 2026-06-26 (Hotfix: editor crash from the bubble menu)
-- **Fixed the editor 500 introduced in v1.2.4.** The new `BubbleMenu` got fresh inline `options` /
-  `shouldShow` objects on every render; it re-dispatches an "updateOptions" transaction whenever
-  those change identity, and with `shouldRerenderOnTransaction` on that became an infinite loop
-  (dispatch → re-render → new object → dispatch → …) that crashed the editor to the error page.
-  Both props are now memoised (`useMemo` / `useCallback`), so the effect runs once.
+**Rebrand**
+- Renamed the project to **Quire** (a.k.a. Quire Blog): brand, wordmark (`quire`**blog**), package
+  name, Docker/Postgres/MCP identifiers, GitHub URLs and the Drive backup folder (`quire-backups`);
+  the `vibeblog-private` creds repo keeps its name.
 
-## v1.2.4 — 2026-06-26 (Live toolbar + floating selection menu)
-- **Fixed: the toolbar wasn't reacting to the cursor.** TipTap 3 disables React re-renders on
-  transactions by default, so `isActive()` never re-ran — the active-format highlights were stale
-  and the v1.2.3 contextual table-tools row never appeared. Enabling `shouldRerenderOnTransaction`
-  makes all of it live, so the table controls now show whenever the cursor is inside a table.
-- **New: a floating menu on selection.** Select text (or put the cursor in a link) and a compact
-  bubble appears with bold / italic / underline / strike / code and a link edit (plus remove-link
-  when on a link) — the contextual menu other editors have. It stays out of the way of image/video
-  node selections, which keep their own controls.
-- Editor menu UI moved to `EditorMenus.tsx` (Toolbar + BubbleBar) to keep `Editor.tsx` within the
-  file-size cap.
-
-## v1.2.3 — 2026-06-26 (Editable tables + tidier toolbar)
-- **Tables can now grow.** With the cursor inside a table a contextual control row appears —
-  add/remove column, add/remove row, delete table — so a table is no longer stuck at the fixed
-  3×3 it was inserted as.
-- **Header row + left column are shaded** with the table's own rule colour (no new colour) so the
-  table's spine reads at a glance, in the editor and once published. The left-column shade is a
-  purely visual cue (GFM has no header-column syntax) and never changes the saved Markdown.
-- **Toolbar tidy-up.** The Markdown/Review toggle now trails the other buttons inline instead of
-  being right-aligned, where it wrapped onto a lonely second row.
-
-## v1.2.2 — 2026-06-26 (Editor gallery preview matches the published grid)
-- **Gallery images now sit side-by-side while editing, not stacked.** Each TipTap node view is
-  wrapped in a block `.react-renderer` div, so the old CSS (which styled only the inner `<figure>`)
-  left every gallery image on its own row — nothing like the published grid. The layout now targets
-  the wrapper via `:has(> figure.img-grid)`, scoped to gallery items only: a `#grid` image is laid
-  out as a thumbnail column and a lone image still spans full width, so the two read differently.
-
-## v1.2.1 — 2026-06-26 (Editor fixes: offline autosave + multi-image gallery)
-- **Autosave no longer publishes.** The old once-a-minute autosave wrote to the server using the
-  post's current status — so editing a *published* post silently pushed half-finished text live.
-  Autosave is now **local-only**: unsaved edits are stashed in `localStorage` every 8s and never
-  reach the server until you click Save/Publish. Because it's local it also survives a dropped
-  connection (a server autosave can't). On return, a "restore / discard" bar offers any recovered
-  draft; a successful save clears it.
-- **Gallery insert kept only the last image.** Picking several images for a gallery inserted them
-  one-by-one, and each `setImage` replaced the previously-inserted (selected) node — so only one
-  survived. All picked images now insert in a single transaction.
-
-## v1.2.0 — 2026-06-25 (Rebrand to Quire + admin dashboard, deeper analytics, galleries & lightbox)
-- **Renamed the project to Quire (a.k.a. Quire Blog).** Brand, wordmark (`quire`**blog**), package
-  name, Docker/Postgres/MCP identifiers, GitHub URLs and the Drive backup folder (`quire-backups`)
-  all moved over; the `vibeblog-private` creds repo keeps its name.
-- **Admin Overview is now a dashboard.** A **Traffic** card (30-day views + visitors with a
-  sparkline + last-7-days), **Most viewed** posts (top 5 by all-time views, by title), and a
-  **Needs attention** card (draft count). Comments have no moderation queue, so there is no
-  "pending" item.
-- **Deeper analytics.** Period-over-period **trend** (▲/▼) on views + visitors, a **new-vs-returning**
-  split, **top pages** as a labelled Page/Views/Visitors/Depth table, **top referrers + countries**
-  (counted by **distinct visitor** — one person = 1, not page views; country shows a flag), and a
-  **CSV export** of the daily series. The trend / new-returning / referrer / country sections need a
-  one-time DB migration (`scripts/migrations/2026-06-25-analytics-deepening.sql` then
-  `…-analytics-fix-visitor-counts.sql`); until applied, the data layer falls back and those sections
-  stay hidden.
-- **Image galleries.** Mark images `#grid` (a toolbar **Gallery** button with a multi-select picker,
-  or the per-image **Grid** toggle) and consecutive ones render as a **smart CSS grid** — the column
-  count adapts to the image count (2→2, 3→3, 4→2×2, 5–9→3, 10+→4; collapses to 2 on phones).
-- **Image lightbox.** Clicking any post/page image opens a full-size overlay with prev/next, keyboard
-  nav (←/→/Esc), a counter and the caption.
-- **Editor fixes.** Drag-dropped images insert at the drop point (not the end of the post); existing
-  links can be edited (the toolbar prefills the href; clearing it removes the link); clearer toolbar
-  labels (text for Table / list / quote / code / divider instead of bare icons).
-- **Faster admin home.** Dropped a per-post content scan (`findUnusedMedia`, hundreds of serial
+**Admin dashboard & analytics**
+- **Overview is now a dashboard:** a Traffic card (30-day views + visitors with a sparkline +
+  last-7-days), Most-viewed posts, and a Needs-attention card (draft count).
+- **Deeper analytics:** period-over-period trend (▲/▼) on views + visitors, a new-vs-returning split,
+  top pages as a labelled Page/Views/Visitors/Depth table, and top referrers + countries counted by
+  **distinct visitor** (one person = 1, not page views; country shows a flag) + a CSV export of the
+  daily series. Needs a one-time DB migration (`scripts/migrations/2026-06-25-analytics-deepening.sql`
+  then `…-analytics-fix-visitor-counts.sql`); until applied those sections fall back / stay hidden.
+- **Faster admin home:** dropped a per-post content scan (`findUnusedMedia`, hundreds of serial
   queries) from the dashboard — it stays an on-demand check on the Media page.
-- **fix(toc):** a heading that slugifies to nothing (e.g. `## !!!`) no longer emits an invalid
-  `id=""`; it gets no anchor and is skipped from the ToC.
+
+**Image galleries & lightbox**
+- Mark images `#grid` (a toolbar **Gallery** button with a multi-select picker, or the per-image
+  **Grid** toggle); consecutive ones render as a **smart CSS grid** whose column count adapts to the
+  image count (2→2, 3→3, 4→2×2, 5–9→3, 10+→4; collapses to 2 on phones).
+- Picking several gallery images inserts **all** of them in one transaction (was keeping only the
+  last — each `setImage` replaced the prior selected node).
+- The editor preview lays gallery images **side-by-side** like the published grid (via
+  `.react-renderer:has(> figure.img-grid)`), distinct from full-width single images.
+- **Lightbox:** clicking any post/page image opens a full-size overlay with prev/next, keyboard nav
+  (←/→/Esc), a counter and the caption.
+
+**Editor**
+- **Offline local autosave** (`useLocalDraft.ts`): unsaved edits are stashed in `localStorage` every
+  8s and never hit the server until Save/Publish — editing a *published* post can no longer push
+  half-finished text live, and a dropped connection won't lose work. A "restore / discard" bar offers
+  any recovered draft on return; `beforeunload` still warns.
+- **Editable tables:** a contextual control row (add/remove column, add/remove row, delete table)
+  appears when the cursor is inside a table; the header row + left column are shaded with the table's
+  own `--c-rule` colour as a visual spine (left-column shade is CSS-only, never changes the Markdown).
+- **Live toolbar + floating selection menu:** the editor sets `shouldRerenderOnTransaction` so the
+  toolbar reacts to the cursor (active highlights, the table row); selecting text — or putting the
+  cursor in a link — pops a compact bubble (bold / italic / underline / strike / code + link
+  edit/remove) that follows light/dark mode. Menu UI lives in `EditorMenus.tsx`.
+- Drag-dropped images insert at the drop point; existing links are editable (prefilled href,
+  clear-to-remove); clearer toolbar labels (text for Table / list / quote / code / divider); the
+  Markdown/Review toggle trails the buttons inline.
+- **fix(toc):** a heading that slugifies to nothing (e.g. `## !!!`) no longer emits an invalid `id=""`.
 
 ## v1.1.9 — 2026-06-24 (Docker self-host: fix fresh-install file permissions)
 - **fix(docker): media uploads + ISR cache now work on a fresh self-host install.** The image runs
