@@ -155,12 +155,13 @@ export function Toolbar({
   )
 }
 
-// Floating menu over a text selection (or with the cursor in a link). Dark chip
-// for contrast against the page — admin chrome, so neutral-* is fine here.
+// Floating menu over a text selection (or with the cursor in a link). An
+// elevated chip that follows light/dark like the toolbar (a fixed dark chip was
+// too harsh on light, and vanished into the dark editor background).
 export function BubbleBar({ editor }: { editor: TiptapEditor }) {
   const t = useAdminT()
   const cls = (active: boolean) =>
-    `rounded px-2 py-1 text-sm ${active ? 'bg-white text-neutral-900' : 'text-neutral-200 hover:bg-neutral-700'}`
+    `rounded px-2 py-1 text-sm ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700'}`
   // Keep the selection while clicking (mousedown would otherwise blur the editor
   // and collapse it before the command runs).
   const hold = (e: React.MouseEvent) => e.preventDefault()
@@ -192,14 +193,14 @@ export function BubbleBar({ editor }: { editor: TiptapEditor }) {
       editor={editor}
       options={options}
       shouldShow={shouldShow}
-      className="flex items-center gap-0.5 rounded-lg border border-neutral-700 bg-neutral-900 p-1 shadow-xl"
+      className="flex items-center gap-0.5 rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
     >
       <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}><strong>B</strong></button>
       <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().toggleItalic().run()} className={cls(editor.isActive('italic'))}><em>I</em></button>
       <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().toggleUnderline().run()} className={cls(editor.isActive('underline'))}><u>U</u></button>
       <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().toggleStrike().run()} className={cls(editor.isActive('strike'))}><s>S</s></button>
       <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}><code>{'`'}</code></button>
-      <span className="mx-0.5 h-5 w-px bg-neutral-700" />
+      <span className="mx-0.5 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
       <button type="button" onMouseDown={hold} onClick={editLink} className={cls(editor.isActive('link'))}>{t.tbLink}</button>
       {editor.isActive('link') && (
         <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().extendMarkRange('link').unsetLink().run()} className={cls(false)}>{t.tbLinkRemove}</button>
