@@ -129,6 +129,13 @@ export type AdminStrings = {
   tbImage: string
   tbGallery: string
   tbTable: string
+  // table editing controls (shown only when the cursor is inside a table)
+  tbTableTools: string
+  tbColAdd: string
+  tbColDel: string
+  tbRowAdd: string
+  tbRowDel: string
+  tbTableDelete: string
   tbMarkdown: string
   tbReview: string
   tbBold: string

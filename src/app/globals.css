@@ -513,6 +513,15 @@ hr {
   font-weight: 600;
   color: var(--c-heading);
 }
+/* Shade the header row (top) and the left column with the table's OWN rule
+   colour — no new colour — so the table's "spine" is easy to read while editing
+   and once published. The header row is the real GFM header (th); the left
+   column is shaded by position (GFM has no header-column syntax, so this is a
+   purely visual cue and never alters the saved Markdown). */
+.prose th,
+.prose td:first-child {
+  background: var(--c-rule);
+}
 /* Video embed (YouTube/Vimeo/TikTok) from a standalone URL, responsive 16:9. */
 .prose .video-embed {
   position: relative;
