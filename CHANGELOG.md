@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v1.2.3 — 2026-06-26 (Editable tables + tidier toolbar)
+- **Tables can now grow.** With the cursor inside a table a contextual control row appears —
+  add/remove column, add/remove row, delete table — so a table is no longer stuck at the fixed
+  3×3 it was inserted as.
+- **Header row + left column are shaded** with the table's own rule colour (no new colour) so the
+  table's spine reads at a glance, in the editor and once published. The left-column shade is a
+  purely visual cue (GFM has no header-column syntax) and never changes the saved Markdown.
+- **Toolbar tidy-up.** The Markdown/Review toggle now trails the other buttons inline instead of
+  being right-aligned, where it wrapped onto a lonely second row.
+
 ## v1.2.2 — 2026-06-26 (Editor gallery preview matches the published grid)
 - **Gallery images now sit side-by-side while editing, not stacked.** Each TipTap node view is
   wrapped in a block `.react-renderer` div, so the old CSS (which styled only the inner `<figure>`)

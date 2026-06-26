@@ -57,6 +57,10 @@
 
 - StarterKit + underline, inline code, bullet/numbered/**task** lists (GFM `- [ ]`), quote,
   code block, hr, link, captioned image, GFM tables, video. `tiptap-markdown` serializes all.
+- **Tables:** insert is a 3×3 with a header row; a contextual toolbar row (shown only when the
+  cursor is in a table) adds/removes columns + rows or deletes the table. The header row + left
+  column are shaded with `--c-rule` (the table's own border colour) as a visual spine — the
+  left-column shade is CSS-only (GFM has no header-column), so it never changes the saved Markdown.
   **GOTCHA:** list items wrap content in `<p>`; `.prose li > p{margin:0}` keeps them tight.
 - **Local (offline) autosave** (`useLocalDraft.ts`): unsaved edits are stashed in `localStorage`
   every 8s while dirty — NEVER to the server, so editing a *published* post can't push

@@ -101,8 +101,11 @@ function Toolbar({
   const t = useAdminT()
   const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
   const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
+  // Markdown/Review toggle. Kept INLINE (no ml-auto) so it trails the other
+  // buttons instead of being pushed to the right edge — where it wrapped onto a
+  // lonely second row and looked broken.
   const toggle = (
-    <button type="button" onClick={onToggleRaw} className={`${BTN} ml-auto font-medium text-neutral-600`}>
+    <button type="button" onClick={onToggleRaw} className={`${BTN} font-medium text-neutral-600`}>
       {raw ? t.tbReview : t.tbMarkdown}
     </button>
   )
@@ -117,7 +120,8 @@ function Toolbar({
   // Wrap to a second row when the buttons don't fit — a horizontal scrollbar here
   // fights the browser's own scrollbar, so wrapping is the lesser evil.
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="sticky top-0 z-10 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex flex-wrap items-center gap-0.5">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
         <strong>B</strong>
       </button>
@@ -199,7 +203,23 @@ function Toolbar({
       >
         {t.tbTable}
       </button>
+      {sep}
       {toggle}
+      </div>
+      {/* Table controls appear only with the cursor inside a table — that's the
+          only place add-column / add-row apply (insertTable alone gave a fixed
+          3×3 with no way to grow it). */}
+      {editor.isActive('table') && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 border-t border-neutral-100 pt-1.5 dark:border-neutral-800">
+          <span className="px-1 text-xs font-medium text-neutral-400">{t.tbTableTools}</span>
+          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className={cls(false)}>{t.tbColAdd}</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()} className={cls(false)}>{t.tbColDel}</button>
+          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className={cls(false)}>{t.tbRowAdd}</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()} className={cls(false)}>{t.tbRowDel}</button>
+          {sep}
+          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()} className={cls(false)}>{t.tbTableDelete}</button>
+        </div>
+      )}
     </div>
   )
 }
