@@ -8,25 +8,18 @@ import NextAuth from 'next-auth'
 import type { Provider } from 'next-auth/providers'
 import type { CommentProvider } from '@/types'
 import Google from 'next-auth/providers/google'
-import Facebook from 'next-auth/providers/facebook'
 import { isAuthorized } from '@/lib/auth-shared'
-import { getIntegrationKeys } from '@/lib/integration-keys'
 
 // Re-export so existing importers (`@/lib/auth`) keep working.
 export { isAuthorized } from '@/lib/auth-shared'
 
-// Config is a FUNCTION so the commenter providers can read runtime keys: Google
-// from env (it's also the owner's admin sign-in), Facebook from the admin-managed
-// `integration_keys` table (env of the same name is a fallback). This runs in
-// Node only — the edge middleware reads the JWT directly (see middleware.ts), so
-// it never pulls the Supabase client into the edge bundle.
+// Config is a FUNCTION so the commenter providers can read runtime state: Google
+// (it's also the owner's admin sign-in) loads when its env credentials exist.
+// This runs in Node only — the edge middleware reads the JWT directly (see
+// middleware.ts), so it never pulls the Supabase client into the edge bundle.
 export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   const providers: Provider[] = []
   if (process.env.AUTH_GOOGLE_ID) providers.push(Google)
-  const { facebookId, facebookSecret } = await getIntegrationKeys()
-  if (facebookId && facebookSecret) {
-    providers.push(Facebook({ clientId: facebookId, clientSecret: facebookSecret }))
-  }
   return {
     providers,
     callbacks: {
@@ -55,7 +48,7 @@ export async function getCommenter(): Promise<{ name: string; email: string; pro
   const email = session?.user?.email
   if (!email) return null
   const p = session.provider
-  const provider: CommentProvider = p === 'google' || p === 'facebook' ? p : 'manual'
+  const provider: CommentProvider = p === 'google' ? p : 'manual'
   return { name: session.user?.name || email, email, provider }
 }
 

@@ -1,5 +1,5 @@
 // Module augmentation: carry which OAuth provider a session came from, so a
-// commenter's identity (manual | google | facebook) is known server-side.
+// commenter's identity (manual | google) is known server-side.
 import 'next-auth'
 import 'next-auth/jwt'
 

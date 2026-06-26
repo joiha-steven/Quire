@@ -4,10 +4,11 @@
 // a managed token and hands it back (see /api/mcp/token). The only identity is the
 // configured blog owner (NextAuth). SERVER-ONLY.
 
-import { createHmac, createHash, timingSafeEqual } from 'node:crypto'
+import { createHmac, createHash, timingSafeEqual, randomBytes } from 'node:crypto'
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
 import { getSettings } from '@/lib/settings'
 import { verifyTokenHash } from '@/lib/mcp/tokens'
+import { consumeCodeJti } from '@/lib/mcp/used-codes'
 
 // OAuth codes are signed with MCP_OAUTH_SECRET, falling back to AUTH_SECRET so a
 // self-hoster only has to set one secret.
@@ -39,22 +40,29 @@ export async function verifyMcpToken(_req: Request, bearer?: string): Promise<Au
 
 // ----- thin OAuth: HMAC-signed authorization codes (carry PKCE challenge) -------
 
-type CodePayload = { redirectUri: string; challenge: string; exp: number }
+// `jti` is a per-code nonce → makes the code single-use: the token endpoint records
+// it in `mcp_used_codes` on first exchange and rejects any later code carrying the
+// same jti (see used-codes.ts). Without it the stateless HMAC code would be replayable.
+type CodePayload = { redirectUri: string; challenge: string; exp: number; jti: string }
 
 function sign(data: string): string {
   return createHmac('sha256', secret()).update(data).digest('base64url')
 }
 
-// Mint a short-lived code bound to the client's redirect_uri + PKCE challenge.
+// Mint a short-lived code bound to the client's redirect_uri + PKCE challenge, with a
+// random jti so it can be consumed exactly once at the token endpoint.
 export function issueCode(redirectUri: string, challenge: string, ttlSec = 300): string {
-  const payload: CodePayload = { redirectUri, challenge, exp: Date.now() + ttlSec * 1000 }
+  const exp = Date.now() + ttlSec * 1000
+  const payload: CodePayload = { redirectUri, challenge, exp, jti: randomBytes(16).toString('base64url') }
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
   return `${body}.${sign(body)}`
 }
 
-// Validate a code at the token endpoint: signature, expiry, redirect_uri match and
-// PKCE (S256) — the verifier must hash to the challenge baked into the code.
-export function verifyCode(code: string, redirectUri: string, verifier: string): boolean {
+// Validate a code at the token endpoint: signature, expiry, redirect_uri match, PKCE
+// (S256, the verifier must hash to the baked-in challenge) AND single-use — the jti is
+// atomically consumed; a second exchange of the same code (replay) is rejected. Async
+// because the consume step persists the jti. Returns false on ANY failure.
+export async function verifyCode(code: string, redirectUri: string, verifier: string): Promise<boolean> {
   const [body, sig] = code.split('.')
   if (!body || !sig || !safeEq(sig, sign(body))) return false
   let p: CodePayload
@@ -63,7 +71,10 @@ export function verifyCode(code: string, redirectUri: string, verifier: string):
   } catch {
     return false
   }
-  if (Date.now() > p.exp || p.redirectUri !== redirectUri) return false
+  if (Date.now() > p.exp || p.redirectUri !== redirectUri || !p.jti) return false
   const computed = createHash('sha256').update(verifier).digest('base64url')
-  return safeEq(computed, p.challenge)
+  if (!safeEq(computed, p.challenge)) return false
+  // Single-use: consume the jti LAST (after all stateless checks pass) so an invalid
+  // code never burns a nonce. A false here means it was already consumed (replay).
+  return consumeCodeJti(p.jti, p.exp)
 }

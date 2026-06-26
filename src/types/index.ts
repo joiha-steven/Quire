@@ -196,11 +196,10 @@ export type CommentSettings = {
   enabled: boolean // master switch — when false, no comments are shown or accepted
   turnstile: boolean // require a Cloudflare Turnstile pass for manual (name/email) comments
   googleAuth: boolean // offer "Sign in with Google" to commenters
-  facebookAuth: boolean // offer "Sign in with Facebook" to commenters
 }
 
 // Where a comment's identity came from.
-export type CommentProvider = 'manual' | 'google' | 'facebook'
+export type CommentProvider = 'manual' | 'google'
 
 // One comment as sent to the PUBLIC client. Email is NEVER included. A tombstone
 // (`deleted: true`) is a soft-deleted node kept only because it still has live

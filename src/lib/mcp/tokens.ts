@@ -85,7 +85,9 @@ export async function createToken(name: string): Promise<{ token: string; info: 
 // Mint the OAuth-connector token (called by /api/mcp/token). NEVER deletes any token
 // (the in-use one survives a re-authorize; nothing auto-prunes — the owner alone
 // removes connections in the admin). Exempt from the manual cap → authorizing never
-// fails with "limit reached". Eternal (no expiry) → connect once, stays connected.
+// fails with "limit reached". Expires 180 days after creation like every token (same
+// TOKEN_TTL_DAYS, shown in the admin "Expires" column); a connector silently
+// re-authorizes across that boundary to mint a fresh one, so it stays connected.
 export async function mintOAuthToken(): Promise<{ token: string; info: McpTokenInfo }> {
   const { token, prefix } = newSecret()
   const { data, error } = await db()
