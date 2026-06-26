@@ -18,6 +18,7 @@ import { Placeholder } from '@tiptap/extension-placeholder'
 import { Markdown } from 'tiptap-markdown'
 import { CaptionedImage } from './CaptionedImage'
 import { Video } from './VideoNode'
+import { Toolbar, BubbleBar } from './EditorMenus'
 import { isVideoUrl } from '@/lib/video'
 import { useAdminT } from './I18nProvider'
 
@@ -83,147 +84,6 @@ type Props = {
   contentWidth: number
 }
 
-const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
-
-function Toolbar({
-  editor,
-  onPickImage,
-  onPickGallery,
-  raw,
-  onToggleRaw,
-}: {
-  editor: TiptapEditor
-  onPickImage: () => void
-  onPickGallery: () => void
-  raw: boolean
-  onToggleRaw: () => void
-}) {
-  const t = useAdminT()
-  const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
-  const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
-  // Markdown/Review toggle. Kept INLINE (no ml-auto) so it trails the other
-  // buttons instead of being pushed to the right edge — where it wrapped onto a
-  // lonely second row and looked broken.
-  const toggle = (
-    <button type="button" onClick={onToggleRaw} className={`${BTN} font-medium text-neutral-600`}>
-      {raw ? t.tbReview : t.tbMarkdown}
-    </button>
-  )
-  // In Markdown source mode the formatting buttons don't apply to plain text.
-  if (raw) {
-    return (
-      <div className="sticky top-0 z-10 flex items-center rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
-        {toggle}
-      </div>
-    )
-  }
-  // Wrap to a second row when the buttons don't fit — a horizontal scrollbar here
-  // fights the browser's own scrollbar, so wrapping is the lesser evil.
-  return (
-    <div className="sticky top-0 z-10 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="flex flex-wrap items-center gap-0.5">
-      <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
-        <strong>B</strong>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={cls(editor.isActive('italic'))}>
-        <em>I</em>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={cls(editor.isActive('underline'))}>
-        <u>U</u>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={cls(editor.isActive('strike'))}>
-        <s>S</s>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}>
-        <code className="">{'`'}</code>
-      </button>
-      {sep}
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cls(editor.isActive('heading', { level: 1 }))}>
-        H1
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={cls(editor.isActive('heading', { level: 2 }))}>
-        H2
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={cls(editor.isActive('heading', { level: 3 }))}>
-        H3
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} className={cls(editor.isActive('heading', { level: 4 }))}>
-        H4
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()} className={cls(editor.isActive('heading', { level: 5 }))}>
-        H5
-      </button>
-      {sep}
-      <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>
-        • {t.tbList}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cls(editor.isActive('orderedList'))}>
-        1. {t.tbListNumbered}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleTaskList().run()} className={cls(editor.isActive('taskList'))}>
-        ☑ {t.tbTask}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cls(editor.isActive('blockquote'))}>
-        ❝ {t.tbQuote}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={cls(editor.isActive('codeBlock'))}>
-        {'</>'} {t.tbCodeBlock}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={cls(false)}>
-        ― {t.tbDivider}
-      </button>
-      {sep}
-      <button
-        type="button"
-        onClick={() => {
-          // Prefill the existing href so an old link can be edited (not just
-          // created). extendMarkRange covers the whole link when the cursor is
-          // merely inside it — no need to first select the linked text.
-          const prev = (editor.getAttributes('link').href as string | undefined) ?? ''
-          const url = window.prompt(t.promptLink, prev)
-          if (url === null) return // cancelled — leave the link untouched
-          const range = editor.chain().focus().extendMarkRange('link')
-          if (url === '') range.unsetLink().run() // cleared the URL -> remove the link
-          else range.setLink({ href: url }).run()
-        }}
-        className={cls(editor.isActive('link'))}
-      >
-        {t.tbLink}
-      </button>
-      <button type="button" onClick={onPickImage} className={cls(false)}>
-        {t.tbImage}
-      </button>
-      <button type="button" onClick={onPickGallery} className={cls(false)}>
-        {t.tbGallery}
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-        className={cls(false)}
-      >
-        {t.tbTable}
-      </button>
-      {sep}
-      {toggle}
-      </div>
-      {/* Table controls appear only with the cursor inside a table — that's the
-          only place add-column / add-row apply (insertTable alone gave a fixed
-          3×3 with no way to grow it). */}
-      {editor.isActive('table') && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 border-t border-neutral-100 pt-1.5 dark:border-neutral-800">
-          <span className="px-1 text-xs font-medium text-neutral-400">{t.tbTableTools}</span>
-          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className={cls(false)}>{t.tbColAdd}</button>
-          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()} className={cls(false)}>{t.tbColDel}</button>
-          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className={cls(false)}>{t.tbRowAdd}</button>
-          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()} className={cls(false)}>{t.tbRowDel}</button>
-          {sep}
-          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()} className={cls(false)}>{t.tbTableDelete}</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickGallery, onUploadFile, apiRef, contentWidth }: Props) {
   const t = useAdminT()
   // Markdown source view: edit the raw markdown directly (still saves live).
@@ -248,6 +108,10 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
 
   const editor = useEditor({
     immediatelyRender: false,
+    // Re-render the React tree on every transaction so the toolbar's isActive()
+    // states stay live — TipTap 3 disables this by default, which left the
+    // active highlights stale and the contextual table-tools row never showing.
+    shouldRerenderOnTransaction: true,
     extensions: [
       StarterKit,
       Underline,
@@ -375,6 +239,8 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
   return (
     <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} />
+      {/* Floating menu on a text selection / link — not in raw source mode. */}
+      {!raw && <BubbleBar editor={editor} />}
       {/* Center the writing column at the public single-post width so what you
           type wraps exactly like the published article. */}
       <div className="mx-auto w-full" style={{ maxWidth: contentWidth }}>

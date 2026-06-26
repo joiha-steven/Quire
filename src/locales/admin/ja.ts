@@ -57,6 +57,7 @@ const ja = {
   tbCodeBlock: 'コード',
   tbDivider: '区切り',
   tbLink: 'リンク',
+  tbLinkRemove: 'リンク解除',
   tbImage: '画像',
   tbGallery: 'ギャラリー',
   tbTable: '表',

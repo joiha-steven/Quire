@@ -126,6 +126,7 @@ export type AdminStrings = {
   tbCodeBlock: string
   tbDivider: string
   tbLink: string
+  tbLinkRemove: string
   tbImage: string
   tbGallery: string
   tbTable: string

@@ -57,6 +57,7 @@ const zh = {
   tbCodeBlock: '代码',
   tbDivider: '分隔线',
   tbLink: '链接',
+  tbLinkRemove: '移除链接',
   tbImage: '图片',
   tbGallery: '图库',
   tbTable: '表格',

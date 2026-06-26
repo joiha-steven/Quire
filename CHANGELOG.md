@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v1.2.4 — 2026-06-26 (Live toolbar + floating selection menu)
+- **Fixed: the toolbar wasn't reacting to the cursor.** TipTap 3 disables React re-renders on
+  transactions by default, so `isActive()` never re-ran — the active-format highlights were stale
+  and the v1.2.3 contextual table-tools row never appeared. Enabling `shouldRerenderOnTransaction`
+  makes all of it live, so the table controls now show whenever the cursor is inside a table.
+- **New: a floating menu on selection.** Select text (or put the cursor in a link) and a compact
+  bubble appears with bold / italic / underline / strike / code and a link edit (plus remove-link
+  when on a link) — the contextual menu other editors have. It stays out of the way of image/video
+  node selections, which keep their own controls.
+- Editor menu UI moved to `EditorMenus.tsx` (Toolbar + BubbleBar) to keep `Editor.tsx` within the
+  file-size cap.
+
 ## v1.2.3 — 2026-06-26 (Editable tables + tidier toolbar)
 - **Tables can now grow.** With the cursor inside a table a contextual control row appears —
   add/remove column, add/remove row, delete table — so a table is no longer stuck at the fixed

@@ -57,6 +57,7 @@ const de = {
   tbCodeBlock: 'Code',
   tbDivider: 'Trennlinie',
   tbLink: 'Link',
+  tbLinkRemove: 'Link entfernen',
   tbImage: 'Bild',
   tbGallery: 'Galerie',
   tbTable: 'Tabelle',
