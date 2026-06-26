@@ -57,6 +57,12 @@
 
 - StarterKit + underline, inline code, bullet/numbered/**task** lists (GFM `- [ ]`), quote,
   code block, hr, link, captioned image, GFM tables, video. `tiptap-markdown` serializes all.
+- **Menus live in `EditorMenus.tsx`** (Toolbar + BubbleBar). The editor sets
+  `shouldRerenderOnTransaction: true` — TipTap 3 disables it by default, which leaves every
+  `isActive()` (toolbar highlights, the table-tools row) stale until an unrelated re-render.
+- **BubbleBar:** a floating `BubbleMenu` (`@tiptap/react/menus`) over a text selection or with the
+  cursor in a link — bold/italic/underline/strike/code + link edit/remove. `shouldShow` skips node
+  selections (image/video) so it never covers their own controls.
 - **Tables:** insert is a 3×3 with a header row; a contextual toolbar row (shown only when the
   cursor is in a table) adds/removes columns + rows or deletes the table. The header row + left
   column are shaded with `--c-rule` (the table's own border colour) as a visual spine — the

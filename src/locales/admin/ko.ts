@@ -57,6 +57,7 @@ const ko = {
   tbCodeBlock: '코드',
   tbDivider: '구분선',
   tbLink: '링크',
+  tbLinkRemove: '링크 제거',
   tbImage: '이미지',
   tbGallery: '갤러리',
   tbTable: '표',

@@ -57,6 +57,7 @@ const vi = {
   tbCodeBlock: 'Code',
   tbDivider: 'Đường kẻ',
   tbLink: 'Liên kết',
+  tbLinkRemove: 'Bỏ liên kết',
   tbImage: 'Ảnh',
   tbGallery: 'Thư viện ảnh',
   tbTable: 'Bảng',

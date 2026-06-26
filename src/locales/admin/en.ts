@@ -57,6 +57,7 @@ const en = {
   tbCodeBlock: 'Code',
   tbDivider: 'Divider',
   tbLink: 'Link',
+  tbLinkRemove: 'Remove link',
   tbImage: 'Image',
   tbGallery: 'Gallery',
   tbTable: 'Table',
