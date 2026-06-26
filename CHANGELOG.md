@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v1.2.5 — 2026-06-26 (Hotfix: editor crash from the bubble menu)
+- **Fixed the editor 500 introduced in v1.2.4.** The new `BubbleMenu` got fresh inline `options` /
+  `shouldShow` objects on every render; it re-dispatches an "updateOptions" transaction whenever
+  those change identity, and with `shouldRerenderOnTransaction` on that became an infinite loop
+  (dispatch → re-render → new object → dispatch → …) that crashed the editor to the error page.
+  Both props are now memoised (`useMemo` / `useCallback`), so the effect runs once.
+
 ## v1.2.4 — 2026-06-26 (Live toolbar + floating selection menu)
 - **Fixed: the toolbar wasn't reacting to the cursor.** TipTap 3 disables React re-renders on
   transactions by default, so `isActive()` never re-ran — the active-format highlights were stale
