@@ -23,9 +23,11 @@ import { useAdminT } from './I18nProvider'
 
 export type EditorApi = {
   insertImage: (url: string) => void
-  // Insert an image as a gallery item (#grid) — consecutive ones group into a
-  // CSS grid on the public side. The picker stays open so several can be added.
-  insertGallery: (url: string) => void
+  // Insert several images as gallery items (#grid) in ONE transaction —
+  // consecutive #grid images group into a CSS grid on the public side. Must be a
+  // single insert: setImage selects the node it inserts, so calling it in a loop
+  // makes each image REPLACE the previous one (only the last survived).
+  insertGalleryMany: (urls: string[]) => void
   // Serialize the current document to Markdown on demand (used at save time, so
   // a save always captures the latest text even mid-debounce).
   getMarkdown: () => string
@@ -310,9 +312,14 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
     apiRef.current = {
       insertImage: (url: string) =>
         editor.chain().focus().setImage({ src: url, alt: captionFromUrl(url) }).run(),
-      // Gallery item: empty alt for a clean mosaic; '#grid' groups consecutive ones.
-      insertGallery: (url: string) =>
-        editor.chain().focus().setImage({ src: `${url}#grid`, alt: '' }).run(),
+      // Gallery: empty alt for a clean mosaic; '#grid' groups consecutive ones.
+      // One insertContent of an array keeps all images (a per-image loop would
+      // leave only the last — each setImage replaces the selected prior node).
+      insertGalleryMany: (urls: string[]) => {
+        if (urls.length === 0) return
+        const nodes = urls.map((url) => ({ type: 'image', attrs: { src: `${url}#grid`, alt: '' } }))
+        editor.chain().focus().insertContent(nodes).run()
+      },
       // In raw mode the textarea is the source of truth; otherwise serialize live.
       getMarkdown: () => (rawRef.current ? rawTextRef.current : readMarkdown(editor)),
       // Load a full document, leaving raw mode so the formatted view shows it.
