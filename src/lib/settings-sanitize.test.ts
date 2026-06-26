@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { sanitizeEnabledPalettes, sanitizeComments } from '@/lib/settings-sanitize'
 import { ALL_PALETTE_IDS } from '@/lib/themes'
 
-const COMMENTS_OFF = { enabled: false, turnstile: false, googleAuth: false, facebookAuth: false }
+const COMMENTS_OFF = { enabled: false, turnstile: false, googleAuth: false }
 
 describe('sanitizeComments', () => {
   it('falls back to defaults for a missing / malformed object', () => {

@@ -1,4 +1,4 @@
-// Optional comment-feature secrets (Turnstile + Facebook) — SERVER-ONLY, like
+// Optional comment-feature secrets (Turnstile) — SERVER-ONLY, like
 // backup-state. The owner enters these in Admin → Settings; they live in the
 // `integration_keys` table (single row id=1), NEVER in settings.data / the client
 // payload. An env var of the same name still works as a fallback (DB wins). Never
@@ -10,8 +10,6 @@ import { db, DB_TAG } from '@/lib/db'
 export type IntegrationKeys = {
   turnstileSiteKey: string // PUBLIC (rendered in the widget)
   turnstileSecretKey: string // secret
-  facebookId: string // public-ish (app id)
-  facebookSecret: string // secret
 }
 
 // What the admin UI may see: which keys are set + the PUBLIC Turnstile site key.
@@ -19,14 +17,11 @@ export type IntegrationKeys = {
 export type IntegrationStatus = {
   turnstileConfigured: boolean
   turnstileSiteKey: string
-  facebookConfigured: boolean
 }
 
 type Row = {
   turnstile_site_key: string | null
   turnstile_secret_key: string | null
-  facebook_id: string | null
-  facebook_secret: string | null
 }
 
 const env = (k: string) => process.env[k] ?? ''
@@ -37,7 +32,7 @@ export async function getIntegrationKeys(): Promise<IntegrationKeys> {
   try {
     const { data } = await db()
       .from('integration_keys')
-      .select('turnstile_site_key,turnstile_secret_key,facebook_id,facebook_secret')
+      .select('turnstile_site_key,turnstile_secret_key')
       .eq('id', 1)
       .maybeSingle()
     row = (data as Row) ?? null
@@ -47,8 +42,6 @@ export async function getIntegrationKeys(): Promise<IntegrationKeys> {
   return {
     turnstileSiteKey: row?.turnstile_site_key || env('TURNSTILE_SITE_KEY'),
     turnstileSecretKey: row?.turnstile_secret_key || env('TURNSTILE_SECRET_KEY'),
-    facebookId: row?.facebook_id || env('AUTH_FACEBOOK_ID'),
-    facebookSecret: row?.facebook_secret || env('AUTH_FACEBOOK_SECRET'),
   }
 }
 
@@ -58,7 +51,6 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus> {
   return {
     turnstileConfigured: !!k.turnstileSecretKey,
     turnstileSiteKey: k.turnstileSiteKey,
-    facebookConfigured: !!(k.facebookId && k.facebookSecret),
   }
 }
 
@@ -69,8 +61,6 @@ export async function saveIntegrationKeys(input: Partial<IntegrationKeys>): Prom
   const map: [keyof IntegrationKeys, keyof Row][] = [
     ['turnstileSiteKey', 'turnstile_site_key'],
     ['turnstileSecretKey', 'turnstile_secret_key'],
-    ['facebookId', 'facebook_id'],
-    ['facebookSecret', 'facebook_secret'],
   ]
   for (const [k, col] of map) {
     const v = input[k]

@@ -1,5 +1,5 @@
-// POST /api/comments/keys -> store the optional Turnstile / Facebook keys (owner
-// only). SECRETS — kept in the server-only `integration_keys` table, NOT in
+// POST /api/comments/keys -> store the optional Turnstile keys (owner only).
+// SECRETS — kept in the server-only `integration_keys` table, NOT in
 // settings.data (which is sent to the client). Only non-empty fields are sent by
 // the admin form, so a blank input never clears an existing key.
 
@@ -19,8 +19,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     await saveIntegrationKeys({
       turnstileSiteKey: str(body.turnstileSiteKey),
       turnstileSecretKey: str(body.turnstileSecretKey),
-      facebookId: str(body.facebookId),
-      facebookSecret: str(body.facebookSecret),
     })
     logRequest(req, 200, start)
     return ok({ saved: true })

@@ -170,7 +170,7 @@
 
 Text-only reader comments, **off by default** (`settings.comments.enabled`). Identity is either
 manual (name + email + optional website, optionally behind Cloudflare Turnstile) or a signed-in
-Google/Facebook account.
+Google account.
 
 - **Instant, never cached — by design.** The post page stays ISR/static; the comment block is a
   CLIENT island (`Comments.tsx`; the composer + sign-in buttons live in `CommentForm.tsx`) that
@@ -201,8 +201,8 @@ Google/Facebook account.
 - **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
   (6/min). The same IP (+ country) is persisted on the row (`author_ip`/`author_country`) for admin
   moderation — admin-only, NEVER sent to the public comment tree.
-- **Integration keys live in the ADMIN, not (just) env (`lib/integration-keys.ts`).** Turnstile +
-  Facebook keys are SECRETS, kept in the server-only `integration_keys` table (single row), set via
+- **Integration keys live in the ADMIN, not (just) env (`lib/integration-keys.ts`).** Turnstile
+  keys are SECRETS, kept in the server-only `integration_keys` table (single row), set via
   Admin → Settings (`CommentKeys.tsx` → owner-gated `POST /api/comments/keys`) — NEVER in
   `settings.data`. An env var of the same name is a fallback. `getCommentEnv()` (async) reports which
   integrations are usable (booleans) + the public Turnstile site key. Google stays env-only (it's
@@ -212,9 +212,9 @@ Google/Facebook account.
   never locks out commenting (the admin row shows a "needs keys" badge + the key inputs appear right
   below). The manual form gates the comment box **behind the Turnstile pass**; the POST verifies the
   token server-side via siteverify (fail closed). Tokens are single-use → the form re-arms after each post.
-- **Google / Facebook login (`auth.ts`).** Toggles `settings.comments.googleAuth` / `facebookAuth`.
-  NextAuth config is a FUNCTION so providers read keys at runtime: Google from env, **Facebook from
-  the `integration_keys` table** (env fallback). This runs in Node only — the **edge middleware reads
+- **Google login (`auth.ts`).** Toggles `settings.comments.googleAuth`.
+  NextAuth config is a FUNCTION so the provider reads keys at runtime: Google from env. This runs
+  in Node only — the **edge middleware reads
   the JWT directly via `getToken`** (`auth-shared.ts` holds the pure `isAuthorized`), so the Supabase
   client never enters the edge bundle. The session carries `name` + `provider` (`next-auth.d.ts`
   augments `Session`/`JWT`). The island resolves the viewer client-side via `/api/auth/session` (the

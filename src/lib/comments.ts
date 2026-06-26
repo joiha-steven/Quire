@@ -33,7 +33,7 @@ export type CommentRow = {
 }
 
 function asProvider(p: string): CommentProvider {
-  return p === 'google' || p === 'facebook' ? p : 'manual'
+  return p === 'google' ? p : 'manual'
 }
 
 // ---- public read: the rendered comment tree for one post ---------------------

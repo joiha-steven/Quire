@@ -20,8 +20,23 @@ async function font(file: string): Promise<ArrayBuffer> {
 
 export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url)
+  const reqOrigin = new URL(req.url).origin
+  // SSRF guard: only fetch images from the Blob store host or this site's own
+  // origin (the local driver serves /uploads same-origin) — never an arbitrary or
+  // internal URL. Applied to BOTH the background image and the custom font below,
+  // so the public ?bg= / ?font= params can't be turned into a server-side fetch.
+  const allowedImg = (s: string): boolean => {
+    if (!s) return false
+    try {
+      const u = new URL(s)
+      return u.origin === reqOrigin || (u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com'))
+    } catch {
+      return false
+    }
+  }
   const title = (searchParams.get('title') || '').slice(0, 160)
-  const bg = searchParams.get('bg') || ''
+  const bgRaw = searchParams.get('bg') || ''
+  const bg = allowedImg(bgRaw) ? bgRaw : ''
   // The bottom line is a site name, domain, or (on the home card) the site
   // description — cap it so a long description can't overflow the card.
   const site = (searchParams.get('site') || '').slice(0, 120)
@@ -38,18 +53,8 @@ export async function GET(req: Request): Promise<Response> {
   // public `?font=` param can't be used to fetch arbitrary/internal URLs (SSRF).
   let custom: ArrayBuffer | null = null
   const fontUrl = searchParams.get('font') || ''
-  if (fontUrl) {
-    try {
-      const u = new URL(fontUrl)
-      // SSRF guard: only the Vercel Blob store host, or this site's own origin (the
-      // local storage driver serves the font from /uploads on the same origin).
-      const sameOrigin = u.origin === new URL(req.url).origin
-      if ((u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com')) || sameOrigin) {
-        custom = await fetch(u).then((r) => (r.ok ? r.arrayBuffer() : null))
-      }
-    } catch {
-      custom = null
-    }
+  if (allowedImg(fontUrl)) {
+    custom = await fetch(fontUrl).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null)
   }
   const family = custom ? 'Site' : 'Inter'
 

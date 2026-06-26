@@ -48,7 +48,6 @@ const vi = {
   commentDeleted: '[bình luận đã xoá]',
   commentError: 'Không gửi được bình luận. Vui lòng thử lại.',
   commentSignInGoogle: 'Đăng nhập Google',
-  commentSignInFacebook: 'Đăng nhập Facebook',
   commentAs: 'Bình luận với tên',
   commentSignOut: 'Đăng xuất',
 } satisfies Dict

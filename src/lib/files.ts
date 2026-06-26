@@ -11,6 +11,7 @@ import {
 } from '@/lib/blob'
 import { db, liveOnly } from '@/lib/db'
 import { slugify } from '@/lib/utils'
+import { safeFetch } from '@/lib/safe-fetch'
 
 // contentType -> extension. `.ico` arrives as x-icon / vnd.microsoft.icon.
 const EXT: Record<string, string> = {
@@ -54,7 +55,8 @@ export async function renderLogo(
   if (!sourceUrl) return null
   let res: Response
   try {
-    res = await fetch(sourceUrl)
+    // SSRF guard: logoUrl is owner-supplied settings; block internal targets.
+    res = await safeFetch(sourceUrl)
   } catch {
     return null
   }
