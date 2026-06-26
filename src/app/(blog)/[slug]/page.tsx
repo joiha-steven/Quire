@@ -201,7 +201,6 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               turnstile={settings.comments.turnstile && commentEnv.turnstileConfigured}
               turnstileSiteKey={commentEnv.turnstileSiteKey}
               googleAuth={settings.comments.googleAuth && commentEnv.googleConfigured}
-              facebookAuth={settings.comments.facebookAuth && commentEnv.facebookConfigured}
             />
           </>
         )}

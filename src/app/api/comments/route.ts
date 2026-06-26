@@ -96,11 +96,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     const post = await getPost(postSlug)
     if (!post || !isPublicallyVisible(post.status, post.date)) return fail('Post not found', 404)
 
-    // Identity: a signed-in commenter (Google/Facebook) is TRUSTED — their
+    // Identity: a signed-in commenter (Google) is TRUSTED — their
     // name/email/provider come from the session, no Turnstile. Otherwise it's a
     // manual comment: name + valid email required, Turnstile enforced if on.
     const commenter = await getCommenter()
-    let identity: { name: string; email: string; website: string; provider: 'manual' | 'google' | 'facebook' }
+    let identity: { name: string; email: string; website: string; provider: 'manual' | 'google' }
     if (commenter) {
       identity = { name: commenter.name.slice(0, 80), email: commenter.email, website: '', provider: commenter.provider }
     } else {

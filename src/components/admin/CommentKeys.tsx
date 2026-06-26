@@ -1,6 +1,6 @@
 'use client'
 
-// Key entry for the optional comment integrations (Turnstile + Facebook). These
+// Key entry for the optional comment integrations (Turnstile). These
 // are SECRETS, so they have their OWN API (`/api/comments/keys` → server-only
 // `integration_keys` table), NOT the settings form. Inputs are write-to-set: a
 // blank field leaves the stored key untouched (only non-empty fields are sent).
@@ -17,12 +17,11 @@ const INPUT =
 // External setup links (where the owner gets each integration's keys / settings).
 const LINKS = {
   turnstile: 'https://dash.cloudflare.com/?to=/:account/turnstile',
-  facebook: 'https://developers.facebook.com/apps/',
   google: 'https://console.cloud.google.com/apis/credentials/consent',
 }
 
-type Keys = { turnstileSiteKey: string; turnstileSecretKey: string; facebookId: string; facebookSecret: string }
-const EMPTY: Keys = { turnstileSiteKey: '', turnstileSecretKey: '', facebookId: '', facebookSecret: '' }
+type Keys = { turnstileSiteKey: string; turnstileSecretKey: string }
+const EMPTY: Keys = { turnstileSiteKey: '', turnstileSecretKey: '' }
 
 // One integration's title + help line with an "Open ↗" link to its setup page.
 function Help({ title, text, href, open }: { title: string; text: string; href: string; open: string }) {
@@ -46,8 +45,7 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
   const [busy, setBusy] = useState(false)
   const showTurnstile = comments.enabled && comments.turnstile
   const showGoogle = comments.enabled && comments.googleAuth
-  const showFacebook = comments.enabled && comments.facebookAuth
-  if (!showTurnstile && !showGoogle && !showFacebook) return null
+  if (!showTurnstile && !showGoogle) return null
 
   const set = (k: keyof Keys, v: string) => setKeys((p) => ({ ...p, [k]: v }))
   // A placeholder hinting the field is already configured (so blank = keep).
@@ -87,14 +85,7 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
       {showGoogle && (
         <Help title={t.commentsGoogleAuth} text={t.commentsGoogleHelp} href={LINKS.google} open={t.commentsHelpOpen} />
       )}
-      {showFacebook && (
-        <div className="space-y-2">
-          <Help title={t.commentsFacebookAuth} text={t.commentsFacebookHelp} href={LINKS.facebook} open={t.commentsHelpOpen} />
-          <input className={INPUT} placeholder={ph(env.facebookConfigured, t.commentsKeyFbId)} value={keys.facebookId} onChange={(e) => set('facebookId', e.target.value)} />
-          <input className={INPUT} type="password" placeholder={ph(env.facebookConfigured, t.commentsKeyFbSecret)} value={keys.facebookSecret} onChange={(e) => set('facebookSecret', e.target.value)} />
-        </div>
-      )}
-      {(showTurnstile || showFacebook) && (
+      {showTurnstile && (
         <button
           type="button"
           onClick={save}

@@ -16,6 +16,7 @@ import { getFiles, deleteFile, restoreFilesBatch, getTrashedFiles } from '@/lib/
 import { getSettings, saveSettings } from '@/lib/settings'
 import { revalidateEverything } from '@/lib/revalidate'
 import { logActivity } from '@/lib/activity'
+import { safeFetch, BlockedUrlError } from '@/lib/safe-fetch'
 import { asText, asJson, asError } from '@/lib/mcp/result'
 
 // Filename from a URL's last path segment (fallback when none is supplied).
@@ -50,8 +51,10 @@ function registerMediaTools(server: McpServer): void {
     async ({ url, filename }) => {
       let res: Response
       try {
-        res = await fetch(url)
-      } catch {
+        // SSRF guard: url comes from any MCP bearer token; block internal targets.
+        res = await safeFetch(url)
+      } catch (e) {
+        if (e instanceof BlockedUrlError) return asError(`Blocked URL: ${url}`)
         return asError(`Could not fetch: ${url}`)
       }
       if (!res.ok) return asError(`Fetch failed (${res.status}): ${url}`)

@@ -1,7 +1,7 @@
 'use client'
 
 // Controlled comment-system toggles. Parent owns state + save. The master switch
-// is always shown; the integration toggles (Turnstile, Google/Facebook login)
+// is always shown; the integration toggles (Turnstile, Google login)
 // appear once comments are on. Each integration is only EFFECTIVE when its env
 // keys exist (`env`); the row shows a "needs key" badge otherwise.
 import type { CommentSettings } from '@/types'
@@ -42,13 +42,6 @@ export function CommentFields({ comments, env, onChange }: Props) {
             badge={needsKey(comments.googleAuth, env.googleConfigured)}
             checked={comments.googleAuth}
             onChange={(googleAuth) => onChange({ ...comments, googleAuth })}
-          />
-          <ToggleRow
-            label={t.commentsFacebookAuth}
-            desc={t.commentsAuthDesc}
-            badge={needsKey(comments.facebookAuth, env.facebookConfigured)}
-            checked={comments.facebookAuth}
-            onChange={(facebookAuth) => onChange({ ...comments, facebookAuth })}
           />
         </>
       )}

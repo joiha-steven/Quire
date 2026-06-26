@@ -15,9 +15,27 @@ import { getBackupState, setFolderId, recordRun, type BackupState } from '@/lib/
 import { accessToken, ensureFolder, listSnapshots, uploadSnapshot, deleteSnapshot, downloadSnapshot, type DriveFile } from '@/lib/gdrive'
 import { revalidateEverything } from '@/lib/revalidate'
 
-// Every text table except `backup_state` (it holds the Drive token — never ship the
-// secret inside a backup, and restoring it would clobber the live connection).
-const TABLES = ['settings', 'posts', 'pages', 'post_revisions', 'media', 'files', 'mcp_tokens', 'activity_log', 'analytics_events', 'analytics_scroll'] as const
+// Every text table except the SECRET-bearing ones: `backup_state` holds the Drive
+// refresh token (never ship the secret inside a backup, and restoring it would
+// clobber the live connection) and `integration_keys` holds the Turnstile
+// secrets — both are intentionally excluded so a restore re-prompts for those keys
+// rather than shipping secrets to Drive. Order matters on restore: `comments`
+// references `post_slug`, so it follows `posts`.
+export const TABLES = ['settings', 'posts', 'comments', 'pages', 'post_revisions', 'media', 'files', 'mcp_tokens', 'activity_log', 'analytics_events', 'analytics_scroll'] as const
+type Table = (typeof TABLES)[number]
+
+// Clearing a table on restore needs a WHERE that targets EVERY row by a column the
+// table actually has. Most tables carry a surrogate `id` (delete where id >= 0), but
+// `posts`/`pages` key off `slug`, `media` off `path`, and `files` off `url` — they
+// have NO `id` column, so a `.gte('id', 0)` errors (PostgREST 42703) and silently
+// leaves them un-cleared. Map each id-less table to a filter on its real PK; the rest
+// fall through to the id filter. Exported for the clear-filter unit test.
+export const CLEAR_BY_PK: Partial<Record<Table, { col: string; absent: string }>> = {
+  posts: { col: 'slug', absent: '' },
+  pages: { col: 'slug', absent: '' },
+  media: { col: 'path', absent: '' },
+  files: { col: 'url', absent: '' },
+}
 
 const SNAPSHOT_PREFIX = 'quire-'
 
@@ -129,7 +147,11 @@ export async function deleteBackup(fileId: string): Promise<void> {
 // Restore a snapshot — DESTRUCTIVE. Replaces every text table (except settings,
 // which is upserted by id=1) and re-uploads every blob. A pre-restore snapshot is
 // taken first so the current state is recoverable. Surrogate `id`s are dropped on
-// insert (tables key off slug/path/hash, so identity columns regenerate cleanly).
+// insert (tables key off slug/path/url, so identity columns regenerate cleanly).
+// NOTE: each table is cleared then re-inserted independently — there is no
+// cross-table transaction, so a mid-restore failure leaves the site half-restored.
+// A single transactional RPC would be safer; until then every delete + insert is
+// error-checked so a failure THROWS (surfaced to the caller) rather than going silent.
 export async function restoreBackup(fileId: string): Promise<void> {
   const { token } = await connect()
   // Safety net: snapshot the live site before overwriting it.
@@ -148,7 +170,13 @@ export async function restoreBackup(fileId: string): Promise<void> {
       if (rows[0]) await db().from('settings').upsert(rows[0])
       continue
     }
-    await db().from(t).delete().gte('id', 0) // clear table (all rows have id >= 0)
+    // Clear the table by a filter valid for its REAL primary key (id-keyed tables
+    // by `id >= 0`; slug/path/url-keyed tables by their PK <> '') and error-check it.
+    const pk = CLEAR_BY_PK[t]
+    const cleared = pk
+      ? await db().from(t).delete().neq(pk.col, pk.absent)
+      : await db().from(t).delete().gte('id', 0)
+    if (cleared.error) throw new Error(`restore clear ${t}: ${cleared.error.message}`)
     if (rows.length) {
       // Drop server-managed columns so the insert is accepted: the surrogate `id`
       // (identity, regenerates) and `posts.search` (generated tsvector).

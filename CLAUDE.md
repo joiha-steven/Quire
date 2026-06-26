@@ -52,8 +52,8 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 - **Text in Postgres (Supabase on Vercel; a bundled Postgres+PostgREST on Docker — supabase-js
   unchanged, see Env); binaries via the `blob.ts` storage driver** (Vercel Blob by default, local
   filesystem on Docker/self-host — `STORAGE_DRIVER`). Tables (schema `public`):
-  `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens`
-  `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
+  `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens` `mcp_clients`
+  `mcp_used_codes` `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
   `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
   `backup_state` (single row) holds the **secret** Drive refresh token + run state and
   is NEVER read into the client-bound settings payload (see `docs/backups.md`).
@@ -139,7 +139,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss`, `fontToCss` | `React.cache()` only. Holds `themes` + `typography` + `customFont`; migrates legacy shapes; image/font urls store-relative |
 | `themes.ts` | `THEME_PRESETS`, `themesToCss`, `paletteOptions`, … | 6 owner-customizable palettes. `themesToCss` emits EVERY palette's vars. Add one = append to `THEME_PRESETS` |
 | `comments.ts` / `comment-md.ts` | `getCommentTree`, `buildCommentTree`, `addComment`, `countsByPosts`, `renderCommentMarkdown` | Text-only reader comments (off by default). Public tree excludes email, tombstones deleted-but-replied, re-roots orphans. `comment-md` = bold/italic-only, escape-first. Client island fetches no-store → instant, no revalidate |
-| `integration-keys.ts` / `comment-env.ts` | `getIntegrationKeys`, `getIntegrationStatus`, `saveIntegrationKeys`, `getCommentEnv` | SERVER-ONLY Turnstile/Facebook secrets in `integration_keys` table (env fallback), set in admin — like `backup_state`, NEVER in `settings.data`. `getCommentEnv` (async) = which comment integrations are usable + public site key |
+| `integration-keys.ts` / `comment-env.ts` | `getIntegrationKeys`, `getIntegrationStatus`, `saveIntegrationKeys`, `getCommentEnv` | SERVER-ONLY Turnstile secrets in `integration_keys` table (env fallback), set in admin — like `backup_state`, NEVER in `settings.data`. `getCommentEnv` (async) = which comment integrations are usable + public site key |
 | `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getViewTotals`, `isBot` | Cookieless; `visitor` = salted hash of IP+UA (no PII); bots + admin/api + owner skipped. Kept FOREVER |
 | `activity.ts` | `logActivity`, `logActivityError`, `getActivity`, `clearActivity` | `activity_log`; gated by `features.activityLog`, never throws; `logActivity` called via `after()` from every mutating route; `logActivityError` (action `error`) is scheduled by `logError` (`api.ts`) on route failures |
 | `media-usage.ts` | `findUnusedMedia` | Read-only audit; badges orphans, never deletes |

@@ -16,7 +16,7 @@ const EMPTY: Draft = { name: '', email: '', website: '', content: '' }
 const inputClass =
   't-small w-full rounded-lg border border-rule bg-bg px-3 py-2 text-text outline-none focus:border-heading'
 
-export function SignInButton({ label, provider }: { label: string; provider: 'google' | 'facebook' }) {
+export function SignInButton({ label, provider }: { label: string; provider: 'google' }) {
   return (
     <button
       type="button"

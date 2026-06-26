@@ -1,7 +1,8 @@
-// OAuth token endpoint (thin layer). Exchanges a valid authorization code + PKCE
-// verifier for an eternal access token (mintOAuthToken — never deletes any token, so
-// a connection persists until the owner removes it in the admin). Public client
-// (token_endpoint_auth_method=none); the code's signature + PKCE gate this.
+// OAuth token endpoint (thin layer). Exchanges a valid, single-use authorization code
+// + PKCE verifier for a 180-day access token (mintOAuthToken — never deletes any token,
+// so a connection persists until the owner removes it in the admin; a connector
+// re-authorizes across the expiry). Public client (token_endpoint_auth_method=none);
+// the code's signature + PKCE + one-time jti gate this.
 
 import { verifyCode, mcpEnabled } from '@/lib/mcp/auth'
 import { mintOAuthToken } from '@/lib/mcp/tokens'
@@ -32,10 +33,10 @@ export async function POST(req: Request): Promise<Response> {
   if (grantType !== 'authorization_code') {
     return Response.json({ error: 'unsupported_grant_type' }, { status: 400, headers: CORS })
   }
-  if (!code || !redirectUri || !verifier || !verifyCode(code, redirectUri, verifier)) {
+  if (!code || !redirectUri || !verifier || !(await verifyCode(code, redirectUri, verifier))) {
     return Response.json({ error: 'invalid_grant' }, { status: 400, headers: CORS })
   }
-  // Mint a fresh eternal token; nothing else is touched (old tokens persist until the
+  // Mint a fresh 180-day token; nothing else is touched (old tokens persist until the
   // owner deletes them in the admin). Exempt from the manual cap → can't hit a limit.
   let minted
   try {

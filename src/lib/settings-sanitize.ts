@@ -111,7 +111,6 @@ export function sanitizeComments(input: unknown, fallback: CommentSettings): Com
     enabled: bool(o.enabled, fallback.enabled),
     turnstile: bool(o.turnstile, fallback.turnstile),
     googleAuth: bool(o.googleAuth, fallback.googleAuth),
-    facebookAuth: bool(o.facebookAuth, fallback.facebookAuth),
   }
 }
 

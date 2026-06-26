@@ -51,7 +51,6 @@ export type Dict = {
   commentDeleted: string
   commentError: string
   commentSignInGoogle: string
-  commentSignInFacebook: string
   commentAs: string
   commentSignOut: string
 }
@@ -349,17 +348,13 @@ export type AdminStrings = {
   commentsTurnstileDesc: string
   commentsNeedsKey: string
   commentsGoogleAuth: string
-  commentsFacebookAuth: string
   commentsAuthDesc: string
   commentsKeySite: string
   commentsKeySecret: string
-  commentsKeyFbId: string
-  commentsKeyFbSecret: string
   commentsKeySave: string
   commentsKeySaved: string
   commentsKeySet: string
   commentsTurnstileHelp: string
-  commentsFacebookHelp: string
   commentsGoogleHelp: string
   commentsHelpOpen: string
   commentsNavTitle: string

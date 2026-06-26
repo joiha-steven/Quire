@@ -28,14 +28,12 @@ export function Comments({
   turnstile = false,
   turnstileSiteKey = '',
   googleAuth = false,
-  facebookAuth = false,
 }: {
   postSlug: string
   lang: SiteLang
   turnstile?: boolean
   turnstileSiteKey?: string
   googleAuth?: boolean
-  facebookAuth?: boolean
 }) {
   const s = t(lang)
   const [comments, setComments] = useState<PublicComment[]>([])
@@ -43,7 +41,7 @@ export function Comments({
   const [loaded, setLoaded] = useState(false)
   const [replyTo, setReplyTo] = useState<number | null>(null)
   const [viewer, setViewer] = useState<Viewer>(null)
-  const oauthOn = googleAuth || facebookAuth
+  const oauthOn = googleAuth
   const tempId = useRef(-1) // optimistic ids count down so they never clash with real ones
 
   // Fetch the tree (no setState) so callers decide when to commit it to state —
@@ -163,7 +161,6 @@ export function Comments({
         {!viewer && oauthOn && (
           <div className="mt-3 flex flex-wrap gap-2">
             {googleAuth && <SignInButton label={s.commentSignInGoogle} provider="google" />}
-            {facebookAuth && <SignInButton label={s.commentSignInFacebook} provider="facebook" />}
           </div>
         )}
       </div>

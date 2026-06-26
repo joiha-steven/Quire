@@ -143,6 +143,27 @@ create index if not exists mcp_tokens_hash_idx on public.mcp_tokens (token_hash)
 alter table public.mcp_tokens
   add column if not exists expires_at timestamptz not null default (now() + interval '180 days');
 
+-- ----- mcp_clients (OAuth Dynamic Client Registration; redirect_uri allowlist) --
+-- A connector registers via /api/mcp/register; we mint a unique client_id and store
+-- its redirect_uris. /api/mcp/authorize accepts a redirect_uri only if it exactly
+-- matches one here (or is a loopback address) — closes the open-redirect hole.
+create table if not exists public.mcp_clients (
+  client_id     text primary key,
+  redirect_uris text[] not null default '{}',
+  created_at    timestamptz not null default now()
+);
+
+-- ----- mcp_used_codes (single-use OAuth authorization codes; replay guard) -------
+-- One row per consumed code jti. Codes are stateless HMAC blobs; the token endpoint
+-- inserts the jti on first exchange and the PRIMARY KEY rejects any replay. expires_at
+-- mirrors the code's own expiry so spent rows can be swept (optional; an expired code
+-- is already rejected upstream).
+create table if not exists public.mcp_used_codes (
+  jti        text primary key,
+  expires_at timestamptz not null
+);
+create index if not exists mcp_used_codes_expires_idx on public.mcp_used_codes (expires_at);
+
 -- ----- backup_state (Google Drive backup: secret refresh token + run state) ---
 -- Single row (id=1). The refresh_token is a SECRET and never leaves the server —
 -- it is NOT stored in `settings.data` (which is sent to the admin client). Backup
@@ -159,17 +180,19 @@ create table if not exists public.backup_state (
 );
 
 -- ----- integration_keys (server-only secrets for OPTIONAL comment features) ---
--- Single row (id=1). Turnstile + Facebook keys the owner enters in Admin →
--- Settings. SECRET — like backup_state, NEVER read into settings.data / the
--- client payload. Env vars of the same name still work as a fallback.
+-- Single row (id=1). Turnstile keys the owner enters in Admin → Settings. SECRET —
+-- like backup_state, NEVER read into settings.data / the client payload. Env vars
+-- of the same name still work as a fallback.
 create table if not exists public.integration_keys (
   id                   int primary key default 1 check (id = 1),
   turnstile_site_key   text,
   turnstile_secret_key text,
-  facebook_id          text,
-  facebook_secret      text,
   constraint integration_keys_singleton check (id = 1)
 );
+-- Upgrade path: drop the removed Facebook-login columns from a pre-existing table.
+alter table public.integration_keys
+  drop column if exists facebook_id,
+  drop column if exists facebook_secret;
 
 -- ----- activity_log ----------------------------------------------------------
 create table if not exists public.activity_log (
@@ -214,6 +237,8 @@ alter table public.settings         enable row level security;
 alter table public.backup_state     enable row level security;
 alter table public.integration_keys enable row level security;
 alter table public.mcp_tokens       enable row level security;
+alter table public.mcp_clients      enable row level security;
+alter table public.mcp_used_codes   enable row level security;
 alter table public.activity_log     enable row level security;
 alter table public.analytics_events enable row level security;
 alter table public.analytics_scroll enable row level security;

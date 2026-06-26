@@ -46,7 +46,6 @@ export const DEFAULT_COMMENTS: CommentSettings = {
   enabled: false,
   turnstile: false,
   googleAuth: false,
-  facebookAuth: false,
 }
 
 // Per-role type CSS vars on :root (+ optional font-smoothing). Injected after
