@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.2.6 — 2026-06-26 (Bubble menu follows light/dark)
+- **The selection bubble now themes with light/dark** like the toolbar. It was a fixed dark chip —
+  too harsh on a light page and nearly invisible against the dark editor. Now a white chip in light
+  mode, a `neutral-800` chip in dark, with matching button + separator colours.
+
 ## v1.2.5 — 2026-06-26 (Hotfix: editor crash from the bubble menu)
 - **Fixed the editor 500 introduced in v1.2.4.** The new `BubbleMenu` got fresh inline `options` /
   `shouldShow` objects on every render; it re-dispatches an "updateOptions" transaction whenever
