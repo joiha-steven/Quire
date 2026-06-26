@@ -8,9 +8,10 @@
 // Both need the editor to re-render on selection change; Editor.tsx enables
 // `shouldRerenderOnTransaction` so isActive() stays live (off by default in
 // TipTap 3, which is why the table row / active highlights weren't updating).
-import type React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { type Editor as TiptapEditor } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
+import { NodeSelection, type EditorState } from '@tiptap/pm/state'
 import { useAdminT } from './I18nProvider'
 
 const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -171,18 +172,26 @@ export function BubbleBar({ editor }: { editor: TiptapEditor }) {
     if (url === '') range.unsetLink().run()
     else range.setLink({ href: url }).run()
   }
+  // These two MUST be referentially stable. BubbleMenu re-dispatches an
+  // "updateOptions" transaction whenever `options`/`shouldShow` change identity;
+  // with shouldRerenderOnTransaction on, a fresh inline object each render would
+  // loop (dispatch -> re-render -> new object -> dispatch -> ...) and crash.
+  const options = useMemo(() => ({ placement: 'top' as const, offset: 8 }), [])
+  const shouldShow = useCallback(
+    ({ editor: ed, state, from, to }: { editor: TiptapEditor; state: EditorState; from: number; to: number }) => {
+      if (ed.isActive('link')) return true // cursor in a link -> offer edit/remove
+      if (from === to) return false // nothing selected
+      // A node selection (image / video) carries its own controls — don't cover it.
+      if (state.selection instanceof NodeSelection) return false
+      return true
+    },
+    [],
+  )
   return (
     <BubbleMenu
       editor={editor}
-      options={{ placement: 'top', offset: 8 }}
-      shouldShow={({ editor: ed, state, from, to }) => {
-        if (ed.isActive('link')) return true // cursor in a link -> offer edit/remove
-        if (from === to) return false // nothing selected
-        // A node selection (image / video) carries its own controls — don't
-        // cover it with the text formatting bubble.
-        if ((state.selection as { node?: unknown }).node) return false
-        return true
-      }}
+      options={options}
+      shouldShow={shouldShow}
       className="flex items-center gap-0.5 rounded-lg border border-neutral-700 bg-neutral-900 p-1 shadow-xl"
     >
       <button type="button" onMouseDown={hold} onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}><strong>B</strong></button>
