@@ -464,13 +464,20 @@ hr {
 }
 /* Editor preview: the TipTap editor has no .gallery wrapper (grouping happens on
    publish), so make #grid figures flow side-by-side as thumbnails — a gallery
-   reads as columns in the editor too, not a vertical stack. Scoped to .ProseMirror
-   so the published page is unaffected. */
-.ProseMirror figure.img-grid {
+   reads as columns in the editor too, not a vertical stack. Each node view is
+   wrapped in a block `.react-renderer` div, so the layout MUST target THAT
+   wrapper (styling the inner figure alone leaves the block wrapper stacking).
+   `:has()` scopes it to gallery items only — single images + videos stay full
+   width, so a gallery image is visibly treated differently from a lone one.
+   Scoped to .ProseMirror so the published page is unaffected. */
+.ProseMirror .react-renderer:has(> figure.img-grid) {
   display: inline-block;
-  width: 31%;
+  width: 31.5%;
   margin: 0 1.5% 0.5rem 0;
   vertical-align: top;
+}
+.ProseMirror figure.img-grid {
+  margin: 0;
 }
 .ProseMirror figure.img-grid img {
   aspect-ratio: 1 / 1;

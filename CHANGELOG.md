@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v1.2.2 — 2026-06-26 (Editor gallery preview matches the published grid)
+- **Gallery images now sit side-by-side while editing, not stacked.** Each TipTap node view is
+  wrapped in a block `.react-renderer` div, so the old CSS (which styled only the inner `<figure>`)
+  left every gallery image on its own row — nothing like the published grid. The layout now targets
+  the wrapper via `:has(> figure.img-grid)`, scoped to gallery items only: a `#grid` image is laid
+  out as a thumbnail column and a lone image still spans full width, so the two read differently.
+
 ## v1.2.1 — 2026-06-26 (Editor fixes: offline autosave + multi-image gallery)
 - **Autosave no longer publishes.** The old once-a-minute autosave wrote to the server using the
   post's current status — so editing a *published* post silently pushed half-finished text live.
