@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import type { SiteSettings, ApiResponse } from '@/types'
 import type { ThemePreset } from '@/lib/themes'
 import type { CommentEnv } from '@/lib/comment-env'
+import type { IntegrationStatus } from '@/lib/integration-keys'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { formatTime } from '@/lib/utils'
@@ -26,12 +27,13 @@ import { FooterField } from './FooterField'
 import { FeatureFields } from './FeatureFields'
 import { CommentFields } from './CommentFields'
 import { CommentKeys } from './CommentKeys'
+import { CloudflareFields } from './CloudflareFields'
 import { SeoFields } from './SeoFields'
 
 type Tab = 'site' | 'content' | 'appearance' | 'seo' | 'integrations'
 const TAB_IDS: Tab[] = ['site', 'content', 'appearance', 'seo', 'integrations']
 
-export function SettingsView({ settings, presets, commentEnv }: { settings: SiteSettings; presets: ThemePreset[]; commentEnv: CommentEnv }) {
+export function SettingsView({ settings, presets, commentEnv, integrations }: { settings: SiteSettings; presets: ThemePreset[]; commentEnv: CommentEnv; integrations: IntegrationStatus }) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -178,7 +180,7 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
         </div>
       )}
 
-      {/* Integrations: Google Drive backups + MCP server. */}
+      {/* Integrations: Google Drive backups + MCP server + Cloudflare cache purge. */}
       {tab === 'integrations' && (
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.backupTitle}>
@@ -186,6 +188,9 @@ export function SettingsView({ settings, presets, commentEnv }: { settings: Site
           </Card>
           <Card title={t.cardMcp}>
             <McpFields mcp={s.mcp} onChange={(mcp) => update({ mcp })} />
+          </Card>
+          <Card title={t.cardCloudflare}>
+            <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
           </Card>
         </div>
       )}

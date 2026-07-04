@@ -1,5 +1,5 @@
 // Image encoding — pure sharp pipeline (Buffer -> Buffer / dimensions). No DB, no
-// Blob, no app state. media.ts depends on this ONE WAY (media -> image, never back).
+// storage, no app state. media.ts depends on this ONE WAY (media -> image, never back).
 
 import sharp from 'sharp'
 

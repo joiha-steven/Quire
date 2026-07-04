@@ -187,12 +187,18 @@ create table if not exists public.integration_keys (
   id                   int primary key default 1 check (id = 1),
   turnstile_site_key   text,
   turnstile_secret_key text,
+  cloudflare_api_token text,
+  cloudflare_zone_id   text,
   constraint integration_keys_singleton check (id = 1)
 );
--- Upgrade path: drop the removed Facebook-login columns from a pre-existing table.
+-- Upgrade path: drop the removed Facebook-login columns from a pre-existing table,
+-- and add the Cloudflare cache-purge columns to a pre-existing table.
 alter table public.integration_keys
   drop column if exists facebook_id,
   drop column if exists facebook_secret;
+alter table public.integration_keys
+  add column if not exists cloudflare_api_token text,
+  add column if not exists cloudflare_zone_id text;
 
 -- ----- activity_log ----------------------------------------------------------
 create table if not exists public.activity_log (
