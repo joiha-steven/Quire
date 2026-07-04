@@ -7,6 +7,7 @@
 // change + "Clear all cache" (see lib/cdn.ts + lib/revalidate.ts), so an edit is live
 // with no manual purge.
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { useAdminT } from './I18nProvider'
@@ -20,6 +21,7 @@ const EMPTY: Keys = { cloudflareZoneId: '', cloudflareApiToken: '' }
 
 export function CloudflareFields({ configured, zoneId }: { configured: boolean; zoneId: string }) {
   const t = useAdminT()
+  const router = useRouter()
   const { notify } = useToast()
   const [keys, setKeys] = useState<Keys>(EMPTY)
   const [busy, setBusy] = useState(false)
@@ -42,6 +44,8 @@ export function CloudflareFields({ configured, zoneId }: { configured: boolean; 
       if (!json.success) throw new Error(json.error)
       setKeys(EMPTY)
       notify(t.commentsKeySaved)
+      router.refresh() // re-render so the "· saved" hint reflects the new state at once
+
     } catch {
       notify(t.deleteFailed, 'error')
     } finally {

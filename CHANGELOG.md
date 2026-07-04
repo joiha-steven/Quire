@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v1.3.6 — 2026-07-04 (fix: Cloudflare integration card reflects the saved state at once)
+
+- The Cloudflare cache card now `router.refresh()`es after a successful save, so the "· saved"
+  placeholder hint updates immediately instead of only after a manual page reload.
+- Operational note (self-host): after an `ALTER TABLE` on a live database, reload the PostgREST
+  schema cache (restart the service or `NOTIFY pgrst, 'reload schema'`) — otherwise PostgREST keeps
+  its old schema and silently ignores writes to the new columns.
+
 ## v1.3.5 — 2026-07-04 (Auto CDN purge: Cloudflare cache clears on every write)
 
 - **Cloudflare cache auto-purge.** Enter a Cloudflare API token (Zone.Cache Purge permission) + Zone
