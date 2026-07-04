@@ -1,4 +1,4 @@
-// Media: metadata in Postgres `media`, binaries on Blob. Raster (jpg/png) keeps
+// Media: metadata in Postgres `media`, binaries on the local filesystem. Raster (jpg/png) keeps
 // the untouched ORIGINAL + responsive variants (-1024/-1600 AVIF+WebP) + a
 // -thumb.webp. Vector/anim (svg/gif/webp) stored as-is. Variant URLs derived by
 // convention from the original's name.
@@ -149,7 +149,7 @@ async function processFile(
   throw new Error(`Unsupported file type: ${contentType}`)
 }
 
-// Upload one or more files: push the binaries to Blob, then insert all rows in a
+// Upload one or more files: write the binaries to the store, then insert all rows in a
 // single statement. Unsupported types throw before any DB write (route -> 415).
 export async function addMediaBatch(
   files: { filename: string; body: ArrayBuffer; contentType: string }[],
@@ -174,9 +174,9 @@ export async function addMedia(
   return item
 }
 
-// Register images the BROWSER uploaded straight to Blob (direct upload bypasses the
-// serverless 4.5MB body limit). Original is already on the store; we fetch it back
-// only to read dims + make the thumb, then insert the row. Variants stay deferred.
+// Register images already written to the store, addressed by URL: fetch each back only
+// to read dims + make the thumb, then insert the row. Variants stay deferred. (Orphaned
+// on the local-only build - the browser posts to /api/media/upload; kept for reuse.)
 export async function registerMediaBatch(items: { url: string; filename: string }[]): Promise<MediaItem[]> {
   const rows: MediaRow[] = []
   for (const it of items) {
