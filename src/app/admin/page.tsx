@@ -1,10 +1,10 @@
 // Admin home: at-a-glance stats (posts, pages, media, storage, taxonomy, version),
 // dashboard widgets (30-day traffic, most-viewed posts, needs-attention), and a
-// System panel (hosting/region/env/commit, database + storage).
+// System panel (hosting, env, database + storage).
 import pkg from '../../../package.json'
 import { getIndex } from '@/lib/posts'
 import { getPageIndex } from '@/lib/pages'
-import { listBlobs, blobOrigin } from '@/lib/blob'
+import { listBlobs } from '@/lib/blob'
 import { getSettings } from '@/lib/settings'
 import { getBackupState } from '@/lib/backup-state'
 import { countsByPosts } from '@/lib/comments'
@@ -15,9 +15,7 @@ import { Overview, type SystemInfo } from '@/components/admin/Overview'
 import type { DashboardData } from '@/components/admin/DashboardWidgets'
 
 // Gather the running-system facts shown in the Overview "System" panel. Best-effort:
-// a DB hiccup just flips the status flag, it never breaks the dashboard. Each fact
-// can carry an optional `href` so the value renders as a deep link to the relevant
-// dashboard (Vercel project, Blob stores, Supabase project, the GitHub commit…).
+// a DB hiccup just flips the status flag, it never breaks the dashboard.
 async function getSystemInfo(): Promise<SystemInfo> {
   let dbReachable = true
   try {
@@ -27,19 +25,12 @@ async function getSystemInfo(): Promise<SystemInfo> {
     dbReachable = false
   }
   const env = process.env
-  const sbRef = (env.SUPABASE_URL ?? '').match(/https:\/\/([^.]+)\./)?.[1] ?? '—'
-  let blobHost = ''
+  let siteHost = ''
   try {
-    blobHost = new URL(blobOrigin()).host
+    siteHost = new URL(env.SITE_URL ?? env.AUTH_URL ?? '').host
   } catch {
     /* leave empty */
   }
-
-  // Vercel injects these on a Git-connected deploy; absent locally.
-  const sha = env.VERCEL_GIT_COMMIT_SHA ?? ''
-  const repoOwner = env.VERCEL_GIT_REPO_OWNER ?? ''
-  const repoSlug = env.VERCEL_GIT_REPO_SLUG ?? ''
-  const prodUrl = env.VERCEL_PROJECT_PRODUCTION_URL ?? ''
   const nextVer = (pkg.dependencies as Record<string, string>).next?.replace(/^[\^~]/, '') ?? ''
 
   // Feature status: MCP on/off + whether backups are active (enabled AND connected).
@@ -48,20 +39,13 @@ async function getSystemInfo(): Promise<SystemInfo> {
   return {
     mcpEnabled: settings.mcp.enabled,
     backupOn: settings.backups.enabled && !!backup.refreshToken,
-    hosting: 'Vercel',
-    hostingHref: 'https://vercel.com/dashboard',
-    site: prodUrl || '—',
-    siteHref: prodUrl ? `https://${prodUrl}` : undefined,
-    region: env.VERCEL_REGION ?? 'sin1 (local)',
-    env: env.VERCEL_ENV ?? 'development',
-    branch: env.VERCEL_GIT_COMMIT_REF || '—',
-    commit: sha.slice(0, 7) || '—',
-    commitHref: sha && repoOwner && repoSlug ? `https://github.com/${repoOwner}/${repoSlug}/commit/${sha}` : undefined,
-    database: `Supabase · ap-southeast-1 · ${sbRef}`,
-    databaseHref: sbRef !== '—' ? `https://supabase.com/dashboard/project/${sbRef}` : undefined,
+    hosting: 'Self-hosted',
+    site: siteHost || '—',
+    siteHref: siteHost ? `https://${siteHost}` : undefined,
+    env: env.NODE_ENV ?? 'production',
+    database: 'PostgreSQL (PostgREST)',
     dbReachable,
-    storage: blobHost ? `Vercel Blob · ${blobHost}` : 'Vercel Blob',
-    storageHref: 'https://vercel.com/dashboard/stores',
+    storage: 'Local filesystem',
     runtime: `Node ${process.version.replace(/^v/, '')}`,
     framework: nextVer ? `Next.js ${nextVer}` : 'Next.js',
   }

@@ -68,8 +68,7 @@ async function buildArchive(): Promise<{ file: string; size: number }> {
   }
   await fs.writeFile(path.join(work, 'db.json'), JSON.stringify({ version: 1, createdAt: new Date().toISOString(), tables }))
 
-  // 2) Copy every blob binary via the storage driver (Vercel fetches the public
-  //    URL; local reads disk) — so a snapshot works under either backend.
+  // 2) Copy every binary via the storage facade (reads from the local store) into the snapshot.
   const blobs = await listBlobs()
   for (const b of blobs) {
     const dest = path.join(work, 'blob', b.pathname)

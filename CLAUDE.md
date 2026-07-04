@@ -3,8 +3,8 @@
 # Quire Blog — operating notes
 
 Public, open-source blog platform. **Zero personal data in this repo.** Real
-credentials live only in the gitignored `.env.local` and on Vercel (`vercel env
-pull`); never commit them. Personal/instance facts are not tracked in git.
+credentials live only in the gitignored `.env.local` (native) or `.env.docker`
+(Docker); never commit them. Personal/instance facts are not tracked in git.
 
 > **Companion doc — don't duplicate it here.** [`ARCHITECTURE.md`](./ARCHITECTURE.md) =
 > the mental model + the *why* behind decisions. This file = operational rules, invariants,
@@ -49,9 +49,9 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 
 ## Architecture (operational)
 
-- **Text in Postgres (Supabase on Vercel; a bundled Postgres+PostgREST on Docker — supabase-js
-  unchanged, see Env); binaries via the `blob.ts` storage driver** (Vercel Blob by default, local
-  filesystem on Docker/self-host — `STORAGE_DRIVER`). Tables (schema `public`):
+- **Text in Postgres (self-hosted; reached through PostgREST with the `supabase-js` client — bundled
+  Postgres+PostgREST on Docker, or your own on native, see Env); binaries on the LOCAL FILESYSTEM via
+  the `blob.ts` facade** (served at `/uploads`; `STORAGE_LOCAL_DIR`). Tables (schema `public`):
   `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens` `mcp_clients`
   `mcp_used_codes` `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
   `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
@@ -63,17 +63,17 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 - **Data flow:** public read = server component → `src/lib` (`getPost`/`getSettings`/…) →
   `marked` render (ISR-cached). Write = `src/app/api/*` route → `requireOwner()` → `src/lib`
   mutate Postgres/Blob → `src/lib/revalidate.ts` purge.
-- **Env:** `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (secret, server-only) + the Blob
-  token — `.env.local` + Vercel only. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
-  env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`).
-  **Self-host (Docker):** `STORAGE_DRIVER=local` + `NEXT_PUBLIC_STORAGE_DRIVER=local` (baked into
-  the image) + `STORAGE_LOCAL_DIR` (volume) + `SITE_URL`; no Blob token. **No Supabase cloud** — the
-  stack bundles Postgres + PostgREST; `db.ts` strips the `/rest/v1` prefix when `POSTGREST_DIRECT=1`
-  so supabase-js hits the local PostgREST unchanged (`SUPABASE_URL=http://rest:3000`, key from
-  `scripts/docker/gen-keys.mjs`; roles/grants in `docker/initdb/`). Full set in `.env.docker.example`;
-  build needs no backend env (data layer degrades to empty).
-- **Region:** `vercel.json` pins functions + the Blob store to `sin1` (Singapore); OG is edge.
-  Detail → `docs/seo-pwa.md`.
+- **Env:** `SUPABASE_URL` (your PostgREST endpoint) + `POSTGREST_DIRECT=1` + `SUPABASE_SERVICE_ROLE_KEY`
+  (HS256 `service_role` JWT, server-only) + `STORAGE_LOCAL_DIR` + `SITE_URL`/`AUTH_URL` + `AUTH_*` +
+  `AUTHORIZED_EMAIL` + `CRON_SECRET`. `SUPABASE_*` keep the name because the data layer uses `supabase-js`
+  (a PostgREST client) — NOT a Supabase cloud project. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
+  env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`). `db.ts` strips the
+  `/rest/v1` prefix when `POSTGREST_DIRECT=1` so supabase-js hits a bare PostgREST unchanged; DB password +
+  JWT secret + service key come from `scripts/docker/gen-keys.mjs`, roles/grants from `docker/initdb/`.
+  **Native:** `.env.example` + `docs/self-host-native.md`. **Docker:** `.env.docker.example` (bundles
+  Postgres + PostgREST + local store + cron). Build needs no backend env (data layer degrades to empty).
+- **Edge:** put a CDN/reverse proxy (e.g. Cloudflare) in front for global caching + TLS/HSTS; OG runs on
+  the edge runtime (so its bundled font loads). Detail → `docs/seo-pwa.md`.
 
 ## Invariants — load-bearing, do not break
 
@@ -86,9 +86,9 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 2. **Posts + pages share ONE `/{slug}` namespace.** Every create/rename calls `ensureSlugFree`
    → 409 `SlugConflictError` on collision (trashed rows still reserve their slug).
    *Enforced at:* `lib/slugs.ts`. *Test:* `lib/slugs.test.ts`.
-3. **Image refs are stored store-relative.** `collapseBlob` strips the host on WRITE, `expandBlob`
-   re-adds it on READ — applied in the data layer only (posts/pages/settings), so stored bytes
-   carry no storeId. *Enforced at:* `lib/blob.ts` + the data-layer files. *Test:* `lib/blob.test.ts`.
+3. **Image refs are stored store-relative.** `collapseBlob` strips the `/uploads` prefix on WRITE,
+   `expandBlob` re-adds it on READ — applied in the data layer only (posts/pages/settings), so stored
+   bytes carry no origin. *Enforced at:* `lib/blob.ts` + the data-layer files. *Test:* `lib/blob.test.ts`.
 4. **Every write/delete route calls `requireOwner()` first.** `src/middleware.ts` is the edge
    defence-in-depth net (blocks `/admin` + owner-only `/api`); a NEW public/bearer route must be
    added to `isPublicApi()` or it 401s. *Enforced at:* `lib/api.ts` + `src/middleware.ts`.
@@ -109,7 +109,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 
 | Symptom / area | Read these first | Read more if needed |
 |---|---|---|
-| Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts` (+ `lib/blob-local.ts`, `app/uploads/[...path]` for the local driver), `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
+| Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts` (+ `lib/blob-local.ts`, `app/uploads/[...path]`), `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
 | Cache / stale / content not updating / ISR | `lib/revalidate.ts`, `lib/db.ts`, `lib/posts.ts` | ARCHITECTURE "Request flow" |
 | Auth / route 401 / route exposed | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO db), `api/<route>/route.ts` | `docs/mcp.md` if MCP |
 | Slug / 404 / duplicate URL | `lib/slugs.ts`, `src/app/(blog)/[slug]` | `lib/posts.ts`, `lib/pages.ts` |
@@ -130,7 +130,7 @@ Terse role per file; the authoritative detail is the code comments.
 | File | Key exports | Role |
 |---|---|---|
 | `db.ts` | `db()` | Server-only `service_role` client; GET reads cache-eligible + tagged `db`, writes `no-store`. ALL text access goes through here |
-| `blob.ts` | `blobUrl`, `uploadFile`, `readBlob`, `deleteByUrl/Pathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | Binaries only; facade over a driver picked by `STORAGE_DRIVER` — `vercel-blob` (default) or `local` (fs, served at `/uploads` via `blob-local.ts` + `app/uploads/[...path]`). Deterministic URLs (never `list()` to read); `collapse/expand` = store-relative refs. ONLY file allowed to import `@vercel/blob` (`check:no-direct-blob`) |
+| `blob.ts` | `blobUrl`, `uploadFile`, `readBlob`, `deleteByUrl/Pathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | Binaries only; facade over the LOCAL fs driver `blob-local.ts` (served at `/uploads` via `app/uploads/[...path]`), lazy-loaded so `node:fs` stays off the client. `collapse/expand` = store-relative refs. No cloud storage SDK anywhere in `src` (`check:no-direct-blob`) |
 | `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads `React.cache()` only. `savePost` snapshots prior version + stores `readingMinutes`. `updateTerm` renames (merges on collision) / removes a term across EVERY post |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors `posts.ts` |
 | `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions/slug (`post_revisions` jsonb, store-relative). Re-slugged on rename, removed on delete |

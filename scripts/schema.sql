@@ -6,8 +6,8 @@
 -- Safe to re-run: every statement is idempotent (IF NOT EXISTS / CREATE OR REPLACE).
 -- The app connects with the service_role key, which BYPASSES row-level security, so
 -- RLS is enabled with no public policies — i.e. nothing is reachable with the anon
--- key, all access is server-side only. Binaries (images/files/icons) live in Vercel
--- Blob, not here; these tables hold text + metadata only.
+-- key, all access is server-side only. Binaries (images/files/icons) live on the
+-- local filesystem, not here; these tables hold text + metadata only.
 
 -- ----- posts -----------------------------------------------------------------
 create table if not exists public.posts (

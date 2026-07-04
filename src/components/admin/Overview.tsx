@@ -13,19 +13,12 @@ type Taxo = { name: string; count: number }
 
 export type SystemInfo = {
   hosting: string
-  hostingHref?: string
   site: string
   siteHref?: string
   env: string
-  region: string
-  branch: string
-  commit: string
-  commitHref?: string
   database: string
-  databaseHref?: string
   dbReachable: boolean
   storage: string
-  storageHref?: string
   runtime: string
   framework: string
   mcpEnabled: boolean
@@ -139,17 +132,14 @@ function RecentActivity({ recent, enabled }: { recent: ActivityEntry[]; enabled:
 function SystemCard({ system }: { system: SystemInfo }) {
   const t = useAdminT()
   const rows: { label: string; value: string; ok?: boolean; href?: string }[] = [
-    { label: t.sysHosting, value: system.hosting, href: system.hostingHref },
+    { label: t.sysHosting, value: system.hosting },
     { label: t.sysSite, value: system.site, href: system.siteHref },
     { label: t.sysEnv, value: system.env },
-    { label: t.sysRegion, value: system.region },
-    { label: t.sysBranch, value: system.branch },
-    { label: t.sysCommit, value: system.commit, href: system.commitHref },
     { label: t.sysFramework, value: system.framework },
     { label: t.sysRuntime, value: system.runtime },
-    { label: t.sysDatabase, value: system.database, href: system.databaseHref },
+    { label: t.sysDatabase, value: system.database },
     { label: t.sysDbStatus, value: system.dbReachable ? t.sysReachable : t.sysUnreachable, ok: system.dbReachable },
-    { label: t.sysStorage, value: system.storage, href: system.storageHref },
+    { label: t.sysStorage, value: system.storage },
     { label: t.sysMcp, value: system.mcpEnabled ? t.sysOn : t.sysOff, ok: system.mcpEnabled || undefined },
     { label: t.sysBackup, value: system.backupOn ? t.sysOn : t.sysOff, ok: system.backupOn || undefined },
   ]

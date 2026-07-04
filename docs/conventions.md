@@ -58,7 +58,7 @@
   `font-family`, no `font-mono`, no second family; `.prose code` is `inherit`;
   **`grep -rE "font-mono" src` must be empty.** A custom font (`settings.customFont` =
   family + `faces[]` per weight 400/500/600/700, uploaded via `FontUpload` → `/api/files/font`,
-  Blob `files/font-<weight>-<ms>`, store-relative) overrides `--font-sans` (Inter fallback) —
+  stored at `files/font-<weight>-<ms>`, store-relative) overrides `--font-sans` (Inter fallback) —
   one `@font-face` per weight because faux-bold is disabled (`font-synthesis-weight: none`).
   `/og` renders Inter + the custom font (`lib/og.ts` `?font=`). Empty = bundled Inter.
 - **Admin chrome does NOT follow the reader's type settings** — it uses Tailwind's standard
@@ -107,12 +107,12 @@
 `node --env-file=.env.local scripts/<name>.mjs [--dry]` — idempotent.
 
 - **`schema.sql`** — full Postgres schema (11 tables + indexes + `posts.search` tsvector +
-  RLS + the analytics RPCs). Run ONCE on a fresh Supabase project. NOT run by the app;
+  RLS + the analytics RPCs). Run ONCE on a fresh Postgres database. NOT run by the app;
   transcribed from the live schema — **keep it in sync when you change tables/RPCs.**
-- **`migrate-to-supabase.mjs`** — one-off P1.5 migration (Blob `_index.json`+`.md` →
+- **`migrate-to-supabase.mjs`** — one-off P1.5 migration (old-store `_index.json`+`.md` →
   Postgres). Already run; kept for recovery.
-- **`scripts/legacy/` — pre-Supabase one-offs, do NOT run against the live site** (they operate
-  on the retired Blob `_index.json`/`.md` model): `import-wordpress`, `convert-html-to-markdown`,
+- **`scripts/legacy/` — pre-Postgres one-offs, do NOT run against the live site** (they operate
+  on the retired `_index.json`/`.md`-on-storage model): `import-wordpress`, `convert-html-to-markdown`,
   `fix-import-captions`, `backfill-excerpts`, `rehost-images`, `rebuild-index`, `wipe-media`,
   `backfill-reading-time`, `list-posts-with-images`, `check-image-links`,
   `backfill-media-dimensions`, `remap-original-images`. Kept for recovery only; their deps
@@ -129,8 +129,8 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   + the **env-var table** must be updated in the SAME change whenever setup/deploy/env/auth/MCP/backup
   behavior changes (new/renamed env var, a new owner setup step, a changed redirect URI, etc.).
   Never let the README drift from how the app is actually installed and run.
-- Keep personal/instance values (credentials, Vercel/Blob IDs, the live domain) OUT of tracked
-  files — `.env.local` + Vercel only.
+- Keep personal/instance values (credentials, the live domain) OUT of tracked
+  files — `.env.local` only.
 - **Audits** (`audit/`): a full review per `audit/README.md` → dated `audit/YYYY-MM-DD-<scope>.md`;
   read the latest first so a pass starts from the last clean line.
 - **Versioning (owner's rule — do NOT auto-bump):** the version is **`1.0.x`** (was `0.9.x`; the

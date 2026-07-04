@@ -106,12 +106,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   backups: DEFAULT_BACKUPS,
 }
 
-// Canonical base URL: owner value, else Vercel production domain, else the
-// self-host SITE_URL env (Docker), else localhost.
+// Canonical base URL: owner value, else the SITE_URL env, else localhost.
 export function resolveSiteUrl(s: SiteSettings): string {
   if (s.siteUrl) return s.siteUrl
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  if (vercel) return `https://${vercel}`
   if (process.env.SITE_URL) return process.env.SITE_URL
   return 'http://localhost:3000'
 }

@@ -1,6 +1,6 @@
 // Supabase Postgres client — the data layer's storage for ALL text content
 // (posts, pages, revisions, media/file metadata, settings). Binaries (images,
-// attachments, icons) still live on Vercel Blob; see `blob.ts`.
+// attachments, icons) live on the local filesystem; see `blob.ts`.
 //
 // SERVER-ONLY. Uses the secret service_role key, which bypasses RLS. Every admin
 // write is already owner-gated by next-auth (`requireOwner`) and public reads only
@@ -28,7 +28,7 @@ const REVALIDATE = 3600
 // supabase-js builds `${SUPABASE_URL}/rest/v1/<table>`; bare PostgREST serves tables
 // at `/<table>`, so when POSTGREST_DIRECT=1 we strip the `/rest/v1` prefix here. This
 // keeps the whole data layer (and supabase-js) byte-for-byte identical on both
-// targets — only the URL path differs. Unset on Vercel → hits Supabase unchanged.
+// targets — only the URL path differs. Unset → supabase-js keeps its default `/rest/v1` path.
 const POSTGREST_DIRECT = process.env.POSTGREST_DIRECT === '1'
 function restTarget(input: RequestInfo | URL): RequestInfo | URL {
   if (!POSTGREST_DIRECT) return input

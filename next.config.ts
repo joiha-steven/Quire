@@ -1,19 +1,11 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // Self-contained server bundle for the Docker / self-host image (`.next/standalone`).
-  // Inert on Vercel, which ignores it. The build needs no backend: the data layer
-  // degrades to empty on a missing DB (posts/pages readIndex catch), so
-  // `generateStaticParams` returns [] and pages render on-demand once env is supplied.
+  // Self-contained server bundle for the self-host image (`.next/standalone`), run as a
+  // plain Node process. The build needs no backend: the data layer degrades to empty on
+  // a missing DB (posts/pages readIndex catch), so `generateStaticParams` returns [] and
+  // pages render on-demand once env is supplied.
   output: 'standalone',
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
-      },
-    ],
-  },
   // Client Router Cache kept minimal: every navigation reflects current server
   // state, so an edit is never hidden behind a stale client-side RSC. The server
   // still serves fast — public pages are ISR-cached (revalidate), so TTFB stays
@@ -28,11 +20,11 @@ const nextConfig: NextConfig = {
     // cut as before. No render-blocking, no added client bundle.
     viewTransition: true,
   },
-  // Baseline security headers on every route. HSTS is added by Vercel; these
-  // cover clickjacking, MIME sniffing, referrer leakage, and feature access.
-  // No CSP here on purpose: the app loads inline theme/no-FOUC scripts, Vercel
-  // Analytics, OG (edge), and Blob images — a strict CSP needs nonces + a
-  // Report-Only rollout first, so it is left out rather than shipped broken.
+  // Baseline security headers on every route. HSTS is best set at the TLS edge
+  // (reverse proxy / CDN); these cover clickjacking, MIME sniffing, referrer leakage,
+  // and feature access. No CSP here on purpose: the app loads inline theme/no-FOUC
+  // scripts and the dynamic OG image — a strict CSP needs nonces + a Report-Only
+  // rollout first, so it is left out rather than shipped broken.
   async headers() {
     return [
       {

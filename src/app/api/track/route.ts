@@ -25,9 +25,9 @@ export async function POST(req: NextRequest): Promise<Response> {
         after(() => recordScroll(path, depth, ip, ua))
       } else {
         // Source attribution: referrer host (external only, set by the beacon on
-        // session entry) + country from the edge. Both best-effort, privacy-light.
+        // session entry) + country from the CDN/proxy edge. Both best-effort, privacy-light.
         const referrer = typeof body.referrer === 'string' ? body.referrer.slice(0, 255) : ''
-        const country = (req.headers.get('x-vercel-ip-country') ?? '').trim()
+        const country = (req.headers.get('cf-ipcountry') ?? '').trim()
         after(() => recordView(path, ip, ua, referrer, country))
       }
     }

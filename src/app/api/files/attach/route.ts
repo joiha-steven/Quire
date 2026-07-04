@@ -1,6 +1,6 @@
 // POST /api/files/attach -> server-mediated attachment upload for the LOCAL storage
 // driver (owner only). Multipart form: one or more "file" parts. The browser sends
-// the bytes here (no client-direct-to-store path off Vercel); the route writes them
+// the bytes here (no client-direct-to-store path); the route writes them
 // via the storage facade and inserts the rows (addFilesBatch) — the server-side twin
 // of /api/files/register. Any content type, like the catch-all attachment library.
 import { after } from 'next/server'

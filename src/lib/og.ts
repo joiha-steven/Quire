@@ -11,7 +11,7 @@ function ogFontParam(settings: SiteSettings, base: string, p: URLSearchParams): 
   if (!faces.length) return
   const pick = [...faces].sort((a, b) => Math.abs(a.weight - 600) - Math.abs(b.weight - 600))[0]
   // Absolutize: the local driver yields `/uploads/...` refs, but the edge OG route
-  // can only fetch absolute URLs. No-op for an already-absolute Vercel Blob URL.
+  // can only fetch absolute URLs. No-op for an already-absolute URL.
   if (pick?.url) p.set('font', new URL(pick.url, base).toString())
 }
 

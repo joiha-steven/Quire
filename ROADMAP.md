@@ -1,6 +1,6 @@
 # Roadmap
 
-Direction for Quire Blog beyond the current single-owner, Vercel-hosted blog. This is
+Direction for Quire Blog beyond the current single-owner, self-hosted blog. This is
 a planning document — nothing here is built yet unless its status says so. Operational
 detail for shipped features lives in [`CLAUDE.md`](./CLAUDE.md); the *why* of the
 current design is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
@@ -10,32 +10,34 @@ current design is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 Make Quire Blog something other people can actually run and live in - not just the
 author's personal instance. Near-term tracks:
 
-1. Run anywhere: **Vercel or Docker**, from one codebase.
+1. Run anywhere: **native self-host or Docker**, from one codebase.
 2. Publish from a **Markdown note app** (Obsidian, then Craft).
 3. Optional **AI assist** in the editor (titles, tags, drafting, images).
 
-Long horizon (after Docker ships): a **free multi-tenant SaaS** at `quire.app`
+Long horizon: a **free multi-tenant SaaS** at `quire.app`
 (see Phase 7). The whole point of the SaaS is the *opposite* of lock-in - it is "the
 same open-source app, hosted for you", and any blog exports to a single snapshot that
-re-installs on Docker or a Vercel + Supabase stack with one button. Hosted is a
+re-installs on a native or Docker stack with one button. Hosted is a
 convenience, never a trap.
 
 ## Architecture fit (why this is mostly additive)
 
-Verified against the code: the only hard Vercel coupling is `@vercel/blob`.
-Everything else already ports to a plain Node/Docker runtime:
+Verified against the code: the runtime is a plain Node/Docker stack, nothing
+platform-locked:
 
-- `sharp` does all image work (runs natively on Node — no Vercel image service).
+- `sharp` does all image work (runs natively on Node).
 - ISR + `revalidatePath`, the OG route, NextAuth and Markdown (gray-matter) all run
   under `next start` / standalone output.
-- Text content lives in **Postgres via PostgREST** — the app uses only Supabase's REST
-  layer, so self-host bundles **Postgres + PostgREST** and supabase-js is unchanged;
-  binaries are store-relative on Blob (`collapseBlob`/`expandBlob`), so swapping the
-  binary backend is mostly resolving a different base URL.
+- Text content lives in **Postgres via PostgREST** — the app uses only the REST
+  layer through the `supabase-js` client, so a deploy bundles **Postgres + PostgREST**
+  (self-hosted); binaries are store-relative on the local filesystem
+  (`collapseBlob`/`expandBlob`), so a binary ref is just a path resolved against the
+  local store.
 
 > **Done (2026-06-21, P1.5):** migrated all text from the old no-DB `_index.json` +
-> `.md`-on-Blob model to Supabase Postgres (`src/lib/db.ts`). Binaries stay on Blob.
-> The Phase 1 storage adapter below now concerns the BINARY store only.
+> `.md`-on-disk model to Postgres (`src/lib/db.ts`, self-hosted via PostgREST).
+> Binaries stay on the local filesystem. The Phase 1 storage adapter below now
+> concerns the BINARY store only.
 
 So the roadmap is feature work on a sound base, not a rewrite.
 
@@ -47,9 +49,9 @@ So the roadmap is feature work on a sound base, not a rewrite.
   path on every target. The SaaS must always offer one-button export to self-host, with
   no proprietary data trapped server-side. Transparency over retention - never hold a
   user's content hostage.
-- **Storage is pluggable.** Self-host is fully independent of Vercel — default S3-
-  compatible (MinIO / Cloudflare R2 / Backblaze) or local filesystem; Vercel Blob
-  stays the default on Vercel.
+- **Storage is pluggable.** Binaries live on the local filesystem today; an S3-
+  compatible driver (MinIO / Cloudflare R2 / Backblaze) is planned behind the same
+  interface.
 - **Note app: Obsidian first** (Markdown-native, real plugin API). Craft is best-
   effort afterward (no comparable plugin API).
 - **AI: bring-your-own key**, owner-only, server-side. Text via Claude (Anthropic);
@@ -58,37 +60,35 @@ So the roadmap is feature work on a sound base, not a rewrite.
 
 ## Phases
 
-### Phase 1 — Storage adapter `[shipped — Vercel Blob + local filesystem]`
-`src/lib/blob.ts` is now a facade selecting a driver by `STORAGE_DRIVER`:
-- **Vercel Blob** (current behaviour, default on Vercel) ✅
-- **Local filesystem** (single volume, served under `/uploads`) ✅ — default for self-host
+### Phase 1 — Storage adapter `[shipped — local filesystem]`
+`src/lib/blob.ts` is a facade over the binary store:
+- **Local filesystem** (single volume, served under `/uploads`) ✅
 - **S3-compatible** (MinIO / R2 / B2) — *still planned*; same interface, drop-in driver
 
-Public-URL resolution was the main work: Vercel Blob has public URLs; the local driver
-serves files via `app/uploads/[...path]/route.ts`. `scripts/checks/no-direct-blob.mjs`
-keeps the SDK contained so a self-host build can't silently reach Vercel Blob. The S3
-driver later reused per-tenant in the SaaS as "bring your own bucket" (Phase 7).
+Public-URL resolution was the main work: the local driver serves files via
+`app/uploads/[...path]/route.ts`. The S3 driver is later reused per-tenant in the SaaS
+as "bring your own bucket" (Phase 7).
 
-### Phase 2 — Docker `[shipped — no-cloud stack]`
+### Phase 2 — Docker `[shipped — self-contained stack]`
 - `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + db + rest + cron). ✅
   The image builds with **no backend env** (data layer degrades to empty), so it is
   portable; env is supplied at runtime via `.env.docker`.
-- **No cloud:** bundled **Postgres + PostgREST** (replaces Supabase) + local FS store
-  (replaces Blob). supabase-js unchanged — `db.ts` strips the `/rest/v1` prefix when
-  `POSTGREST_DIRECT=1`. `scripts/docker/gen-keys.mjs` mints DB password + JWT. ✅
-- Cron: a sidecar pings `/api/cron` hourly (Vercel Cron has no off-platform equivalent). ✅
+- **Self-contained:** bundled **Postgres + PostgREST** + local FS store. supabase-js
+  unchanged — `db.ts` strips the `/rest/v1` prefix when `POSTGREST_DIRECT=1` so it hits
+  the local PostgREST. `scripts/docker/gen-keys.mjs` mints DB password + JWT. ✅
+- Cron: a sidecar pings `/api/cron` hourly. ✅
 - *Still planned:* a GitHub Action that builds + publishes a versioned image to GHCR on
   each release tag, so updating is `docker compose pull && up -d`; optional bundled MinIO
   once the S3 driver lands.
 
-One codebase, one CI: the same source produces both the Vercel deploy and the Docker
+One codebase, one CI: the same source drives both the native self-host and the Docker
 image — there is no second version to maintain.
 
 ### Phase 3 — Token auth + ingest API `[partly done]`
 > **Done (2026-06-22, v1.0.0):** token auth + external publishing landed as the **MCP
 > server** (`/api/mcp`) — a single full-access `MCP_TOKEN` (+ thin OAuth for connectors)
 > lets an agent create/update/delete posts & pages, manage media/files, and read settings,
-> all through the same data layer. `add_media_from_url` rehosts an image URL to Blob.
+> all through the same data layer. `add_media_from_url` rehosts an image URL to local storage.
 
 Still planned: a plain HTTP **ingest endpoint** that takes Markdown + frontmatter and maps
 it to post fields (for the note-app plugins below), rehosting embedded images.
@@ -110,7 +110,7 @@ Independent of Phases 1–4 — could be done first as a quick win.
 ### Phase 6 — Native comments `[planned, independent]`
 
 Reader comments with **no third-party login** (giscus was rejected for exactly this —
-it forces a GitHub account). Fully self-hosted on the existing Supabase Postgres,
+it forces a GitHub account). Fully self-hosted on the existing Postgres,
 owner-moderated, spam-guarded by **Cloudflare Turnstile**. A `features.comments` toggle
 gates the whole thing (re-added; removed when the giscus spike was dropped).
 
@@ -167,8 +167,8 @@ deploy-per-user). It is a large rewrite of the data layer, accepted deliberately
 - `settings` drops the hardcoded `id=1` → one row per tenant.
 - **Cache tags go per-tenant** (`db:<tenantId>` not the global `db`), or one user's save
   purges everyone's cache.
-- **Blob paths get a tenant prefix** (`t/<tenantId>/...`); URLs stay deterministic from
-  the one store token. Easiest part - blob I/O is already centralized.
+- **Storage paths get a tenant prefix** (`t/<tenantId>/...`); URLs stay deterministic.
+  Easiest part - binary I/O is already centralized.
 - **Security:** the app uses `service_role` today (bypasses RLS). Multi-tenant requires
   either per-request clients scoped by JWT claims, or enforcing `tenant_id` in every
   query. This is the most sensitive surface - get it wrong and tenants read each other.
@@ -176,12 +176,12 @@ deploy-per-user). It is a large rewrite of the data layer, accepted deliberately
 **Auth & routing:**
 - Open signup, owner-per-tenant (replaces the single `AUTHORIZED_EMAIL`).
 - Wildcard `*.quire.app`; middleware resolves the tenant from the host. Admin at
-  `app.quire.app`. Custom domains via the Vercel Domains API + automated SSL.
+  `app.quire.app`. Custom domains via the reverse proxy + automated SSL.
 
 **Portability backbone (the headline promise):**
 - Reuse Backup/Restore as the universal interchange format. **Export** = the tenant's
-  slice as a `.tar.gz`; **Import** = restore that snapshot into a fresh Docker or
-  Vercel + Supabase install. Make import a first-class onboarding step on self-host.
+  slice as a `.tar.gz`; **Import** = restore that snapshot into a fresh native or
+  Docker install. Make import a first-class onboarding step on self-host.
 - One button to leave, no proprietary state left behind.
 
 **Plans (this is a hobby, never for profit):**

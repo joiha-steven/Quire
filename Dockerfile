@@ -1,9 +1,9 @@
 # quire self-host image. Builds the Next standalone server (output: 'standalone')
-# and runs it as a plain Node process — no Vercel. Storage is the local filesystem
-# driver (STORAGE_DRIVER=local); binaries live in a mounted /app/uploads volume.
-# The build needs NO backend env: the data layer degrades to empty when the DB is
-# absent, so static generation produces nothing and pages render on-demand at
-# runtime once .env is supplied. Postgres (Supabase) + Google OAuth stay external.
+# and runs it as a plain Node process. Binaries live on the local filesystem in a
+# mounted /app/uploads volume. The build needs NO backend env: the data layer
+# degrades to empty when the DB is absent, so static generation produces nothing and
+# pages render on-demand at runtime once .env is supplied. Postgres + Google OAuth
+# are external (the compose stack bundles Postgres + PostgREST).
 
 # --- deps: install all dependencies (dev included, needed to build) --------------
 FROM node:22-bookworm-slim AS deps
@@ -15,9 +15,6 @@ RUN npm ci
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-# Client bundle bakes the storage driver in at build time, so it MUST be set here
-# (not just at runtime) for the browser upload path to choose the local route.
-ENV NEXT_PUBLIC_STORAGE_DRIVER=local
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
@@ -29,9 +26,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-# Storage: local filesystem driver, binaries under the mounted volume.
-ENV STORAGE_DRIVER=local
-ENV NEXT_PUBLIC_STORAGE_DRIVER=local
+# Storage: binaries live on the local filesystem under the mounted volume.
 ENV STORAGE_LOCAL_DIR=/app/uploads
 
 # Standalone output + the assets it does not bundle (static chunks, public/).

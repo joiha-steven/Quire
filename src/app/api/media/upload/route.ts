@@ -1,6 +1,6 @@
 // POST /api/media/upload -> server-mediated image upload for the LOCAL storage
 // driver (owner only). Multipart form: one or more "file" parts. The browser sends
-// the bytes here (no client-direct-to-store path off Vercel); the route writes them
+// the bytes here (no client-direct-to-store path); the route writes them
 // via the storage facade, makes the thumb + dims (addMediaBatch), then defers the
 // heavy variants — the same post-upload shape as /api/media/register. On a Node
 // self-host there is no 4.5MB body cap, so large photos are fine.

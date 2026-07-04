@@ -1,6 +1,6 @@
 // GET /api/files -> the file-library manifest (owner only).
-// Uploads go straight from the browser to Blob (see /api/files/blob-token +
-// /api/files/register) so they bypass the serverless 4.5MB request-body limit.
+// Uploads are POSTed to /api/files/attach, which writes them to the local store and
+// registers them in one shot (a Node host has no 4.5MB request-body limit).
 
 import type { NextRequest } from 'next/server'
 import { getFiles } from '@/lib/files'

@@ -123,8 +123,8 @@
   counts; no "pending comments" — comments publish on submit, there is no moderation queue). Then a
   **Quick actions** row, a **Recent activity** card (latest 6 from `getActivity`, gated by
   `features.activityLog`), taxonomy breakdown, and the System panel at the bottom.
-- **System panel** (`getSystemInfo()`): hosting/URL/region/env/git + database
-  (Supabase, live reachability) + Blob host + **MCP on/off** + **Backups on** (= enabled AND Drive
+- **System panel** (`getSystemInfo()`): hosting/URL/env/git + database
+  (Postgres, live reachability) + storage host + **MCP on/off** + **Backups on** (= enabled AND Drive
   connected); rows may deep-link. The Images card splits media into **originals / variants / files**
   (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
@@ -194,8 +194,8 @@ Google account.
 - **Admin:** `/admin/comments` lists live comments (content/post/time/name/IP/delete); the content
   cell is clamped to two lines and click-toggles to the full text per row (replies are flat rows, so
   each toggles on its own). The IP column shows the captured commenter IP with the ISO country code
-  in parens (`1.2.3.4 (VN)`) — country is best-effort from the Vercel edge (`x-vercel-ip-country`),
-  blank off-platform, and pre-feature rows show `—`. Delete = soft delete via owner-gated
+  in parens (`1.2.3.4 (VN)`) — country is best-effort from the reverse proxy / Cloudflare edge
+  header, blank when absent, and pre-feature rows show `—`. Delete = soft delete via owner-gated
   `DELETE /api/comments/[id]` → Trash (restore/purge in `TrashView`'s Comments tab). `/admin/content`
   posts table gains a comment-count column when enabled (`countsByPosts`).
 - **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
@@ -215,8 +215,8 @@ Google account.
 - **Google login (`auth.ts`).** Toggles `settings.comments.googleAuth`.
   NextAuth config is a FUNCTION so the provider reads keys at runtime: Google from env. This runs
   in Node only — the **edge middleware reads
-  the JWT directly via `getToken`** (`auth-shared.ts` holds the pure `isAuthorized`), so the Supabase
-  client never enters the edge bundle. The session carries `name` + `provider` (`next-auth.d.ts`
+  the JWT directly via `getToken`** (`auth-shared.ts` holds the pure `isAuthorized`), so the
+  database client never enters the edge bundle. The session carries `name` + `provider` (`next-auth.d.ts`
   augments `Session`/`JWT`). The island resolves the viewer client-side via `/api/auth/session` (the
   post page is static): signed in → "Commenting as …" + a plain box (no name/email/Turnstile); else
   sign-in buttons (`signIn` from `next-auth/react`). The POST **trusts the session** (`getCommenter()`)

@@ -76,8 +76,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
-    // Country is best-effort from the edge (Vercel only); absent off-platform.
-    const country = (req.headers.get('x-vercel-ip-country') ?? '').trim()
+    // Country is best-effort from the CDN/proxy edge (Cloudflare's cf-ipcountry); absent without one.
+    const country = (req.headers.get('cf-ipcountry') ?? '').trim()
     if (rateLimited(ip)) {
       logRequest(req, 429, start)
       return fail('Too many comments — slow down a moment', 429)

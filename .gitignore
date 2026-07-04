@@ -36,9 +36,6 @@ yarn-error.log*
 !.env.example
 !.env.docker.example
 
-# vercel
-.vercel
-
 # docker self-host: the bundled stack writes Postgres data + uploaded binaries
 # here (docker-compose bind mounts). Runtime data, never committed.
 /data/
