@@ -1,6 +1,6 @@
 <div align="center">
 
-# **quire**blog &nbsp;`v1.4.0`
+# **quire**blog &nbsp;`v1.3.5`
 
 **An AI-operated personal blog platform. Self-hosted, no cloud lock-in.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.

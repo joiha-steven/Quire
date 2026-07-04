@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v1.4.0 — 2026-07-04 (Auto CDN purge: Cloudflare cache clears on every write)
+## v1.3.5 — 2026-07-04 (Auto CDN purge: Cloudflare cache clears on every write)
 
 - **Cloudflare cache auto-purge.** Enter a Cloudflare API token (Zone.Cache Purge permission) + Zone
   ID in Admin → Settings → Integrations; the app then purges the whole zone on every content change
