@@ -283,7 +283,7 @@ const ja = {
   featProgress: '読書進捗バー',
   featProgressDesc: 'スクロールに合わせて伸びる上部の細いバー。',
   seoCanonical: 'サイトアドレス（canonical）',
-  seoCanonicalHint: 'サイトマップ、RSS、スキーマ、llms.txt、OG画像、canonicalタグに使用されます。空欄の場合はVercelのドメインを使用します。',
+  seoCanonicalHint: 'サイトマップ、RSS、スキーマ、llms.txt、OG画像、canonicalタグに使用されます。空欄の場合はサイトのURL（SITE_URL）を使用します。',
   seoAutoSchema: '自動スキーマ（JSON-LD）',
   seoAutoSchemaDesc: 'Google向けの構造化データを追加: トップページにWebSite、各記事にBlogPosting。',
   seoSitemapDesc: 'すべての記事、ページ、カテゴリー、タグを列挙し、検索エンジンが完全にクロールできるようにします。',

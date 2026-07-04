@@ -11,7 +11,7 @@ export type Post = {
   status: PostStatus
   categories: string[]
   tags: string[]
-  featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
+  featuredImage?: string // stored image URL; used only for SEO/social meta, never shown
   excerpt?: string // auto-extracted from first paragraph if empty
   readingMinutes?: number // estimated read time, computed from the body at save (for lists)
   deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
@@ -35,7 +35,7 @@ export type Page = {
   title: string
   slug: string
   status: PostStatus
-  featuredImage?: string // Vercel Blob URL; used only for SEO/social meta, never shown
+  featuredImage?: string // stored image URL; used only for SEO/social meta, never shown
   deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
 }
 
@@ -58,7 +58,7 @@ export type MediaItem = {
 }
 
 // A non-image file in the "Files" library (PDF, zip, docx, audio…). Stored under
-// `files/` on Blob with its own manifest, separate from the image media library.
+// `files/` in the local store with its own manifest, separate from the image media library.
 export type FileItem = {
   url: string // store-relative, absolute on read
   filename: string // display name (original upload name)
@@ -123,10 +123,10 @@ export type TypographySettings = {
 // One uploaded weight of the custom typeface.
 export type FontFace = {
   weight: number // 400 | 500 | 600 | 700
-  url: string // Blob URL; store-relative at rest, absolute on read
+  url: string // store URL; store-relative at rest, absolute on read
 }
 
-// Owner-uploaded custom typeface (stored on Blob under files/). All faces share one
+// Owner-uploaded custom typeface (stored under files/). All faces share one
 // `family`, registered via @font-face per weight so bold/heading text is crisp (the
 // site disables faux-bold synthesis). Empty family / no faces = bundled Inter.
 export type FontSettings = {
@@ -180,7 +180,7 @@ export type SiteSettings = {
   enabledPalettes: string[] // palettes a visitor may switch between (subset of THEME_PRESETS ids); ALWAYS includes themePreset. <2 enabled => the switcher is hidden
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
   typography: TypographySettings // type scale + reading rhythm → CSS vars (--fs-*, --lh-body, --ls-body)
-  customFont: FontSettings // owner-uploaded typeface (Blob files/); '' = bundled Inter
+  customFont: FontSettings // owner-uploaded typeface (files/); '' = bundled Inter
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
   comments: CommentSettings // reader comment system (off by default)
@@ -227,7 +227,7 @@ export type AdminComment = {
   provider: CommentProvider
   content: string // raw markdown source
   ip?: string // commenter IP captured at submit (empty for pre-feature rows)
-  country?: string // ISO 3166-1 alpha-2 from the edge (empty off-Vercel)
+  country?: string // ISO 3166-1 alpha-2 from a proxy/CDN header (empty when absent)
   createdAt: string
   deletedAt?: string
 }

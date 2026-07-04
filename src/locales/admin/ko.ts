@@ -283,7 +283,7 @@ const ko = {
   featProgress: '읽기 진행 표시줄',
   featProgressDesc: '스크롤에 따라 채워지는 상단의 얇은 막대.',
   seoCanonical: '사이트 주소(canonical)',
-  seoCanonicalHint: '사이트맵, RSS, 스키마, llms.txt, OG 이미지 및 canonical 태그에 사용됩니다. 비워두면 Vercel 도메인을 사용합니다.',
+  seoCanonicalHint: '사이트맵, RSS, 스키마, llms.txt, OG 이미지 및 canonical 태그에 사용됩니다. 비워두면 사이트 URL(SITE_URL)을 사용합니다.',
   seoAutoSchema: '자동 스키마(JSON-LD)',
   seoAutoSchemaDesc: 'Google용 구조화 데이터를 추가합니다: 홈페이지에 WebSite, 각 게시물에 BlogPosting.',
   seoSitemapDesc: '모든 게시물, 페이지, 카테고리, 태그를 나열하여 검색 엔진이 완전히 크롤링하도록 합니다.',

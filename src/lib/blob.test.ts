@@ -1,20 +1,24 @@
 import { describe, it, expect } from 'vitest'
 import { blobUrl, collapseBlob, expandBlob } from '@/lib/blob'
 
-// The fake token in vitest.config.ts derives this deterministic store host.
-const HOST = 'https://teststore.public.blob.vercel-storage.com'
+// Binaries are served same-origin under /uploads (the local filesystem store).
+const BASE = '/uploads'
 
 describe('blob store-relative refs (collapse <-> expand)', () => {
-  it('expands a media pathname into an absolute store URL', () => {
-    expect(expandBlob('media/photo.jpg')).toBe(`${HOST}/media/photo.jpg`)
+  it('expands a media pathname into a public /uploads URL', () => {
+    expect(expandBlob('media/photo.jpg')).toBe(`${BASE}/media/photo.jpg`)
   })
 
   it('expands a files pathname (favicon / app icon) too', () => {
-    expect(expandBlob('files/favicon-123.ico')).toBe(`${HOST}/files/favicon-123.ico`)
+    expect(expandBlob('files/favicon-123.ico')).toBe(`${BASE}/files/favicon-123.ico`)
   })
 
-  it('collapses an absolute store URL back to a store-relative pathname', () => {
-    expect(collapseBlob(`${HOST}/media/photo.jpg`)).toBe('media/photo.jpg')
+  it('collapses a /uploads URL back to a store-relative pathname', () => {
+    expect(collapseBlob(`${BASE}/media/photo.jpg`)).toBe('media/photo.jpg')
+  })
+
+  it('collapses a /uploads URL carrying an origin too', () => {
+    expect(collapseBlob(`https://example.com${BASE}/media/photo.jpg`)).toBe('media/photo.jpg')
   })
 
   it('round-trips a bare pathname (collapse after expand is identity)', () => {
@@ -22,26 +26,20 @@ describe('blob store-relative refs (collapse <-> expand)', () => {
     expect(collapseBlob(expandBlob(pathname))).toBe(pathname)
   })
 
-  it('round-trips an absolute URL (expand after collapse is identity)', () => {
-    const url = `${HOST}/media/photo.png`
-    expect(expandBlob(collapseBlob(url))).toBe(url)
-  })
-
   it('is idempotent: collapsing an already store-relative string changes nothing', () => {
     expect(collapseBlob('media/photo.jpg')).toBe('media/photo.jpg')
   })
 
-  it('leaves external (non-blob) URLs untouched on expand', () => {
+  it('leaves external URLs untouched on expand/collapse', () => {
     const external = 'https://example.com/img/banner.jpg'
     expect(expandBlob(external)).toBe(external)
     expect(collapseBlob(external)).toBe(external)
   })
 
-  it('stores a markdown body with NO storeId/host after collapse', () => {
-    const body = `Look: ![alt](${HOST}/media/a.jpg) and <img src="${HOST}/media/b.png">`
+  it('stores a markdown body with NO origin/prefix after collapse', () => {
+    const body = `Look: ![alt](${BASE}/media/a.jpg) and <img src="${BASE}/media/b.png">`
     const stored = collapseBlob(body)
-    expect(stored).not.toContain('teststore')
-    expect(stored).not.toContain('public.blob.vercel-storage.com')
+    expect(stored).not.toContain('/uploads/')
     expect(stored).toContain('](media/a.jpg)')
     expect(stored).toContain('src="media/b.png"')
   })
@@ -50,13 +48,13 @@ describe('blob store-relative refs (collapse <-> expand)', () => {
     const body = 'text media/loose.jpg ![x](media/a.jpg) <img src="media/b.png">'
     const out = expandBlob(body)
     // link + src positions are rewritten...
-    expect(out).toContain(`](${HOST}/media/a.jpg)`)
-    expect(out).toContain(`src="${HOST}/media/b.png"`)
+    expect(out).toContain(`](${BASE}/media/a.jpg)`)
+    expect(out).toContain(`src="${BASE}/media/b.png"`)
     // ...but a loose mention mid-paragraph is NOT (only positional refs expand).
     expect(out).toContain('text media/loose.jpg ')
   })
 
-  it('blobUrl builds the deterministic public URL from the token', () => {
-    expect(blobUrl('media/x.webp')).toBe(`${HOST}/media/x.webp`)
+  it('blobUrl builds the deterministic public URL', () => {
+    expect(blobUrl('media/x.webp')).toBe(`${BASE}/media/x.webp`)
   })
 })

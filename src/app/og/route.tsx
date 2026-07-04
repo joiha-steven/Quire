@@ -21,15 +21,14 @@ async function font(file: string): Promise<ArrayBuffer> {
 export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url)
   const reqOrigin = new URL(req.url).origin
-  // SSRF guard: only fetch images from the Blob store host or this site's own
-  // origin (the local driver serves /uploads same-origin) — never an arbitrary or
-  // internal URL. Applied to BOTH the background image and the custom font below,
-  // so the public ?bg= / ?font= params can't be turned into a server-side fetch.
+  // SSRF guard: only fetch images from this site's own origin (binaries are served
+  // at /uploads same-origin) — never an arbitrary or internal URL. Applied to BOTH
+  // the background image and the custom font below, so the public ?bg= / ?font=
+  // params can't be turned into a server-side fetch.
   const allowedImg = (s: string): boolean => {
     if (!s) return false
     try {
-      const u = new URL(s)
-      return u.origin === reqOrigin || (u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com'))
+      return new URL(s).origin === reqOrigin
     } catch {
       return false
     }

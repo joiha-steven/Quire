@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## v1.3.0 — 2026-07-04 (Native self-host: drop Vercel + Supabase-cloud, local-filesystem storage)
+
+Quire is now self-hosted only, in two deploy flavors: **native** (install PostgreSQL + PostgREST +
+the app directly on a Linux server) and **Docker** (unchanged). Vercel hosting and Supabase-cloud are
+no longer supported targets.
+
+**Storage: local filesystem only**
+- Removed the Vercel Blob storage driver and the `@vercel/blob` dependency; binaries always live on
+  the local filesystem (`STORAGE_LOCAL_DIR`, served at `/uploads`). `blob.ts` is now a thin facade over
+  `blob-local.ts` (lazy-loaded so `node:fs` stays off the client). Deleted the browser-direct-upload
+  token routes (`/api/{media,files}/blob-token`) and the `STORAGE_DRIVER` / `NEXT_PUBLIC_STORAGE_DRIVER`
+  switches — uploads always POST to the server (no 4.5MB cap).
+- Image refs stay store-relative: `collapseBlob` strips the `/uploads` prefix, `expandBlob` re-adds it.
+
+**Deploy**
+- New native install guide (`docs/self-host-native.md`) + systemd / PostgREST config templates in
+  `deploy/native/`. Removed `vercel.json`.
+- `.env.example` is now the native template. `SUPABASE_URL` points at your own PostgREST endpoint with
+  `POSTGREST_DIRECT=1`; the `supabase-js` client and `SUPABASE_*` env names stay because they speak the
+  PostgREST protocol, not a Supabase cloud project.
+- Admin System panel reports self-host facts (Self-hosted / PostgreSQL / Local filesystem); dropped the
+  Vercel region/branch/commit rows and the Supabase/Blob dashboard links.
+- Analytics + comments read the visitor country from the CDN/proxy edge header (`cf-ipcountry`).
+
+**Migration**
+- `scripts/legacy/blob-to-local.mjs` mirrors a legacy Vercel Blob store to the local filesystem
+  (pathnames preserved, so store-relative content renders unchanged).
+- Docs refreshed to the native-first model (README, ARCHITECTURE, CLAUDE, ROADMAP, CHECKLIST, docs/*).
+
 ## v1.2.6 — 2026-06-26 (Quire 1.2: rebrand, dashboard, deeper analytics, galleries, lightbox & reworked editor)
 Consolidates the whole 1.2.0–1.2.6 line into one entry.
 

@@ -7,16 +7,17 @@ ROUTER live in [`CLAUDE.md`](./CLAUDE.md); per-area detail lives in [`docs/`](./
 
 ## Mental model
 
-A single-owner, AI-operated blog. **Text content lives in Supabase Postgres;
-binaries (images, attachments, icons) live in Vercel Blob.** The app is a thin
+A single-owner, AI-operated blog. **Text content lives in PostgreSQL;
+binaries (images, attachments, icons) live on the local filesystem.** The app is a thin
 Next.js (App Router) layer: `src/lib` is the data layer (`db.ts` = Postgres,
 `blob.ts` = binaries only), `src/app/api` are thin write routes, `src/app/(blog)`
 is the public site, `src/app/admin` is the owner console. Post/page bodies are
-**Markdown stored in a text column** (portable, exportable).
+**Markdown stored in a text column** (portable, exportable). Quire self-hosts two
+ways: **native on a Linux server** (primary) or **Docker via docker compose** (secondary).
 
 ## Data model
 
-Postgres (project `quire`, ap-southeast-1), schema `public`:
+PostgreSQL, schema `public`:
 
 ```
 posts            slug PK · title · date · status · categories[] · tags[] · featured_image
@@ -30,32 +31,33 @@ mcp_tokens       id · name · token_hash (sha256, unique) · prefix · created_
 activity_log     at · action · detail   (admin audit trail, Admin → Log; toggleable)
 ```
 
-Vercel Blob holds only the binaries: `media/{name}.{ext}` (original + responsive
-variants + thumbnail) and `files/{...}` (attachments + site icons). Posts + pages
-share one `/{slug}` URL namespace (`ensureSlugFree`).
+The local store (under `STORAGE_LOCAL_DIR`, served at `/uploads`) holds only the
+binaries: `media/{name}.{ext}` (original + responsive variants + thumbnail) and
+`files/{...}` (attachments + site icons). Posts + pages share one `/{slug}` URL
+namespace (`ensureSlugFree`).
 
 `deleted_at` powers a **Trash** (soft delete): every delete just timestamps the row, so
 all four kinds are recoverable; live reads filter `deleted_at is null`. Media/file soft
-delete keeps the blob (a published post's images never break), removed only on an explicit
+delete keeps the file (a published post's images never break), removed only on an explicit
 purge. Admin → Trash restores or permanently removes per kind — nothing auto-purges.
 
 Reads are always fresh + transactional (no manifest read-modify-write, no
 read-after-write staleness). Image refs are stored **store-relative** (pathnames
 like `media/x.jpg`); the data layer collapses on write / expands on read
-(`collapseBlob`/`expandBlob`), so content carries no storeId and the binary store
-can change (e.g. → Cloudflare R2) without rewriting anything.
+(`collapseBlob`/`expandBlob`), so content carries no store location and the binary store
+can move without rewriting anything.
 
 ## Request flow
 
 - **Public read**: server components call `src/lib` (`getPublicPosts`, `getPost`,
   `getSettings`, …). Pages are **ISR-cached** (`revalidate = 3600`; `/[slug]` prerendered
-  via `generateStaticParams`), so visitors get fast cached HTML. The Supabase reads are
+  via `generateStaticParams`), so visitors get fast cached HTML. The DB reads are
   cache-eligible + tagged `db` (so pages can stay static) and deduped per request with
   `React.cache()`; a save calls `revalidateTag('db')` so any re-render reads fresh from
   Postgres. Pagination is path-based (`/page/[n]`, `/category/[slug]/page/[n]`,
   `/tag/[slug]/page/[n]`; page 1 at the bare path).
 - **Write** (owner only): `src/app/api/*` routes call `requireOwner()`, mutate Postgres
-  (and Blob for binaries) via `src/lib`, then invalidate through one place
+  (and the local store for binaries) via `src/lib`, then invalidate through one place
   (`src/lib/revalidate.ts`): a new
   post refreshes the list/taxonomy surfaces, editing a post also refreshes its own page,
   a settings change purges the whole site. Each purge is a deliberate superset of what a
@@ -69,8 +71,8 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
 
 | Path | What |
 |---|---|
-| `src/lib/db.ts` | Supabase client (server-only, `service_role`). Custom fetch: GET reads cache-eligible + tagged `db`; writes `no-store`. |
-| `src/lib/blob.ts` | Binary I/O only (images/files/icons). URLs deterministic from the token (lowercase store host; no vanity domain, no `list()` to read). |
+| `src/lib/db.ts` | `supabase-js` client (server-only, `service_role`) pointed at PostgREST. Custom fetch: GET reads cache-eligible + tagged `db`; writes `no-store`; strips `/rest/v1` when `POSTGREST_DIRECT=1`. |
+| `src/lib/blob.ts` | Binary I/O only (images/files/icons). Facade over the local fs driver `blob-local.ts` (served at `/uploads`), lazy-loaded so `node:fs` stays off the client. |
 | `src/lib/{posts,pages,media,settings,revisions,activity}.ts` | Data layer over Postgres; `React.cache()` request dedup. `activity` = the admin activity log. |
 | `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon + attachment store). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
@@ -82,43 +84,39 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
 
 ## Design decisions (the *why*)
 
-- **Postgres for text, Blob for binaries** → real queries (lists, taxonomy,
+- **Postgres for text, local files for binaries** → real queries (lists, taxonomy,
   full-text), atomic writes (no manifest clobber), and always-fresh reads, while
   binaries stay cheap + portable as plain files. The old no-DB model used
   `_index.json` manifests as the query layer; every write did a read-modify-write
-  that, under Blob's CDN cache + concurrency, repeatedly **clobbered the index** and
+  that, under CDN cache + concurrency, repeatedly **clobbered the index** and
   resurrected deleted images. Postgres removes that whole class of bug at the root.
-  Secrets (the `service_role` key) live only in the gitignored `.env.local` + Vercel.
+  Secrets (the `service_role` key) live only in the gitignored `.env.local` (native) / `.env.docker` (Docker).
 - **ISR pages + tagged DB reads, purged on save** → pages are ISR-cached for speed; the
-  Supabase reads are cache-eligible (so pages can be static) and tagged `db`. Every save,
+  DB reads are cache-eligible (so pages can be static) and tagged `db`. Every save,
   through `src/lib/revalidate.ts`, calls `revalidateTag('db')` (next render reads fresh from
   Postgres) AND a `revalidatePath` superset (decides which pages re-render). Postgres is always
-  consistent, so this is reliable — unlike the old no-DB model where Blob's CDN staleness +
+  consistent, so this is reliable — unlike the old no-DB model where CDN staleness +
   per-tag bookkeeping over `unstable_cache` repeatedly served stale content. Never set the DB
   reads to `no-store` (it would force every page dynamic, killing ISR).
 - **Store-relative image refs (`collapseBlob`/`expandBlob`)** → stored content holds
-  pathnames, not absolute Blob URLs, so the storeId is never baked in. Switching Blob
-  store / region / provider needs only a token change, no content rewrite. (Used to
-  move the store to **Singapore (`sin1`)** — see `vercel.json`; functions run there too.)
-- **One storage facade, two drivers (`STORAGE_DRIVER`)** → because refs are store-relative,
-  `blob.ts` can swap the *backend* without touching content. Default `vercel-blob` (browser
-  uploads straight to the store); `local` writes to a mounted volume and serves it under
-  `/uploads`, which is what the Docker / self-host image runs. The browser upload path mirrors
-  this (`NEXT_PUBLIC_STORAGE_DRIVER`): off Vercel the bytes are POSTed to a server route (no
-  client-direct-to-store, and a Node host has no 4.5 MB body cap). `no-direct-blob` keeps the
-  Vercel SDK contained so a self-host build can't silently depend on it. **One codebase, no fork:**
-  Vercel ignores the `Dockerfile`; the image needs no backend env to build (the data layer
-  degrades to empty), so the same source ships both targets.
-- **Bundled DB on self-host, supabase-js unchanged.** Supabase's API is just **PostgREST** over
-  Postgres, and the app uses nothing else from Supabase (no Auth/Realtime/Storage — sign-in is
-  NextAuth, binaries are the storage driver). So the Docker stack bundles **Postgres + PostgREST**
-  and supabase-js talks to the local PostgREST — the whole data layer is identical, no rewrite to a
-  raw Postgres client. The single seam is in `db.ts`: when `POSTGREST_DIRECT=1` the custom `dbFetch`
-  strips the `/rest/v1` path prefix supabase-js adds (bare PostgREST serves tables at `/`), which
-  avoids a proxy container. Postgres applies `scripts/schema.sql` + a role/grant bootstrap on first
-  init; `service_role` is `BYPASSRLS` (every table has RLS on with no policies, exactly like
-  Supabase). Net: a self-hoster needs **no cloud account** — text in a local Postgres volume,
-  binaries on a local disk volume.
+  pathnames, not absolute URLs, so the store location is never baked in. `collapseBlob`
+  strips the `/uploads` prefix on write, `expandBlob` re-adds it on read, so the store
+  directory can move without rewriting any content.
+- **Binaries are plain files on disk behind the `blob.ts` facade** → images/files/icons are
+  written under `STORAGE_LOCAL_DIR` and served at `/uploads` by `app/uploads/[...path]`. `blob.ts`
+  is a thin facade that lazy-loads `blob-local.ts` so `node:fs` stays off the client. Because refs
+  are store-relative (see above), the store directory can move without rewriting content. Uploads
+  are POSTed to a server route (a Node host has no 4.5 MB body cap). `no-direct-blob` guards that no
+  cloud storage SDK sneaks into `src`. **One codebase:** the image needs no backend env to build (the
+  data layer degrades to empty), so the same source runs native or in Docker.
+- **Postgres + PostgREST, supabase-js as the client.** The data layer speaks to **PostgREST** over
+  Postgres via the `supabase-js` library, and uses nothing else from that stack (no Auth/Realtime/Storage
+  — sign-in is NextAuth, binaries are local files). The single seam is in `db.ts`: when `POSTGREST_DIRECT=1`
+  the custom `dbFetch` strips the `/rest/v1` path prefix supabase-js adds (bare PostgREST serves tables at
+  `/`), so supabase-js hits PostgREST directly with no proxy container. Postgres applies `scripts/schema.sql`
+  + a role/grant bootstrap on first init; `service_role` is `BYPASSRLS` (every table has RLS on with no
+  policies). **Docker** bundles Postgres + PostgREST + the local store; **native** installs them directly.
+  Net: no cloud account — text in a local Postgres volume, binaries on a local disk volume.
 - **100% Markdown, raw HTML escaped** → safe, portable content; videos are bare URLs
   embedded at render, not stored iframes.
 - **Responsive images, encoding deferred to save** → jpg/png uploads keep the
@@ -144,7 +142,7 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
   to one of 9 roles (h1–h5, body, small, caption, code), each with its own size/line-height/
   letter-spacing flowing from CSS vars (`--fs-*`/`--lh-*`/`--ls-*`); the layout injects the owner's
   `settings.typography` as a `:root` override after the baked-in defaults. An optional per-weight
-  `@font-face` set (`settings.customFont` = family + faces, stored on Blob under `files/`, one file
+  `@font-face` set (`settings.customFont` = family + faces, stored under `files/`, one file
   per weight) overrides `--font-sans` (Inter fallback) — per-weight because the site disables
   faux-bold. Titles use `.fs-h*` utilities, secondary text `.t-small`; single post/page titles +
   list-page headings are H1, list cards H2. **One typeface for the whole reading site** — body,
@@ -154,14 +152,14 @@ can change (e.g. → Cloudflare R2) without rewriting anything.
   settings (title, palette color, uploaded icon); standalone launch only — offline is
   intentionally out of scope, so there is nothing to register/cache and admin/API are
   never served stale.
-- **Off-provider backups to the owner's Google Drive.** Supabase + Blob are already durable, so
-  backups exist for *off-provider redundancy* + a one-click restore point, not as primary safety.
-  A snapshot is one self-contained `.tar.gz` (DB dump + every blob) because a single file is the
+- **Off-server backups to the owner's Google Drive.** Your Postgres + uploads dir are your primary
+  data; Drive is *off-server redundancy* + a one-click restore point, not primary safety.
+  A snapshot is one self-contained `.tar.gz` (DB dump + every binary) because a single file is the
   easiest thing to retain (delete one = drop a snapshot) and to restore (one file = the whole
   site). Drive auth is a **separate** `drive.file` consent (not the login scope) so signing in
   stays unchanged and the app can only touch files it created; the refresh token is the one true
   secret, so it lives server-side in `backup_state`, never in the client-bound `settings` blob.
-  Blobs are immutable, so even "full every run" stays cheap to produce.
+  Uploaded binaries are immutable, so even "full every run" stays cheap to produce.
 
 ## Conventions
 

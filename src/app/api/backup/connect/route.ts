@@ -18,7 +18,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
     // Deterministic redirect from the canonical site URL (NOT the request origin),
     // so it always matches the one URI registered on the OAuth client even when the
-    // admin is reached via a *.vercel.app host.
+    // admin is reached via a proxy/CDN host.
     const redirectUri = backupRedirectUri(await getSettings())
     const url = consentUrl(redirectUri, signState())
     logRequest(req, 302, start)

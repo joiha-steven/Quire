@@ -283,7 +283,7 @@ const de = {
   featProgress: 'Lesefortschrittsbalken',
   featProgressDesc: 'Ein dünner Balken oben, der sich beim Scrollen füllt.',
   seoCanonical: 'Website-Adresse (kanonisch)',
-  seoCanonicalHint: 'Wird für Sitemap, RSS, Schema, llms.txt, OG-Bild und den Canonical-Tag verwendet. Leer lassen, um die Vercel-Domain zu nutzen.',
+  seoCanonicalHint: 'Wird für Sitemap, RSS, Schema, llms.txt, OG-Bild und den Canonical-Tag verwendet. Leer lassen, um die Website-URL (SITE_URL) zu nutzen.',
   seoAutoSchema: 'Auto-Schema (JSON-LD)',
   seoAutoSchemaDesc: 'Fügt strukturierte Daten für Google hinzu: WebSite auf der Startseite, BlogPosting bei jedem Beitrag.',
   seoSitemapDesc: 'Listet jeden Beitrag, jede Seite, Kategorie und jedes Schlagwort für vollständiges Crawling auf.',

@@ -1,5 +1,5 @@
-# Fully self-contained Quire Blog — NO cloud. Postgres + PostgREST replace Supabase,
-# the local filesystem replaces Vercel Blob, a cron sidecar replaces Vercel Cron.
+# Fully self-contained Quire Blog — NO cloud. Postgres + PostgREST are the database,
+# the local filesystem holds binaries, and a cron sidecar runs scheduled maintenance.
 # Everything runs on your own host; only Google OAuth (sign-in) reaches the internet.
 #
 #   cp .env.docker.example .env.docker
@@ -80,8 +80,8 @@ services:
       - ./data/uploads:/app/uploads
     restart: unless-stopped
 
-  # Hourly maintenance ping (variant/backup sweep) — the job vercel.json runs on
-  # Vercel. Calls /api/cron with the CRON_SECRET bearer.
+  # Hourly maintenance ping (variant/backup sweep + keep-alive). Calls /api/cron with
+  # the CRON_SECRET bearer.
   cron:
     image: alpine:3.20
     depends_on:

@@ -1,15 +1,17 @@
-// LIVE data-integrity check (NOT in check:all — needs real creds).
-// Cross-checks the media/files tables against the actual Vercel Blob store, both
-// directions:
-//   - manifest -> blob: every blob a row references (original + thumb + the 4
-//     -1024/-1600 AVIF/WebP variants when variants=true) must exist in the store.
-//   - blob -> manifest: every media/ or files/ blob must be referenced by a row.
-// Trashed rows (deleted_at set) KEEP their blobs until purge, so BOTH directions
+// LIVE data-integrity check (NOT in check:all — needs real creds + a running DB).
+// Cross-checks the media/files tables against the actual binaries on disk
+// (STORAGE_LOCAL_DIR), both directions:
+//   - manifest -> disk: every binary a row references (original + thumb + the 4
+//     -1024/-1600 AVIF/WebP variants when variants=true) must exist on disk.
+//   - disk -> manifest: every media/ or files/ binary must be referenced by a row.
+// Trashed rows (deleted_at set) KEEP their binaries until purge, so BOTH directions
 // consider all rows regardless of deleted_at.
 //
-// Env from .env.local. Missing creds => warn + exit 0 (skip), so CI without
-// secrets never fails on it. A real mismatch => exit 1.
+// Env from .env.local. Missing creds => warn + exit 0 (skip), so CI without a live
+// backend never fails on it. A real mismatch => exit 1.
 import { existsSync, readFileSync } from 'node:fs'
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
 
 // Load .env.local without overwriting already-set vars.
 if (existsSync('.env.local')) {
@@ -21,30 +23,35 @@ if (existsSync('.env.local')) {
   }
 }
 
-const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, BLOB_READ_WRITE_TOKEN } = process.env
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !BLOB_READ_WRITE_TOKEN) {
-  console.log('~ check:consistency:live SKIPPED — missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / BLOB_READ_WRITE_TOKEN (.env.local).')
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STORAGE_LOCAL_DIR, POSTGREST_DIRECT } = process.env
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !STORAGE_LOCAL_DIR) {
+  console.log('~ check:consistency:live SKIPPED — missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / STORAGE_LOCAL_DIR (.env.local).')
   process.exit(0)
 }
 
 const { createClient } = await import('@supabase/supabase-js')
-const { list } = await import('@vercel/blob')
 
+// Mirror db.ts: bare PostgREST serves tables at `/<table>`, but supabase-js builds
+// `${url}/rest/v1/<table>` — strip that prefix when POSTGREST_DIRECT=1.
+const dbFetch = (input, init) => {
+  if (POSTGREST_DIRECT === '1' && typeof input === 'string') input = input.replace('/rest/v1', '')
+  return fetch(input, init)
+}
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: dbFetch },
 })
 
-const blobHostRe = /^https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i
-const toPathname = (url) => url.replace(blobHostRe, '')
-// Global host strip (for free-text JSON, not just a single URL).
-const collapseHost = (s) => s.replace(/https?:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//gi, '')
-const variantNames = (path) => {
-  const stem = path.replace(/\.[^.]+$/, '')
+// Strip a leading `/uploads/` (with or without an origin) → store-relative pathname.
+const toPathname = (url) => url.replace(/^(?:https?:\/\/[^/]+)?\/uploads\//i, '')
+const collapse = (s) => s.replace(/(?:https?:\/\/[^/]+)?\/uploads\//gi, '')
+const variantNames = (p) => {
+  const stem = p.replace(/\.[^.]+$/, '')
   return [`${stem}-1024.avif`, `${stem}-1600.avif`, `${stem}-1024.webp`, `${stem}-1600.webp`]
 }
 
-// 1. Every blob a row references (all rows; trashed keep their blobs).
-// The files/ prefix also holds non-table blobs: site icons (favicon-/app-icon-),
+// 1. Every binary a row references (all rows; trashed keep their binaries).
+// The files/ prefix also holds non-table binaries: site icons (favicon-/app-icon-),
 // the rendered logo, and the custom font — all referenced from the settings JSON,
 // not the files table. So settings is part of the "referenced" source too.
 const { data: media, error: mErr } = await db.from('media').select('path, thumb, variants')
@@ -63,33 +70,42 @@ for (const m of media ?? []) {
 }
 for (const f of files ?? []) referenced.add(toPathname(f.url))
 // Pull every media/ + files/ pathname mentioned anywhere in the settings JSON
-// (icons, logo, custom font, OG images). Collapse any absolute URLs to pathnames first.
-const settingsJson = collapseHost(JSON.stringify(settings?.data ?? {}))
+// (icons, logo, custom font, OG images).
+const settingsJson = collapse(JSON.stringify(settings?.data ?? {}))
 for (const m of settingsJson.matchAll(/\b(?:media|files)\/[A-Za-z0-9._-]+/g)) referenced.add(m[0])
 
-// 2. Every blob actually in the store.
+// 2. Every binary actually on disk (walk STORAGE_LOCAL_DIR).
 const present = new Set()
-let cursor
-do {
-  const res = await list({ cursor, limit: 1000 })
-  for (const b of res.blobs) present.add(b.pathname)
-  cursor = res.cursor
-} while (cursor)
+const walk = async (dir, base) => {
+  let entries
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true })
+  } catch {
+    return // dir does not exist yet → no binaries
+  }
+  for (const e of entries) {
+    const abs = path.join(dir, e.name)
+    const rel = base ? `${base}/${e.name}` : e.name
+    if (e.isDirectory()) await walk(abs, rel)
+    else present.add(rel)
+  }
+}
+await walk(path.resolve(STORAGE_LOCAL_DIR), '')
 
 // 3. Compare both directions.
 const violations = []
-for (const path of referenced) {
-  if (!present.has(path)) violations.push(`manifest -> blob MISSING: ${path}`)
+for (const p of referenced) {
+  if (!present.has(p)) violations.push(`manifest -> disk MISSING: ${p}`)
 }
-for (const path of present) {
-  if ((path.startsWith('media/') || path.startsWith('files/')) && !referenced.has(path)) {
-    violations.push(`blob -> manifest ORPHAN: ${path}`)
+for (const p of present) {
+  if ((p.startsWith('media/') || p.startsWith('files/')) && !referenced.has(p)) {
+    violations.push(`disk -> manifest ORPHAN: ${p}`)
   }
 }
 
 console.log(
   `  ${media?.length ?? 0} media + ${files?.length ?? 0} files rows; ` +
-    `${referenced.size} referenced blobs vs ${present.size} in store`,
+    `${referenced.size} referenced binaries vs ${present.size} on disk`,
 )
 if (violations.length === 0) {
   console.log('✓ check:consistency:live: ok')

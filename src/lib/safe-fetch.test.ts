@@ -69,7 +69,7 @@ describe('isBlockedUrl', () => {
 
   it('allows a normal public https URL through the pre-DNS check', () => {
     expect(isBlockedUrl(new URL('https://example.com/image.png'))).toBe(false)
-    expect(isBlockedUrl(new URL('https://teststore.public.blob.vercel-storage.com/media/a.jpg'))).toBe(false)
+    expect(isBlockedUrl(new URL('https://cdn.example.net/media/a.jpg'))).toBe(false)
   })
 })
 

@@ -283,7 +283,7 @@ const vi = {
   featProgress: 'Thanh tiến độ đọc',
   featProgressDesc: 'Thanh mảnh trên đầu trang chạy theo khi cuộn.',
   seoCanonical: 'Địa chỉ trang (canonical)',
-  seoCanonicalHint: 'Dùng cho sitemap, RSS, schema, llms.txt, ảnh OG và thẻ canonical. Để trống sẽ tự dùng tên miền Vercel.',
+  seoCanonicalHint: 'Dùng cho sitemap, RSS, schema, llms.txt, ảnh OG và thẻ canonical. Để trống sẽ tự dùng URL của trang (SITE_URL).',
   seoAutoSchema: 'Tự động Schema (JSON-LD)',
   seoAutoSchemaDesc: 'Chèn dữ liệu có cấu trúc cho Google: WebSite ở trang chủ, BlogPosting ở mỗi bài viết.',
   seoSitemapDesc: 'Liệt kê mọi bài viết, trang, danh mục và thẻ để công cụ tìm kiếm thu thập đầy đủ.',

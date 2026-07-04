@@ -15,7 +15,7 @@
 - [ ] Future-dated posts hidden until the date is reached
 - [ ] Past-date posts show the correct date
 - [ ] Postgres rows stay consistent after every write/delete (posts/pages/media/files)
-- [ ] `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set in the target Vercel environment
+- [ ] `SUPABASE_URL` (PostgREST) + `POSTGREST_DIRECT` + `SUPABASE_SERVICE_ROLE_KEY` set in the target env (`.env.local` / `.env.docker`)
 - [ ] Deleting a media item moves it to Trash (it leaves the library but is NOT gone — the
   blob + every variant stay until purged from Trash)
 
@@ -25,8 +25,7 @@
 - [ ] After saving settings: header/title/theme updates on next page load
 - [ ] Editing a post slug: old slug returns 404, new slug works
 - [ ] Deleting a post: slug returns 404, removed from home list
-- [ ] `BLOB_READ_WRITE_TOKEN` format is `vercel_blob_rw_<storeId>_<secret>` —
-  `blobUrl()` will throw at runtime if the token is malformed or missing
+- [ ] `STORAGE_LOCAL_DIR` is set and writable by the app user; uploads land under it and render at `/uploads/...`
 
 ## Pagination (path-based)
 - [ ] Home `/page/2` works; `/page/1` and out-of-range `/page/999` return 404
@@ -80,14 +79,13 @@
   reaches every table (sign in, create/list a post) — no PostgREST permission errors in `rest` logs
 - [ ] Text survives a restart: `docker compose down && up -d` keeps posts (volume `./data/postgres`)
 - [ ] Analytics dashboard loads (the `analytics_summary`/`analytics_totals` RPCs resolve via PostgREST)
-- [ ] `STORAGE_DRIVER=local`: uploading an image writes under the `/app/uploads` volume and renders
+- [ ] Uploading an image writes under the `/app/uploads` volume and renders
   at `/uploads/...` (original + thumb + variants); it survives `docker compose down && up`
 - [ ] Large upload (>4.5 MB) succeeds — the browser posts to `/api/media/upload` (no serverless cap)
 - [ ] Deleting then purging media removes the files from the volume (no orphaned binaries)
 - [ ] The cron sidecar reaches `/api/cron` hourly with the `CRON_SECRET` bearer (keep-alive + sweep)
 - [ ] Backup "Back up now" produces a `.tar.gz` whose `blob/` holds the volume's files (driver read)
 - [ ] OG card: a post's featured image + custom font load (absolute `<SITE_URL>/uploads/...` URLs)
-- [ ] The Vercel deploy is unaffected: no `STORAGE_DRIVER` set there → still Vercel Blob
 
 ## Admin nav (collapsible left sidebar)
 - [ ] Desktop: sticky left sidebar with icons; active route highlighted; controls pinned at the bottom
@@ -136,8 +134,8 @@ curl -s            localhost:3000/api/media/unused   # GET, owner-only audit
 - Model = ISR pages + full purge on save. After an admin save, a plain reload of the
   public page must show the change (the save calls `revalidatePath('/', 'layout')`).
 - `npm run build` should show `/` and `/[slug]` as `○`/`●` (ISR), admin as `ƒ` (dynamic).
-  If `/[slug]` is `ƒ`, the Blob reads got set to `no-store` again (that breaks ISR).
-- Do NOT add `unstable_cache` back or `cacheComponents: true`. Do NOT set `blob.ts` reads
+  If `/[slug]` is `ƒ`, the DB reads got set to `no-store` again (that breaks ISR).
+- Do NOT add `unstable_cache` back or `cacheComponents: true`. Do NOT set `db.ts` reads
   to `cache: 'no-store'` — keep `{ next: { revalidate } }` so pages stay ISR-eligible.
 - The "Clear all cache" button must purge + warm (returns `{ warmed }`).
 - Change blog settings (e.g. background color) → reload public site shows it immediately.

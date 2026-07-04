@@ -283,7 +283,7 @@ const zh = {
   featProgress: '阅读进度条',
   featProgressDesc: '页面顶部随滚动填充的细条。',
   seoCanonical: '站点地址（canonical）',
-  seoCanonicalHint: '用于站点地图、RSS、schema、llms.txt、OG 图片和 canonical 标签。留空将自动使用 Vercel 域名。',
+  seoCanonicalHint: '用于站点地图、RSS、schema、llms.txt、OG 图片和 canonical 标签。留空将自动使用站点 URL（SITE_URL）。',
   seoAutoSchema: '自动 Schema（JSON-LD）',
   seoAutoSchemaDesc: '为 Google 添加结构化数据：首页用 WebSite，每篇文章用 BlogPosting。',
   seoSitemapDesc: '列出所有文章、页面、分类和标签，供搜索引擎完整抓取。',

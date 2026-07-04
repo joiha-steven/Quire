@@ -11,7 +11,7 @@ const SCOPE = 'https://www.googleapis.com/auth/drive.file'
 
 // The OAuth redirect URI, derived from the canonical site URL so it is stable and
 // matches the single URI registered on the Google client — independent of which host
-// (custom domain vs *.vercel.app) the admin is being reached from.
+// (direct vs behind a proxy/CDN) the admin is being reached from.
 export function backupRedirectUri(settings: SiteSettings): string {
   return `${resolveSiteUrl(settings)}/api/backup/callback`
 }

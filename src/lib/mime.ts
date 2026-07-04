@@ -1,6 +1,6 @@
 // Content-type by file extension — shared by the local storage driver's serving
 // route and the backup re-upload path. Extension-based on purpose: the local
-// driver does not persist the upload content-type (Vercel Blob did), so the type
+// driver does not persist the upload content-type, so the type
 // is always re-derived from the pathname, which is stable and unique.
 
 const MIME: Record<string, string> = {

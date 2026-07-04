@@ -4,8 +4,8 @@
 
 - **What it is.** A full-site snapshot to the owner's Google Drive: one self-contained
   `.tar.gz` = `db.json` (every text table except `backup_state`) + `blob/<pathname>` (every
-  binary, read through the storage driver via `readBlob` — Vercel fetches the public URL, the
-  local driver reads disk, so a snapshot works on either backend) + `manifest.json`. Built in
+  binary, read through the storage driver via `readBlob`, which reads the local disk) +
+  `manifest.json`. Built in
   `/tmp` then resumable-uploaded into a `quire-backups`
   Drive folder. Runs on a schedule (cron, every `settings.backups.intervalDays`, default 4) or
   the "Back up now" button; retention keeps the newest `settings.backups.keep` (default 4).
@@ -14,8 +14,8 @@
   consent → `GET /api/backup/callback` exchanges the code for a **refresh token**, stored in
   `backup_state` (server-only). `drive.file` = the app only ever sees files IT created. The
   **redirect URI is `backupRedirectUri(settings)` = `${resolveSiteUrl(settings)}/api/backup/callback`**
-  — derived from the canonical site URL, NOT `req.nextUrl.origin` (which is a `*.vercel.app` host
-  when the admin is opened there → `redirect_uri_mismatch`). So the URI registered on the OAuth
+  — derived from the canonical site URL, NOT `req.nextUrl.origin` (which can be an internal/proxy
+  host when the admin is opened there → `redirect_uri_mismatch`). So the URI registered on the OAuth
   client must use the canonical host (`settings.siteUrl`).
 - **Secret hygiene (HARD RULE).** The Drive refresh token must NEVER reach the client. It lives
   in `backup_state`, NOT in `settings.data` (which is sent to the admin). Only non-secret config

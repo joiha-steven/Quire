@@ -283,7 +283,7 @@ const en = {
   featProgress: 'Reading progress bar',
   featProgressDesc: 'A thin bar at the top that fills as you scroll.',
   seoCanonical: 'Site address (canonical)',
-  seoCanonicalHint: 'Used for sitemap, RSS, schema, llms.txt, OG image and the canonical tag. Leave blank to use the Vercel domain.',
+  seoCanonicalHint: 'Used for sitemap, RSS, schema, llms.txt, OG image and the canonical tag. Leave blank to use your site URL (SITE_URL).',
   seoAutoSchema: 'Auto schema (JSON-LD)',
   seoAutoSchemaDesc: 'Adds structured data for Google: WebSite on the home page, BlogPosting on each post.',
   seoSitemapDesc: 'Lists every post, page, category and tag for full search-engine crawling.',

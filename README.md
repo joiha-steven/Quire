@@ -1,8 +1,8 @@
 <div align="center">
 
-# **quire**blog &nbsp;`v1.2.6`
+# **quire**blog &nbsp;`v1.3.0`
 
-**An AI-operated personal blog platform.**
+**An AI-operated personal blog platform. Self-hosted, no cloud lock-in.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
 
 <br/>
@@ -11,8 +11,8 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 ![React 19](https://img.shields.io/badge/React_19-20232a?logo=react&logoColor=61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)
 ![Tailwind v4](https://img.shields.io/badge/Tailwind_v4-0b1120?logo=tailwindcss&logoColor=38bdf8)
-![Supabase](https://img.shields.io/badge/Supabase-3ecf8e?logo=supabase&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?logo=postgresql&logoColor=white)
+![PostgREST](https://img.shields.io/badge/PostgREST-008080)
 ![Docker](https://img.shields.io/badge/Docker-self--host-2496ed?logo=docker&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-ready-7c3aed)
 ![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)
@@ -31,9 +31,9 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 ## ✨ What it is
 
-An **open-source** (MIT), single-owner blog built for people who just want to **write**. The public site is statically cached so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
+An **open-source** (MIT), single-owner blog built for people who just want to **write** — and to **own the whole stack**. No SaaS, no vendor lock-in: text lives in your own **PostgreSQL**, binaries on your own **disk**, running on **your server**. The public site is statically cached so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
 
-All the writing happens in a polished `/admin` (or over MCP). Text lives in **Postgres** (Supabase on Vercel, or a bundled Postgres when you self-host); binaries (images, files, icons) go through a pluggable storage driver — **Vercel Blob** by default, or the **local filesystem** on Docker. No git push to publish, no CMS to wrangle.
+All the writing happens in a polished `/admin` (or over MCP). Text lives in **PostgreSQL** (reached through **PostgREST** with the `supabase-js` client); images, files, and icons are plain files on the **local filesystem**. No git push to publish, no CMS to wrangle.
 
 | Area | What you get |
 |:---|:---|
@@ -47,70 +47,25 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 | 🤖&nbsp;**MCP** | a remote endpoint that lets an AI agent write & manage the blog with the same rules as the admin |
 | 📱&nbsp;**PWA** | installable, launches standalone |
 | 🔐&nbsp;**Auth** | NextAuth v5 · Google sign-in · single authorized owner · edge-guarded admin/API |
-| 🚀&nbsp;**Deploy** | Vercel + Supabase (+ Vercel Blob), **or** self-host with Docker — bundled Postgres + local storage, **no cloud** — same codebase |
+| 🚀&nbsp;**Deploy** | **native** on your own Linux server, **or** **Docker** — bundled Postgres + local storage, **no cloud account** either way |
 
-> Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, deployed on **Vercel** or self-hosted with **Docker**.
+> Built on **Next.js 16** (App Router, React 19, strict TS) + **Tailwind v4**, backed by **PostgreSQL + PostgREST**, binaries on the **local filesystem**.
 
-**Who it's for** — one person who wants a fast, good-looking, fully self-owned blog, runs it on Vercel + Supabase **or self-hosts it with Docker**, and likes the idea of letting an AI agent help run it.
+**Who it's for** — one person who wants a fast, good-looking, **fully self-owned** blog on their own server (native or Docker), and likes the idea of letting an AI agent help run it.
 **Not for** — multi-author teams / publications needing roles and editorial workflows. Quire Blog is single-owner by design (one authorized email); multi-tenant lives in the planned SaaS, not here.
 
 ---
 
 ## 🚀 Get your own copy
 
-Three ways to stand up your own blog — **pick one**. Each ends with a live site at your domain.
+Two ways to stand up your own blog — **pick one**. Both run entirely on **your own server, no cloud account**.
 
-<details>
-<summary><b>1️⃣ &nbsp;Do it yourself</b> &nbsp;— ~10 minutes in the dashboards</summary>
-
-<br/>
-
-1. **Fork** this repo (so Vercel deploys *your* copy).
-2. **Database** — create a [Supabase](https://supabase.com) project → SQL Editor → paste [`scripts/schema.sql`](./scripts/schema.sql) → **Run** (idempotent). Copy the **Project URL** + **`service_role`** key (Settings → API).
-3. **Import to Vercel** — *Add New → Project* → import your fork.
-4. **Blob store** — *Storage → Create → Blob*, connect it to the project. This injects `BLOB_READ_WRITE_TOKEN` automatically.
-5. **Env vars** (Settings → Environment Variables — see [the table](#-environment-variables)):
-   `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` (`npx auth secret`), `AUTHORIZED_EMAIL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
-6. **Deploy.** Then on your [Google OAuth client](https://console.cloud.google.com/apis/credentials) add the redirect URI `https://<your-domain>/api/auth/callback/google`.
-7. Open `https://<your-domain>/admin`, sign in as `AUTHORIZED_EMAIL`, set your title / palette / menu in **Settings**, and start writing.
-
-</details>
-
-<details>
-<summary><b>2️⃣ &nbsp;Hand it to an AI agent</b> &nbsp;— Claude, OpenAI Codex, OpenClaw, Hermes…</summary>
+<details open>
+<summary><b>1️⃣ &nbsp;Docker</b> &nbsp;— the fastest path, one command</summary>
 
 <br/>
 
-Give an agent **Vercel + Supabase + GitHub access** (tokens / CLI / MCP), then paste:
-
-```text
-Deploy my own copy of github.com/joiha-steven/Quire:
-1. Fork the repo to my account.
-2. Create a Supabase project and run scripts/schema.sql in its SQL editor.
-3. Create a Vercel project from the fork; add a Vercel Blob store (this sets BLOB_READ_WRITE_TOKEN).
-4. Walk me step by step through creating a Google OAuth "Web" client
-   (you can't log into my Google account, so guide me through the Cloud Console:
-   create the project, configure the consent screen, create the OAuth client,
-   and tell me exactly what to click), then collect the resulting
-   AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET from me.
-5. Set env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Supabase → Settings → API),
-   AUTH_SECRET (generate with `npx auth secret`), AUTHORIZED_EMAIL=<my email>,
-   AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.
-6. Deploy, then tell me to register https://<domain>/api/auth/callback/google
-   as a redirect URI on the Google client.
-7. Return the live URL.
-```
-
-> The agent does everything else; for the Google OAuth app it **walks you through the clicks** (it can't log into your Google account) and takes the client ID/secret back from you.
-
-</details>
-
-<details>
-<summary><b>3️⃣ &nbsp;Self-host with Docker</b> &nbsp;— your own server, no Vercel</summary>
-
-<br/>
-
-**Fully self-contained — no cloud accounts.** The stack bundles **Postgres + PostgREST** (replaces Supabase) and the **local filesystem** store (replaces Vercel Blob), plus a cron sidecar. Everything runs on your host; only Google sign-in reaches the internet. Data lives in `./data/postgres` (text) + `./data/uploads` (binaries) — back up those two folders.
+**Fully self-contained.** The stack bundles **PostgreSQL + PostgREST** (your database) and stores binaries on the **local filesystem**, plus a cron sidecar. Everything runs on your host; only Google sign-in reaches the internet. Data lives in `./data/postgres` (text) + `./data/uploads` (binaries) — back up those two folders.
 
 ```bash
 git clone https://github.com/joiha-steven/Quire.git && cd Quire
@@ -120,18 +75,54 @@ node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + s
 docker compose up -d --build   # app on :3000 + db + rest + cron
 ```
 
-Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/auth/callback/google` (and `<SITE_URL>/api/backup/callback` for Drive backups) on your Google OAuth client. The image needs **no backend env to build** — secrets are supplied at runtime. The bundled DB applies `scripts/schema.sql` automatically on first boot. Prefer a managed database? Point `SUPABASE_URL` at any Supabase project and drop the `db`/`rest` services — see [`.env.docker.example`](./.env.docker.example). The Vercel path is unchanged (Supabase + Blob).
+Then point a reverse proxy / TLS at port `3000`, and register `<SITE_URL>/api/auth/callback/google` (and `<SITE_URL>/api/backup/callback` for Drive backups) on your Google OAuth client. The image needs **no backend env to build** — secrets are supplied at runtime; the bundled DB applies [`scripts/schema.sql`](./scripts/schema.sql) automatically on first boot.
+
+</details>
+
+<details>
+<summary><b>2️⃣ &nbsp;Native</b> &nbsp;— install directly on a Linux server (e.g. behind CloudPanel / nginx)</summary>
+
+<br/>
+
+Run the same components **without Docker** — PostgreSQL, PostgREST, and the Next.js app as plain services on your host, behind any reverse proxy. Full step-by-step (systemd units, PostgREST config, nginx, migration from an existing instance) in **[`docs/self-host-native.md`](./docs/self-host-native.md)**. In short:
+
+```bash
+# 1. Database
+apt install -y postgresql-16
+sudo -u postgres createdb quire
+sudo -u postgres psql -d quire -f docker/initdb/01_roles.sql   # anon + service_role + authenticator
+sudo -u postgres psql -d quire -f scripts/schema.sql
+sudo -u postgres psql -d quire -f docker/initdb/03_grants.sql
+
+# 2. PostgREST (binary → systemd) on 127.0.0.1:3001, secrets from gen-keys.mjs
+node scripts/docker/gen-keys.mjs   # -> PGPASSWORD, PGRST_JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY
+
+# 3. App
+npm ci && npm run build
+# fill .env.local (see docs/self-host-native.md), then run `next start` under systemd/supervisor
+```
+
+Point your reverse proxy at the app's port, register the Google OAuth redirect URIs, and add an hourly cron hitting `/api/cron` with `CRON_SECRET`.
+
+</details>
+
+<details>
+<summary><b>🤖 &nbsp;Hand it to an AI agent</b> &nbsp;— Claude, OpenAI Codex, …</summary>
+
+<br/>
+
+Give an agent **SSH to your server** (and GitHub access), then ask it to deploy either flavor above: clone the repo, stand up PostgreSQL + PostgREST + the app (native or Docker), walk you through creating a Google OAuth "Web" client (it can't log into your Google account, so it guides you through the Cloud Console and collects the client ID/secret), set the env vars, and return the live URL. Everything else it does end to end.
 
 </details>
 
 > [!TIP]
-> **Vercel:** two `vercel.json` knobs to make yours — `regions` (defaults to `sin1`/Singapore — set your nearest) and `maxDuration: 60` for uploads (the free Hobby plan caps function time, so trim it or upgrade to Pro for big photos). **Docker:** large uploads have no 4.5 MB cap (the browser posts straight to the server), so big photos just work.
+> Large uploads have **no 4.5 MB cap** on a self-host — the browser posts straight to the server, so big photos just work. Put **Cloudflare (or any CDN)** in front for global edge caching + TLS.
 
 ---
 
 ## 🤖 Let an AI agent write & publish (MCP)
 
-Quire Blog ships a remote **MCP** server, so a second AI agent can run your blog — drafting, editing, tagging, and **publishing straight to the live site**. No git, no deploy: content goes into Supabase + Blob through the same data layer (and same slug/revision/soft-delete rules) the admin uses.
+Quire Blog ships a remote **MCP** server, so a second AI agent can run your blog — drafting, editing, tagging, and **publishing straight to the live site**. No git, no deploy: content goes into Postgres + the local store through the same data layer (and same slug/revision/soft-delete rules) the admin uses.
 
 1. **Turn it on** — *Admin → Settings → Advanced → MCP*, generate a named token (shown **once**, hashed at rest, expires in 180 days).
 2. **Connect your agent** to the endpoint `https://<your-domain>/api/mcp` with `Authorization: Bearer <token>` (OAuth connectors are supported too).
@@ -149,38 +140,38 @@ The post is live in seconds. Sensitive settings are blocked over MCP, and you st
 
 ## 🔑 Environment variables
 
-See [`.env.example`](./.env.example). The essentials:
+See [`.env.example`](./.env.example) (native) and [`.env.docker.example`](./.env.docker.example) (Docker). The essentials:
 
 | Variable | Required | What it is · where to get it |
 |---|:---:|---|
 | `AUTH_SECRET` | ✅ | NextAuth secret — generate with `npx auth secret` |
 | `AUTHORIZED_EMAIL` | ✅ | The only email allowed into `/admin` — your email |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in + optional commenter login) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
-| `SUPABASE_URL` | ✅ | Supabase project API URL — Supabase → Settings → API. **Docker:** auto-set to the bundled PostgREST (`http://rest:3000`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase `service_role` key (secret, server-only) — same page. **Docker:** generate with `node scripts/docker/gen-keys.mjs` |
-| `POSTGRES_PASSWORD` / `SUPABASE_JWT_SECRET` | ◻️ Docker | Bundled-DB secrets for the local Postgres + PostgREST — produced by `gen-keys.mjs` alongside the key above |
-| `BLOB_READ_WRITE_TOKEN` | ✅ Vercel | Vercel Blob token — **auto-injected** when you connect a Blob store; also derives the public Blob URL. **Not used on Docker** (local filesystem driver) |
-| `STORAGE_DRIVER` | ◻️ Docker | `vercel-blob` (default) or `local`. The Docker image bakes in `local`; binaries go to `STORAGE_LOCAL_DIR` (default `/app/uploads`) |
-| `SITE_URL` | ◻️ Docker | Canonical public URL of the instance (Vercel infers this automatically). Used for OG/sitemap/auth callbacks when self-hosting |
-| `CRON_SECRET` | ◻️ optional | Protects `/api/cron` (keep-alive + scheduled backup) — any random string. On Docker the cron sidecar sends it |
-| `MCP_OAUTH_SECRET` | ◻️ optional | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
-| Turnstile / Facebook keys | ◻️ optional | Comment anti-spam (Cloudflare Turnstile) + Facebook commenter login — **enter these in Admin → Settings** (stored server-side). The matching env vars (`TURNSTILE_*`, `AUTH_FACEBOOK_*`) still work as a fallback |
+| `SITE_URL` / `AUTH_URL` | ✅ | Canonical public URL of your instance (OG/sitemap/auth callbacks) |
+| `SUPABASE_URL` | ✅ | Your **PostgREST endpoint** (e.g. `http://127.0.0.1:3001`). Named `SUPABASE_` because the data layer uses the `supabase-js` client, which speaks PostgREST — **not** a Supabase cloud project |
+| `POSTGREST_DIRECT` | ✅ | `1` when talking to a bare PostgREST (strips the `/rest/v1` path prefix supabase-js adds) |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | HS256 JWT (`role=service_role`) signed with the PostgREST `jwt-secret` — generate both with `node scripts/docker/gen-keys.mjs` |
+| `STORAGE_LOCAL_DIR` | ✅ | Directory that holds binaries (`media/`, `files/`), served at `/uploads` (Docker image defaults to `/app/uploads`) |
+| `CRON_SECRET` | ◻️ | Protects `/api/cron` (keep-alive + variant sweep + scheduled backup) — any random string |
+| `MCP_OAUTH_SECRET` | ◻️ | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
+| Turnstile / Facebook keys | ◻️ | Comment anti-spam + Facebook commenter login — **enter these in Admin → Settings** (stored server-side); the matching env vars still work as a fallback |
 
-MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (gitignored) + Vercel (`vercel env pull`) — or `.env.docker` when self-hosting; your blog content lives in Supabase + Blob (or the bundled Postgres + local volume on Docker), never in git. The full self-host set is in [`.env.docker.example`](./.env.docker.example).
+MCP tokens and the Google Drive backup connection are **created in the admin**, not via env. Secrets stay in `.env.local` (native) or `.env.docker` (Docker), both gitignored; your content lives in PostgreSQL + the local uploads dir, never in git.
 
 ---
 
-## 🧑‍💻 Run locally (optional)
+## 🧑‍💻 Run locally (dev)
 
 ```bash
 git clone https://github.com/joiha-steven/Quire.git && cd Quire
 npm install
-cp .env.example .env.local        # fill in the values above
-npx auth secret                   # AUTH_SECRET
-npm run dev                       # http://localhost:3000/admin
+docker compose up -d db rest        # a local Postgres + PostgREST just for dev
+cp .env.example .env.local          # fill in the values above (point SUPABASE_URL at the dev PostgREST)
+npx auth secret                     # AUTH_SECRET
+npm run dev                         # http://localhost:3000/admin
 ```
 
-Point the same Supabase + Blob at local, and add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm run check:all` must pass before any change is done (typecheck + lint + invariant checks + the vitest seam tests; offline, no creds); `npm run build` for a release.
+Add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm run check:all` must pass before any change is done (typecheck + lint + invariant checks + the vitest seam tests; offline, no creds); `npm run build` for a release.
 
 ---
 
@@ -195,7 +186,7 @@ Point the same Supabase + Blob at local, and add `http://localhost:3000/api/auth
 
 ## 🗺️ Roadmap
 
-Docker self-host shipped (local filesystem storage); next up: an S3/MinIO storage driver + a published GHCR image, publishing from Markdown note apps (Obsidian → Craft), and optional AI assist in the editor. See [`ROADMAP.md`](./ROADMAP.md).
+Native + Docker self-host shipped; next up: an S3/MinIO storage driver + a published GHCR image, publishing from Markdown note apps (Obsidian → Craft), and optional AI assist in the editor. See [`ROADMAP.md`](./ROADMAP.md).
 
 ---
 

@@ -1,4 +1,4 @@
-// GET /api/cron — scheduled maintenance (Vercel Cron, hourly; see vercel.json).
+// GET /api/cron — scheduled maintenance (hourly; run it from cron / your panel).
 // 1) Keep-alive ping: a trivial DB read so the Supabase free-tier project never
 //    pauses (it pauses after ~7 days with no requests).
 // 2) Finalize sweep: generate any still-missing display variants (variants:false)
@@ -16,7 +16,7 @@ export const maxDuration = 300
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
-  // When CRON_SECRET is set, Vercel Cron sends it as a Bearer token; reject others.
+  // When CRON_SECRET is set, the cron job sends it as a Bearer token; reject others.
   const secret = process.env.CRON_SECRET
   if (secret && req.headers.get('authorization') !== `Bearer ${secret}`) {
     logRequest(req, 401, start)

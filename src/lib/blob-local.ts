@@ -1,8 +1,8 @@
-// Local-filesystem storage driver — the self-host / Docker binary store. Mirrors
-// the IO surface Vercel Blob provides (put / read / list / del), but writes files
-// straight to a mounted directory (STORAGE_LOCAL_DIR, default ./uploads). Selected
-// at runtime by `blob.ts` when STORAGE_DRIVER=local, and ALWAYS reached through a
-// dynamic import() so node:fs never lands in a client bundle. SERVER-ONLY.
+// Local-filesystem storage driver — the self-host / Docker binary store. Provides the
+// IO surface the storage facade expects (put / read / list / del), writing files
+// straight to a mounted directory (STORAGE_LOCAL_DIR, default ./uploads). Reached only
+// through a dynamic import() from `blob.ts` so node:fs never lands in a client bundle.
+// SERVER-ONLY.
 //
 // Files are served back over HTTP by app/uploads/[...path]/route.ts under the
 // `/uploads` prefix, which is the same prefix blob.ts uses to build public URLs.
@@ -35,7 +35,7 @@ export function read(pathname: string): Promise<Buffer> {
   return fs.readFile(resolveSafe(pathname))
 }
 
-// Delete a binary. No-op when missing (mirrors Vercel `del`).
+// Delete a binary. No-op when missing.
 export async function del(pathname: string): Promise<void> {
   await fs.rm(resolveSafe(pathname), { force: true })
 }
