@@ -471,6 +471,10 @@ export type AdminStrings = {
   movedToTrash: string
   // MCP server (Admin → Settings → Advanced)
   cardMcp: string
+  cardCloudflare: string
+  cfHelp: string
+  cfZoneId: string
+  cfToken: string
   mcpEnable: string
   mcpEnableDesc: string
   mcpTokensTitle: string

@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v1.4.0 — 2026-07-04 (Auto CDN purge: Cloudflare cache clears on every write)
+
+- **Cloudflare cache auto-purge.** Enter a Cloudflare API token (Zone.Cache Purge permission) + Zone
+  ID in Admin → Settings → Integrations; the app then purges the whole zone on every content change
+  and on "Clear all cache", so an edit is live instantly with no manual purge. Best-effort and
+  non-blocking (fires after the response via `after()`), a no-op when unconfigured. Credentials are
+  server-only (the `integration_keys` table, env fallback `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ZONE_ID`),
+  never sent to the client. New `lib/cdn.ts`, hooked into `lib/revalidate.ts` (the single write choke
+  point `freshenData`), new `CloudflareFields` admin card + `POST /api/integrations/cloudflare`.
+- DB: adds `cloudflare_api_token` + `cloudflare_zone_id` to `integration_keys` (idempotent upgrade in
+  `scripts/schema.sql`).
+
 ## v1.3.0 — 2026-07-04 (Native self-host: drop Vercel + Supabase-cloud, local-filesystem storage)
 
 Quire is now self-hosted only, in two deploy flavors: **native** (install PostgreSQL + PostgREST +

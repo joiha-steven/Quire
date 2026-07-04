@@ -9,16 +9,27 @@
 // next save. Cosmetic, self-heals; "Clear all cache" is the full-sync escape hatch.
 
 import { revalidatePath, revalidateTag } from 'next/cache'
+import { after } from 'next/server'
 import { getPublicPosts } from '@/lib/posts'
 import { getPublicPages } from '@/lib/pages'
+import { purgeCloudflare } from '@/lib/cdn'
 import { DB_TAG } from '@/lib/db'
 
-// Invalidate every cache-eligible Supabase read so the next render of a purged
-// page reads fresh from Postgres. One coarse tag; pages still re-render only when
-// their PATH is purged below.
+// Invalidate every cache-eligible DB read so the next render of a purged page reads
+// fresh from Postgres. One coarse tag; pages still re-render only when their PATH is
+// purged below. Every content write goes through here, so this is also where we clear
+// a CDN in front (Cloudflare) — it can't see the tag purge, so without this an edit
+// would stay stale at the edge until the CDN's own TTL. No-op when unconfigured.
 function freshenData(): void {
   // Next 16 requires a second arg; 'max' purges across all cache profiles.
   revalidateTag(DB_TAG, 'max')
+  // Best-effort CDN purge, post-response. `after` throws outside a request scope (unit
+  // tests call these helpers directly) — ignore that; a real write always has one.
+  try {
+    after(() => purgeCloudflare())
+  } catch {
+    /* not in a request scope */
+  }
 }
 
 // Every route that lists/aggregates post metadata. Bracketed dynamic forms (+
