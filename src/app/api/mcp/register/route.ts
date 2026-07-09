@@ -5,6 +5,7 @@
 // registered here (or is a loopback address), closing the open-redirect hole.
 
 import { registerClient } from '@/lib/mcp/clients'
+import { mcpEnabled } from '@/lib/mcp/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,11 +15,33 @@ const CORS: Record<string, string> = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
 
+// Unauthenticated endpoint: cap registrations per IP so a script can't flood the
+// `mcp_clients` table (each POST inserts a row). Best-effort, per-instance.
+const WINDOW_MS = 60_000
+const MAX_PER_WINDOW = 5
+const hits = new Map<string, number[]>()
+function rateLimited(ip: string): boolean {
+  const now = Date.now()
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS)
+  recent.push(now)
+  hits.set(ip, recent)
+  return recent.length > MAX_PER_WINDOW
+}
+
 export function OPTIONS(): Response {
   return new Response(null, { status: 204, headers: CORS })
 }
 
 export async function POST(req: Request): Promise<Response> {
+  // Registration is only useful when MCP is on; refuse otherwise (matches /authorize,
+  // /token) so a disabled server can't be used to grow the clients table.
+  if (!(await mcpEnabled())) {
+    return Response.json({ error: 'temporarily_unavailable' }, { status: 503, headers: CORS })
+  }
+  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
+  if (rateLimited(ip)) {
+    return Response.json({ error: 'too_many_requests' }, { status: 429, headers: CORS })
+  }
   const body = (await req.json().catch(() => ({}))) as { redirect_uris?: unknown; client_name?: unknown }
   const redirectUris = Array.isArray(body.redirect_uris)
     ? body.redirect_uris.filter((u): u is string => typeof u === 'string')
