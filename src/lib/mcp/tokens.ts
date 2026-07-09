@@ -46,8 +46,6 @@ const toInfo = (r: TokenRow): McpTokenInfo => ({
   oauth: r.name === OAUTH_TOKEN_NAME,
 })
 
-export const tokenLimit = (): number => MAX_TOKENS
-
 // All tokens (metadata only), newest first.
 export async function listTokens(): Promise<McpTokenInfo[]> {
   const { data } = await db()

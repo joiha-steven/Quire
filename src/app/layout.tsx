@@ -3,7 +3,6 @@ import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
-import { blobOrigin } from '@/lib/blob'
 
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
@@ -50,7 +49,6 @@ export async function generateViewport(): Promise<Viewport> {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { language, themes, themePreset, enabledPalettes, typography, customFont, motion } = await getSettings()
-  const blob = blobOrigin()
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   // data-motion is server-rendered from settings (site-wide), so the motion engine
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
@@ -60,12 +58,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="min-h-full">
         {/* Preload the Latin Inter subset (needed by almost every page) — no swap flash. */}
         <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        {blob && (
-          <>
-            <link rel="preconnect" href={blob} crossOrigin="anonymous" />
-            <link rel="dns-prefetch" href={blob} />
-          </>
-        )}
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
         {/* Owner type scale → fs/lh/ls vars (overrides globals.css) + custom @font-face. */}

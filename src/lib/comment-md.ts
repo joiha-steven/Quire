@@ -4,17 +4,9 @@
 // first, so only the `<strong>`/`<em>`/`<br>` tags WE inject can ever appear (no
 // user-supplied tag survives). Mirrors Invariant 5 (raw HTML in content is escaped).
 
-const MAX_LEN = 1000
+import { escapeHtml } from '@/lib/utils'
 
-// HTML-escape every special char so nothing the user typed becomes markup.
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
+const MAX_LEN = 1000
 
 // Render comment source to SAFE html. Bold before italic (so `**` is consumed
 // before single `*`); emphasis never spans a newline. Newlines become <br>.

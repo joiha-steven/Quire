@@ -1,5 +1,17 @@
 // Pure helpers shared across lib and components. No side effects, no I/O.
 
+// HTML-escape every special char so nothing user/author-typed becomes markup. The
+// escape-first half of the limited-markdown security model (Invariant 5): shared by
+// comment-md + inline-md, which then inject only their own whitelisted tags.
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 // Convert arbitrary text to a URL-safe slug (supports Vietnamese diacritics).
 export function slugify(input: string): string {
   return input
@@ -12,13 +24,6 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/[\s-]+/g, '-')
     .replace(/^-+|-+$/g, '')
-}
-
-// Format an ISO date as Vietnamese long form, e.g. "19 tháng 6, 2026".
-export function formatDateVi(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return `${d.getDate()} tháng ${d.getMonth() + 1}, ${d.getFullYear()}`
 }
 
 // Terse date + 24h time for the admin tables, e.g. "4/6/26 - 14:05".
@@ -60,8 +65,9 @@ export function deriveExcerpt(markdown: string, maxWords = 50): string {
   const plain = toPlainText(markdown)
   if (!plain) return ''
   const words = plain.split(' ')
-  if (words.length <= maxWords) return plain
-  return `${words.slice(0, maxWords).join(' ')}...`
+  const trimmed = words.length <= maxWords ? plain : `${words.slice(0, maxWords).join(' ')}...`
+  // Also cap by chars: a single long token (e.g. a URL) can blow past the word limit.
+  return clampExcerpt(trimmed)
 }
 
 // All image URLs referenced in a piece of (rendered) content: markdown

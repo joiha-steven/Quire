@@ -30,12 +30,6 @@ export function blobUrl(pathname: string): string {
   return `${LOCAL_BASE}/${pathname}`
 }
 
-// Public media origin (for a <link rel="preconnect">). Empty — binaries are
-// same-origin (/uploads), so there is nothing to preconnect to.
-export function blobOrigin(): string {
-  return ''
-}
-
 // Persist form: strip the store prefix → store-relative pathname. Idempotent.
 export function collapseBlob(s: string): string {
   return s.replace(STORE_PREFIX_RE, '')
@@ -81,9 +75,4 @@ export async function deleteByPathname(pathname: string): Promise<void> {
     console.error(`[ERROR] blob.deleteByPathname(${pathname}): ${(error as Error).message}`)
     throw error
   }
-}
-
-// Delete a binary by its public URL.
-export async function deleteByUrl(url: string): Promise<void> {
-  await deleteByPathname(collapseBlob(url))
 }
