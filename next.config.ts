@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   // a missing DB (posts/pages readIndex catch), so `generateStaticParams` returns [] and
   // pages render on-demand once env is supplied.
   output: 'standalone',
+  // turndown (HTML→Markdown for the WordPress importer) ships its own Node DOM shim;
+  // keep it external so the bundler doesn't rewrite that dynamic require.
+  serverExternalPackages: ['turndown', 'turndown-plugin-gfm'],
   // Client Router Cache kept minimal: every navigation reflects current server
   // state, so an edit is never hidden behind a stale client-side RSC. The server
   // still serves fast — public pages are ISR-cached (revalidate), so TTFB stays

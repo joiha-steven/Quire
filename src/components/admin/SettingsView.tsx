@@ -28,6 +28,7 @@ import { FeatureFields } from './FeatureFields'
 import { CommentFields } from './CommentFields'
 import { CommentKeys } from './CommentKeys'
 import { CloudflareFields } from './CloudflareFields'
+import { ImportFields } from './ImportFields'
 import { SeoFields } from './SeoFields'
 
 type Tab = 'site' | 'content' | 'appearance' | 'seo' | 'integrations'
@@ -191,6 +192,9 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
           </Card>
           <Card title={t.cardCloudflare}>
             <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
+          </Card>
+          <Card title={t.cardImport}>
+            <ImportFields />
           </Card>
         </div>
       )}

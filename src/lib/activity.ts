@@ -20,6 +20,8 @@ export type ActivityAction =
   | 'trash.empty'
   // MCP access tokens (Admin → Settings → Advanced).
   | 'mcp.token.create' | 'mcp.token.delete'
+  // Content import (Admin → Settings → Integrations).
+  | 'import.wordpress'
   // Google Drive backups (Admin → Settings → Advanced).
   | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
   // Reader comments (create is public; restore/purge from the admin Trash).

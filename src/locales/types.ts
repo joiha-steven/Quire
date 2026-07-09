@@ -475,6 +475,12 @@ export type AdminStrings = {
   cfHelp: string
   cfZoneId: string
   cfToken: string
+  // WordPress import (Admin → Settings → Integrations)
+  cardImport: string
+  importHelp: string
+  importChoose: string
+  importRun: string
+  importDone: string
   mcpEnable: string
   mcpEnableDesc: string
   mcpTokensTitle: string
