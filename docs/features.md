@@ -150,7 +150,8 @@
   **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontUpload`/
   `TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine
   toggle → `settings.motion.enabled`) + custom-CSS; **SEO**
-  `SeoFields`; **Integrations** `BackupFields` + `McpFields`. `McpFields` is the EXCEPTION to "no own
+  `SeoFields`; **Integrations** `BackupFields` + `McpFields` + `CloudflareFields` + `ImportFields`
+  (WordPress import — see below). `McpFields` is the EXCEPTION to "no own
   state/save": the MCP enable toggle flows through the settings form, but its token manager has its
   own `/api/mcp/tokens` API (plaintext shown once).
 - **Palette is FRONTEND-ONLY now** — the admin chrome no longer carries a `PaletteToggle` (only the
@@ -224,3 +225,18 @@ Google account.
   `/admin` to `AUTHORIZED_EMAIL` only.
 - **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
   (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.
+
+## WordPress import — `lib/wordpress-import.ts`, Admin → Settings → Integrations
+
+- **One-click import** from a WordPress export (`Tools → Export → All content` = a WXR `.xml`).
+  `ImportFields` uploads the file (multipart) to owner-gated `POST /api/import/wordpress`.
+- **`parseWxr(xml, now)` is PURE** (no I/O; unit-tested in `wordpress-import.test.ts`): each `item`
+  with `wp:post_type` post/page and a live status → a post/page. HTML `content:encoded` → Markdown
+  (`turndown` + GFM), `<figure><figcaption>` folded INTO the image alt (Quire renders captions from
+  alt). Categories/tags split by `@_domain`, `Uncategorized` dropped; dates via `wp:post_date_gmt`;
+  status `publish`→`published` else `draft`; excerpt from `excerpt:encoded` or `deriveExcerpt`.
+- **The route persists** via `savePost`/`savePage` — new content is ADDED, a slug that collides with
+  existing content gets a numeric suffix (nothing overwritten). One `revalidateEverything()` at the
+  end; logged as `import.wordpress`. **Images keep their source URLs** (not rehosted).
+- `turndown`/`turndown-plugin-gfm`/`fast-xml-parser` are runtime deps; turndown is in
+  `serverExternalPackages` (its Node DOM shim). Max upload 100MB; non-WXR files are rejected.

@@ -90,9 +90,12 @@ image — there is no second version to maintain.
 > lets an agent create/update/delete posts & pages, manage media/files, and read settings,
 > all through the same data layer. `add_media_from_url` rehosts an image URL to local storage.
 
+> **Done (2026-07-09, v1.4.0):** **WordPress import** landed as a first-class admin
+> feature (Settings → Integrations) — upload a WXR `.xml` export and posts + pages import
+> as Markdown (`lib/wordpress-import.ts` + `POST /api/import/wordpress`). No CLI, no creds.
+
 Still planned: a plain HTTP **ingest endpoint** that takes Markdown + frontmatter and maps
 it to post fields (for the note-app plugins below), rehosting embedded images.
-(`scripts/legacy/rehost-images.mjs` and `legacy/import-wordpress.mjs` are existing patterns to build on.)
 
 ### Phase 4 — Obsidian, then Craft `[planned, needs Phase 3]`
 - **Obsidian plugin**: a command that POSTs the active note (frontmatter + body) and
@@ -107,7 +110,11 @@ Owner-gated `/api/ai/*` routes; key in env, never client-exposed:
 
 Independent of Phases 1–4 — could be done first as a quick win.
 
-### Phase 6 — Native comments `[planned, independent]`
+### Phase 6 — Native comments `[shipped]`
+
+> **Done (v1.1.0):** reader comments are live — `comments` table, `features.comments`
+> toggle, Turnstile-guarded `POST /api/comments`, SSG-safe client hydration, and the
+> `/admin/comments` moderation page. The design below is what shipped.
 
 Reader comments with **no third-party login** (giscus was rejected for exactly this —
 it forces a GitHub account). Fully self-hosted on the existing Postgres,

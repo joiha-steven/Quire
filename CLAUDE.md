@@ -72,6 +72,10 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
   JWT secret + service key come from `scripts/docker/gen-keys.mjs`, roles/grants from `docker/initdb/`.
   **Native:** `.env.example` + `docs/self-host-native.md`. **Docker:** `.env.docker.example` (bundles
   Postgres + PostgREST + local store + cron). Build needs no backend env (data layer degrades to empty).
+  **Boot:** `src/instrumentation.ts` runs `validateEnv()` (`src/env.ts`) at server start (NOT build/edge)
+  and fails fast on missing required vars. **Upgrades:** `scripts/migrate.sh` applies pending
+  `scripts/migrations/*.sql` tracked in `schema_migrations` (Docker runs it as a one-shot; fresh installs
+  seed the ledger from `schema.sql`). **Probe:** `GET /api/health` (DB + store writable).
 - **Edge:** put a CDN/reverse proxy (e.g. Cloudflare) in front for global caching + TLS/HSTS; OG runs on
   the edge runtime (so its bundled font loads). Detail → `docs/seo-pwa.md`.
 
@@ -122,6 +126,8 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | SEO / sitemap / feed / robots / OG | `docs/seo-pwa.md`, `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | `lib/og.ts` |
 | PWA / manifest / favicon | `docs/seo-pwa.md`, `src/app/manifest.ts`, `src/app/layout.tsx` | — |
 | MCP server | `docs/mcp.md`, `src/lib/mcp/*`, `src/app/api/mcp/*` | — |
+| WordPress import | `lib/wordpress-import.ts` (pure WXR→posts/pages), `api/import/wordpress`, `components/admin/ImportFields.tsx` | `docs/features.md` |
+| Health / env / migrations / rate-limit | `api/health`, `src/env.ts` + `src/instrumentation.ts`, `scripts/migrate.sh` + `scripts/schema.sql` (`schema_migrations`), `lib/rate-limit.ts` | `docs/self-host-native.md` |
 
 ## Data layer map — `src/lib/`
 
@@ -150,7 +156,9 @@ Terse role per file; the authoritative detail is the code comments.
 | `revalidate.ts` | `revalidateNewPost/Post/Page/Everything`, `warmCache` | Single source of cache invalidation (see Caching) |
 | `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Every route calls `requireOwner()` first |
 | `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
-| others | `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`isPublicallyVisible`) | Pure/shared helpers |
+| `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
+| `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
+| others | `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
 
 ## Caching — ISR pages + tagged DB reads, purge on save
 
