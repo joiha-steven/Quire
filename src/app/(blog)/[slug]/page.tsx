@@ -142,7 +142,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           />
         )}
         {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
-        <h1 className="fs-h1 font-semibold tracking-tight">{post.title}</h1>
+        <h1 className="fs-h1 font-semibold">{post.title}</h1>
         <p className="mt-3 t-small text-meta">
           {formatDate(post.date, language)}
           {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
@@ -211,7 +211,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   if (page && page.status === 'published') {
     return (
       <article>
-        <h1 className="fs-h1 font-semibold tracking-tight">{page.title}</h1>
+        <h1 className="fs-h1 font-semibold">{page.title}</h1>
         <Lightbox lang={language} />
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />

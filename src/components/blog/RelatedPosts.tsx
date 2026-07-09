@@ -11,7 +11,7 @@ export function RelatedPosts({ posts, lang }: { posts: Post[]; lang: SiteLang })
       <ul className="space-y-4">
         {posts.map((p) => (
           <li key={p.slug}>
-            <Link href={`/${p.slug}`} className="font-medium tracking-tight hover:text-heading">
+            <Link href={`/${p.slug}`} className="font-medium hover:text-heading">
               {p.title}
             </Link>
             <p className="mt-0.5 t-small text-meta">{formatDate(p.date, lang)}</p>

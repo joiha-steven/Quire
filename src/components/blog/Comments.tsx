@@ -136,7 +136,7 @@ export function Comments({
 
   return (
     <section className="mt-6">
-      <h2 className="fs-h3 font-semibold tracking-tight text-heading">
+      <h2 className="fs-h3 font-semibold text-heading">
         {s.commentsHeading}
         {count > 0 && ` (${count})`}
       </h2>

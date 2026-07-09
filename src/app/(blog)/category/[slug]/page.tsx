@@ -39,7 +39,7 @@ export default async function CategoryPage({ params }: PageProps<'/category/[slu
         page={1}
         basePath={`/category/${slug}`}
         emptyText={t(language).emptyCategory}
-        heading={<h1 className="mb-8 fs-h1 font-bold tracking-tight">{t(language).categoryLabel}: {name}</h1>}
+        heading={<h1 className="mb-8 fs-h1 font-bold">{t(language).categoryLabel}: {name}</h1>}
       />
     </section>
   )

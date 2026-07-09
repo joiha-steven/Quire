@@ -45,6 +45,10 @@
   (body-role text outside prose: card excerpts, footer). H1 = single post/page titles +
   category/tag headings + draft preview; list cards (`PostCard`) = H2; brand wordmark = `.fs-h4`.
   Only fixed public size left: the 404 numeral.
+- **No hardcoded letter-spacing on public text either — tracking comes from `--ls-<role>`.** The
+  `.fs-h*`/`.t-*` classes already emit `letter-spacing: var(--ls-<role>)`, so NEVER add Tailwind
+  `tracking-tight`/`tracking-*` on a public heading/title: it overrides the owner's tuned value and
+  the Admin letter-spacing control stops working. (`grep -rE "tracking-" src/app/\(blog\) src/components/blog` must stay empty.)
 - **Reading-optimized defaults (= the Reset target).** Restrained, monotonic heading scale
   (h1 2.0 → h5 1.0, h5 no longer below body), 18px body at ~1.7 leading, ~66-char measure
   (`contentWidth` 672). Text wraps normally (no `text-wrap: balance`/`pretty` — both re-broke lines
@@ -84,6 +88,10 @@
   rendered result before shipping.
 - **One divider style site-wide:** the global `<hr>` (50% width, left, faint). Never bespoke
   `border-t`/`border-b` as content dividers; never ALL-CAPS (no `uppercase`) in shipped UI.
+- **Sharp corners everywhere — `border-radius: 0`.** A global reset in `globals.css` forces it
+  (beats Tailwind's `rounded-*` utilities), so you don't need to strip `rounded-*` from markup and
+  new UI can't reintroduce rounding. Do NOT add bespoke `border-radius`; change the house rule in
+  ONE place (that reset) if it ever needs revisiting. (Native radios/checkboxes keep their shape.)
 - **Public UI colours come ONLY from theme tokens — never hardcode `neutral-*`/`white`/`black`
   or a hex.** Vars `--c-bg/text/heading/meta/link/rule` are utilities (`bg-bg`, `text-text`,
   `text-heading`, `text-meta`, `text-link`, `border-rule`). Every line/border + faint surface
