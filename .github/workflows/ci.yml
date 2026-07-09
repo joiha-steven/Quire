@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Full offline gate: typecheck + lint + route/filesize/no-any/no-blob/token-bust
+      # guards + the vitest seam net. Needs no backend env.
+      - run: npm run check:all
+      # A production build must succeed with NO backend env (the data layer degrades
+      # to empty) — this catches build-time regressions the check suite can't.
+      - run: npm run build
