@@ -96,7 +96,7 @@ const ja = {
   excerptPlaceholder: '空欄の場合、本文の最初の50語を自動で使用します。最大200文字。',
   multiPlaceholder: '入力してEnterキーを押す',
   removeAria: '削除',
-  paletteNames: { mono: 'モノ', sepia: 'セピア', forest: 'フォレスト', ocean: 'オーシャン', rose: 'ローズ', amber: 'アンバー' },
+  paletteNames: { mono: 'モノ', sepia: 'セピア', forest: 'フォレスト', ocean: 'オーシャン', scifi: 'サイファイ', amber: 'アンバー' },
   libraryTitle: 'ライブラリ',
   tabImages: '画像',
   tabFiles: 'ファイル',

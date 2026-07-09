@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from 'react'
 import type { MediaItem, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
-import { formatBytes, formatDateVi } from '@/lib/utils'
+import { formatBytes } from '@/lib/utils'
+import { formatDate } from '@/lib/i18n'
 import { ImageUploader } from './ImageUploader'
-import { useAdminT } from './I18nProvider'
+import { useAdminT, useAdminLang } from './I18nProvider'
 
 type Props = {
   mode?: 'page' | 'picker'
@@ -25,6 +26,7 @@ const PAGE = 50 // render this many, then load more on scroll (keeps it light)
 
 export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectMany, onClose }: Props) {
   const t = useAdminT()
+  const lang = useAdminLang()
   const { notify } = useToast()
   const [items, setItems] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -208,7 +210,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
               </p>
               <p className="text-neutral-400">
                 {m.width && m.height ? `${m.width}×${m.height} · ` : ''}
-                {formatBytes(m.size)} · {formatDateVi(m.uploadedAt)}
+                {formatBytes(m.size)} · {formatDate(m.uploadedAt, lang)}
               </p>
               {mode === 'page' && (
                 <div className="flex flex-wrap gap-3 pt-1">

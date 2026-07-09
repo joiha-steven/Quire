@@ -6,9 +6,10 @@
 import { useEffect, useState } from 'react'
 import type { FileItem, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
-import { formatBytes, formatDateVi } from '@/lib/utils'
+import { formatBytes } from '@/lib/utils'
+import { formatDate } from '@/lib/i18n'
 import { FileUploader } from './FileUploader'
-import { useAdminT } from './I18nProvider'
+import { useAdminT, useAdminLang } from './I18nProvider'
 
 // Short uppercase tag from the filename extension (or the MIME subtype).
 function ext(item: FileItem): string {
@@ -20,6 +21,7 @@ function ext(item: FileItem): string {
 
 export function FileLibrary() {
   const t = useAdminT()
+  const lang = useAdminLang()
   const { notify } = useToast()
   const [items, setItems] = useState<FileItem[]>([])
   const [icons, setIcons] = useState<FileItem[]>([])
@@ -91,7 +93,7 @@ export function FileLibrary() {
           {f.filename}
         </p>
         <p className="text-xs text-neutral-400">
-          {formatBytes(f.size)} · {formatDateVi(f.uploadedAt)}
+          {formatBytes(f.size)} · {formatDate(f.uploadedAt, lang)}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-3 text-xs">

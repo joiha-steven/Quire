@@ -292,6 +292,12 @@ function applyTerm(list: string[], name: string, newName: string | null): string
 
 // Rename (newName set) or remove (null) a category/tag across EVERY post. Array
 // columns → only affected rows change, no body rewrite. Returns posts changed.
+// ACCEPTED RISK — the one read-modify-write in the data layer: it reads each row's
+// array, edits it in JS, and writes the whole array back. A concurrent write to the
+// SAME post (another updateTerm, or a savePost) would last-write-win and drop the
+// other's array edit. Safe here because Quire is single-owner (one admin, no MCP/cron
+// path writes post arrays), so simultaneous same-post writes don't occur. A single
+// SQL `array_replace`/`array_remove` RPC would close it if that ever changes.
 export async function updateTerm(kind: TermKind, name: string, newName: string | null): Promise<number> {
   const field = kind === 'category' ? 'categories' : 'tags'
   const clean = newName?.trim() || null

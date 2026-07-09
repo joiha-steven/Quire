@@ -96,7 +96,7 @@ const vi = {
   excerptPlaceholder: 'Để trống sẽ tự lấy 50 chữ đầu bài. Tối đa 200 ký tự.',
   multiPlaceholder: 'Nhập rồi nhấn Enter',
   removeAria: 'Xóa',
-  paletteNames: { mono: 'Đơn sắc', sepia: 'Nâu giấy', forest: 'Rừng xanh', ocean: 'Đại dương', rose: 'Hồng phấn', amber: 'Hổ phách' },
+  paletteNames: { mono: 'Đơn sắc', sepia: 'Nâu giấy', forest: 'Rừng xanh', ocean: 'Đại dương', scifi: 'Viễn tưởng', amber: 'Hổ phách' },
   libraryTitle: 'Thư viện',
   tabImages: 'Hình ảnh',
   tabFiles: 'Files',

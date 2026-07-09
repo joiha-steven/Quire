@@ -1,7 +1,7 @@
 // Dynamic sitemap.xml from published posts + pages (and their taxonomy).
 // Returns an empty sitemap when the feature is toggled off.
 import type { MetadataRoute } from 'next'
-import { getPublicPosts, getPost, getCategories, getTags } from '@/lib/posts'
+import { getPublicPosts, getPost } from '@/lib/posts'
 import { termSlug } from '@/lib/taxonomy'
 import { getPublicPages } from '@/lib/pages'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
@@ -14,12 +14,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!s.seo.sitemap) return []
 
   const base = resolveSiteUrl(s)
-  const [posts, pages, categories, tags] = await Promise.all([
+  const [posts, pages] = await Promise.all([
     getPublicPosts(),
     getPublicPages(),
-    getCategories(),
-    getTags(),
   ])
+
+  // Taxonomy comes from PUBLIC posts only — `getCategories`/`getTags` read the full
+  // index (drafts/future/trashed), but `/category|tag/[slug]` resolves against public
+  // posts and 404s otherwise, so those terms would be dead sitemap URLs.
+  const categories = [...new Set(posts.flatMap((p) => p.categories))].sort()
+  const tags = [...new Set(posts.flatMap((p) => p.tags))].sort()
 
   const newest = posts[0]?.date ?? new Date().toISOString()
 

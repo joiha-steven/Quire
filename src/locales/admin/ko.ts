@@ -96,7 +96,7 @@ const ko = {
   excerptPlaceholder: '비워두면 본문의 처음 50단어를 자동으로 사용합니다. 최대 200자.',
   multiPlaceholder: '입력 후 Enter 키를 누르세요',
   removeAria: '삭제',
-  paletteNames: { mono: '모노', sepia: '세피아', forest: '포레스트', ocean: '오션', rose: '로즈', amber: '앰버' },
+  paletteNames: { mono: '모노', sepia: '세피아', forest: '포레스트', ocean: '오션', scifi: '사이파이', amber: '앰버' },
   libraryTitle: '라이브러리',
   tabImages: '이미지',
   tabFiles: '파일',

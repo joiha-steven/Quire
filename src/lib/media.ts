@@ -331,10 +331,13 @@ export async function debugDelete(url: string): Promise<{
 }
 
 // Generate deferred display variants for pending raster originals (variants:false).
-// Called via after() post-save; cron sweeps anything left pending.
-export async function finalizeVariants(pathnames: string[]): Promise<void> {
+// Called via after() post-save; cron sweeps anything left pending. Returns how many
+// originals were NEWLY finalized so callers can re-purge the pages that embed them
+// (a page cached at save time still shows the plain <img> until its <picture> exists).
+export async function finalizeVariants(pathnames: string[]): Promise<number> {
   const targets = [...new Set(pathnames)].filter((p) => /\.(jpe?g|png)$/i.test(p))
-  if (targets.length === 0) return
+  if (targets.length === 0) return 0
+  let finalized = 0
   for (const path of targets) {
     const { data: row } = await db().from('media').select('variants').eq('path', path).maybeSingle()
     if (!row || (row as { variants: boolean }).variants) continue
@@ -345,7 +348,9 @@ export async function finalizeVariants(pathnames: string[]): Promise<void> {
     const files = await makeDisplay(original)
     await Promise.all(files.map((f) => uploadFile(`${stem}${f.suffix}`, f.data, f.contentType)))
     await db().from('media').update({ variants: true }).eq('path', path)
+    finalized++
   }
+  return finalized
 }
 
 // Backfill thumbs for rows that have none (script/migration imports). Raster gets a
@@ -373,10 +378,11 @@ export async function finalizePendingThumbs(): Promise<number> {
 }
 
 // Finalize every uploaded raster referenced by a piece of content (body + image).
-export async function finalizeContentMedia(content: string, featuredImage?: string): Promise<void> {
+// Returns how many originals were newly finalized (0 = nothing to re-purge).
+export async function finalizeContentMedia(content: string, featuredImage?: string): Promise<number> {
   const text = `${collapseBlob(content)} ${featuredImage ? collapseBlob(featuredImage) : ''}`
   const refs = [...text.matchAll(/media\/[^\s")'#]+\.(?:jpe?g|png)/gi)].map((m) => m[0])
-  await finalizeVariants(refs)
+  return finalizeVariants(refs)
 }
 
 // Cron backstop: sweep all raster originals still pending variants, in case a
@@ -387,6 +393,5 @@ export async function finalizePendingVariants(): Promise<number> {
     .map((r) => r.path)
     .filter((p) => /\.(jpe?g|png)$/i.test(p))
   if (paths.length === 0) return 0
-  await finalizeVariants(paths)
-  return paths.length
+  return finalizeVariants(paths)
 }
