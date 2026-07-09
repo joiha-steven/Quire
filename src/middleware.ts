@@ -16,6 +16,7 @@ function isPublicApi(pathname: string): boolean {
   return (
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/track') ||
     pathname.startsWith('/api/search') ||
     // ONLY the exact collection endpoint (GET list + POST create) is public; the
