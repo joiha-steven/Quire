@@ -1,5 +1,59 @@
 # CHANGELOG
 
+## v1.4.0 — 2026-07-09 (WordPress import, ops hardening, deep-audit fixes)
+
+Outcome of a full read-through audit (UI/UX, typography, logic/cache, security, self-host
+readiness). No CRITICAL/HIGH security holes were found; the rest is new capability + fixes.
+
+**New — WordPress import (Admin → Settings → Integrations)**
+- Upload a WordPress export (`Tools → Export → All content`, a WXR `.xml`) and its posts + pages
+  import as Markdown — no CLI, no credentials. HTML → Markdown (turndown + GFM), categories/tags/
+  dates/status/excerpt preserved, figure captions folded into the image alt, `Uncategorized` dropped.
+  New content is ADDED (slug collisions get a numeric suffix; nothing is overwritten); images keep
+  their source URLs. `lib/wordpress-import.ts` (pure, tested) + `POST /api/import/wordpress` +
+  `ImportFields`. Replaces the removed, broken legacy CLI script.
+
+**Ops / self-host readiness**
+- **`GET /api/health`** — liveness/readiness probe (Postgres reachable + local store writable, 200/503);
+  wired as the Docker `app` healthcheck.
+- **Boot-time env validation** — `src/instrumentation.ts` + `src/env.ts` fail fast with a readable list
+  when a required var is missing (guarded off build + edge, so `next build` still needs no backend env).
+- **DB migration runner** — `schema_migrations` ledger + `scripts/migrate.sh` (`npm run migrate`) apply
+  pending `scripts/migrations/*.sql` idempotently on upgrade; a Docker one-shot `migrate` service runs
+  it before the app. Fresh installs seed the ledger from `schema.sql`.
+- **Community + CI** — `SECURITY.md`, `CONTRIBUTING.md`, issue/PR templates, and a CI workflow
+  (`check:all` + `build`).
+
+**Security hardening**
+- Generous per-IP rate limits on the public endpoints (`lib/rate-limit.ts`): `/api/track` (240/min,
+  silent drop), `/api/search` (60/min → 429), `/api/mcp/register` (5/min).
+- `/api/mcp/register` now gated behind `mcpEnabled()` (503 when off) so a disabled server can't grow
+  the `mcp_clients` table.
+- `/api/cron` uses a constant-time bearer compare; its maintenance steps are isolated so a finalize
+  failure no longer skips the backup, and backup failures are logged.
+- Backup **restore aborts** if the pre-restore safety snapshot fails, instead of overwriting with no
+  recovery point.
+
+**Fixes**
+- Sitemap no longer lists category/tag URLs that 404 (derived from public posts only).
+- Admin palette label `scifi` was keyed on a stale `rose` in all 6 locales → every language fell back
+  to English; fixed.
+- Admin Media/File library dates were hardcoded Vietnamese in every language → now locale-aware.
+- A just-saved post now re-purges once its deferred AVIF/WebP variants finish, so `<picture>` appears
+  without waiting on the ~1h ISR window.
+
+**UI / typography**
+- **Sharp corners everywhere** — one global `border-radius: 0` reset (house style).
+- Removed `tracking-tight` from public headings so the Admin letter-spacing control actually applies.
+- Visible focus ring on the two public search inputs.
+
+**Cleanup**
+- Removed dead code (`blobOrigin` + its layout block, `deleteByUrl`, `countByPost`, `tokenLimit`, an
+  unused `signIn`); deduped `escapeHtml`; excerpt now clamps by chars too.
+
+> Note: the CI workflow file (`.github/workflows/ci.yml`) must be added by a push with the GitHub
+> `workflow` OAuth scope — it ships in the repo tree but a scopeless token can't create it.
+
 ## v1.3.6 — 2026-07-04 (fix: Cloudflare integration card reflects the saved state at once)
 
 - The Cloudflare cache card now `router.refresh()`es after a successful save, so the "· saved"
