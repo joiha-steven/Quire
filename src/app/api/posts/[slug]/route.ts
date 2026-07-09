@@ -52,7 +52,10 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/[slug]
     // The original always renders meanwhile; the cron sweep finalizes stragglers.
     after(async () => {
       try {
-        await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+        const finalized = await finalizeContentMedia(body.content ?? '', body.featuredImage ?? undefined)
+        // The page was cached above with plain <img> (variants didn't exist yet).
+        // Re-purge it now the <picture> sources are ready so it swaps in at once.
+        if (finalized > 0) revalidatePost(meta.slug)
       } catch (error) {
         logError(req, error)
       }

@@ -153,8 +153,14 @@ export async function deleteBackup(fileId: string): Promise<void> {
 // error-checked so a failure THROWS (surfaced to the caller) rather than going silent.
 export async function restoreBackup(fileId: string): Promise<void> {
   const { token } = await connect()
-  // Safety net: snapshot the live site before overwriting it.
-  await runBackup().catch(() => {}) // best-effort; restore proceeds regardless
+  // Safety net: snapshot the live site BEFORE any destructive write. If this fails
+  // we abort — a restore with no recovery point is worse than not restoring, and at
+  // this point nothing has been touched yet, so the live site is left intact.
+  try {
+    await runBackup()
+  } catch (e) {
+    throw new Error(`restore aborted — pre-restore safety snapshot failed: ${(e as Error).message}`)
+  }
 
   const archive = path.join(os.tmpdir(), `vbrestore-${Date.now()}.tar.gz`)
   const work = `${archive}.dir`

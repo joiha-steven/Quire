@@ -96,7 +96,7 @@ const de = {
   excerptPlaceholder: 'Leer lassen, um automatisch die ersten 50 Wörter zu verwenden. Max. 200 Zeichen.',
   multiPlaceholder: 'Eingeben und Enter drücken',
   removeAria: 'Entfernen',
-  paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Wald', ocean: 'Ozean', rose: 'Rosé', amber: 'Bernstein' },
+  paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Wald', ocean: 'Ozean', scifi: 'Sci-Fi', amber: 'Bernstein' },
   libraryTitle: 'Bibliothek',
   tabImages: 'Bilder',
   tabFiles: 'Dateien',
