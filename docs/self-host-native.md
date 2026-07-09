@@ -120,6 +120,26 @@ On your [Google OAuth "Web" client](https://console.cloud.google.com/apis/creden
 - `https://<your-domain>/api/auth/callback/google` (admin sign-in)
 - `https://<your-domain>/api/backup/callback` (Google Drive backups)
 
+## Upgrading to a new release
+
+After pulling a new version, **apply any pending DB migrations before restarting the app**:
+
+```bash
+DATABASE_URL="postgresql://USER:PASS@127.0.0.1:5432/quire" npm run migrate
+npm ci && npm run build   # then restart the systemd service
+```
+
+`npm run migrate` (→ `scripts/migrate.sh`, needs `psql`) applies only the files in
+`scripts/migrations/` not yet recorded in the `schema_migrations` ledger — it's idempotent
+and a no-op when you're already up to date. A fresh install seeds the ledger from
+`scripts/schema.sql`, so migrations only ever matter on upgrade. (Docker runs this
+automatically as the one-shot `migrate` service before the app starts.)
+
+**Health check:** `GET /api/health` returns `200` when Postgres is reachable and the store is
+writable, `503` otherwise — point your reverse proxy / monitor at it. On boot the app also
+validates its environment and refuses to start (with a readable list) if a required var is
+missing.
+
 ## Migrating from an existing instance
 
 Text (PostgreSQL) — dump data-only from the old DB and load into the new one (schema already
