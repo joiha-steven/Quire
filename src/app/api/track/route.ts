@@ -7,6 +7,7 @@ import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { recordView, recordScroll } from '@/lib/analytics'
 import { requireOwner } from '@/lib/api'
+import { rateLimited, clientIp } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
@@ -15,6 +16,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (await requireOwner()) return new Response(null, { status: 204 })
     const body = (await req.json().catch(() => ({}))) as { path?: unknown; depth?: unknown; referrer?: unknown }
     const path = typeof body.path === 'string' ? body.path : ''
+    // Generous per-IP cap so a real reader (page views + scroll beacons) never trips
+    // it, but a script can't flood analytics_events. Silently drop over the limit.
+    if (path && rateLimited(`track:${clientIp(req)}`, 240)) return new Response(null, { status: 204 })
     if (path) {
       const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
       const ua = req.headers.get('user-agent') ?? ''

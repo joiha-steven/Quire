@@ -7,10 +7,16 @@ import type { NextRequest } from 'next/server'
 import { searchPosts } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
 import { ok, fail, logRequest, logError } from '@/lib/api'
+import { rateLimited, clientIp } from '@/lib/rate-limit'
 
 export async function GET(req: NextRequest): Promise<Response> {
   const start = Date.now()
   try {
+    // Generous per-IP cap: a public FTS endpoint shouldn't be a free DB-load lever.
+    if (rateLimited(`search:${clientIp(req)}`, 60)) {
+      logRequest(req, 429, start)
+      return fail('Too many requests', 429)
+    }
     // Honor the same feature gate as the /search page.
     const { features } = await getSettings()
     if (!features.search) {
