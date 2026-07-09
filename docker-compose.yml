@@ -47,6 +47,24 @@ services:
       PGRST_DB_ANON_ROLE: anon
     restart: unless-stopped
 
+  # One-shot: apply any pending SQL migrations (scripts/migrations/) before the app
+  # starts. A fresh DB already has them seeded by schema.sql, so this is a no-op then;
+  # on an upgrade it applies only the new files. psql ships in the postgres image.
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env.docker            # POSTGRES_PASSWORD (from gen-keys.mjs)
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGDATABASE: quire
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "-c", "PGPASSWORD=\"$$POSTGRES_PASSWORD\" sh /scripts/migrate.sh"]
+    restart: "no"
+
   # One-shot: make the bind-mounted uploads dir writable by the app's `node` user
   # (uid 1000). Docker creates host bind-mounts as root, shadowing the image's
   # chown, so without this media uploads fail with EACCES. Runs as root, fixes
@@ -68,6 +86,8 @@ services:
         condition: service_healthy
       rest:
         condition: service_started
+      migrate:
+        condition: service_completed_successfully
       init-uploads:
         condition: service_completed_successfully
     env_file: .env.docker
@@ -78,6 +98,14 @@ services:
       - "3000:3000"
     volumes:
       - ./data/uploads:/app/uploads
+    healthcheck:
+      # /api/health checks Postgres reachable + store writable. Node has global fetch,
+      # so no curl/wget needed in the slim runtime image.
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   # Hourly maintenance ping (variant/backup sweep + keep-alive). Calls /api/cron with

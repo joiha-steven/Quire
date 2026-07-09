@@ -9,6 +9,20 @@
 -- key, all access is server-side only. Binaries (images/files/icons) live on the
 -- local filesystem, not here; these tables hold text + metadata only.
 
+-- ----- schema_migrations -----------------------------------------------------
+-- Ledger of which files in scripts/migrations/ have run, so scripts/migrate.sh
+-- applies only NEW ones on upgrade. A fresh install applies THIS file (which already
+-- includes every past migration's effect), so we seed those filenames as applied —
+-- keep this list in sync when you add a migration (its effect goes in this file too).
+create table if not exists public.schema_migrations (
+  name        text primary key,
+  applied_at  timestamptz not null default now()
+);
+insert into public.schema_migrations (name) values
+  ('2026-06-25-analytics-deepening.sql'),
+  ('2026-06-25-analytics-fix-visitor-counts.sql')
+on conflict (name) do nothing;
+
 -- ----- posts -----------------------------------------------------------------
 create table if not exists public.posts (
   slug            text primary key,
