@@ -165,14 +165,6 @@ export async function addComment(input: NewComment): Promise<PublicComment> {
 
 // ---- counts ------------------------------------------------------------------
 
-// Live comment count for one post.
-export async function countByPost(postSlug: string): Promise<number> {
-  const { count } = await liveOnly(
-    db().from('comments').select('id', { count: 'exact', head: true }).eq('post_slug', postSlug),
-  )
-  return count ?? 0
-}
-
 // slug -> live comment count, for the admin content table. One read, grouped in JS.
 export const countsByPosts = cache(async (): Promise<Record<string, number>> => {
   try {

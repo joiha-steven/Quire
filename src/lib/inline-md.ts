@@ -7,17 +7,9 @@
 // (e.g. javascript:) falls back to plain text. Pure + isomorphic: the server layout
 // renders the footer with it and the admin editor previews with the same function.
 
-const MAX_LEN = 600
+import { escapeHtml } from '@/lib/utils'
 
-// HTML-escape every special char so nothing the author typed becomes markup.
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
+const MAX_LEN = 600
 
 // A safe href (checked on the already-escaped url; quotes are gone so it cannot
 // break out of the attribute): absolute http(s)/mailto, root-relative, or anchor.

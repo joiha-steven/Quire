@@ -17,7 +17,7 @@ export { isAuthorized } from '@/lib/auth-shared'
 // (it's also the owner's admin sign-in) loads when its env credentials exist.
 // This runs in Node only — the edge middleware reads the JWT directly (see
 // middleware.ts), so it never pulls the Supabase client into the edge bundle.
-export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
+export const { handlers, auth, signOut } = NextAuth(async () => {
   const providers: Provider[] = []
   if (process.env.AUTH_GOOGLE_ID) providers.push(Google)
   return {
