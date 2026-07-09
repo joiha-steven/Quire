@@ -16,7 +16,7 @@ export function PostCard({
     // `reveal` eases the card in as it scrolls into view (motion engine; fully
     // visible when motion is off / unsupported — see globals.css).
     <article className="reveal">
-      <h2 className="fs-h2 font-semibold tracking-tight">
+      <h2 className="fs-h2 font-semibold">
         <Link href={`/${post.slug}`} className="hover:text-meta">
           {post.title}
         </Link>

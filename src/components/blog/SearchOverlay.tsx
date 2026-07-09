@@ -100,7 +100,7 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
           onChange={(e) => setQ(e.target.value)}
           placeholder={t(lang).searchPlaceholder}
           aria-label={t(lang).search}
-          className="fs-h3 w-full border-b border-rule bg-transparent pb-3 tracking-tight outline-none placeholder:text-meta"
+          className="fs-h3 w-full border-b border-rule bg-transparent pb-3 outline-none transition-colors focus:border-heading placeholder:text-meta"
         />
         <div className="mt-4 max-h-[55vh] overflow-y-auto">
           {needle.length < 1 ? (
@@ -114,7 +114,7 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
                   <Link
                     href={`/${d.slug}`}
                     onClick={onClose}
-                    className="font-medium tracking-tight hover:text-heading"
+                    className="font-medium hover:text-heading"
                   >
                     {d.title}
                   </Link>

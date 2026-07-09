@@ -107,6 +107,21 @@
     --dur-slow: 0s;
   }
 }
+
+/* House style: SHARP CORNERS everywhere (border-radius: 0). One reset so no stray
+   radius slips in — beats Tailwind's `rounded-*` utilities and any component value,
+   so new UI can't reintroduce rounding. Change here (not per component) if that ever
+   needs revisiting. Native round controls (radios/checkboxes) keep their shape. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+input[type='radio'],
+input[type='checkbox'] {
+  border-radius: revert !important;
+}
+
 :where(.dark) {
   --c-bg: #0e0e0f;
   --c-text: #d4d4d8;
@@ -337,7 +352,7 @@ hr {
   color: var(--c-text);
   border: 1px solid var(--c-rule);
   padding: 0.9em 1.1em;
-  border-radius: 0.625rem;
+  border-radius: 0;
   overflow-x: auto;
   font-size: var(--fs-code);
   line-height: var(--lh-code);
@@ -367,10 +382,10 @@ hr {
 .prose :not(pre) > code {
   background: var(--c-rule);
   padding: 0.15em 0.38em;
-  border-radius: 0.3rem;
+  border-radius: 0;
 }
 .prose img {
-  border-radius: 0.625rem;
+  border-radius: 0;
   max-width: 100%;
   height: auto;
 }
@@ -388,7 +403,7 @@ hr {
 .prose figure img {
   width: 100%;
   height: auto;
-  border-radius: 0.625rem;
+  border-radius: 0;
 }
 .prose figure.img-left {
   margin-left: 0;
@@ -535,7 +550,7 @@ hr {
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: 0.625rem;
+  border-radius: 0;
 }
 
 /* No dark-mode code-chip override needed: code/pre backgrounds use var(--c-rule),
@@ -583,11 +598,11 @@ input[type='color']::-webkit-color-swatch-wrapper {
 }
 input[type='color']::-webkit-color-swatch {
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0;
 }
 input[type='color']::-moz-color-swatch {
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0;
 }
 
 /* ===========================================================================
@@ -659,7 +674,7 @@ button:not(:disabled):active,
    degrades to a calm static placeholder. */
 .skeleton {
   background: var(--c-rule);
-  border-radius: 0.375rem;
+  border-radius: 0;
 }
 @media (prefers-reduced-motion: no-preference) {
   :root[data-motion='on'] .skeleton {
