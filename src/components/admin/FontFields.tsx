@@ -7,18 +7,23 @@
 // (below) overrides whichever built-in is chosen.
 import type { TypographySettings } from '@/types'
 import { FONT_PRESETS } from '@/lib/themes'
+import { ToggleRow } from '@/components/ui/Switch'
 import { useAdminT } from './I18nProvider'
 
 export function FontFields({
   value,
   onChange,
+  chromeInter,
+  onChromeInter,
 }: {
   value: string
   onChange: (fontPreset: string, typography: TypographySettings) => void
+  chromeInter: boolean
+  onChromeInter: (v: boolean) => void
 }) {
   const t = useAdminT()
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2">
         {FONT_PRESETS.map((f) => {
           const active = f.id === value
@@ -44,6 +49,14 @@ export function FontFields({
         })}
       </div>
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.fontPresetHint}</p>
+      <div className="border-t border-neutral-200 pt-3 dark:border-neutral-800">
+        <ToggleRow
+          label={t.fontChromeInter}
+          desc={t.fontChromeInterDesc}
+          checked={chromeInter}
+          onChange={onChromeInter}
+        />
+      </div>
     </div>
   )
 }

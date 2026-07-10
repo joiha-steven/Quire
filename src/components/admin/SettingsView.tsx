@@ -146,6 +146,8 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
               <FontFields
                 value={s.fontPreset}
                 onChange={(fontPreset, typography) => update({ fontPreset, typography })}
+                chromeInter={s.fontChromeInter}
+                onChromeInter={(fontChromeInter) => update({ fontChromeInter })}
               />
               <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
                 <FontUpload value={s.customFont} onChange={(customFont) => update({ customFont })} />

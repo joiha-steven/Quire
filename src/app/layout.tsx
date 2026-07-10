@@ -49,7 +49,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset, fontPreset, enabledPalettes, typography, customFont, motion } = await getSettings()
+  const { language, themes, themePreset, fontPreset, fontChromeInter, enabledPalettes, typography, customFont, motion } = await getSettings()
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   // data-motion is server-rendered from settings (site-wide), so the motion engine
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
@@ -61,9 +61,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preload" href={fontPreloadHref(fontPreset)} as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
-        {/* Owner type scale → fs/lh/ls vars, then the chosen built-in font (sets
-            --font-sans), then any uploaded custom font (wins over the built-in). */}
-        <style dangerouslySetInnerHTML={{ __html: typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) }} />
+        {/* Owner type scale → fs/lh/ls vars, then the reading font (--font-reading:
+            chosen built-in, then any uploaded custom font which wins). When the owner
+            turns OFF "keep chrome in Inter", the last rule points --font-sans at the
+            reading font too, so the whole interface follows the chosen font. */}
+        <style dangerouslySetInnerHTML={{ __html:
+          typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) +
+          (fontChromeInter ? '' : ':root{--font-sans:var(--font-reading)}') }} />
         <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes) }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
