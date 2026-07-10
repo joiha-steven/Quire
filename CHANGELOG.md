@@ -1,24 +1,40 @@
 # CHANGELOG
 
-## Unreleased (reading layout: sidebar rail, accent colour)
+## v1.4.1 — 2026-07-10 (the sidebar rail, an accent colour, four layout toggles)
+
+A reading-layout release. The blog gains a real sidebar and, with it, the site's first accent
+colour. Nothing here changes an existing install's hue or breaks its settings.
 
 **New — the sidebar rail.** Categories + tags (home) and a post's table of contents now live in the
-left gutter, sticky, with their first line level with the content's first line. The reading column
-stays exactly centred: the rail is absolutely placed and never displaces it. Its breakpoint is
-computed from `contentWidth`, so a wider column keeps the rail hidden for longer. Below that width the same
-markup becomes a slide-out drawer behind a small edge handle.
+left gutter, sticky, ranged right against a hairline divider, their first line level with the
+content's first line. The reading column stays exactly centred: the rail is absolutely placed and
+never displaces it. Its breakpoint is computed from `contentWidth`, so a wider column keeps the rail
+hidden for longer. Below that width the SAME markup becomes a slide-out drawer behind a small edge
+handle (`RailHandle` toggles `<html data-rail>`; drawer, handle and scrim all react in CSS).
 
-**New — `accent`, a 7th palette colour** (Admin → Appearance). Paints the marker beside the rail row
-you are reading and the title hover underline. Seeded from each palette's `link`, so Mono stays
+**New — `accent`, a 7th palette colour** (Admin → Appearance). One highlight, used identically
+everywhere: the marker beside the rail row you are reading, and the underline under any link you
+hover (`.link-accent`, plus `.prose a:hover`). Seeded from each palette's `link`, so Mono stays
 monochrome and no existing site changes hue. Settings saved before this key migrate on read.
 
 **New feature toggles** (Admin → Settings → Features), all default on: `sidebar`, `leadPost` (the
 newest post on home page 1 takes the h1 role), `categoryLabel`, `deck` (the excerpt as a standfirst
-under a post title).
+under a post title). Title display sizes come from the h1/h2 type roles, never a hardcoded value.
+
+**Fixed**
+- The table of contents never marked the section you were reading. An `IntersectionObserver` over
+  the headings goes blank mid-section — the heading has already scrolled past, so nothing intersects.
+  It now tracks the last heading past the reading line, coalesced to one measurement per frame.
+- The drawer handle jumped half its height down the screen on every tap: it centred itself with
+  `transform: translateY(-50%)`, which the global press feedback (`button:active{transform:scale(.97)}`)
+  overwrote. It centres with `translate` now.
+- The rail rendered before the page heading, so every page's outline opened with the sidebar's `h2`
+  ahead of the article's `h1`.
 
 **Changed**
 - The table of contents is no longer a bordered, shadowed panel pinned to the viewport edge; it is
-  type in the rail. Its in-page "Tags / Categories / Comments" jump link went with the panel.
+  type in the rail. It now opens with the post title (click = back to top) and closes with the
+  tags/categories/comments jump, so a post with no headings still gets a usable index.
 - The global `<hr>` runs the full column width instead of a left-aligned 50% stub.
 - No rule between list cards and none under a post title: whitespace separates them. The
   end-of-article rules (before tags / related / comments) stay.
