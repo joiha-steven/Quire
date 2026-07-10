@@ -1,11 +1,16 @@
-// The left-gutter rail. Absolutely placed inside the layout's `.with-rail` box,
-// so it never displaces the reading column: with or without a rail, the column
-// sits in the same place. Hidden below the breakpoint the layout computes from
-// `contentWidth` — on narrow screens the same content rides in the header menu.
-export function Rail({ children }: { children: React.ReactNode }) {
+// The sidebar. On wide screens it is the left-gutter rail: absolutely placed
+// inside the layout's `.with-rail` box, so it never displaces the reading column.
+// Below the breakpoint the same DOM is a slide-out drawer behind an edge handle
+// (see globals.css + RailHandle) — one piece of markup, two presentations.
+import { RailHandle } from './RailHandle'
+
+export function Rail({ children, label }: { children: React.ReactNode; label: string }) {
   return (
-    <aside className="rail">
-      <div className="rail-inner">{children}</div>
-    </aside>
+    <>
+      <RailHandle label={label} />
+      <aside className="rail">
+        <div className="rail-inner">{children}</div>
+      </aside>
+    </>
   )
 }

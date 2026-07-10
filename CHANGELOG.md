@@ -5,8 +5,8 @@
 **New — the sidebar rail.** Categories + tags (home) and a post's table of contents now live in the
 left gutter, sticky, with their first line level with the content's first line. The reading column
 stays exactly centred: the rail is absolutely placed and never displaces it. Its breakpoint is
-computed from `contentWidth`, so a wider column keeps the rail hidden for longer. Below that width
-the rail is hidden and its contents fold into the header menu.
+computed from `contentWidth`, so a wider column keeps the rail hidden for longer. Below that width the same
+markup becomes a slide-out drawer behind a small edge handle.
 
 **New — `accent`, a 7th palette colour** (Admin → Appearance). Paints the marker beside the rail row
 you are reading and the title hover underline. Seeded from each palette's `link`, so Mono stays

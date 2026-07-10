@@ -11,8 +11,9 @@ import { SideIndex } from './SideIndex'
 export async function HomeRail({ lang }: { lang: SiteLang }) {
   const { categories, tags } = await getPublicTaxonomy()
   const labels = t(lang)
+  if (categories.length === 0 && tags.length === 0) return null
   return (
-    <Rail>
+    <Rail label={labels.categoriesTitle}>
       <SideIndex
         categoriesTitle={labels.categoriesTitle}
         tagsTitle={labels.tagsTitle}

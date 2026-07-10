@@ -15,7 +15,6 @@ import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
 import { Rail } from '@/components/blog/Rail'
-import { SetMenuHeadings } from '@/components/blog/MenuContext'
 import { TOC_ANCHORS } from '@/lib/toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
@@ -131,16 +130,14 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           />
         )}
         {/* The ToC lives in the left-gutter rail on wide screens; below the rail
-            breakpoint the same headings ride in the header menu. */}
+            breakpoint the same markup is a slide-out drawer. */}
         {showToc && (
-          <>
-            <Rail>
-              <Toc headings={headings} title={tx.tocIndex} />
-            </Rail>
-            <SetMenuHeadings headings={headings} />
-          </>
+          <Rail label={tx.tocIndex}>
+            <Toc headings={headings} title={tx.tocIndex} />
+          </Rail>
         )}
 
+        {/* Meta line above the title, matching the list cards. */}
         <header className="pb-9">
           <p className="t-small text-meta">
             {category && (
@@ -155,7 +152,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
           </p>
           {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
-          <h1 className="mt-3 fs-h1 font-semibold">{post.title}</h1>
+          <h1 className="mt-2 fs-h1 font-semibold">{post.title}</h1>
           {/* Standfirst: the excerpt, so a long read opens on a sentence, not a wall. */}
           {features.deck && post.excerpt && <p className="mt-4 fs-h4 text-meta">{post.excerpt}</p>}
         </header>
