@@ -203,6 +203,8 @@ const ko = {
   typoCode: '코드',
   typographyPreview: '제목 예시',
   typographyPreviewBody: '일반 본문',
+  fontChromeInter: '인터페이스를 Inter로 유지',
+  fontChromeInterDesc: '선택한 글꼴은 본문에만 적용됩니다. 끄면 인터페이스 전체에 적용됩니다.',
   fontPresetHint: '내장 글꼴을 선택하면 권장 텍스트 크기가 아래 항목에 적용되며, 이후 조정할 수 있습니다.',
   cardFont: '글꼴',
   fontHint: '굵기별로 글꼴 업로드(.woff2, .woff, .ttf, .otf). 파일과 함께 저장되어 사이트 전체에 적용됩니다. 모든 굵기가 한 패밀리를 공유합니다.',

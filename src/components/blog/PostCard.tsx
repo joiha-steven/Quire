@@ -39,7 +39,9 @@ export function PostCard({
           ? ` · ${post.readingMinutes} ${t(lang).readingSuffix}`
           : ''}
       </p>
-      <Title className={`mt-2 ${lead ? 'fs-h1' : 'fs-h2'} font-semibold`}>
+      {/* Title + excerpt are the article's own words — the reading font, like the
+          post page. The meta line above stays chrome (Inter). */}
+      <Title className={`reading-font mt-2 ${lead ? 'fs-h1' : 'fs-h2'} font-semibold`}>
         <Link
           href={`/${post.slug}`}
           className="link-accent"
@@ -47,7 +49,7 @@ export function PostCard({
           {post.title}
         </Link>
       </Title>
-      {post.excerpt && <p className="mt-3 t-body text-text">{post.excerpt}</p>}
+      {post.excerpt && <p className="reading-font mt-3 t-body text-text">{post.excerpt}</p>}
     </article>
   )
 }
