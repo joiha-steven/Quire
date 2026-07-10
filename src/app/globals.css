@@ -313,6 +313,12 @@ hr {
   position: relative;
   padding-left: var(--rail-pad);
 }
+/* Post counts sit in their own column, so the labels beside them stay aligned no
+   matter how many digits a count carries. Wide enough for three. */
+.rail-count {
+  min-width: 2.25em;
+  text-align: right;
+}
 .rail-row[aria-current]::before {
   content: '';
   position: absolute;
@@ -807,7 +813,10 @@ button:not(:disabled):active,
    every size.
    =========================================================================== */
 .book-text .prose p {
-  margin-top: 0;
+  /* A printed book leads paragraphs with nothing but the indent. On screen that
+     reads as a wall, so keep a small lead — enough to breathe, far short of the
+     blank line that marks web paragraphs. */
+  margin-top: 0.65em;
   text-indent: 1.6em;
 }
 /* A paragraph that OPENS something is never indented — the indent exists to say
