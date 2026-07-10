@@ -203,6 +203,7 @@ const vi = {
   typoCode: 'Code',
   typographyPreview: 'Tiêu đề mẫu',
   typographyPreviewBody: 'Chữ thường',
+  fontPresetHint: 'Chọn một font có sẵn; cỡ chữ khuyến nghị của nó sẽ nạp vào các vai trò bên dưới, bạn chỉnh tiếp được.',
   cardFont: 'Phông chữ',
   fontHint: 'Tải phông theo từng weight (.woff2, .woff, .ttf, .otf). File lưu cùng kho tệp, áp dụng toàn trang; mọi weight dùng chung một family.',
   fontFamilyLabel: 'Family',
