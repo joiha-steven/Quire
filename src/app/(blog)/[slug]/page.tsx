@@ -158,7 +158,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
           </p>
           {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
-          <h1 className="mt-2 fs-h1 font-semibold">{post.title}</h1>
+          <h1 className="reading-font mt-2 fs-h1 font-semibold">{post.title}</h1>
           {/* Standfirst: the excerpt, so a long read opens on a sentence, not a wall. */}
           {features.deck && post.excerpt && <p className="mt-4 fs-h4 text-meta">{post.excerpt}</p>}
         </header>
@@ -232,7 +232,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
   if (page && page.status === 'published') {
     return (
       <article>
-        <h1 className="fs-h1 font-semibold">{page.title}</h1>
+        <h1 className="reading-font fs-h1 font-semibold">{page.title}</h1>
         <Lightbox lang={language} />
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />

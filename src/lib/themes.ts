@@ -128,10 +128,11 @@ export function isFontPresetId(id: unknown): id is string {
   return typeof id === 'string' && FONT_PRESETS.some((f) => f.id === id)
 }
 
-// Point --font-sans at the chosen family. Emitted AFTER globals.css (so it wins the
-// @theme default) but BEFORE fontToCss (so an uploaded custom font still wins).
+// Point --font-reading (the article/comment/editor face) at the chosen family —
+// NOT --font-sans, which stays Inter for all system chrome. Emitted after globals
+// (beats the default) but before fontToCss (an uploaded custom font still wins).
 export function fontPresetCss(id: string): string {
-  return `:root{--font-sans:${getFontPreset(id).stack}}`
+  return `:root{--font-reading:${getFontPreset(id).stack}}`
 }
 
 // TRUE neutral grayscale — zero hue, the Quire Blog house style. (Earlier values had a

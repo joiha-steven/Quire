@@ -65,7 +65,7 @@ export function typographyToCss(t: TypographySettings): string {
 }
 
 // Emit one @font-face per uploaded weight for the owner typeface and point
-// --font-sans at it (Inter stays the fallback). Empty when no font is set.
+// --font-reading at it (Inter stays the fallback). Empty when no font is set.
 export function fontToCss(f: FontSettings): string {
   if (!f.family || f.faces.length === 0) return ''
   const faces = f.faces
@@ -75,7 +75,9 @@ export function fontToCss(f: FontSettings): string {
       return `@font-face{font-family:'${f.family}';font-weight:${face.weight};font-style:normal;src:${src};font-display:swap}`
     })
     .join('')
-  return faces + `:root{--font-sans:'${f.family}', var(--font-inter)}`
+  // An uploaded custom font styles the reader's words (article, comments, editor),
+  // matching the built-in fontPreset scope — the chrome stays Inter.
+  return faces + `:root{--font-reading:'${f.family}', var(--font-inter)}`
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
