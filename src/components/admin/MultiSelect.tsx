@@ -15,7 +15,10 @@ type Props = {
 export function MultiSelect({ label, value, options, placeholder, onChange }: Props) {
   const t = useAdminT()
   const [draft, setDraft] = useState('')
-  const suggestions = options.filter((o) => !value.includes(o))
+  // Every not-yet-picked term is offered (no cap — the editor must show them all);
+  // typing filters the list by substring so a long taxonomy stays navigable.
+  const q = draft.trim().toLowerCase()
+  const suggestions = options.filter((o) => !value.includes(o) && (!q || o.toLowerCase().includes(q)))
 
   function add(item: string) {
     const v = item.trim()
@@ -50,8 +53,8 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
         className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-neutral-400"
       />
       {suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {suggestions.slice(0, 12).map((o) => (
+        <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
+          {suggestions.map((o) => (
             <button
               key={o}
               type="button"

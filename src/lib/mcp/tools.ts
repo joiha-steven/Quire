@@ -85,10 +85,32 @@ function registerPostTools(server: McpServer): void {
 
   server.registerTool(
     'update_post',
-    { description: 'Overwrite an existing post by slug. This REPLACES the post, so pass the complete post (title, content, status, categories, tags…); omitted fields reset to defaults. Read it first with get_post if you only want to tweak. Returns the saved metadata.', inputSchema: { ...postFields, slug: z.string() } },
+    { description: 'Overwrite an existing post by slug. This REPLACES the post, so pass the complete post (title, content, status, categories, tags…); omitted fields reset to defaults. To change only a few fields (title, tags, categories…) without touching the body, use patch_post instead. Returns the saved metadata.', inputSchema: { ...postFields, slug: z.string() } },
     async ({ slug, ...rest }) => {
       try {
         const meta = await savePost(rest as Partial<PostWithContent>, slug)
+        revalidatePost(meta.slug, slug)
+        await logActivity('post.update', meta.title || meta.slug)
+        return asJson(meta)
+      } catch (e) {
+        if (e instanceof SlugConflictError) return asError('slug_taken: that slug is already used by a post or page')
+        throw e
+      }
+    },
+  )
+
+  // slug identifies the post; the body cannot rename it (that is update_post's job).
+  const { slug: _slug, ...patchFields } = postFields
+  server.registerTool(
+    'patch_post',
+    { description: 'Partially update ONE post by slug: only the fields you pass change, everything else — INCLUDING the body — is left as-is. Use this to tweak the title, categories, tags, excerpt, status, featured image or date without resending the whole post. (update_post, by contrast, replaces the entire post.) Returns the saved metadata.', inputSchema: { slug: z.string(), ...patchFields } },
+    async ({ slug, ...patch }) => {
+      const existing = await getPost(slug)
+      if (!existing) return asError(`Post not found: ${slug}`)
+      // Merge only the provided keys over the current post, then save the whole thing.
+      const defined = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined))
+      try {
+        const meta = await savePost({ ...existing, ...defined } as Partial<PostWithContent>, slug)
         revalidatePost(meta.slug, slug)
         await logActivity('post.update', meta.title || meta.slug)
         return asJson(meta)

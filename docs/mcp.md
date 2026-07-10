@@ -41,6 +41,7 @@
   `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only).
 - **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
   results via `result.ts`). Content is Markdown verbatim — no HTML conversion. Deletes are soft
-  (→ Trash). **`update_settings` exposes only a safe allowlist (title/description/showDescription)** —
+  (→ Trash). **`update_post` REPLACES the whole post; `patch_post` merges only the passed fields
+  over the current post (body preserved)** — use it to change just the title/tags/categories/etc. **`update_settings` exposes only a safe allowlist (title/description/showDescription)** —
   the zod inputSchema IS the allowlist, so sensitive settings can't be written over MCP. `get_settings`
   reads all. **Adding a tool that mutates → revalidate + `logActivity` like the admin routes.**
