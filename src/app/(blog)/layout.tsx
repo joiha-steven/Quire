@@ -13,10 +13,13 @@ import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 // cannot read a CSS variable, so the breakpoint is computed here from the owner's
 // contentWidth: the rail only appears once BOTH gutters can hold it, which keeps
 // the reading column exactly centred at every width.
-const RAIL_W = 200
+const RAIL_W = 180
 const RAIL_GAP = 72 // mirrors --rail-gap
 const RAIL_PAD = 14 // mirrors --rail-pad
-const RAIL_BREATHING = 40 // clear space between the rail and the viewport edge
+const RAIL_BREATHING = 16 // clear space between the rail and the viewport edge
+// Breakpoint = contentWidth + 2*(RAIL_W+RAIL_GAP+RAIL_BREATHING). At contentWidth
+// 720 that is ~1256px, so common 1280/1366 laptops show the rail (not just the
+// >=1344 it needed before), while narrower screens keep the drawer.
 
 // Wide enough for a gutter: promote the drawer into the rail, strip every drawer
 // affordance (fixed position, surface, border, transform, handle, scrim), and

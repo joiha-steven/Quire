@@ -275,7 +275,7 @@ hr {
    wider column simply keeps the rail hidden for longer.
 --------------------------------------------------------------------------- */
 :root {
-  --rail-w: 200px;
+  --rail-w: 180px;
   --rail-gap: 72px;
   /* Gap between a rail row's text and the accent marker beside it. */
   --rail-pad: 14px;
