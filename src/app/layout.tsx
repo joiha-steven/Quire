@@ -3,7 +3,7 @@ import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
-import { fontPresetCss } from '@/lib/themes'
+import { fontPresetCss, fontPreloadHref } from '@/lib/themes'
 
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
@@ -57,8 +57,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang={language} data-motion={motion.enabled ? 'on' : 'off'} className="h-full">
       <body className="min-h-full">
-        {/* Preload the Latin Inter subset (needed by almost every page) — no swap flash. */}
-        <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* Preload the Latin subset of the CHOSEN font (not always Inter) — no swap flash. */}
+        <link rel="preload" href={fontPreloadHref(fontPreset)} as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
         {/* Owner type scale → fs/lh/ls vars, then the chosen built-in font (sets

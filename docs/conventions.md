@@ -95,6 +95,12 @@
   keeps the rail hidden for longer. Below it the SAME DOM becomes a slide-out drawer behind a
   small edge handle (`RailHandle` toggles `<html data-rail>`; the drawer, handle and scrim all
   react in CSS). In the gutter the rail is type on the page: no border, no shadow, no background.
+- **Built-in fonts (`fontPreset`).** Four self-hosted families in `FONT_PRESETS` (lib/themes.ts):
+  Inter, Source Sans 3, Literata, Source Serif 4 — each declared per unicode-range in globals.css,
+  so a family downloads ONLY when the chosen preset uses it. Each preset carries the typography
+  TUNED for it; picking a font in Admin → Appearance drops that setup into the editable roles (still
+  owner-owned). `--font-sans` is set by `fontPresetCss` after globals (beats the @theme default) and
+  before `fontToCss` (an uploaded custom font still wins). Preload tracks the chosen font.
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.

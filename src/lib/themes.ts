@@ -56,8 +56,15 @@ export const DEFAULT_FONT: FontSettings = { family: '', faces: [] }
 export type FontPreset = {
   id: string
   name: string
+  slug: string // public/fonts/<slug>-{latin,latin-ext,vietnamese}.woff2
   stack: string // CSS font-family value assigned to --font-sans
   typography: TypographySettings
+}
+
+// The Latin subset of the active font, to <link rel="preload"> (no swap flash on
+// the file almost every glyph needs).
+export function fontPreloadHref(id: string): string {
+  return `/fonts/${getFontPreset(id).slug}-latin.woff2`
 }
 
 // A preset's typography = the tuned defaults with a few roles overridden.
@@ -71,6 +78,7 @@ export const FONT_PRESETS: FontPreset[] = [
   {
     // Inter — the geometric UI sans, the historical default. Crisp, even, neutral.
     id: 'inter',
+    slug: 'inter',
     name: 'Inter',
     stack: `'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif`,
     typography: tuned({}),
@@ -79,6 +87,7 @@ export const FONT_PRESETS: FontPreset[] = [
     // Source Sans 3 — Adobe's humanist sans. A touch warmer than Inter, slightly
     // shorter x-height, so nudge the body up and loosen the line a hair.
     id: 'source-sans',
+    slug: 'sourcesans',
     name: 'Source Sans 3',
     stack: `'Source Sans 3', system-ui, -apple-system, sans-serif`,
     typography: tuned({ body: { size: 1.15, line: 1.72 } }),
@@ -87,6 +96,7 @@ export const FONT_PRESETS: FontPreset[] = [
     // Literata — Google's book serif (Play Books). Reads small, so a larger body
     // and a tighter, booklike leading; headings drop the sans's negative tracking.
     id: 'literata',
+    slug: 'literata',
     name: 'Literata',
     stack: `'Literata', Georgia, 'Times New Roman', serif`,
     typography: tuned({
@@ -98,6 +108,7 @@ export const FONT_PRESETS: FontPreset[] = [
     // Source Serif 4 — Adobe's screen book serif, sibling to Source Sans. A little
     // finer than Literata, similar reading setup.
     id: 'source-serif',
+    slug: 'sourceserif',
     name: 'Source Serif 4',
     stack: `'Source Serif 4', Georgia, 'Times New Roman', serif`,
     typography: tuned({
