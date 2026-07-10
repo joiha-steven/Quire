@@ -159,6 +159,7 @@ export type FeatureSettings = {
   leadPost: boolean // first post of page 1 gets the h1 role instead of h2
   categoryLabel: boolean // category name in the meta line of cards and post headers
   deck: boolean // the excerpt shown as a standfirst under a post title
+  bookText: boolean // running text set like a book: first-line indent, justified >=600px
 }
 
 export type SiteSettings = {

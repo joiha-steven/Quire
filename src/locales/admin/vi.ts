@@ -290,6 +290,8 @@ const vi = {
   featCategoryLabel: 'Nhãn danh mục',
   featCategoryLabelDesc: 'Hiện danh mục trên dòng thông tin của thẻ bài và đầu bài viết.',
   featDeck: 'Câu dẫn',
+  featBookText: 'Dàn trang kiểu sách',
+  featBookTextDesc: 'Thụt đầu dòng mỗi đoạn thay vì chừa dòng trống, và canh đều hai bên trên màn hình rộng.',
   featDeckDesc: 'Hiện phần tóm tắt dưới tiêu đề bài, trên phần thân bài.',
   seoCanonical: 'Địa chỉ trang (canonical)',
   seoCanonicalHint: 'Dùng cho sitemap, RSS, schema, llms.txt, ảnh OG và thẻ canonical. Để trống sẽ tự dùng URL của trang (SITE_URL).',

@@ -389,6 +389,8 @@ export type AdminStrings = {
   featCategoryLabelDesc: string
   featDeck: string
   featDeckDesc: string
+  featBookText: string
+  featBookTextDesc: string
   // SEO fields
   seoCanonical: string
   seoCanonicalHint: string

@@ -290,6 +290,8 @@ const en = {
   featCategoryLabel: 'Category label',
   featCategoryLabelDesc: 'Show the category in the meta line of cards and post headers.',
   featDeck: 'Standfirst',
+  featBookText: 'Book text',
+  featBookTextDesc: 'Indent the first line of each paragraph instead of leaving a blank line, and justify both margins on wide screens.',
   featDeckDesc: 'Show the excerpt under a post title, above the body.',
   seoCanonical: 'Site address (canonical)',
   seoCanonicalHint: 'Used for sitemap, RSS, schema, llms.txt, OG image and the canonical tag. Leave blank to use your site URL (SITE_URL).',
