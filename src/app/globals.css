@@ -246,7 +246,10 @@ hr {
   transform: none;
 }
 
-/* The handle: a slim tab on the screen edge that travels with the drawer. */
+/* The handle: a slim tab on the screen edge that travels with the drawer.
+   Centred with `translate`, NOT `transform` — the global press feedback
+   (`button:active{transform:scale(.97)}`) would otherwise drop the -50% offset
+   and make the tab jump down the screen on every tap. */
 .rail-handle {
   position: fixed;
   top: 50%;
@@ -255,9 +258,9 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 64px;
-  transform: translateY(-50%);
+  width: 18px;
+  height: 56px;
+  translate: 0 -50%;
   color: var(--c-meta);
   background: var(--c-bg);
   border: 1px solid var(--c-rule);
@@ -288,6 +291,17 @@ hr {
 .rail-inner {
   position: sticky;
   top: 2.5rem;
+}
+
+/* ONE hover signature for every link outside the body copy (rail rows, tags, card
+   titles, related posts): an accent underline. Body links live in `.prose` below
+   and carry a permanent rule that warms to the accent on hover. Change the look
+   here, not per component. */
+.link-accent:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--c-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
 /* The one accent mark: a hairline beside the row you are reading. */
@@ -390,7 +404,7 @@ hr {
   transition: text-decoration-color 0.12s ease;
 }
 .prose a:hover {
-  text-decoration-color: var(--c-link);
+  text-decoration-color: var(--c-accent);
 }
 .prose hr {
   margin: 2.4em 0; /* inherits the site hr look (faint, 50%, left) */

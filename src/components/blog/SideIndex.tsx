@@ -19,7 +19,7 @@ export function IndexBlock({ title, links }: { title: string; links: IndexLink[]
           <li key={l.href} className="mt-2 first:mt-0">
             <Link
               href={l.href}
-              className="rail-row flex justify-between gap-2.5 t-small text-meta hover:text-heading"
+              className="rail-row link-accent flex justify-between gap-2.5 t-small text-meta hover:text-heading"
             >
               <span>{l.label}</span>
               {l.count != null && <span className="shrink-0 tabular-nums">{l.count}</span>}
@@ -42,7 +42,7 @@ export function TagCloud({ title, links }: { title: string; links: IndexLink[] }
           <Link
             key={l.href}
             href={l.href}
-            className="t-small text-meta decoration-accent underline-offset-4 hover:text-heading hover:underline"
+            className="link-accent t-small text-meta hover:text-heading"
           >
             {l.label}
           </Link>
