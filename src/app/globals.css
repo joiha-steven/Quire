@@ -33,36 +33,6 @@
   unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
 }
 
-/* Literata (variable: optical size 7-72, weight 200-900), self-hosted the same way
-   and only downloaded when `features.bookText` is on. Google drew it for Google Play
-   Books, so it carries what a screen sans cannot: an optical-size axis (small text
-   gets sturdier, display text finer) and oldstyle figures that sit in the line.
-   Loaded per unicode-range, so a Vietnamese reader never fetches the Latin-ext file. */
-@font-face {
-  font-family: 'Literata';
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url('/fonts/literata-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Literata';
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url('/fonts/literata-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF, U+FB00-FB06;
-}
-@font-face {
-  font-family: 'Literata';
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url('/fonts/literata-vietnamese.woff2') format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
-}
-
 /* The site font handle. `fontToCss` (custom-font upload) falls back to this, and
    `--font-sans` in @theme inline points at it — so Inter is the universal base. */
 :root { --font-inter: 'Inter'; }
@@ -844,20 +814,6 @@ button:not(:disabled):active,
    the text goes back to a normal ragged right. The indent stays: books indent at
    every size.
    =========================================================================== */
-/* One typeface for the whole page, the way a book uses one. `font-optical-sizing`
-   lets the browser drive the opsz axis from the rendered size, and `onum` puts the
-   figures back in the line (Inter has neither: it ignores `onum` entirely). */
-.book-text {
-  font-family: 'Literata', var(--font-sans), serif;
-  font-optical-sizing: auto;
-  font-feature-settings: "onum" 1, "liga" 1, "calt" 1;
-}
-/* Numerals that must line up in a column stay lining + tabular. */
-.book-text .rail-count,
-.book-text .tabular-nums {
-  font-feature-settings: "lnum" 1, "tnum" 1;
-}
-
 .book-text .prose p {
   /* A printed book leads paragraphs with nothing but the indent. On screen that
      reads as a wall, so keep a small lead — enough to breathe, far short of the
