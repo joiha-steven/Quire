@@ -13,6 +13,14 @@ editor. System chrome (dates, reading-time, related posts, header, footer, sideb
 Inter by default; a `fontChromeInter` toggle (Admin → Appearance) extends the chosen font across the
 whole interface when turned off.
 
+**Fix — editor shows every category and tag.** The category/tag picker capped its suggestions at 12,
+so terms past the first dozen never appeared to click. It now offers them all (scrollable), and typing
+filters the list by substring.
+
+**MCP — `patch_post`.** A new tool that partially updates one post by slug: only the fields you pass
+change, the body and everything else stay put. Lets an agent tweak just the title, tags, or category
+without resending the whole post (`update_post` still does a full replace).
+
 ## v1.4.1 — 2026-07-10 (the sidebar rail, an accent colour, four layout toggles)
 
 A reading-layout release. The blog gains a real sidebar and, with it, the site's first accent
