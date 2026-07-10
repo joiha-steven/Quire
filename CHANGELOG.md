@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased
+
+**New — built-in fonts** (Admin → Appearance → Font). Four self-hosted families: Inter, Source
+Sans 3, Literata, Source Serif 4. Each is subset per unicode-range, so a family downloads only when
+chosen. Picking a font also loads its tuned text sizing (a serif runs small, wants a tighter
+leading) into the editable roles, which the owner still owns. An uploaded custom font overrides the
+chosen built-in. (Bookerly was requested but is Amazon-proprietary; Source Serif 4 stands in.)
+
 ## v1.4.1 — 2026-07-10 (the sidebar rail, an accent colour, four layout toggles)
 
 A reading-layout release. The blog gains a real sidebar and, with it, the site's first accent
