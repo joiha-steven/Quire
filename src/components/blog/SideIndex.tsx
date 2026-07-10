@@ -37,7 +37,7 @@ export function TagCloud({ title, links }: { title: string; links: IndexLink[] }
   return (
     <div>
       <h2 className="mb-3 pl-3.5 t-small font-semibold text-heading">{title}</h2>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 pl-3.5">
+      <div className="rail-tags flex flex-wrap gap-x-3 gap-y-1 pl-3.5">
         {links.map((l) => (
           <Link
             key={l.href}

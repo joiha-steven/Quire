@@ -14,19 +14,31 @@ import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 // contentWidth: the rail only appears once BOTH gutters can hold it, which keeps
 // the reading column exactly centred at every width.
 const RAIL_W = 200
-const RAIL_GAP = 60
+const RAIL_GAP = 72 // mirrors --rail-gap
+const RAIL_PAD = 14 // mirrors --rail-pad
 const RAIL_BREATHING = 40 // clear space between the rail and the viewport edge
 
-// Wide enough for a gutter: promote the drawer into the rail and strip every
-// drawer affordance (fixed position, surface, border, transform, handle, scrim).
+// Wide enough for a gutter: promote the drawer into the rail, strip every drawer
+// affordance (fixed position, surface, border, transform, handle, scrim), and
+// turn the rail around to face the column — text ranged right, accent marker on
+// the right, and a hairline centred in the whitespace BETWEEN the two text edges
+// (not between the two boxes, which would sit `--rail-pad` off centre).
 function railCss(contentWidth: number): string {
   const at = contentWidth + 2 * (RAIL_W + RAIL_GAP + RAIL_BREATHING)
+  const divider = (RAIL_GAP - RAIL_PAD) / 2
   return (
     `@media (min-width:${at}px){` +
     `.rail{position:absolute;inset:auto auto auto auto;top:var(--rail-top);` +
     `right:calc(100% + var(--rail-gap));left:auto;width:var(--rail-w);` +
     `height:calc(100% - var(--rail-top));padding:0;background:none;border:0;` +
-    `overflow:visible;transform:none}` +
+    `overflow:visible;transform:none;text-align:right}` +
+    `.rail::after{content:"";position:absolute;top:0;bottom:0;` +
+    `right:-${divider}px;width:1px;background:var(--c-rule)}` +
+    `.rail h2,.rail .rail-tags{padding-left:0;padding-right:var(--rail-pad)}` +
+    `.rail .rail-tags{justify-content:flex-end}` +
+    `.rail li a{justify-content:flex-end}` +
+    `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
+    `.rail-row[aria-current]::before{left:auto;right:0}` +
     `.rail-handle,.rail-scrim{display:none}}`
   )
 }

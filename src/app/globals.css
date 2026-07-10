@@ -213,7 +213,9 @@ hr {
 --------------------------------------------------------------------------- */
 :root {
   --rail-w: 200px;
-  --rail-gap: 60px;
+  --rail-gap: 72px;
+  /* Gap between a rail row's text and the accent marker beside it. */
+  --rail-pad: 14px;
   /* Space between the header rule and the first line of content. The rail's top
      matches it, so the rail's first line is level with the article's first line. */
   --rail-top: 3rem;
@@ -304,10 +306,12 @@ hr {
   text-underline-offset: 4px;
 }
 
-/* The one accent mark: a hairline beside the row you are reading. */
+/* The one accent mark: a hairline beside the row you are reading. In the drawer
+   it sits on the left of the text; in the gutter the rail flips (see the layout's
+   injected media query) and it sits on the right, facing the divider. */
 .rail-row {
   position: relative;
-  padding-left: 14px;
+  padding-left: var(--rail-pad);
 }
 .rail-row[aria-current]::before {
   content: '';
