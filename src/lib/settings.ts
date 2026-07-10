@@ -8,7 +8,7 @@ import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
 import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, TYPE_ROLES } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, isFontPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, DEFAULT_FONT_PRESET, TYPE_ROLES } from '@/lib/themes'
 import {
   sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp, sanitizeMotion,
   sanitizeBackups, sanitizeComments, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
@@ -89,6 +89,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   logoRenderHeight: 0,
   showLogo: false,
   showDescription: true,
+  fontPreset: DEFAULT_FONT_PRESET,
   faviconUrl: '',
   appIconUrl: '',
   contentWidth: 672,
@@ -143,6 +144,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       excerptLength: clampNumber(stored.excerptLength, 10, 100, DEFAULT_SETTINGS.excerptLength),
       customCss: sanitizeCss(stored.customCss),
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
+      fontPreset: isFontPresetId(stored.fontPreset) ? stored.fontPreset : DEFAULT_FONT_PRESET,
       enabledPalettes: sanitizeEnabledPalettes(stored.enabledPalettes, isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID),
       themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
       typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
@@ -212,6 +214,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     footer: typeof input.footer === 'string' ? input.footer.slice(0, 600) : current.footer,
     menu: sanitizeMenu(input.menu, current.menu),
     themePreset,
+    fontPreset: isFontPresetId(input.fontPreset) ? input.fontPreset : current.fontPreset,
     enabledPalettes: sanitizeEnabledPalettes(input.enabledPalettes ?? current.enabledPalettes, themePreset),
     themes: sanitizeThemes(input.themes, current.themes),
     typography: sanitizeTypography(input.typography, current.typography),

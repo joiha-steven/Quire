@@ -173,6 +173,7 @@ export type SiteSettings = {
   logoRenderHeight: number // displayed height (px) of the logo at logoWidth — set width+height on the <img> to reserve space (no CLS); 0 when unknown
   showLogo: boolean
   showDescription: boolean
+  fontPreset: string // built-in font choice id (lib/themes FONT_PRESETS); '' -> Inter
   faviconUrl: string // browser-tab icon; '' = the bundled default favicon
   appIconUrl: string // PWA / home-screen app icon (square); '' = favicon, else bundled default
   contentWidth: number // px, max width of the content column (desktop)

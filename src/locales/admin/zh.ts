@@ -203,6 +203,7 @@ const zh = {
   typoCode: '代码',
   typographyPreview: '标题示例',
   typographyPreviewBody: '普通正文',
+  fontPresetHint: '选择一款内置字体，其推荐的文字尺寸会载入下方各项，仍可自行调整。',
   cardFont: '字体',
   fontHint: '按字重上传字体（.woff2、.woff、.ttf、.otf）。文件与附件一起存储，应用于全站；所有字重共用一个字体族。',
   fontFamilyLabel: '字体族',

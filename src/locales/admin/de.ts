@@ -203,6 +203,7 @@ const de = {
   typoCode: 'Code',
   typographyPreview: 'Überschrift-Beispiel',
   typographyPreviewBody: 'Normaler Fließtext',
+  fontPresetHint: 'Wähle eine integrierte Schrift; ihre empfohlene Textgröße wird unten übernommen und bleibt anpassbar.',
   cardFont: 'Schriftart',
   fontHint: 'Schrift je Schnitt hochladen (.woff2, .woff, .ttf, .otf). Wird bei den Dateien gespeichert und seitenweit angewendet; alle Schnitte teilen eine Familie.',
   fontFamilyLabel: 'Familie',

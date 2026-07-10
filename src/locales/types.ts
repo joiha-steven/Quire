@@ -295,6 +295,7 @@ export type AdminStrings = {
   typographyPreviewBody: string
   // custom font (per weight)
   cardFont: string
+  fontPresetHint: string
   fontHint: string
   fontFamilyLabel: string
   fontDefault: string

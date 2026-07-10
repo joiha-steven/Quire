@@ -203,6 +203,7 @@ const ja = {
   typoCode: 'コード',
   typographyPreview: '見出しの見本',
   typographyPreviewBody: '通常の本文',
+  fontPresetHint: '内蔵フォントを選ぶと、推奨の文字サイズが下の各役割に読み込まれます。後から調整できます。',
   cardFont: 'フォント',
   fontHint: 'ウェイトごとにフォントをアップロード（.woff2, .woff, .ttf, .otf）。ファイルと一緒に保存され、サイト全体に適用。全ウェイトで同じファミリーを共有します。',
   fontFamilyLabel: 'ファミリー',

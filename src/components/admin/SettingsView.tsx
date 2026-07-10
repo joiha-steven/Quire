@@ -19,6 +19,7 @@ import { SiteFields } from './SiteFields'
 import { ThemeFields } from './ThemeFields'
 import { TypographyFields } from './TypographyFields'
 import { FontUpload } from './FontUpload'
+import { FontFields } from './FontFields'
 import { AdvancedFields } from './AdvancedFields'
 import { McpFields } from './McpFields'
 import { BackupFields } from './BackupFields'
@@ -142,7 +143,13 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
           </div>
           <div className="space-y-6">
             <Card title={t.cardFont}>
-              <FontUpload value={s.customFont} onChange={(customFont) => update({ customFont })} />
+              <FontFields
+                value={s.fontPreset}
+                onChange={(fontPreset, typography) => update({ fontPreset, typography })}
+              />
+              <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                <FontUpload value={s.customFont} onChange={(customFont) => update({ customFont })} />
+              </div>
             </Card>
             <Card title={t.cardTypography}>
               <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />

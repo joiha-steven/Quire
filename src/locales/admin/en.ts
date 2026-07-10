@@ -203,6 +203,7 @@ const en = {
   typoCode: 'Code',
   typographyPreview: 'Heading sample',
   typographyPreviewBody: 'Normal body text',
+  fontPresetHint: 'Pick a built-in font; its recommended text sizing loads into the roles below, yours to adjust.',
   cardFont: 'Font',
   fontHint: 'Upload a typeface per weight (.woff2, .woff, .ttf, .otf). Files are stored with your files and applied site-wide; all weights share one family.',
   fontFamilyLabel: 'Family',

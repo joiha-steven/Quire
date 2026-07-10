@@ -3,6 +3,7 @@ import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
+import { fontPresetCss } from '@/lib/themes'
 
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
@@ -48,7 +49,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset, enabledPalettes, typography, customFont, motion } = await getSettings()
+  const { language, themes, themePreset, fontPreset, enabledPalettes, typography, customFont, motion } = await getSettings()
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   // data-motion is server-rendered from settings (site-wide), so the motion engine
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
@@ -60,8 +61,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
-        {/* Owner type scale → fs/lh/ls vars (overrides globals.css) + custom @font-face. */}
-        <style dangerouslySetInnerHTML={{ __html: typographyToCss(typography) + fontToCss(customFont) }} />
+        {/* Owner type scale → fs/lh/ls vars, then the chosen built-in font (sets
+            --font-sans), then any uploaded custom font (wins over the built-in). */}
+        <style dangerouslySetInnerHTML={{ __html: typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) }} />
         <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes) }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>

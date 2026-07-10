@@ -3,7 +3,7 @@
 // names the visitor default (switchable via PaletteToggle). `name` is the English
 // fallback — the displayed name is localized via `paletteNames`, keyed by id.
 
-import type { ThemeColors, ThemeSettings, TypographySettings, TypeRole, FontSettings } from '@/types'
+import type { ThemeColors, ThemeSettings, TypographySettings, TypeRole, TypeStyle, FontSettings } from '@/types'
 
 export type ThemePreset = {
   id: string
@@ -47,6 +47,81 @@ export const DEFAULT_TYPOGRAPHY: TypographySettings = {
 
 // Default typeface: none uploaded → the bundled Inter.
 export const DEFAULT_FONT: FontSettings = { family: '', faces: [] }
+
+// Built-in font choices (Admin → Appearance). Each is a self-hosted family (see
+// globals.css) plus the typography TUNED for it — a serif runs small and wants a
+// tighter leading than a sans, so switching font also loads its reading setup.
+// `typography` here is what the admin drops into the editable roles when the owner
+// picks the font; they still own and can tweak every value afterwards.
+export type FontPreset = {
+  id: string
+  name: string
+  stack: string // CSS font-family value assigned to --font-sans
+  typography: TypographySettings
+}
+
+// A preset's typography = the tuned defaults with a few roles overridden.
+function tuned(over: Partial<Record<TypeRole, Partial<TypeStyle>>>): TypographySettings {
+  const roles = {} as Record<TypeRole, TypeStyle>
+  for (const r of TYPE_ROLES) roles[r] = { ...DEFAULT_TYPOGRAPHY.roles[r], ...over[r] }
+  return { roles, smoothing: DEFAULT_TYPOGRAPHY.smoothing }
+}
+
+export const FONT_PRESETS: FontPreset[] = [
+  {
+    // Inter — the geometric UI sans, the historical default. Crisp, even, neutral.
+    id: 'inter',
+    name: 'Inter',
+    stack: `'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif`,
+    typography: tuned({}),
+  },
+  {
+    // Source Sans 3 — Adobe's humanist sans. A touch warmer than Inter, slightly
+    // shorter x-height, so nudge the body up and loosen the line a hair.
+    id: 'source-sans',
+    name: 'Source Sans 3',
+    stack: `'Source Sans 3', system-ui, -apple-system, sans-serif`,
+    typography: tuned({ body: { size: 1.15, line: 1.72 } }),
+  },
+  {
+    // Literata — Google's book serif (Play Books). Reads small, so a larger body
+    // and a tighter, booklike leading; headings drop the sans's negative tracking.
+    id: 'literata',
+    name: 'Literata',
+    stack: `'Literata', Georgia, 'Times New Roman', serif`,
+    typography: tuned({
+      body: { size: 1.2, line: 1.62 },
+      h1: { spacing: -0.01 }, h2: { spacing: -0.008 }, h3: { spacing: 0 }, h4: { spacing: 0 },
+    }),
+  },
+  {
+    // Source Serif 4 — Adobe's screen book serif, sibling to Source Sans. A little
+    // finer than Literata, similar reading setup.
+    id: 'source-serif',
+    name: 'Source Serif 4',
+    stack: `'Source Serif 4', Georgia, 'Times New Roman', serif`,
+    typography: tuned({
+      body: { size: 1.2, line: 1.6 },
+      h1: { spacing: -0.01 }, h2: { spacing: -0.008 }, h3: { spacing: 0 }, h4: { spacing: 0 },
+    }),
+  },
+]
+
+export const DEFAULT_FONT_PRESET = 'inter'
+
+export function getFontPreset(id: string): FontPreset {
+  return FONT_PRESETS.find((f) => f.id === id) ?? FONT_PRESETS[0]
+}
+
+export function isFontPresetId(id: unknown): id is string {
+  return typeof id === 'string' && FONT_PRESETS.some((f) => f.id === id)
+}
+
+// Point --font-sans at the chosen family. Emitted AFTER globals.css (so it wins the
+// @theme default) but BEFORE fontToCss (so an uploaded custom font still wins).
+export function fontPresetCss(id: string): string {
+  return `:root{--font-sans:${getFontPreset(id).stack}}`
+}
 
 // TRUE neutral grayscale — zero hue, the Quire Blog house style. (Earlier values had a
 // faint warm/blue cast: bg/rule read as cream, meta/text leaned blue. All pure gray
