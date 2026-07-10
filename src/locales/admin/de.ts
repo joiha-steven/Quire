@@ -290,6 +290,8 @@ const de = {
   featCategoryLabel: 'Kategorie-Label',
   featCategoryLabelDesc: 'Kategorie in der Metazeile von Karten und Beitragsköpfen zeigen.',
   featDeck: 'Vorspann',
+  featBookText: 'Buchsatz',
+  featBookTextDesc: 'Erste Zeile jedes Absatzes einrücken statt Leerzeile, und auf breiten Bildschirmen Blocksatz.',
   featDeckDesc: 'Auszug unter dem Titel über dem Fließtext zeigen.',
   seoCanonical: 'Website-Adresse (kanonisch)',
   seoCanonicalHint: 'Wird für Sitemap, RSS, Schema, llms.txt, OG-Bild und den Canonical-Tag verwendet. Leer lassen, um die Website-URL (SITE_URL) zu nutzen.',

@@ -290,6 +290,8 @@ const ja = {
   featCategoryLabel: 'カテゴリー表示',
   featCategoryLabelDesc: 'カード と記事見出しのメタ行にカテゴリーを表示します。',
   featDeck: 'リード文',
+  featBookText: '書籍組み',
+  featBookTextDesc: '段落の間を空けずに一行目を字下げし、広い画面では両端揃えにします。',
   featDeckDesc: '記事タイトルの下、本文の上に抜粋を表示します。',
   seoCanonical: 'サイトアドレス（canonical）',
   seoCanonicalHint: 'サイトマップ、RSS、スキーマ、llms.txt、OG画像、canonicalタグに使用されます。空欄の場合はサイトのURL（SITE_URL）を使用します。',

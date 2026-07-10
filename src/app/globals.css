@@ -791,6 +791,50 @@ button:not(:disabled):active,
   }
 }
 
+/* ===========================================================================
+   Book text (`features.bookText`). Sets running text the way a book sets it:
+   paragraphs marked by a first-line indent instead of a blank line, and both
+   margins justified.
+
+   Justification is safe here in a way it is not in English. Vietnamese is written
+   in separate syllables — measured over a real 6,270-word article the average
+   token is 3.37 characters and 0.3% of words exceed 7 — so the justifier only
+   nudges word spaces and no rivers open. English needs hyphenation to justify
+   cleanly; `hyphens: auto` is kept for the rare long word and for other languages.
+
+   Below 600px a line holds ~40 characters, too few to justify without gaps, so
+   the text goes back to a normal ragged right. The indent stays: books indent at
+   every size.
+   =========================================================================== */
+.book-text .prose p {
+  margin-top: 0;
+  text-indent: 1.6em;
+}
+/* A paragraph that OPENS something is never indented — the indent exists to say
+   "a new paragraph continues", and after a heading or a break there is nothing to
+   continue from. */
+.book-text .prose > p:first-child {
+  text-indent: 0;
+}
+.book-text .prose :is(h1, h2, h3, h4, h5, blockquote, figure, pre, ul, ol, hr, table, .gallery, .video-embed) + p {
+  text-indent: 0;
+  /* Zeroing every paragraph margin above also killed the air under a heading. */
+  margin-top: 1.4em;
+}
+/* text-indent inherits: keep it out of list items and quotes. */
+.book-text .prose li p,
+.book-text .prose blockquote p {
+  text-indent: 0;
+}
+
+@media (min-width: 600px) {
+  .book-text .prose p,
+  .book-text .prose li {
+    text-align: justify;
+    hyphens: auto;
+  }
+}
+
 /* Loading skeleton block (route loading.tsx). Faint themed surface; the subtle
    pulse follows the motion engine (gated by data-motion + reduced-motion), so it
    degrades to a calm static placeholder. */

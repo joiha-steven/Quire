@@ -100,7 +100,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
         <Track />
         {/* Positioning context for the rail: it wraps the content, not the header,
             so the rail's first line lands level with the content's first line. */}
-        <div className="with-rail flex flex-1 flex-col">
+        <div className={`with-rail flex flex-1 flex-col${settings.features.bookText ? ' book-text' : ''}`}>
           <main className="flex-1 pt-12 pb-4">{children}</main>
         </div>
       <footer

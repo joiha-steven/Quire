@@ -111,6 +111,7 @@ export function sanitizeFeatures(input: unknown, fallback: FeatureSettings): Fea
     leadPost: bool(o.leadPost, fallback.leadPost),
     categoryLabel: bool(o.categoryLabel, fallback.categoryLabel),
     deck: bool(o.deck, fallback.deck),
+    bookText: bool(o.bookText, fallback.bookText),
   }
 }
 

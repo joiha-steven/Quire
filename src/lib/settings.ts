@@ -44,6 +44,7 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   leadPost: true,
   categoryLabel: true,
   deck: true,
+  bookText: false,
 }
 
 export const DEFAULT_COMMENTS: CommentSettings = {
