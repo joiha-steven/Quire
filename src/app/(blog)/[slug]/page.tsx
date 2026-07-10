@@ -144,7 +144,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           />
         )}
         {/* Meta line above the title, matching the list cards. */}
-        <header className="pb-9">
+        <header>
           <p className="t-small text-meta">
             {category && (
               <>
@@ -162,7 +162,6 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           {/* Standfirst: the excerpt, so a long read opens on a sentence, not a wall. */}
           {features.deck && post.excerpt && <p className="mt-4 fs-h4 text-meta">{post.excerpt}</p>}
         </header>
-        <hr />
 
         {/* The ToC lives in the left-gutter rail on wide screens; below the rail
             breakpoint the same markup is a slide-out drawer. Placed after the
@@ -173,7 +172,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           </Rail>
         )}
 
-        <div className="mt-9">
+        <div className="mt-10">
           <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 
