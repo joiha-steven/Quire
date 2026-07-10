@@ -8,6 +8,11 @@ chosen. Picking a font also loads its tuned text sizing (a serif runs small, wan
 leading) into the editable roles, which the owner still owns. An uploaded custom font overrides the
 chosen built-in. (Bookerly was requested but is Amazon-proprietary; Source Serif 4 stands in.)
 
+The chosen font styles the reader's words — post body + title, list cards, comment body, and the
+editor. System chrome (dates, reading-time, related posts, header, footer, sidebar, admin) stays
+Inter by default; a `fontChromeInter` toggle (Admin → Appearance) extends the chosen font across the
+whole interface when turned off.
+
 ## v1.4.1 — 2026-07-10 (the sidebar rail, an accent colour, four layout toggles)
 
 A reading-layout release. The blog gains a real sidebar and, with it, the site's first accent

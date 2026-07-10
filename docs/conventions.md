@@ -99,8 +99,13 @@
   Inter, Source Sans 3, Literata, Source Serif 4 — each declared per unicode-range in globals.css,
   so a family downloads ONLY when the chosen preset uses it. Each preset carries the typography
   TUNED for it; picking a font in Admin → Appearance drops that setup into the editable roles (still
-  owner-owned). `--font-sans` is set by `fontPresetCss` after globals (beats the @theme default) and
-  before `fontToCss` (an uploaded custom font still wins). Preload tracks the chosen font.
+  owner-owned). Preload tracks the chosen font.
+- **Two font handles — chosen font ≠ site font.** `--font-reading` is the reader's own words (post
+  body + title, list cards, comment body, the editor `.prose`) and is what `fontPresetCss` /
+  `fontToCss` point (custom upload wins). `--font-sans` is the system-chrome face (dates/reading-time,
+  related/taxonomy, header, footer, rail, admin). The `fontChromeInter` toggle (default on) keeps
+  `--font-sans` = Inter; off, the layout points `--font-sans` at `--font-reading` so the whole
+  interface follows the chosen font. Apply reading text with the `reading-font` class (`.prose` sets it).
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.
