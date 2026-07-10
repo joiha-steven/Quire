@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## v1.4.2 — 2026-07-11 (built-in reading fonts, book-page text, patch_post)
 
 **New — built-in fonts** (Admin → Appearance → Font). Four self-hosted families: Inter, Source
 Sans 3, Literata, Source Serif 4. Each is subset per unicode-range, so a family downloads only when
@@ -12,6 +12,15 @@ The chosen font styles the reader's words — post body + title, list cards, com
 editor. System chrome (dates, reading-time, related posts, header, footer, sidebar, admin) stays
 Inter by default; a `fontChromeInter` toggle (Admin → Appearance) extends the chosen font across the
 whole interface when turned off.
+
+**New — book-page reading** (Admin → Settings → Features, `bookText`). Optional typesetting for the
+post body: a first-line indent on each paragraph and justified text on columns 600px and wider, for a
+printed-page feel.
+
+**Sidebar — reaches every listing and marks where you are.** It now shows on home pages 2+ and on
+category and tag archives (not just home page 1); the category or tag you are viewing carries the
+accent mark, like a post's table of contents. Its breakpoint dropped so common 1280/1366 laptops show
+the rail in the gutter instead of only the drawer handle.
 
 **Fix — editor shows every category and tag.** The category/tag picker capped its suggestions at 12,
 so terms past the first dozen never appeared to click. It now offers them all (scrollable), and typing
