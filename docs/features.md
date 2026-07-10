@@ -24,8 +24,9 @@
 ## Reading & discovery
 
 - Features `{ search, toc, related, readingTime, progressBar, activityLog, sidebar, leadPost,
-  categoryLabel, deck }` (default on, Admin → Settings → Tính năng); gated in header / `/search` /
-  post page.
+  categoryLabel, deck, bookText }` (all default on EXCEPT `bookText`, which is off; Admin → Settings →
+  Tính năng); gated in header / `/search` / post page. `bookText` = book-page typesetting on the post
+  body (first-line indent + justify ≥600px).
 - **Sidebar** (`sidebar`): categories (with published-post counts) + tags in the left gutter of the
   home list, from `getPublicTaxonomy()`. `toc` puts a post's headings in that same gutter. Both are
   `<Rail>`; below the rail breakpoint the same markup becomes a slide-out drawer opened by a small
@@ -155,8 +156,8 @@
   preview). `{year}`/`{title}` tokens expand at render. The public layout renders it in `<footer
   class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
-  **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontUpload`/
-  `TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine
+  **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontFields`
+  (built-in `fontPreset` picker + `fontChromeInter` toggle)/`FontUpload`/`TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine
   toggle → `settings.motion.enabled`) + custom-CSS; **SEO**
   `SeoFields`; **Integrations** `BackupFields` + `McpFields` + `CloudflareFields` + `ImportFields`
   (WordPress import — see below). `McpFields` is the EXCEPTION to "no own

@@ -38,9 +38,9 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 | Area | What you get |
 |:---|:---|
 | 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · responsive `sharp` images (original + AVIF/WebP variants) · 3-version time machine · offline local autosave |
-| 🎨&nbsp;**Look** | 6 customizable light+dark palettes · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · upload a custom font per weight |
+| 🎨&nbsp;**Look** | 6 customizable light+dark palettes (+ an accent) · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · four built-in reading fonts (or upload a custom font per weight), scoped to reading text |
 | 🌍&nbsp;**i18n** | Admin + site in `en · vi · de · ja · zh · ko` |
-| 🔍&nbsp;**Reading** | instant local + Postgres full-text search · ToC · related posts · reading time · progress bar |
+| 🔍&nbsp;**Reading** | instant local + Postgres full-text search · a left sidebar rail (categories + tags, or a post's ToC) · related posts · reading time · progress bar |
 | 📈&nbsp;**Built-in** | cookieless analytics (views / visitors / top pages, no PII) · activity log · soft-delete Trash (nothing auto-purges) |
 | 🔎&nbsp;**SEO** | sitemap · RSS · `robots.txt` · `llms.txt` · dynamic OG images — all toggleable |
 | 💾&nbsp;**Backups** | one-click full snapshots (DB + all binaries) to **Google Drive**, scheduled + restore |
@@ -180,7 +180,7 @@ Add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm
 
 - `/` — public blog (published, date-reached posts) · `/category/<slug>`, `/tag/<slug>` (slugified) · header search overlay · path-based pagination (`/page/2`).
 - `/admin` — dashboard, editor, media, analytics, settings (owner only).
-- **Settings** is one form / one Save, three tabs — **General** (site, menu, reader features, SEO), **Appearance** (palettes, custom font, the per-role text-size table), **Advanced** (MCP, backups, custom CSS). Everything is injected as CSS variables, so changes apply site-wide with **no redeploy**.
+- **Settings** is one form / one Save, five tabs — **Site**, **Content** (reader features, comments), **Appearance** (palettes, built-in + custom fonts, the per-role text-size table, custom CSS), **SEO**, **Integrations** (MCP, backups, Cloudflare, WordPress import). Everything is injected as CSS variables, so changes apply site-wide with **no redeploy**.
 - **Performance:** public pages are ISR-cached; every admin save purges exactly the affected pages through one place ([`src/lib/revalidate.ts`](./src/lib/revalidate.ts)), so edits are live next request without ever serving stale. Full design + the *why* in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ---

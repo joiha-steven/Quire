@@ -218,7 +218,8 @@ grows with users - the free tier holds almost indefinitely.
 
 - Single author (one `AUTHORIZED_EMAIL`) per instance. No multi-user / roles in the
   self-host build - multi-tenant arrives only in the SaaS (Phase 7), which lifts this.
-- `_index.json` is read in full per list regeneration — fine to the low hundreds of
-  posts; sharding would be needed well beyond that.
+- List/taxonomy pages load ALL posts' metadata in one Postgres query (`getIndex`), then
+  paginate in memory — fine into the low thousands of posts; DB-level pagination would be
+  needed well beyond that.
 - Related-posts box on other posts can lag up to the ISR window after a new post
   (see CLAUDE.md caching notes); the "Clear all cache" button is the instant fix.
