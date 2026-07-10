@@ -9,7 +9,7 @@ export type IndexLink = {
   count?: number // categories show a post count; tags do not
 }
 
-export function IndexBlock({ title, links }: { title: string; links: IndexLink[] }) {
+export function IndexBlock({ title, links, activeHref }: { title: string; links: IndexLink[]; activeHref?: string }) {
   if (links.length === 0) return null
   // Widest count on this list, in digits — the count column is sized to exactly that.
   const digits = Math.max(1, ...links.map((l) => (l.count == null ? 1 : String(l.count).length)))
@@ -21,7 +21,10 @@ export function IndexBlock({ title, links }: { title: string; links: IndexLink[]
           <li key={l.href} className="mt-2 first:mt-0">
             <Link
               href={l.href}
-              className="rail-row link-accent flex justify-between gap-3.5 t-small text-meta hover:text-heading"
+              aria-current={l.href === activeHref ? 'page' : undefined}
+              className={`rail-row link-accent flex justify-between gap-3.5 t-small hover:text-heading ${
+                l.href === activeHref ? 'font-medium text-heading' : 'text-meta'
+              }`}
             >
               <span>{l.label}</span>
               {/* Fixed-width and right-aligned: otherwise a two-digit count pushes
@@ -36,7 +39,7 @@ export function IndexBlock({ title, links }: { title: string; links: IndexLink[]
 }
 
 // Tags are many and short: a wrapped run of plain words, no chips, no boxes.
-export function TagCloud({ title, links }: { title: string; links: IndexLink[] }) {
+export function TagCloud({ title, links, activeHref }: { title: string; links: IndexLink[]; activeHref?: string }) {
   if (links.length === 0) return null
   return (
     <div>
@@ -46,7 +49,10 @@ export function TagCloud({ title, links }: { title: string; links: IndexLink[] }
           <Link
             key={l.href}
             href={l.href}
-            className="link-accent t-small text-meta hover:text-heading"
+            aria-current={l.href === activeHref ? 'page' : undefined}
+            className={`link-accent t-small hover:text-heading ${
+              l.href === activeHref ? 'font-medium text-heading underline decoration-accent underline-offset-4' : 'text-meta'
+            }`}
           >
             {l.label}
           </Link>
@@ -63,17 +69,19 @@ export function SideIndex({
   tags,
   categoriesTitle,
   tagsTitle,
+  activeHref,
 }: {
   categories: IndexLink[]
   tags: IndexLink[]
   categoriesTitle: string
   tagsTitle: string
+  activeHref?: string // the category/tag being viewed — its row gets the accent mark
 }) {
   if (categories.length === 0 && tags.length === 0) return null
   return (
     <div className="space-y-7">
-      <IndexBlock title={categoriesTitle} links={categories} />
-      <TagCloud title={tagsTitle} links={tags} />
+      <IndexBlock title={categoriesTitle} links={categories} activeHref={activeHref} />
+      <TagCloud title={tagsTitle} links={tags} activeHref={activeHref} />
     </div>
   )
 }

@@ -5,7 +5,6 @@ import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { ogCardUrl, siteDomain } from '@/lib/og'
 import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
-import { HomeRail } from '@/components/blog/HomeRail'
 import { JsonLd, websiteSchema } from '@/components/blog/JsonLd'
 
 // ISR-cached for fast reads; admin saves purge it instantly via
@@ -39,9 +38,6 @@ export default async function HomePage() {
         />
       )}
       <BlogListing posts={posts} page={1} basePath="/" emptyText={t(settings.language).emptyPosts} lead />
-      {/* After the listing: the rail is absolutely placed, so DOM order is free —
-          and this keeps the page's h1 ahead of the sidebar's h2 headings. */}
-      {settings.features.sidebar && <HomeRail lang={settings.language} />}
     </>
   )
 }
