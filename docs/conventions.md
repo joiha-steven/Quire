@@ -92,8 +92,9 @@
   `.with-rail` (which wraps the content, not the header, so the rail's first line is level with
   the article's first line) and sticks on scroll. Its breakpoint is COMPUTED from `contentWidth`
   in `(blog)/layout.tsx` — a media query cannot read a CSS variable — so a wider column simply
-  keeps the rail hidden for longer. Below it the rail is hidden and its contents ride in
-  `HeaderMenu`. The rail is type on the page: no border, no shadow, no background.
+  keeps the rail hidden for longer. Below it the SAME DOM becomes a slide-out drawer behind a
+  small edge handle (`RailHandle` toggles `<html data-rail>`; the drawer, handle and scrim all
+  react in CSS). In the gutter the rail is type on the page: no border, no shadow, no background.
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.

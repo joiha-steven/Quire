@@ -28,8 +28,8 @@
   post page.
 - **Sidebar** (`sidebar`): categories (with published-post counts) + tags in the left gutter of the
   home list, from `getPublicTaxonomy()`. `toc` puts a post's headings in that same gutter. Both are
-  `<Rail>`; below the rail breakpoint they fold into `HeaderMenu` (a post's headings reach the header
-  through `MenuContext`, since the post renders below it).
+  `<Rail>`; below the rail breakpoint the same markup becomes a slide-out drawer opened by a small
+  edge handle.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).

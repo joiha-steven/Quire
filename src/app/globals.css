@@ -224,11 +224,65 @@ hr {
   position: relative;
 }
 
-/* Below the breakpoint the rail is hidden — its content rides in the header menu
-   instead (see HeaderMenu). The layout injects the @media that turns it on and
-   places it, because a media query cannot read a CSS variable. */
+/* Mobile-first: the rail is a slide-out drawer behind a small edge handle. The
+   layout injects the @media that promotes it into the gutter, because a media
+   query cannot read a CSS variable. ONE piece of DOM serves both. */
 .rail {
-  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  width: min(300px, 84vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4.5rem 1.25rem 2rem;
+  background: var(--c-bg);
+  border-right: 1px solid var(--c-rule);
+  transform: translateX(-100%);
+  transition: transform var(--dur-base) var(--ease);
+}
+:root[data-rail='open'] .rail {
+  transform: none;
+}
+
+/* The handle: a slim tab on the screen edge that travels with the drawer. */
+.rail-handle {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  z-index: 41;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 64px;
+  transform: translateY(-50%);
+  color: var(--c-meta);
+  background: var(--c-bg);
+  border: 1px solid var(--c-rule);
+  border-left: 0;
+  cursor: pointer;
+  transition: left var(--dur-base) var(--ease), color var(--dur-fast) var(--ease);
+}
+.rail-handle:hover {
+  color: var(--c-heading);
+}
+.rail-handle svg {
+  transition: transform var(--dur-base) var(--ease);
+}
+:root[data-rail='open'] .rail-handle {
+  left: min(300px, 84vw);
+}
+:root[data-rail='open'] .rail-handle svg {
+  transform: rotate(180deg);
+}
+
+/* Tap-anywhere-else to close. No dim: the drawer already owns a solid surface. */
+.rail-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
 }
 
 .rail-inner {
