@@ -26,6 +26,7 @@ pages            slug PK · title · status · featured_image · content (markdo
 post_revisions   slug · data (jsonb snapshot) · saved_at   (app keeps last 3 / slug)
 media            path PK · filename · size · width · height · thumb · variants · uploaded_at · deleted_at
 files            url PK · filename · size · content_type · uploaded_at · deleted_at
+comments         id · post_slug · parent_id · depth · author_* · provider · content (md) · created_at · deleted_at  (reader comments, off by default; email/ip/country admin-only)
 settings         single row id=1 · data (jsonb SiteSettings)
 mcp_tokens       id · name · token_hash (sha256, unique) · prefix · created_at · last_used_at  (MCP access tokens; max 5, hash only)
 activity_log     at · action · detail   (admin audit trail, Admin → Log; toggleable)

@@ -52,8 +52,8 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
 - **Text in Postgres (self-hosted; reached through PostgREST with the `supabase-js` client — bundled
   Postgres+PostgREST on Docker, or your own on native, see Env); binaries on the LOCAL FILESYSTEM via
   the `blob.ts` facade** (served at `/uploads`; `STORAGE_LOCAL_DIR`). Tables (schema `public`):
-  `posts` `pages` `post_revisions` `media` `files` `settings` `mcp_tokens` `mcp_clients`
-  `mcp_used_codes` `backup_state` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
+  `posts` `pages` `post_revisions` `media` `files` `comments` `settings` `mcp_tokens` `mcp_clients`
+  `mcp_used_codes` `backup_state` `integration_keys` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
   `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
   `backup_state` (single row) holds the **secret** Drive refresh token + run state and
   is NEVER read into the client-bound settings payload (see `docs/backups.md`).
@@ -158,7 +158,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
 | `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
 | `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
-| others | `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
+| others | `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
 
 ## Caching — ISR pages + tagged DB reads, purge on save
 

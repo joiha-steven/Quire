@@ -137,7 +137,7 @@
 
 `node --env-file=.env.local scripts/<name>.mjs [--dry]` — idempotent.
 
-- **`schema.sql`** — full Postgres schema (11 tables + indexes + `posts.search` tsvector +
+- **`schema.sql`** — full Postgres schema (15 tables + the `schema_migrations` ledger + indexes + `posts.search` tsvector +
   RLS + the analytics RPCs). Run ONCE on a fresh Postgres database. NOT run by the app;
   transcribed from the live schema — **keep it in sync when you change tables/RPCs.**
 - **`migrate-to-supabase.mjs`** — one-off P1.5 migration (old-store `_index.json`+`.md` →
@@ -168,10 +168,10 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   files — `.env.local` only.
 - **Audits** (`audit/`): a full review per `audit/README.md` → dated `audit/YYYY-MM-DD-<scope>.md`;
   read the latest first so a pass starts from the last clean line.
-- **Versioning (owner's rule — do NOT auto-bump):** the version is **`1.0.x`** (was `0.9.x`; the
-  owner cut **1.0.0** with the MCP + Trash release). Each change bumps the patch `x`
-  (→ `1.0.999`), a running counter with no semver meaning. NEVER raise `1.0` → `1.1` or `→ 2.0`
-  unless the owner asks. A code change bumps `x`; pure-docs may skip. On a bump, also update the
-  **README title** version: `` # vibe**blog** `v1.0.x` `` (centered header, top of README).
-- **Cutting a release:** `x` already current; `npm run build` + `npm run lint` exit 0; push `main`;
-  `gh release create v1.0.<x> --title "v1.0.<x> - <tagline>" --notes "…"`.
+- **Versioning (owner's rule — do NOT auto-bump):** the version is currently **`1.4.x`**. Each change
+  bumps the patch `x`, a running counter with no semver meaning. The minor (`1.0` → … → `1.4`) moves
+  only when the owner asks — NEVER raise it (or `→ 2.0`) on your own. A code change bumps `x`;
+  pure-docs may skip. On a bump, also update the **README title** version:
+  `` # **quire**blog `v1.4.x` `` (centered header, top of README).
+- **Cutting a release:** `x` already current; `npm run build` + `npm run check:all` exit 0; push `main`;
+  `gh release create v1.4.<x> --title "v1.4.<x> - <tagline>" --notes "…"`.
