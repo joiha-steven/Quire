@@ -232,7 +232,7 @@ function CommentNode({
               <span className="text-meta">{formatDate(comment.createdAt, lang)}</span>
             </div>
             <div
-              className="mt-1.5 text-text [&_a]:underline"
+              className="reading-font mt-1.5 text-text [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: comment.contentHtml }}
             />
             {canReply && (

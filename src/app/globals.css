@@ -108,6 +108,14 @@ body { font-optical-sizing: auto; }
   --color-rule: var(--c-rule);
 }
 
+/* Two font handles. `--font-sans` is the SYSTEM CHROME face — header, footer, rail,
+   dates/reading-time, everything under a post except its body, and the whole admin —
+   and it stays Inter always. `--font-reading` is what the READER'S OWN WORDS are set
+   in (post body + title, comment body, and the editor so it matches): the chosen
+   `fontPreset` (or an uploaded custom font) points this one, leaving the chrome
+   untouched. Defaults to --font-sans, so with no choice everything is still Inter. */
+:root { --font-reading: var(--font-sans); }
+
 /* ---------------------------------------------------------------------------
    Reading-color fallbacks (neutral, almost no hue).
    These are DEFAULTS only — the owner's saved theme (Admin → Cài đặt → Giao diện)
@@ -405,10 +413,15 @@ hr {
 /* Rendered post body + TipTap editor share these typographic rules.
    Tuned for calm, long-form reading: 18px body, airy but even rhythm. */
 .prose {
+  font-family: var(--font-reading); /* the reader's words, in the chosen font (chrome stays --font-sans) */
   font-size: var(--fs-body); /* normal/body text — owner-tunable (~18px default) */
   line-height: var(--lh-body);
   letter-spacing: var(--ls-body);
   color: var(--c-text);
+}
+/* The post title and comment bodies are the reader's words too. */
+.reading-font {
+  font-family: var(--font-reading);
 }
 .prose > * + * {
   margin-top: 1.4em;
