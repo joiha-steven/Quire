@@ -71,7 +71,8 @@ export const getPage = cache(async (slug: string): Promise<PageWithContent | nul
 function normalize(input: Partial<PageWithContent>): PageWithContent {
   const content = (input.content ?? '').trim()
   const title = (input.title ?? '').trim()
-  const slug = input.slug?.trim() ? slugify(input.slug) : slugify(title)
+  // Guard an empty slug (slugify can empty an emoji/punctuation title) — see posts.ts.
+  const slug = (input.slug?.trim() ? slugify(input.slug) : slugify(title)) || `page-${Date.now()}`
   return {
     title,
     slug,

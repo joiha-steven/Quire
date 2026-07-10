@@ -21,6 +21,10 @@ filters the list by substring.
 change, the body and everything else stay put. Lets an agent tweak just the title, tags, or category
 without resending the whole post (`update_post` still does a full replace).
 
+**Fix — no more empty-slug posts.** A title/slug made only of emoji or punctuation slugified to `''`,
+and the empty-slug row was unreachable from the editor and Trash (couldn't be edited or deleted).
+`savePost`/`savePage` now fall back to a timestamped slug, so every post/page keeps an editable identity.
+
 **Fix — serif reading fonts sit lighter.** Literata and Source Serif 4 rendered a large body (19px) and
 a very black 700 bold that out-weighed the 600 headings, so bold read like a second heading. Body drops
 to 18px (Literata) / 18.4px (Source Serif); presets now carry `readingBold: 600` (`--reading-bold`) so

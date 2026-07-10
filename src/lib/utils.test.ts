@@ -16,6 +16,13 @@ describe('slugify', () => {
   it('collapses spaces/symbols and trims leading/trailing hyphens', () => {
     expect(slugify('  Hello, World!  ')).toBe('hello-world')
   })
+
+  // A title with no sluggable characters yields '' — why savePost/savePage must
+  // fall back to a timestamped slug so a post never persists an empty (unreachable) slug.
+  it('returns empty for punctuation/emoji-only input', () => {
+    expect(slugify('!!! --- ...')).toBe('')
+    expect(slugify('🔦')).toBe('')
+  })
 })
 
 describe('readingMinutes', () => {
