@@ -1,5 +1,4 @@
-// A list of post previews with an empty state. A faint rule separates cards.
-import { Fragment } from 'react'
+// A list of post previews with an empty state. Cards are separated by whitespace.
 import type { Post, SiteLang } from '@/types'
 import { PostCard } from './PostCard'
 
@@ -21,19 +20,19 @@ export function PostList({
   if (posts.length === 0) {
     return <p className="py-16 text-center text-meta">{emptyText}</p>
   }
+  // No rules between cards: whitespace does the separating, so the gap has to be
+  // wide enough to read as a break rather than a paragraph space.
   return (
-    <div className="flex flex-col gap-9">
+    <div className="flex flex-col gap-16">
       {posts.map((post, i) => (
-        <Fragment key={post.slug}>
-          {i > 0 && <hr />}
-          <PostCard
-            post={post}
-            lang={lang}
-            showReadingTime={showReadingTime}
-            showCategory={showCategory}
-            lead={lead && i === 0}
-          />
-        </Fragment>
+        <PostCard
+          key={post.slug}
+          post={post}
+          lang={lang}
+          showReadingTime={showReadingTime}
+          showCategory={showCategory}
+          lead={lead && i === 0}
+        />
       ))}
     </div>
   )

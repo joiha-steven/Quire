@@ -20,6 +20,8 @@ under a post title).
 - The table of contents is no longer a bordered, shadowed panel pinned to the viewport edge; it is
   type in the rail. Its in-page "Tags / Categories / Comments" jump link went with the panel.
 - The global `<hr>` runs the full column width instead of a left-aligned 50% stub.
+- No rule between list cards and none under a post title: whitespace separates them. The
+  end-of-article rules (before tags / related / comments) stay.
 
 ## v1.4.0 — 2026-07-09 (WordPress import, ops hardening, deep-audit fixes)
 
