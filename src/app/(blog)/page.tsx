@@ -38,8 +38,10 @@ export default async function HomePage() {
           })}
         />
       )}
-      {settings.features.sidebar && <HomeRail lang={settings.language} />}
       <BlogListing posts={posts} page={1} basePath="/" emptyText={t(settings.language).emptyPosts} lead />
+      {/* After the listing: the rail is absolutely placed, so DOM order is free —
+          and this keeps the page's h1 ahead of the sidebar's h2 headings. */}
+      {settings.features.sidebar && <HomeRail lang={settings.language} />}
     </>
   )
 }
