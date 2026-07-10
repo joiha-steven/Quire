@@ -59,6 +59,10 @@ export type FontPreset = {
   slug: string // public/fonts/<slug>-{latin,latin-ext,vietnamese}.woff2
   stack: string // CSS font-family value assigned to --font-sans
   typography: TypographySettings
+  // Bold weight for the reading text (`.prose strong`). Book serifs render a very
+  // black 700, heavier than the 600 headings — 600 keeps bold as emphasis, not a
+  // second heading. Omitted → the default 700 (right for the sans faces).
+  readingBold?: number
 }
 
 // The Latin subset of the active font, to <link rel="preload"> (no swap flash on
@@ -93,14 +97,16 @@ export const FONT_PRESETS: FontPreset[] = [
     typography: tuned({ body: { size: 1.15, line: 1.72 } }),
   },
   {
-    // Literata — Google's book serif (Play Books). Reads small, so a larger body
-    // and a tighter, booklike leading; headings drop the sans's negative tracking.
+    // Literata — Google's book serif (Play Books). A generous x-height, so 18px body
+    // is plenty; booklike leading; headings drop the sans's negative tracking; a 600
+    // bold so emphasis stays lighter than the headings.
     id: 'literata',
     slug: 'literata',
     name: 'Literata',
     stack: `'Literata', Georgia, 'Times New Roman', serif`,
+    readingBold: 600,
     typography: tuned({
-      body: { size: 1.2, line: 1.62 },
+      body: { size: 1.125, line: 1.65 },
       h1: { spacing: -0.01 }, h2: { spacing: -0.008 }, h3: { spacing: 0 }, h4: { spacing: 0 },
     }),
   },
@@ -111,8 +117,9 @@ export const FONT_PRESETS: FontPreset[] = [
     slug: 'sourceserif',
     name: 'Source Serif 4',
     stack: `'Source Serif 4', Georgia, 'Times New Roman', serif`,
+    readingBold: 600,
     typography: tuned({
-      body: { size: 1.2, line: 1.6 },
+      body: { size: 1.15, line: 1.62 },
       h1: { spacing: -0.01 }, h2: { spacing: -0.008 }, h3: { spacing: 0 }, h4: { spacing: 0 },
     }),
   },
@@ -132,7 +139,9 @@ export function isFontPresetId(id: unknown): id is string {
 // NOT --font-sans, which stays Inter for all system chrome. Emitted after globals
 // (beats the default) but before fontToCss (an uploaded custom font still wins).
 export function fontPresetCss(id: string): string {
-  return `:root{--font-reading:${getFontPreset(id).stack}}`
+  const p = getFontPreset(id)
+  const bold = p.readingBold ? `;--reading-bold:${p.readingBold}` : ''
+  return `:root{--font-reading:${p.stack}${bold}}`
 }
 
 // TRUE neutral grayscale — zero hue, the Quire Blog house style. (Earlier values had a

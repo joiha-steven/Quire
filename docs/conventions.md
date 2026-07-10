@@ -99,7 +99,9 @@
   Inter, Source Sans 3, Literata, Source Serif 4 — each declared per unicode-range in globals.css,
   so a family downloads ONLY when the chosen preset uses it. Each preset carries the typography
   TUNED for it; picking a font in Admin → Appearance drops that setup into the editable roles (still
-  owner-owned). Preload tracks the chosen font.
+  owner-owned). Preload tracks the chosen font. A preset may also set `readingBold` (the serifs use
+  600, since their 700 is blacker than the 600 headings) — `fontPresetCss` emits it as `--reading-bold`,
+  consumed by `.prose strong`; sans presets omit it and fall back to 700.
 - **Two font handles — chosen font ≠ site font.** `--font-reading` is the reader's own words (post
   body + title, list cards, comment body, the editor `.prose`) and is what `fontPresetCss` /
   `fontToCss` point (custom upload wins). `--font-sans` is the system-chrome face (dates/reading-time,

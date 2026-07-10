@@ -21,6 +21,11 @@ filters the list by substring.
 change, the body and everything else stay put. Lets an agent tweak just the title, tags, or category
 without resending the whole post (`update_post` still does a full replace).
 
+**Fix — serif reading fonts sit lighter.** Literata and Source Serif 4 rendered a large body (19px) and
+a very black 700 bold that out-weighed the 600 headings, so bold read like a second heading. Body drops
+to 18px (Literata) / 18.4px (Source Serif); presets now carry `readingBold: 600` (`--reading-bold`) so
+`.prose` bold stays emphasis beneath the headings. Sans faces are unchanged.
+
 ## v1.4.1 — 2026-07-10 (the sidebar rail, an accent colour, four layout toggles)
 
 A reading-layout release. The blog gains a real sidebar and, with it, the site's first accent

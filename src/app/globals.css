@@ -475,6 +475,12 @@ hr {
      which shortened lines and left too much space on the right. Normal greedy wrap
      fills each line to the measure. */
 }
+/* Bold = emphasis in body colour. `--reading-bold` lets a book serif dial it to 600
+   (its 700 is blacker than the 600 headings); sans faces fall back to 700. */
+.prose strong,
+.prose b {
+  font-weight: var(--reading-bold, 700);
+}
 .prose a {
   color: var(--c-link);
   text-decoration: underline;
