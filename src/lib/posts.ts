@@ -150,7 +150,10 @@ export const getPost = cache(async (slug: string): Promise<PostWithContent | nul
 function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWithContent {
   const content = (input.content ?? '').trim()
   const title = (input.title ?? '').trim()
-  const slug = input.slug?.trim() ? slugify(input.slug) : slugify(title)
+  // slugify() can reduce a non-empty title/slug (emoji, punctuation-only, an empty
+  // import title) to '' — an empty slug makes the row unreachable in the editor and
+  // Trash. Fall back to a timestamped slug so every post keeps an editable identity.
+  const slug = (input.slug?.trim() ? slugify(input.slug) : slugify(title)) || `post-${Date.now()}`
   // Author excerpt wins (length-capped); else auto from the body.
   const excerpt = input.excerpt?.trim() ? clampExcerpt(input.excerpt.trim()) : deriveExcerpt(content, excerptWords)
   return {
