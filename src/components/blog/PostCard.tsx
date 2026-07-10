@@ -24,7 +24,7 @@ export function PostCard({
   return (
     // `reveal` eases the card in as it scrolls into view (motion engine; fully
     // visible when motion is off / unsupported — see globals.css).
-    <article className="reveal group">
+    <article className="reveal">
       <p className="t-small text-meta">
         {category && (
           <>
@@ -42,7 +42,7 @@ export function PostCard({
       <Title className={`mt-2 ${lead ? 'fs-h1' : 'fs-h2'} font-semibold`}>
         <Link
           href={`/${post.slug}`}
-          className="decoration-accent underline-offset-4 group-hover:underline"
+          className="link-accent"
         >
           {post.title}
         </Link>

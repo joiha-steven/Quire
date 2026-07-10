@@ -107,7 +107,21 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
     const tx = t(language)
-    const showToc = features.toc && headings.length > 0
+    // ONE jump at the foot of the index: the end-of-article sections that exist
+    // (Tags / Categories / Comments), scrolling to the first of them.
+    const metaParts = [
+      post.tags.length > 0 ? tx.tagLabel : null,
+      post.categories.length > 0 ? tx.categoryLabel : null,
+      showComments ? tx.commentsHeading : null,
+    ].filter((p): p is string => p !== null)
+    const metaAnchor = post.tags.length > 0
+      ? TOC_ANCHORS.tags
+      : post.categories.length > 0
+        ? TOC_ANCHORS.categories
+        : TOC_ANCHORS.comments
+    const tocMeta = metaParts.length ? { label: metaParts.join(' / '), anchor: metaAnchor } : undefined
+    // Every post gets an index: the title row alone is already useful.
+    const showToc = features.toc && (headings.length > 0 || Boolean(tocMeta))
     const category = features.categoryLabel ? post.categories[0] : undefined
     return (
       <article>
@@ -155,7 +169,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             title (it is absolutely positioned) so the h1 opens the outline. */}
         {showToc && (
           <Rail label={tx.tocIndex}>
-            <Toc headings={headings} title={tx.tocIndex} />
+            <Toc headings={headings} title={tx.tocIndex} postTitle={post.title} meta={tocMeta} />
           </Rail>
         )}
 
