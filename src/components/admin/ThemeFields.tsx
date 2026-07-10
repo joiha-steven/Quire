@@ -20,6 +20,7 @@ const FIELDS: { key: ColorKey; label: keyof AdminStrings }[] = [
   { key: 'heading', label: 'colorHeading' },
   { key: 'meta', label: 'colorMeta' },
   { key: 'link', label: 'colorLink' },
+  { key: 'accent', label: 'colorAccent' },
   { key: 'rule', label: 'colorRule' },
 ]
 

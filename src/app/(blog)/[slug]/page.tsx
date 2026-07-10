@@ -14,6 +14,8 @@ import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
+import { Rail } from '@/components/blog/Rail'
+import { SetMenuHeadings } from '@/components/blog/MenuContext'
 import { TOC_ANCHORS } from '@/lib/toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
@@ -105,22 +107,9 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
-    // ONE in-page jump under the ToC headings: the present section labels joined
-    // (Tags / Categories / Comments), scrolling to the first section that exists.
     const tx = t(language)
-    const metaParts = [
-      post.tags.length > 0 ? tx.tagLabel : null,
-      post.categories.length > 0 ? tx.categoryLabel : null,
-      showComments ? tx.commentsHeading : null,
-    ].filter((p): p is string => p !== null)
-    const metaAnchor = post.tags.length > 0
-      ? TOC_ANCHORS.tags
-      : post.categories.length > 0
-        ? TOC_ANCHORS.categories
-        : TOC_ANCHORS.comments
-    const tocMeta = metaParts.length ? { label: metaParts.join(' / '), anchor: metaAnchor } : undefined
-    // Show the panel for any post that has headings to list OR an in-page jump.
-    const showToc = features.toc && (headings.length > 0 || Boolean(tocMeta))
+    const showToc = features.toc && headings.length > 0
+    const category = features.categoryLabel ? post.categories[0] : undefined
     return (
       <article>
         {features.progressBar && <ReadingProgress />}
@@ -141,17 +130,38 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             })}
           />
         )}
-        {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
-        <h1 className="fs-h1 font-semibold">{post.title}</h1>
-        <p className="mt-3 t-small text-meta">
-          {formatDate(post.date, language)}
-          {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
-        </p>
+        {/* The ToC lives in the left-gutter rail on wide screens; below the rail
+            breakpoint the same headings ride in the header menu. */}
+        {showToc && (
+          <>
+            <Rail>
+              <Toc headings={headings} title={tx.tocIndex} />
+            </Rail>
+            <SetMenuHeadings headings={headings} />
+          </>
+        )}
 
-        {/* The ToC is fixed to the viewport (see Toc.tsx) — left-pinned on desktop,
-            a left-edge tab + slide-out on mobile — not anchored here. */}
-        <div className="mt-8">
-          {showToc && <Toc headings={headings} title={tx.tocTitle} indexTitle={tx.tocIndex} meta={tocMeta} />}
+        <header className="pb-9">
+          <p className="t-small text-meta">
+            {category && (
+              <>
+                <Link href={`/category/${termSlug(category)}`} className="text-heading hover:text-meta">
+                  {category}
+                </Link>
+                {' · '}
+              </>
+            )}
+            {formatDate(post.date, language)}
+            {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
+          </p>
+          {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
+          <h1 className="mt-3 fs-h1 font-semibold">{post.title}</h1>
+          {/* Standfirst: the excerpt, so a long read opens on a sentence, not a wall. */}
+          {features.deck && post.excerpt && <p className="mt-4 fs-h4 text-meta">{post.excerpt}</p>}
+        </header>
+        <hr />
+
+        <div className="mt-9">
           <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 

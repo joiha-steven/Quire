@@ -86,8 +86,17 @@
   `inline-flex h-9 items-center` box; the row is `items-center`. NEVER align a bigger wordmark
   by `items-baseline` (the recurring bug); never leave an item without the `h-9` box. Verify the
   rendered result before shipping.
-- **One divider style site-wide:** the global `<hr>` (50% width, left, faint). Never bespoke
+- **One divider style site-wide:** the global `<hr>` (full width, faint). Never bespoke
   `border-t`/`border-b` as content dividers; never ALL-CAPS (no `uppercase`) in shipped UI.
+- **The sidebar rail never moves the reading column.** `.rail` is absolutely placed inside
+  `.with-rail` (which wraps the content, not the header, so the rail's first line is level with
+  the article's first line) and sticks on scroll. Its breakpoint is COMPUTED from `contentWidth`
+  in `(blog)/layout.tsx` — a media query cannot read a CSS variable — so a wider column simply
+  keeps the rail hidden for longer. Below it the rail is hidden and its contents ride in
+  `HeaderMenu`. The rail is type on the page: no border, no shadow, no background.
+- **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
+  active rail marker and the title hover underline. It is seeded from each palette's `link`, so
+  Mono stays monochrome. Never hardcode a highlight colour.
 - **Sharp corners everywhere — `border-radius: 0`.** A global reset in `globals.css` forces it
   (beats Tailwind's `rounded-*` utilities), so you don't need to strip `rounded-*` from markup and
   new UI can't reintroduce rounding. Do NOT add bespoke `border-radius`; change the house rule in

@@ -24,12 +24,17 @@ function color(value: unknown, fallback: string): string {
 // Merge a partial color set over a fallback set.
 function sanitizeColors(input: unknown, fallback: ThemeColors): ThemeColors {
   const o = (input ?? {}) as Partial<ThemeColors>
+  // `accent` arrived after `link`. Settings saved before it have no accent key, so
+  // seed it from the RESOLVED link — the same rule the presets use. A palette whose
+  // link the owner had customized keeps that hue instead of snapping to the preset.
+  const link = color(o.link, fallback.link)
   return {
     bg: color(o.bg, fallback.bg),
     text: color(o.text, fallback.text),
     heading: color(o.heading, fallback.heading),
     meta: color(o.meta, fallback.meta),
-    link: color(o.link, fallback.link),
+    link,
+    accent: color(o.accent, link),
     rule: color(o.rule, fallback.rule),
   }
 }
@@ -102,6 +107,10 @@ export function sanitizeFeatures(input: unknown, fallback: FeatureSettings): Fea
     readingTime: bool(o.readingTime, fallback.readingTime),
     progressBar: bool(o.progressBar, fallback.progressBar),
     activityLog: bool(o.activityLog, fallback.activityLog),
+    sidebar: bool(o.sidebar, fallback.sidebar),
+    leadPost: bool(o.leadPost, fallback.leadPost),
+    categoryLabel: bool(o.categoryLabel, fallback.categoryLabel),
+    deck: bool(o.deck, fallback.deck),
   }
 }
 

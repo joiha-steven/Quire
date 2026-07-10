@@ -22,6 +22,8 @@ const de = {
   searchEmpty: 'Keine passenden Beiträge gefunden.',
   tocTitle: 'Überschriften',
   tocIndex: 'Inhalt',
+  categoriesTitle: 'Kategorien',
+  tagsTitle: 'Schlagwörter',
   relatedTitle: 'Ähnliche Beiträge',
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',

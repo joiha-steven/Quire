@@ -49,6 +49,7 @@
   --color-heading: var(--c-heading);
   --color-meta: var(--c-meta);
   --color-link: var(--c-link);
+  --color-accent: var(--c-accent);
   --color-rule: var(--c-rule);
 }
 
@@ -65,6 +66,7 @@
   --c-heading: #14141a;
   --c-meta: #8a8a90;
   --c-link: #14141a;
+  --c-accent: #14141a;
   --c-rule: #e9e9e4;
   /* Type system — one tunable set per role (size rem, line-height, letter-spacing
      em). ONE source of truth for every text size on the public site; no per-element
@@ -128,6 +130,7 @@ input[type='checkbox'] {
   --c-heading: #f1f1f2;
   --c-meta: #85858c;
   --c-link: #f1f1f2;
+  --c-accent: #f1f1f2;
   --c-rule: #27272a;
 }
 
@@ -193,12 +196,59 @@ h1, h2, h3, h4, h5 {
 /* Body-role text OUTSIDE .prose (excerpts, footer) — same size/rhythm as running text. */
 .t-body { font-size: var(--fs-body); line-height: var(--lh-body); letter-spacing: var(--ls-body); }
 
-/* One divider style for the whole site: faint, 50% wide, left-aligned. */
+/* One divider style for the whole site: faint, full width. */
 hr {
   border: none;
   border-top: 1px solid var(--c-rule);
-  width: 50%;
+  width: 100%;
   margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Sidebar rail. It lives in the left gutter and NEVER displaces the reading
+   column, which stays centred on the page exactly as it does without a rail.
+   `--rail-at` is the viewport width at which the gutter can finally hold it —
+   computed from the owner's contentWidth and injected by the blog layout, so a
+   wider column simply keeps the rail hidden for longer.
+--------------------------------------------------------------------------- */
+:root {
+  --rail-w: 200px;
+  --rail-gap: 60px;
+  /* Space between the header rule and the first line of content. The rail's top
+     matches it, so the rail's first line is level with the article's first line. */
+  --rail-top: 3rem;
+}
+
+/* Positioning context for the rail: wraps the content, not the header. */
+.with-rail {
+  position: relative;
+}
+
+/* Below the breakpoint the rail is hidden — its content rides in the header menu
+   instead (see HeaderMenu). The layout injects the @media that turns it on and
+   places it, because a media query cannot read a CSS variable. */
+.rail {
+  display: none;
+}
+
+.rail-inner {
+  position: sticky;
+  top: 2.5rem;
+}
+
+/* The one accent mark: a hairline beside the row you are reading. */
+.rail-row {
+  position: relative;
+  padding-left: 14px;
+}
+.rail-row[aria-current]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  background: var(--c-accent);
 }
 
 /* Secondary text (dates, captions) — owner-themed. */

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeEnabledPalettes, sanitizeComments } from '@/lib/settings-sanitize'
-import { ALL_PALETTE_IDS } from '@/lib/themes'
+import { sanitizeEnabledPalettes, sanitizeComments, sanitizeThemes } from '@/lib/settings-sanitize'
+import { ALL_PALETTE_IDS, defaultThemes } from '@/lib/themes'
 
 const COMMENTS_OFF = { enabled: false, turnstile: false, googleAuth: false }
 
@@ -43,5 +43,27 @@ describe('sanitizeEnabledPalettes', () => {
 
   it('falls back to the built-in default when the given default is invalid', () => {
     expect(sanitizeEnabledPalettes(['ocean'], 'not-a-preset')).toContain('mono')
+  })
+})
+
+// `accent` shipped after the palettes did. A settings row saved before it has no
+// accent key, so the sanitizer must invent one — otherwise the CSS var lands empty
+// and every accent mark paints transparent.
+describe('sanitizeColors: accent back-compat', () => {
+  it('seeds a missing accent from the RESOLVED link colour', () => {
+    const out = sanitizeThemes({ mono: { light: { link: '#ff0000' }, dark: {} } }, defaultThemes())
+    expect(out.mono.light.accent).toBe('#ff0000')
+  })
+
+  it('keeps an explicit accent over the link colour', () => {
+    const out = sanitizeThemes({ mono: { light: { link: '#ff0000', accent: '#00ff00' } } }, defaultThemes())
+    expect(out.mono.light.accent).toBe('#00ff00')
+  })
+
+  it('never leaves accent empty, for any palette or mode', () => {
+    for (const theme of Object.values(sanitizeThemes({}, defaultThemes()))) {
+      expect(theme.light.accent).toMatch(/^#[0-9a-f]{6}$/i)
+      expect(theme.dark.accent).toMatch(/^#[0-9a-f]{6}$/i)
+    }
   })
 })

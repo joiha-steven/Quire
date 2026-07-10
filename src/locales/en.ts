@@ -22,6 +22,8 @@ const en = {
   searchEmpty: 'No matching posts found.',
   tocTitle: 'Headings',
   tocIndex: 'Contents',
+  categoriesTitle: 'Categories',
+  tagsTitle: 'Tags',
   relatedTitle: 'Related posts',
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',
