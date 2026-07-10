@@ -21,6 +21,7 @@
   --col: 680px;   /* the reading column, always centred on the page */
   --rail: 200px;  /* floats in the left gutter, never displaces the column */
   --gutter: 60px; /* gap between rail and column */
+  --content-top: 48px; /* space between the masthead rule and the first line of content */
 }
 
 *, *::before, *::after { border-radius: 0; box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,11 +39,14 @@ a { color: inherit; text-decoration: none; }
 /* The ONE centred column. Masthead, content and footer all share its width, so
    the page reads as a single centred axis no matter what the rail does. */
 .page {
-  position: relative;
   max-width: var(--col);
   margin: 0 auto;
   padding: 0 24px;
 }
+
+/* Containing block for the rail. It wraps ONLY the content, so the rail's first
+   line starts level with the article's first line, not with the masthead. */
+.with-rail { position: relative; }
 
 /* ---- Masthead ---- */
 .masthead {
@@ -64,10 +68,10 @@ a { color: inherit; text-decoration: none; }
    No border, no shadow, no panel. It is typography sitting on the page. ---- */
 .rail {
   position: absolute;
-  top: 0;
+  top: var(--content-top);           /* first rail line sits level with the article's first line */
   right: calc(100% + var(--gutter)); /* right edge sits one gutter left of the column */
   width: var(--rail);
-  height: 100%;                      /* gives the sticky child room to travel */
+  height: calc(100% - var(--content-top)); /* room for the sticky child to travel */
 }
 .rail-inner {
   position: sticky;
@@ -75,11 +79,9 @@ a { color: inherit; text-decoration: none; }
   font-size: 14px;
   line-height: 1.5;
 }
-.rail .tagline {
-  color: var(--text); font-size: 14.5px; line-height: 1.6;
-  padding: 0 0 20px 14px; margin-bottom: 20px;
-  border-bottom: 1px solid var(--rule);
-}
+/* Variant under test: rail pinned to the vertical middle instead of the top. */
+body.rail-center .rail-inner { top: 50%; transform: translateY(-50%); }
+
 .rail h2 { font-size: 13px; font-weight: 600; color: var(--heading); margin-bottom: 12px; }
 .rail .block + .block { margin-top: 28px; }
 .rail ul { list-style: none; }
@@ -106,7 +108,7 @@ a { color: inherit; text-decoration: none; }
 .tags a:hover { color: var(--heading); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--accent); }
 
 /* ---- Reading column ---- */
-main { padding-top: 48px; }
+main { padding-top: var(--content-top); }
 .eyebrow { font-size: 13px; color: var(--meta); }
 .eyebrow .cat { color: var(--heading); }
 
@@ -145,25 +147,33 @@ main { padding-top: 48px; }
 
 .foot { padding: 64px 0 40px; color: var(--meta); font-size: 14px; }
 
+/* ---- Drawer: on phones the whole rail lives behind the menu button ---- */
+.drawer { display: none; }
+.drawer.is-open { display: block; }
+.drawer-inner { padding: 24px 0 8px; border-top: 1px solid var(--rule); }
+.drawer nav.links { margin-bottom: 28px; }
+.drawer nav.links a { display: block; font-size: 17px; color: var(--heading); padding: 8px 0; }
+.drawer .block + .block { margin-top: 28px; }
+.drawer h2 { font-size: 13px; font-weight: 600; color: var(--heading); margin-bottom: 12px; }
+.drawer ul { list-style: none; }
+.drawer li a {
+  display: flex; justify-content: space-between; gap: 10px;
+  color: var(--meta); padding: 7px 0; min-height: 44px; align-items: center;
+}
+.drawer .tags { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 0; }
+.drawer .tags a { color: var(--meta); font-size: 14px; padding: 4px 0; }
+
 /* The rail only exists when the gutter can actually hold it:
-   680 column + 2 x (216 rail + 64 gutter) = 1240, plus breathing room. */
+   680 column + 2 x (200 rail + 60 gutter) = 1200, plus breathing room. */
 @media (max-width: 1279px) {
-  .rail {
-    position: static; width: auto; height: auto;
-    margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--rule);
-  }
-  .rail-inner { position: static; }
+  /* Phones show none of it inline. Categories, tags and the table of contents
+     all move behind the menu button. */
+  .rail { display: none; }
   main { padding-top: 28px; }
-  .rail .tagline { border: 0; padding: 0; margin: 0 0 20px; }
-  /* Phones get the tagline plus a horizontal category scroller; the full list
-     and the tag cloud are rail furniture. */
-  .rail .block { display: none; }
-  .cats-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
-  .cats-scroll a { border: 1px solid var(--rule); padding: 5px 10px; white-space: nowrap; color: var(--meta); }
   .masthead img { width: 132px; }
   .lead h1 { font-size: 32px; max-width: none; }
   .entry h2 { font-size: 22px; }
   .post-head h1 { font-size: 31px; max-width: none; }
   .lead p.excerpt, .entry p.excerpt { font-size: 16.5px; }
 }
-@media (min-width: 1280px) { .cats-scroll { display: none; } }
+@media (min-width: 1280px) { .drawer { display: none !important; } }

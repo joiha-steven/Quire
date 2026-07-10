@@ -9,6 +9,51 @@
 <body>
 <div class="page">
 
+
+  <header class="masthead">
+    <a href="/"><img src="assets/logo.webp" alt="manhhung"></a>
+    <div class="icons">
+      <button aria-label="Tìm kiếm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <button aria-label="Bảng màu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="5"/><circle cx="15" cy="15" r="5"/></svg></button>
+      <button aria-label="Giao diện"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
+      <button aria-label="Menu" id="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </header>
+  <hr class="rule-full">
+
+  <!-- Phones: the table of contents rides in the menu too. -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-inner">
+      <nav class="links">
+        <a href="#">Trang chủ</a>
+        <a href="#">Giới thiệu</a>
+        <a href="#">Lưu trữ</a>
+      </nav>
+
+      <div class="block">
+        <h2>Mục lục</h2>
+        <ul>
+          <li><a href="#">Đo lường một sự phồn vinh, và đọc con số cho đúng</a></li>
+          <li><a href="#">Cuộc cách mạng lặng lẽ của các loại cây lương thực</a></li>
+          <li><a href="#">Một nền kinh tế thị trường mà không có chủ nghĩa tư bản</a></li>
+          <li><a href="#">Bạc, và nhà Thanh trong dòng chảy của cả thế giới</a></li>
+          <li><a href="#">Đế chế khổng lồ, bộ máy thu tiền tí hon</a></li>
+          <li><a href="#">Đỉnh cao của tăng trưởng theo bề rộng</a></li>
+          <li><a href="#">1793, và cái bóng của một tương lai vô định</a></li>
+          <li><a href="#">Nguồn tham khảo</a></li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h2>Thẻ</h2>
+        <div class="tags">
+          <a href="#">kinh tế</a><a href="#">lịch sử</a><a href="#">châu á</a><a href="#">thị trường</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="with-rail">
   <aside class="rail">
     <div class="rail-inner">
       <div class="block">
@@ -34,17 +79,6 @@
     </div>
   </aside>
 
-  <header class="masthead">
-    <a href="/"><img src="assets/logo.webp" alt="manhhung"></a>
-    <div class="icons">
-      <button aria-label="Tìm kiếm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
-      <button aria-label="Bảng màu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="5"/><circle cx="15" cy="15" r="5"/></svg></button>
-      <button aria-label="Giao diện"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
-      <button aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    </div>
-  </header>
-  <hr class="rule-full">
-
   <main>
     <article>
       <header class="post-head">
@@ -69,8 +103,12 @@
       </div>
     </article>
   </main>
+  </div>
 
   <footer class="foot">© 2026 manhhung.me · powered by Quireblog</footer>
 </div>
+<script>
+  menu.onclick = () => drawer.classList.toggle('is-open')
+</script>
 </body>
 </html>
