@@ -1,17 +1,19 @@
-# Sidebar variants (rendered on the live site, not a mockup)
+# Book-page typography: a preview on the real article
 
-## A. Current: rail left, no divider
-![a](shots/a_hien_tai.png)
+Same paragraphs, same 680px column, same screen. Only the setting changes.
 
-## B. Rail left, hairline divider, text left-aligned
-![b](shots/b_line_chu_trai.png)
+## A. Today — Inter, ragged right, blank line between paragraphs
+![now](shots/a_hien_tai_inter.png)
 
-## C. Rail left, hairline divider, text right-aligned
-Wrapped items rag on the left ("bản", "vô định" land alone), and the accent
-marker ends up 14px from the divider — two vertical lines competing.
-![c](shots/c_line_chu_phai.png)
+## B. Book mode — Literata, justified, first-line indent, oldstyle figures
+Body 19.5px / 1.58, `text-align: justify`, `text-indent: 1.6em` (flush after a
+heading), `font-feature-settings: "onum"` so 1793 sits in the line instead of
+standing above it.
+![book](shots/b_che_do_sach_literata.png)
 
-## D. Rail moved to the RIGHT gutter, hairline on its left
-The article leads the eye, the index is secondary. This is the docs-site
-convention (Stripe, MDN). Text stays left-aligned.
-![d](shots/d_sidebar_ben_phai.png)
+## Why justification is safe in Vietnamese
+
+Measured over the 6,270 words of this article: the average token is **3.37
+characters** and only **0.3%** of words run longer than 7. Short tokens mean the
+justifier only has to nudge word spaces, so no rivers open up. English, with its
+long words, needs hyphenation to justify cleanly. Vietnamese does not.
