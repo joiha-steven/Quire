@@ -5,6 +5,7 @@ import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { ogCardUrl, siteDomain } from '@/lib/og'
 import { t } from '@/lib/i18n'
 import { BlogListing } from '@/components/blog/BlogListing'
+import { HomeRail } from '@/components/blog/HomeRail'
 import { JsonLd, websiteSchema } from '@/components/blog/JsonLd'
 
 // ISR-cached for fast reads; admin saves purge it instantly via
@@ -37,7 +38,8 @@ export default async function HomePage() {
           })}
         />
       )}
-      <BlogListing posts={posts} page={1} basePath="/" emptyText={t(settings.language).emptyPosts} />
+      {settings.features.sidebar && <HomeRail lang={settings.language} />}
+      <BlogListing posts={posts} page={1} basePath="/" emptyText={t(settings.language).emptyPosts} lead />
     </>
   )
 }

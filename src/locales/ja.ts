@@ -22,6 +22,8 @@ const ja = {
   searchEmpty: '一致する投稿が見つかりません。',
   tocTitle: '見出し',
   tocIndex: '目次',
+  categoriesTitle: 'カテゴリー',
+  tagsTitle: 'タグ',
   relatedTitle: '関連記事',
   notFoundTitle: 'ページが見つかりません',
   notFoundText: 'お探しのページは存在しないか、移動されました。',

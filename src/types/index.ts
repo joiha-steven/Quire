@@ -85,6 +85,7 @@ export type ThemeColors = {
   meta: string // secondary text (dates, captions)
   link: string // links
   rule: string // horizontal rule (---) and borders
+  accent: string // the ONE highlight: active sidebar row, title hover underline. Seeded from `link` (so mono stays monochrome)
 }
 
 export type ThemeSettings = {
@@ -149,11 +150,15 @@ export type SeoSettings = {
 // one (activityLog) is an admin feature.
 export type FeatureSettings = {
   search: boolean // header search icon + /search page
-  toc: boolean // table of contents on long posts
+  toc: boolean // table of contents on long posts (the post sidebar)
   related: boolean // related posts at the end of an article
   readingTime: boolean // reading-time estimate in the post meta
   progressBar: boolean // reading-progress bar on posts
   activityLog: boolean // record admin mutations to the activity log (Admin -> Log)
+  sidebar: boolean // categories + tags in the left gutter of the post list
+  leadPost: boolean // first post of page 1 gets the h1 role instead of h2
+  categoryLabel: boolean // category name in the meta line of cards and post headers
+  deck: boolean // the excerpt shown as a standfirst under a post title
 }
 
 export type SiteSettings = {

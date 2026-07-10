@@ -329,3 +329,20 @@ export async function getTags(): Promise<string[]> {
   const posts = await getIndex()
   return [...new Set(posts.flatMap((p) => p.tags))].sort()
 }
+
+export type TermCount = { name: string; count: number }
+
+// Terms of PUBLISHED posts only, with their post counts — what the public sidebar
+// lists. Busiest first, ties alphabetical. (`getCategories`/`getTags` above serve
+// the admin, and include drafts.)
+export async function getPublicTaxonomy(): Promise<{ categories: TermCount[]; tags: TermCount[] }> {
+  const posts = await getPublicPosts()
+  const tally = (pick: (p: Post) => string[]): TermCount[] => {
+    const counts = new Map<string, number>()
+    for (const p of posts) for (const term of pick(p)) counts.set(term, (counts.get(term) ?? 0) + 1)
+    return [...counts]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  }
+  return { categories: tally((p) => p.categories), tags: tally((p) => p.tags) }
+}

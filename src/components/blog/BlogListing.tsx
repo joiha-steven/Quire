@@ -14,12 +14,14 @@ export async function BlogListing({
   basePath,
   emptyText,
   heading,
+  lead = false,
 }: {
   posts: Post[]
   page: number
   basePath: string // '/', '/category/x', '/tag/x' (no trailing slash except home)
   emptyText: string
   heading?: React.ReactNode
+  lead?: boolean // home page 1 only — a category/tag archive has no lead post
 }) {
   const { language, postsPerPage, features } = await getSettings()
   const { items, page: current, totalPages } = paginate(posts, page, postsPerPage)
@@ -35,6 +37,8 @@ export async function BlogListing({
         lang={language}
         emptyText={emptyText}
         showReadingTime={features.readingTime}
+        showCategory={features.categoryLabel}
+        lead={lead && features.leadPost && current === 1}
       />
       <Pagination basePath={basePath} page={current} totalPages={totalPages} lang={language} />
     </>

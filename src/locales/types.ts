@@ -23,6 +23,8 @@ export type Dict = {
   searchEmpty: string
   tocTitle: string
   tocIndex: string
+  categoriesTitle: string
+  tagsTitle: string
   relatedTitle: string
   notFoundTitle: string
   notFoundText: string
@@ -263,6 +265,7 @@ export type AdminStrings = {
   colorHeading: string
   colorMeta: string
   colorLink: string
+  colorAccent: string
   colorRule: string
   resetDefault: string
   // settings tabs (task-based)
@@ -378,6 +381,14 @@ export type AdminStrings = {
   featReadingTimeDesc: string
   featProgress: string
   featProgressDesc: string
+  featSidebar: string
+  featSidebarDesc: string
+  featLeadPost: string
+  featLeadPostDesc: string
+  featCategoryLabel: string
+  featCategoryLabelDesc: string
+  featDeck: string
+  featDeckDesc: string
   // SEO fields
   seoCanonical: string
   seoCanonicalHint: string

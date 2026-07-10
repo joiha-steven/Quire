@@ -22,6 +22,8 @@ const ko = {
   searchEmpty: '일치하는 게시물이 없습니다.',
   tocTitle: '제목',
   tocIndex: '목차',
+  categoriesTitle: '카테고리',
+  tagsTitle: '태그',
   relatedTitle: '관련 게시물',
   notFoundTitle: '페이지를 찾을 수 없습니다',
   notFoundText: '찾으시는 페이지가 존재하지 않거나 이동되었습니다.',

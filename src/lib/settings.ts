@@ -40,6 +40,10 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   readingTime: true,
   progressBar: true,
   activityLog: true,
+  sidebar: true,
+  leadPost: true,
+  categoryLabel: true,
+  deck: true,
 }
 
 export const DEFAULT_COMMENTS: CommentSettings = {

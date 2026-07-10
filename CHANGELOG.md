@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## Unreleased (reading layout: sidebar rail, accent colour)
+
+**New — the sidebar rail.** Categories + tags (home) and a post's table of contents now live in the
+left gutter, sticky, with their first line level with the content's first line. The reading column
+stays exactly centred: the rail is absolutely placed and never displaces it. Its breakpoint is
+computed from `contentWidth`, so a wider column keeps the rail hidden for longer. Below that width
+the rail is hidden and its contents fold into the header menu.
+
+**New — `accent`, a 7th palette colour** (Admin → Appearance). Paints the marker beside the rail row
+you are reading and the title hover underline. Seeded from each palette's `link`, so Mono stays
+monochrome and no existing site changes hue. Settings saved before this key migrate on read.
+
+**New feature toggles** (Admin → Settings → Features), all default on: `sidebar`, `leadPost` (the
+newest post on home page 1 takes the h1 role), `categoryLabel`, `deck` (the excerpt as a standfirst
+under a post title).
+
+**Changed**
+- The table of contents is no longer a bordered, shadowed panel pinned to the viewport edge; it is
+  type in the rail. Its in-page "Tags / Categories / Comments" jump link went with the panel.
+- The global `<hr>` runs the full column width instead of a left-aligned 50% stub.
+
 ## v1.4.0 — 2026-07-09 (WordPress import, ops hardening, deep-audit fixes)
 
 Outcome of a full read-through audit (UI/UX, typography, logic/cache, security, self-host
