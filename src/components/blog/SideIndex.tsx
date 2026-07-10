@@ -11,15 +11,17 @@ export type IndexLink = {
 
 export function IndexBlock({ title, links }: { title: string; links: IndexLink[] }) {
   if (links.length === 0) return null
+  // Widest count on this list, in digits — the count column is sized to exactly that.
+  const digits = Math.max(1, ...links.map((l) => (l.count == null ? 1 : String(l.count).length)))
   return (
     <div>
       <h2 className="mb-3 pl-3.5 t-small font-semibold text-heading">{title}</h2>
-      <ul>
+      <ul style={{ '--count-w': `${digits}ch` } as React.CSSProperties}>
         {links.map((l) => (
           <li key={l.href} className="mt-2 first:mt-0">
             <Link
               href={l.href}
-              className="rail-row link-accent flex justify-between gap-4 t-small text-meta hover:text-heading"
+              className="rail-row link-accent flex justify-between gap-3.5 t-small text-meta hover:text-heading"
             >
               <span>{l.label}</span>
               {/* Fixed-width and right-aligned: otherwise a two-digit count pushes
