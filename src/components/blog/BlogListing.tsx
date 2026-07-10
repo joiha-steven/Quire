@@ -7,6 +7,7 @@ import { getSettings } from '@/lib/settings'
 import { paginate } from '@/lib/paginate'
 import { PostList } from './PostList'
 import { Pagination } from './Pagination'
+import { ListingSidebar } from './ListingSidebar'
 
 export async function BlogListing({
   posts,
@@ -29,6 +30,9 @@ export async function BlogListing({
   // would serve duplicate content under a bogus URL).
   if (page > 1 && page > totalPages) notFound()
 
+  // On a category/tag archive the basePath IS that term's URL — mark it in the rail.
+  const activeHref = /^\/(category|tag)\//.test(basePath) ? basePath : undefined
+
   return (
     <>
       {heading}
@@ -41,6 +45,9 @@ export async function BlogListing({
         lead={lead && features.leadPost && current === 1}
       />
       <Pagination basePath={basePath} page={current} totalPages={totalPages} lang={language} />
+      {/* Rendered last: the rail is absolutely placed, so DOM order stays free and
+          the page heading leads the outline. Present on every listing page. */}
+      {features.sidebar && <ListingSidebar lang={language} activeHref={activeHref} />}
     </>
   )
 }
