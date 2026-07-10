@@ -2,15 +2,16 @@
 
 Static mockup only. No Quire source is touched on this branch.
 
-Core idea: replace the single 680px strip with a real two-column grid, a 224px
-sticky rail plus the 680px reading column. The rail holds the site identity,
-categories and tags on the home page, and the table of contents on a post. The
-TOC stops floating (`fixed left-0`) and becomes part of the grid.
+The reading column stays **centred on the page**, exactly as today. The rail is
+absolutely placed in the left gutter and never displaces it, and it sticks as
+you scroll. It carries no border, no shadow and no background: it is typography
+sitting on the page, not a panel. On a post it holds the table of contents; on
+the home page it holds the tagline, the categories and the tags.
 
 Other changes: a display-size lead post, a category label on every entry, a
 full-width divider replacing the 50% stub, a deck line under post titles, and
-the logo red `#d80000` echoed as the single accent (active rail item, title
-hover underline).
+the logo red `#d80000` echoed as the single accent (the marker beside the active
+rail row, and the title hover underline).
 
 The signature logo is kept as-is.
 
@@ -22,9 +23,13 @@ Home
 Post
 ![post desktop](shots/post_d.png)
 
+Post, scrolled 1000px. The rail stays with you, the active section is marked.
+![post scrolled](shots/post_scrolled.png)
+
 ## Mobile, 390px
 
-The rail unstacks to the top: tagline plus a horizontal category scroller.
+Below 1280px the gutter cannot hold the rail, so it unstacks to the top:
+tagline plus a horizontal category scroller.
 
 Home
 ![home mobile](shots/home_m.png)
