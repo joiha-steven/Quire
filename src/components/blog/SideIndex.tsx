@@ -19,10 +19,12 @@ export function IndexBlock({ title, links }: { title: string; links: IndexLink[]
           <li key={l.href} className="mt-2 first:mt-0">
             <Link
               href={l.href}
-              className="rail-row link-accent flex justify-between gap-2.5 t-small text-meta hover:text-heading"
+              className="rail-row link-accent flex justify-between gap-4 t-small text-meta hover:text-heading"
             >
               <span>{l.label}</span>
-              {l.count != null && <span className="shrink-0 tabular-nums">{l.count}</span>}
+              {/* Fixed-width and right-aligned: otherwise a two-digit count pushes
+                  its label left and the names stop lining up. */}
+              {l.count != null && <span className="rail-count shrink-0 tabular-nums">{l.count}</span>}
             </Link>
           </li>
         ))}
