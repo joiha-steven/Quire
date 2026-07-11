@@ -76,8 +76,9 @@
   import the same string so they can't drift. Admin nav is a **collapsible left sidebar**
   (`AdminSidebar.tsx`): each item has an icon (`navIcons.tsx`) + label; a toggle collapses the rail
   to icon-only (persisted in localStorage; it publishes its width as `--admin-nav-w` so the fixed
-  settings/editor save bars offset past it). Every item — nav links AND theme/palette/cache/sign-out
-  controls — uses `headerActions.ts` `SIDEBAR_NAV` (active links add `SIDEBAR_NAV_ACTIVE`); on mobile
+  settings/editor save bars offset past it). Nav links use `headerActions.ts` `SIDEBAR_NAV` (active
+  links add `SIDEBAR_NAV_ACTIVE`); the footer holds only the **light/dark toggle + Sign out** (palette
+  selection moved to the public site, cache-clearing left the persistent nav); on mobile
   it's a hamburger drawer (always icon+label). (`ADMIN_NAV` is the older horizontal variant.)
   Public header's 40px icon buttons → `ICON_BTN` (`ui/iconButton.ts`). Adding an item = reuse the
   constant, never copy a class list.

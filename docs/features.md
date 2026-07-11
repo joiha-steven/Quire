@@ -105,9 +105,10 @@
   `Tabs` (`underline` for Settings + `segment` for Content/Analytics, one component),
   `StatCard`, `EmptyState`, and table tokens (`TableFrame` / `THEAD` / `TROW`). Admin is
   monochrome by design — the kit uses the neutral scale, not public theme tokens.
-- **Dotted canvas:** `<main>` in the admin layout carries `.admin-canvas` (globals.css) —
-  a CSS radial-gradient dot grid (fixed faint neutral per light/dark mode); the sidebar +
-  cards float on solid surfaces above it.
+- **Admin canvas:** `<main>` in the admin layout carries `.admin-canvas` (globals.css) — a flat,
+  quiet neutral surface (one fill per light/dark mode); the sidebar + cards sit on solid surfaces
+  above it. (The editorial redesign replaced the old dotted-grid canvas — see
+  `docs/admin-redesign-2026-07.md`.)
 - **Sidebar (`AdminSidebar`):** the collapse/expand control sits at the TOP next to the
   wordmark (a compact chrome button, NOT a nav row) so it can't be mistaken for Sign out;
   Sign out sits alone in the footer under its own divider. Palette selection was REMOVED
@@ -123,7 +124,7 @@
 - `PostsTable` filter bar: substring search + All/Published/Draft (client-side).
 - `TaxonomyManager`: rename (merge) / remove terms across all posts → `updateTerm`.
 
-## Activity log + System panel (Admin)
+## Activity log + Overview (Admin)
 
 - **Activity log:** every mutating route does `after(() => logActivity(action, detail))`
   (post/page CRUD, media/file/icon/font, settings, taxonomy, cache.clear, backup.*). Gated by
@@ -134,22 +135,19 @@
   entry (gated by the same toggle). So unexpected server failures show up in the log, rendered with
   a red badge in `ActivityLog.tsx`. Only genuine errors land here (validation 400s use `fail()`, not
   `logError`).
-- **Overview (`Overview.tsx`):** stat cards — **Posts / Pages / Comments / Images / Storage**
-  (each links to its section; Comments = sum of `countsByPosts()` when comments are on) — then the
-  **dashboard widgets** (`DashboardWidgets.tsx`): a **Traffic** card (30-day views + visitors with an
-  inline sparkline + last-7-days, from `getAnalytics(30)`), **Most viewed** (top 5 posts/pages by
-  all-time views, `getViewTotals` mapped to titles), and **Needs attention** (draft + unused-media
-  counts; no "pending comments" — comments publish on submit, there is no moderation queue). Then an
-  **SEO health** card (published count + posts missing an excerpt / cover image, metadata-only so it's
-  cheap — no body scan — each linking to Content) and a **Traffic sources** card (top referrers +
-  countries over 30 days by distinct visitor, from `getAnalytics(30).topReferrers/topCountries`; an
-  empty label = "Direct / none"). Then a **Quick actions** row (New post/page, Media, Settings, plus a
-  **Clear cache** button and a **View site** link), a **Recent activity** card (latest 6 from
-  `getActivity`, gated by `features.activityLog`), taxonomy breakdown, and the System panel at the bottom.
-- **System panel** (`getSystemInfo()`): hosting/URL/env/git + database
-  (Postgres, live reachability) + storage host + **MCP on/off** + **Backups** (on = enabled AND Drive
-  connected; shows the **last run** or "never"); rows may deep-link. The Images card splits media into **originals / variants / files**
-  (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
+- **Overview (`Overview.tsx`):** the admin home. A header with a **New post** action, five **stat
+  cards** — Posts / Pages / Comments / Images / Storage (each links to its section; Comments = sum of
+  `countsByPosts()` when comments are on) — then the **dashboard widgets** (`DashboardWidgets.tsx`): a
+  **Traffic** card (30-day views + visitors with an inline sparkline + last-7-days, from
+  `getAnalytics(30)`), **Most viewed** (top 5 posts/pages by all-time views, `getViewTotals` mapped to
+  titles), and **Needs attention** (**draft count only** — unused-media is deliberately excluded, too
+  heavy to compute per load; no "pending comments" — comments publish on submit). Below that a **Recent
+  activity** list (latest few from `getActivity`, gated by `features.activityLog`, "view all" → Log) and
+  a one-line **system footer** — DB reachability · storage · a **View site** link, from `getSystemInfo()`.
+- **The editorial redesign** removed the old home-page duplicate cards (SEO health, traffic sources,
+  quick-actions row, taxonomy breakdown, and the rich system panel) — that data lives on its own pages
+  now; only the compact footer remains. See `docs/admin-redesign-2026-07.md`. (`admin/page.tsx` still
+  passes the `seo`/`sources` props, now unused by `Overview`.)
 - **Help / Guide:** Admin → Help (`/admin/help`, `HelpGuide.tsx`) — a concise, sectioned index (writing,
   settings, self-host, Cloudflare, cache/ops, MCP) linking out to the repo docs. **Content is English by
   design** (canonical, like the docs); only the nav label + title are localized (`navHelp`). Pure server

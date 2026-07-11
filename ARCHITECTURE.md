@@ -30,6 +30,12 @@ comments         id · post_slug · parent_id · depth · author_* · provider �
 settings         single row id=1 · data (jsonb SiteSettings)
 mcp_tokens       id · name · token_hash (sha256, unique) · prefix · created_at · last_used_at  (MCP access tokens; max 5, hash only)
 activity_log     at · action · detail   (admin audit trail, Admin → Log; toggleable)
+analytics_events cookieless view events (visitor = salted IP+UA hash, no PII) · kept forever
+analytics_scroll per-post scroll-depth samples
+integration_keys server-only secrets (e.g. Turnstile) · never in the client settings payload
+backup_state     single row · Drive refresh token + run state (SECRET, never client-bound)
+mcp_clients      registered MCP OAuth clients   ·   mcp_used_codes  one-time OAuth codes (replay guard)
+schema_migrations applied-migration ledger (scripts/migrate.sh; fresh installs seed from schema.sql)
 ```
 
 The local store (under `STORAGE_LOCAL_DIR`, served at `/uploads`) holds only the
@@ -78,7 +84,7 @@ can move without rewriting anything.
 | `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon + attachment store). |
 | `src/locales/` | UI strings per language (en/vi/de/ja/zh/ko); `types.ts` shapes, `langs.ts` registry; `satisfies` enforces every key. |
 | `src/app/(blog)/` | Public site (home, `/[slug]`, category, tag, search, preview, not-found). |
-| `src/app/admin/` | Owner console (editor, media, settings, trash). |
+| `src/app/admin/` | Owner console (overview, editor, content, media, comments, analytics, log, help, settings, trash). |
 | `src/lib/mcp/` + `src/app/api/mcp/` | MCP server: tools (thin wrappers over the data layer) + the `/api/mcp` endpoint, the thin OAuth flow, `/.well-known/*` metadata, and admin-managed access tokens (`tokens.ts` + `mcp_tokens`). Enabled + tokenized from Admin → Settings → Advanced. |
 | `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | SEO / feeds / dynamic share image. |
 | `src/components/{blog,admin,ui,theme}/` | UI. `ui/` = shared primitives (Button, Input, Switch, Toast). |
