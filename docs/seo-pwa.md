@@ -20,8 +20,9 @@
   `seo.ogImage`; appends `font=` when a custom font is set.
 - **Canonical:** every indexable page self-canonicals via `alternates.canonical` in its
   `generateMetadata` (home `/`, `/[slug]`, `/category|tag/[slug]`, and each `…/page/[n]`), resolved
-  absolute against `metadataBase`. `/page/1` (and `/category|tag/<x>/page/1`) `permanentRedirect` (308)
-  to the base — page 1 IS the base, never a duplicate.
+  absolute against `metadataBase`. `/page/1` (and `/category|tag/<x>/page/1`) 308-redirect to the base
+  in `src/middleware.ts` — page 1 IS the base, never a duplicate. (It MUST be middleware: a page-level
+  `redirect()` runs after `loading.tsx` streams, so Next downgrades it to a client meta-refresh.)
 - JSON-LD via `JsonLd.tsx` (`websiteSchema` home, `articleSchema` + `breadcrumbSchema` posts —
   Home → first category → post), gated `seo.autoSchema`.
 - Unknown slugs / out-of-range pages `notFound()` mid-stream, so Next returns 200 but injects

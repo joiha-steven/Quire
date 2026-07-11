@@ -1,5 +1,5 @@
 // Home pagination: /page/2, /page/3, … (page 1 lives at /).
-import { notFound, permanentRedirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPublicPosts } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
@@ -17,9 +17,9 @@ export async function generateMetadata({ params }: PageProps<'/page/[n]'>): Prom
 
 export default async function HomePaged({ params }: PageProps<'/page/[n]'>) {
   const { n } = await params
-  if (n === '1') permanentRedirect('/') // page 1 IS the home — 308, not a duplicate
+  // /page/1 is 308'd to '/' in middleware (before render). Here only junk/out-of-range remain.
   const page = parsePathPage(n)
-  if (page === null) notFound() // junk (non-numeric, <1) only live at '/'
+  if (page === null) notFound()
   const [posts, settings] = await Promise.all([getPublicPosts(), getSettings()])
   return <BlogListing posts={posts} page={page} basePath="/" emptyText={t(settings.language).emptyPosts} />
 }
