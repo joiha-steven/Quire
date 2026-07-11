@@ -633,21 +633,21 @@ hr {
   margin-right: 0;
 }
 /* "Large" image: column width by DEFAULT (tablets / narrow desktop below the
-   rail breakpoint). Two overrides widen it where it looks good:
-   - Phones (≤767px): FULL-BLEED — edge to edge of the viewport, breaking out of
-     the reading column's side padding, for an editorial effect (see below).
-   - Wide screens with a free right gutter (rail breakpoint): the layout injects
-     a rule that noses it right by one rail width — see railCss() in (blog)/layout.tsx.
-   Alignment doesn't apply to a large image: it grows out of the column, not within it. */
+   rail breakpoint). On wide screens with a free right gutter (rail breakpoint) the
+   layout injects a rule that noses it right by one rail width — see railCss() in
+   (blog)/layout.tsx. On phones the toggle is moot: EVERY image goes full-bleed
+   (see the ≤767px rule below). Alignment doesn't apply to a large image. */
 .prose figure.img-wide {
   width: 100%;
   max-width: 100%;
 }
-/* Phone full-bleed: 100vw + the centering margins pull the figure flush to both
-   screen edges regardless of the column padding, with no horizontal scroll (mobile
-   scrollbars are overlay, so 100vw == the visible width). */
+/* Phone full-bleed: EVERY image (any size/alignment) goes edge to edge of the
+   viewport for an editorial look — 100vw + the centering margins pull the figure
+   flush to both screen edges regardless of the column padding, with no horizontal
+   scroll (mobile scrollbars are overlay, so 100vw == the visible width). Gallery
+   (.img-grid) items are excluded so the mosaic grid stays intact. */
 @media (max-width: 767px) {
-  .prose figure.img-wide {
+  .prose figure:not(.img-grid) {
     width: 100vw;
     max-width: 100vw;
     margin-left: calc(50% - 50vw);
