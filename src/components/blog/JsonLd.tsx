@@ -23,6 +23,21 @@ export function websiteSchema(args: { name: string; url: string; description?: s
   }
 }
 
+// BreadcrumbList schema — the trail Google can show under a result (Home > Category > Post).
+// Each item is an absolute URL; positions are 1-based.
+export function breadcrumbSchema(items: { name: string; url: string }[]): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: it.url,
+    })),
+  }
+}
+
 // BlogPosting schema for a single post.
 export function articleSchema(args: {
   title: string

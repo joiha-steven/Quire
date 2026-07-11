@@ -18,7 +18,15 @@
   `title`/`site`/`bg` + optional `?font=<storeUrl>` (storage host only, SSRF-guarded). `lib/og.ts`
   builds the card URLs (`ogImageUrl` posts/pages, `ogCardUrl`+`siteDomain` lists); honors
   `seo.ogImage`; appends `font=` when a custom font is set.
-- JSON-LD via `JsonLd.tsx` (`websiteSchema` home, `articleSchema` posts), gated `seo.autoSchema`.
+- **Canonical:** every indexable page self-canonicals via `alternates.canonical` in its
+  `generateMetadata` (home `/`, `/[slug]`, `/category|tag/[slug]`, and each `…/page/[n]`), resolved
+  absolute against `metadataBase`. `/page/1` (and `/category|tag/<x>/page/1`) `permanentRedirect` (308)
+  to the base — page 1 IS the base, never a duplicate.
+- JSON-LD via `JsonLd.tsx` (`websiteSchema` home, `articleSchema` + `breadcrumbSchema` posts —
+  Home → first category → post), gated `seo.autoSchema`.
+- Unknown slugs / out-of-range pages `notFound()` mid-stream, so Next returns 200 but injects
+  `<meta name="robots" content="noindex">` (its documented streaming behaviour) — a soft-404 that
+  search engines are told not to index. Not a bug; don't "fix" the status.
 - robots/sitemap/feed/llms are ISR; an SEO toggle is a settings save → `revalidateEverything()`;
   post create/edit purges feed/sitemap/llms.
 

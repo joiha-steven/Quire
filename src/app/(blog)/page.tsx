@@ -18,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const og = ogCardUrl(settings, base, { title: siteDomain(base), site: settings.description })
   const images = og ? [og] : undefined
   return {
+    alternates: { canonical: '/' },
     openGraph: { title: settings.title, description: settings.description || undefined, images, type: 'website' },
     twitter: { card: images ? 'summary_large_image' : 'summary', images },
   }

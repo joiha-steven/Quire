@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## Unreleased
+
+**SEO — canonical + breadcrumbs.** Every indexable page now emits a self-referencing
+`<link rel="canonical">` (home, posts, pages, category/tag, and each `…/page/[n]`), and posts carry a
+`BreadcrumbList` (Home → category → post) alongside the existing `BlogPosting`. `/page/1` (and
+`/category|tag/<x>/page/1`) now 308-redirect to the base instead of serving a duplicate of page 1.
+(Unknown URLs already return a `noindex` soft-404 — Next's documented streaming behaviour — so they
+were never indexable; no change there.)
+
+**Cache — deploy flush.** `GET /api/cron?purge=1` (same `CRON_SECRET` auth) forces a full
+`revalidateEverything()` — Next paths + the whole Cloudflare zone — so a code deploy, which runs no
+admin write, still clears the edge. Content saves and the "Clear all cache" button already purge the
+zone when the CF token+zone are set.
+
 ## v1.4.2 — 2026-07-11 (built-in reading fonts, book-page text, patch_post)
 
 **New — built-in fonts** (Admin → Appearance → Font). Four self-hosted families: Inter, Source

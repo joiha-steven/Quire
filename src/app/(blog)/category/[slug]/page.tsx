@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: PageProps<'/category/[slug]'>
   const images = og ? [og] : undefined
   return {
     title: name,
+    alternates: { canonical: `/category/${slug}` },
     openGraph: { title: name, images, type: 'website' },
     twitter: { card: images ? 'summary_large_image' : 'summary', images },
   }

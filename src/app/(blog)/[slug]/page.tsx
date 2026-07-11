@@ -12,7 +12,7 @@ import { collapseBlob } from '@/lib/blob'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
-import { JsonLd, articleSchema } from '@/components/blog/JsonLd'
+import { JsonLd, articleSchema, breadcrumbSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
 import { Rail } from '@/components/blog/Rail'
 import { TOC_ANCHORS } from '@/lib/toc'
@@ -60,6 +60,7 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
     return {
       title: post.title,
       description: post.excerpt || undefined,
+      alternates: { canonical: `/${slug}` },
       openGraph: { title: post.title, description: post.excerpt || undefined, images, type: 'article' },
       twitter: { card: images ? 'summary_large_image' : 'summary', images },
     }
@@ -69,6 +70,7 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
     const images = og ? [og] : undefined
     return {
       title: page.title,
+      alternates: { canonical: `/${slug}` },
       openGraph: { title: page.title, images, type: 'website' },
       twitter: { card: images ? 'summary_large_image' : 'summary', images },
     }
@@ -141,6 +143,15 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               image: post.featuredImage || extractImageUrls(post.content)[0],
               authorName: settings.title,
             })}
+          />
+        )}
+        {settings.seo.autoSchema && (
+          <JsonLd
+            data={breadcrumbSchema([
+              { name: settings.title, url: base },
+              ...(category ? [{ name: category, url: `${base}/category/${termSlug(category)}` }] : []),
+              { name: post.title, url: `${base}/${post.slug}` },
+            ])}
           />
         )}
         {/* Meta line above the title, matching the list cards. */}
