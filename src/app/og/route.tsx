@@ -60,7 +60,11 @@ export async function GET(req: Request): Promise<Response> {
   if (allowedImg(fontUrl)) {
     custom = await fetch(fontUrl).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null)
   }
-  const family = custom ? 'Site' : 'Inter'
+  // Each subset gets a DISTINCT name + an explicit fallback chain. With the same name,
+  // Satori treats overlapping subsets as one font and DOUBLE-renders any glyph present
+  // in more than one (đ/U+0111 lives in BOTH latin-ext and vietnamese → a doubled
+  // crossbar). Distinct names make each glyph resolve to exactly the first font that has it.
+  const family = (custom ? 'Site, ' : '') + 'Inter, InterExt, InterVN'
 
   // Smaller title for longer text so it never overflows the card.
   const titleSize = title.length > 90 ? 52 : title.length > 55 ? 60 : 72
@@ -143,8 +147,8 @@ export async function GET(req: Request): Promise<Response> {
       fonts: [
         ...(custom ? [{ name: 'Site' as const, data: custom, weight: 600 as const, style: 'normal' as const }] : []),
         { name: 'Inter' as const, data: latin, weight: 600 as const, style: 'normal' as const },
-        { name: 'Inter' as const, data: latinExt, weight: 600 as const, style: 'normal' as const },
-        { name: 'Inter' as const, data: vietnamese, weight: 600 as const, style: 'normal' as const },
+        { name: 'InterExt' as const, data: latinExt, weight: 600 as const, style: 'normal' as const },
+        { name: 'InterVN' as const, data: vietnamese, weight: 600 as const, style: 'normal' as const },
       ],
     },
   )
