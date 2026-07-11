@@ -1,5 +1,6 @@
 // Tag pagination: /tag/[slug]/page/2, … (page 1 lives at /tag/[slug]).
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
+import type { Metadata } from 'next'
 import { getPublicPosts } from '@/lib/posts'
 import { resolveTerm } from '@/lib/taxonomy'
 import { getSettings } from '@/lib/settings'
@@ -9,8 +10,14 @@ import { parsePathPage } from '@/lib/paginate'
 
 export const revalidate = 3600 // ISR; admin save purges via revalidatePath('/','layout')
 
+export async function generateMetadata({ params }: PageProps<'/tag/[slug]/page/[n]'>): Promise<Metadata> {
+  const { slug, n } = await params
+  return { alternates: { canonical: `/tag/${slug}/page/${n}` } }
+}
+
 export default async function TagPaged({ params }: PageProps<'/tag/[slug]/page/[n]'>) {
   const { slug, n } = await params
+  if (n === '1') permanentRedirect(`/tag/${slug}`) // page 1 lives at the base
   const page = parsePathPage(n)
   if (page === null) notFound()
   const [posts, { language }] = await Promise.all([getPublicPosts(), getSettings()])

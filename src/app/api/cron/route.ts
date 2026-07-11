@@ -36,6 +36,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   try {
     // Keep-alive: any request keeps the project active; this is the cheapest read.
     await db().from('settings').select('id').limit(1)
+    // Deploy hook: `?purge=1` forces a full cache clear (Next data/paths + the
+    // Cloudflare zone) so a code deploy — which doesn't run any admin write — still
+    // flushes the edge. Same auth as the cron itself (CRON_SECRET).
+    const doPurge = req.nextUrl.searchParams.get('purge') === '1'
+    if (doPurge) revalidateEverything()
     // Isolate the maintenance steps: a finalize failure must NOT skip the backup.
     let finalized = 0
     let thumbs = 0
@@ -57,7 +62,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       return { ran: false, error: (e as Error).message }
     })
     logRequest(req, 200, start)
-    return ok({ alive: true, finalized, thumbs, backup })
+    return ok({ alive: true, purged: doPurge, finalized, thumbs, backup })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)

@@ -26,9 +26,13 @@
 - [ ] Editing a post slug: old slug returns 404, new slug works
 - [ ] Deleting a post: slug returns 404, removed from home list
 - [ ] `STORAGE_LOCAL_DIR` is set and writable by the app user; uploads land under it and render at `/uploads/...`
+- [ ] **After a code deploy** (which runs no admin write), flush the edge: `GET /api/cron?purge=1`
+  with the `CRON_SECRET` bearer → `revalidateEverything()` (Next paths + the Cloudflare zone). A save
+  or the "Clear all cache" button already purges Cloudflare when the CF token+zone are set in Integrations.
 
 ## Pagination (path-based)
-- [ ] Home `/page/2` works; `/page/1` and out-of-range `/page/999` return 404
+- [ ] Home `/page/2` works; `/page/1` **308-redirects to `/`**; out-of-range `/page/999` soft-404s (200 + `noindex`)
+- [ ] Every indexable page carries a self `<link rel="canonical">`
 - [ ] `/category/<x>/page/2` and `/tag/<x>/page/2` work; page links carry no `?query`
 - [ ] Blog list shows reading time when the readingTime feature is on
 
