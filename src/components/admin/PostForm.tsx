@@ -279,7 +279,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
 
   return (
     <div>
-      <div className="sticky top-0 z-20 mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-white/95 py-3 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
+      <div className="sticky top-4 z-20 mb-8 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/admin/content" className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">← {t.navDashboard}</Link>
           <span className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
