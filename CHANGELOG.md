@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+**Admin — a fuller Overview.** The dashboard gains an **SEO health** card (published count + how many
+posts miss an excerpt or a cover image, each linking to Content), a **Traffic sources** card (top
+referrers + countries over 30 days by distinct visitor), a **Clear cache** button and a **View site**
+link in Quick actions, and the System panel's Backups row now shows the **last run** (or "never").
+
 **SEO — canonical + breadcrumbs.** Every indexable page now emits a self-referencing
 `<link rel="canonical">` (home, posts, pages, category/tag, and each `…/page/[n]`), and posts carry a
 `BreadcrumbList` (Home → category → post) alongside the existing `BlogPosting`. `/page/1` (and

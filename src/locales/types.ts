@@ -340,8 +340,21 @@ export type AdminStrings = {
   dashDrafts: string
   // overview: quick actions + recent activity
   quickTitle: string
+  viewSite: string
   recentActivity: string
   recentViewAll: string
+  // overview: SEO health + traffic sources widgets
+  seoTitle: string
+  seoNoExcerpt: string
+  seoNoImage: string
+  seoAllGood: string
+  sourcesTitle: string
+  sourcesReferrers: string
+  sourcesCountries: string
+  sourcesDirect: string
+  sourcesEmpty: string
+  sysBackupLast: string
+  sysBackupNever: string
   // settings cards
   cardGeneral: string
   cardLayout: string
