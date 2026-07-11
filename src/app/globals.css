@@ -279,6 +279,8 @@ hr {
   --rail-gap: 72px;
   /* Gap between a rail row's text and the accent marker beside it. */
   --rail-pad: 14px;
+  /* Extra inset for a sub-level ToC row (an H3 under H2s), off the start edge. */
+  --rail-sub-indent: 11px;
   /* Space between the header rule and the first line of content. The rail's top
      matches it, so the rail's first line is level with the article's first line. */
   --rail-top: 3rem;
@@ -375,6 +377,14 @@ hr {
 .rail-row {
   position: relative;
   padding-left: var(--rail-pad);
+}
+/* Sub-level ToC row (H3 when the post also has H2s): slightly smaller and inset off
+   the start edge so it reads as a child. Only added when levels are MIXED — a
+   single-level ToC stays uniform. Drawer mode insets from the left; the gutter-rail
+   override (layout railCss) insets from the right, since the rail is ranged right. */
+.rail-sub {
+  font-size: var(--fs-caption);
+  padding-left: calc(var(--rail-pad) + var(--rail-sub-indent));
 }
 /* Post counts sit in their own right-aligned column so the labels beside them stay
    aligned however many digits a count carries. The column is exactly as wide as the
