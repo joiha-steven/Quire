@@ -4,7 +4,9 @@
 
 **Reading — nested table of contents.** When a post mixes heading levels (H2 + H3), the top-level (H2)
 rows get a bigger dot marker and the child (H3) rows go smaller with no dot — a few big markers over
-quieter children. A post that is all-H2 or all-H3 stays uniform, as before.
+quieter children. A post that is all-H2 or all-H3 stays uniform, as before. A long ToC that outruns the
+viewport now scrolls inside its own (sticky) box instead of pinning its tail off-screen, and the gutter
+rail is 30px wider (210px) to wrap less — the breakpoint is unchanged, so 1280/1366 laptops still show it.
 
 **Admin — a fuller Overview.** The dashboard gains an **SEO health** card (published count + how many
 posts miss an excerpt or a cover image, each linking to Content), a **Traffic sources** card (top
