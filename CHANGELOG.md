@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v1.4.5 — 2026-07-11 (docs refresh)
+
+Documentation only — no code change. Brings the project "About" (README's *What it is*) and the internal
+docs current with the v1.4.4 line. README now lists the editorial admin, drag-drop / paste uploads (incl.
+AVIF), the captioned-figure sizes (column / large / full-bleed / gallery), full-bleed mobile images, and
+the in-app Help / Guide. `docs/features.md`, `ARCHITECTURE.md`, `docs/conventions.md` and `CHECKLIST.md`
+are re-synced to the redesigned admin (flat canvas, slimmed Overview, light/dark + Sign-out footer, the
+post editor's sticky header) and the full 15-table schema list.
+
 ## v1.4.4 — 2026-07-11 (stable: reading layout, admin redesign, media hardening)
 
 Consolidates the whole 1.4.1–1.4.4 line into one stable entry: the sidebar rail + accent colour and

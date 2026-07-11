@@ -101,7 +101,8 @@
 - [ ] Desktop: sticky left sidebar with icons; active route highlighted; controls pinned at the bottom
 - [ ] Collapse toggle → icon-only rail; state persists across navigation (localStorage); tooltips show
 - [ ] Mobile: hamburger opens a drawer with the same links + controls (always icon+label)
-- [ ] Settings + editor save bars sit to the right of the sidebar (not under it) at any collapse state
+- [ ] Settings + page-editor save bars sit to the right of the sidebar (not under it) at any collapse
+      state; the post editor's save/preview/publish live in its own sticky header (no bottom bar)
 
 ## Layout / visual (owner is very sensitive here)
 - [ ] Header rows align on one line: every item (incl. the wordmark) is an `h-9`/`h-10`
