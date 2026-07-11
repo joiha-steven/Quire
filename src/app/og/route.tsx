@@ -39,6 +39,10 @@ export async function GET(req: Request): Promise<Response> {
   // The bottom line is a site name, domain, or (on the home card) the site
   // description — cap it so a long description can't overflow the card.
   const site = (searchParams.get('site') || '').slice(0, 120)
+  // A post card adds an excerpt (a middle line) + the publish date (the bottom
+  // line, replacing `site`). Cap the excerpt so it can't overflow the card.
+  const desc = (searchParams.get('desc') || '').slice(0, 150)
+  const date = (searchParams.get('date') || '').slice(0, 60)
 
   const [latin, latinExt, vietnamese] = await Promise.all([
     font('inter-latin.woff'),
@@ -105,9 +109,28 @@ export async function GET(req: Request): Promise<Response> {
           >
             {title}
           </div>
-          <div style={{ marginTop: 28, fontSize: 30, color: 'rgba(255,255,255,0.65)', display: 'flex' }}>
-            {site}
-          </div>
+          {desc ? (
+            <div
+              style={{
+                marginTop: 24,
+                fontSize: 30,
+                lineHeight: 1.35,
+                color: 'rgba(255,255,255,0.82)',
+                // Clamp to 3 lines so a long excerpt never pushes the date off the card.
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {desc}
+            </div>
+          ) : null}
+          {(date || site) ? (
+            <div style={{ marginTop: 26, fontSize: 26, color: 'rgba(255,255,255,0.55)', display: 'flex' }}>
+              {date || site}
+            </div>
+          ) : null}
         </div>
       </div>
     ),

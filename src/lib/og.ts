@@ -18,12 +18,17 @@ function ogFontParam(settings: SiteSettings, base: string, p: URLSearchParams): 
 export function ogImageUrl(
   settings: SiteSettings,
   base: string,
-  opts: { title: string; featuredImage?: string },
+  opts: { title: string; featuredImage?: string; desc?: string; date?: string },
 ): string | undefined {
   const { ogImage, ogFallbackImage } = settings.seo
   const bg = opts.featuredImage || ogFallbackImage || ''
   if (ogImage) {
-    const p = new URLSearchParams({ title: opts.title, site: settings.title })
+    // A post card shows title + excerpt + date; when neither is given (e.g. a page)
+    // it falls back to the site name as the small bottom line.
+    const p = new URLSearchParams({ title: opts.title })
+    if (opts.desc) p.set('desc', opts.desc)
+    if (opts.date) p.set('date', opts.date)
+    if (!opts.desc && !opts.date) p.set('site', settings.title)
     if (bg) p.set('bg', new URL(bg, base).toString())
     ogFontParam(settings, base, p)
     return `${base}/og?${p.toString()}`

@@ -14,8 +14,9 @@
   (`<image:image>`). `sitemaps.xml` → 308 to `/sitemap.xml`.
 - `llms.txt` (markdown content index, 404 off) · `feed.xml` (RSS 50, 404 off, auto-discovered).
 - `og/route.tsx` — dynamic OG (1200×630, runs on the **edge runtime** so its bundled Inter
-  `.woff` subsets load); query
-  `title`/`site`/`bg` + optional `?font=<storeUrl>` (storage host only, SSRF-guarded). `lib/og.ts`
+  `.woff` subsets load); query `title` + optional `desc` (excerpt, 3-line-clamped) + `date` (bottom
+  line) + `site` (bottom-line fallback) + `bg` + `?font=<storeUrl>` (storage host only, SSRF-guarded).
+  A post card = title + excerpt + date; home/category/tag = title + site. `lib/og.ts`
   builds the card URLs (`ogImageUrl` posts/pages, `ogCardUrl`+`siteDomain` lists); honors
   `seo.ogImage`; appends `font=` when a custom font is set.
 - **Canonical:** every indexable page self-canonicals via `alternates.canonical` in its

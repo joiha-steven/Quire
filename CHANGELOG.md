@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Unreleased
+
+**OG card — post share previews show title + excerpt + date.** The generated Open Graph / Twitter card
+for a post replaces the bottom "site name" line with the post's excerpt (3-line-clamped) and its publish
+date, so a shared link reads like the homepage entry. Home/category/tag cards are unchanged. `/og` gains
+`desc` + `date` query params.
+
 ## v1.4.3 — 2026-07-11 (the reading layout: sidebar rail, built-in fonts, nested ToC, SEO & dashboard)
 
 Consolidates the whole 1.4.1–1.4.3 line into one entry: the sidebar rail + accent colour, four (then
