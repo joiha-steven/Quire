@@ -452,6 +452,7 @@ export type AdminStrings = {
   analyticsPrivacyNote: string
   // activity log (Admin → Log) + feature toggle
   navLog: string
+  navHelp: string
   featActivityLog: string
   featActivityLogDesc: string
   logTitle: string

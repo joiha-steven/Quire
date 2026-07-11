@@ -367,6 +367,7 @@ const ja = {
   analyticsNoData: 'まだデータがありません。',
   analyticsPrivacyNote: 'クッキー不使用。訪問者はソルト付きのIP＋ユーザーエージェントのハッシュで集計され、個人データは保存されません。',
   navLog: 'ログ',
+  navHelp: 'ヘルプ',
   featActivityLog: 'アクティビティログ',
   featActivityLogDesc: '管理操作（保存・アップロード・削除）をログページに記録します。',
   logTitle: 'アクティビティログ',

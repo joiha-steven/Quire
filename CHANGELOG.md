@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+**Admin — a Help / Guide page.** A new sidebar item (`/admin/help`) with a concise, sectioned index:
+writing &amp; publishing, the five settings tabs, server &amp; self-host, Cloudflare (Cache Rules, Tiered
+Cache, SSL, auto-purge), cache &amp; operations, and MCP — each linking out to the repo docs for depth.
+Content is English (canonical, like the docs); the nav label + title are localized in all six languages.
+Pure server component, ships no client JS.
+
 **Cache — "Clear all cache" (and the deploy flush) now re-prime in the right order.** The warm step used
 to run BEFORE the Cloudflare purge (which fired post-response), so it re-cached stale bytes the purge then
 wiped — leaving the cache cold. `purgeAndWarm()` now purges the origin ISR + the whole CF zone FIRST, then

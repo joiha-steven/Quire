@@ -367,6 +367,7 @@ const en = {
   analyticsNoData: 'No data yet.',
   analyticsPrivacyNote: 'No cookies. Visitors are counted by a salted IP + user-agent hash; no personal data is stored.',
   navLog: 'Log',
+  navHelp: 'Help',
   featActivityLog: 'Activity log',
   featActivityLogDesc: 'Record admin actions (saves, uploads, deletes) to the Log page.',
   logTitle: 'Activity log',

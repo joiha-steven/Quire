@@ -367,6 +367,7 @@ const vi = {
   analyticsNoData: 'Chưa có dữ liệu.',
   analyticsPrivacyNote: 'Không dùng cookie. Người xem được đếm bằng mã băm IP + trình duyệt có muối; không lưu dữ liệu cá nhân.',
   navLog: 'Nhật ký',
+  navHelp: 'Hướng dẫn',
   featActivityLog: 'Nhật ký hoạt động',
   featActivityLogDesc: 'Ghi lại thao tác admin (lưu, tải lên, xóa) vào trang Nhật ký.',
   logTitle: 'Nhật ký hoạt động',
