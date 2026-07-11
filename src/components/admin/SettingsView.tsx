@@ -3,7 +3,8 @@
 // Settings screen: ONE form, ONE save button, split into FIVE task-based tabs —
 // Site, Content, Appearance, SEO, Integrations. All settings live in a single state
 // object and are saved together via PUT /api/settings (which merges). Cards share
-// the kit chrome; each tab lays them out in a top-aligned, length-balanced grid.
+// the kit chrome; desktop keeps a compact two-column working layout while mobile
+// falls back to one column.
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SiteSettings, ApiResponse } from '@/types'
@@ -87,7 +88,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
 
       {/* Site: identity + navigation/layout. */}
       {tab === 'site' && (
-        <div className="max-w-3xl space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.cardGeneral}>
             <SiteFields s={s} update={update} />
           </Card>
@@ -103,7 +104,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
 
       {/* Content: reading features + reader comments. */}
       {tab === 'content' && (
-        <div className="max-w-3xl space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.cardFeatures}>
             <FeatureFields
               features={s.features}
@@ -121,7 +122,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
 
       {/* Appearance: theme colours, font, type scale, rendering, custom CSS. */}
       {tab === 'appearance' && (
-        <div className="max-w-3xl space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <div className="space-y-6">
             <Card title={t.navAppearance}>
               {/* Palette selection now lives on the PUBLIC site only — the admin
@@ -183,7 +184,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
 
       {/* SEO: search + social metadata. */}
       {tab === 'seo' && (
-        <div className="max-w-3xl space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title="SEO">
             <SeoFields s={s} update={update} />
           </Card>
@@ -192,7 +193,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
 
       {/* Integrations: Google Drive backups + MCP server + Cloudflare cache purge. */}
       {tab === 'integrations' && (
-        <div className="max-w-3xl space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <Card title={t.backupTitle}>
             <BackupFields backups={s.backups} onChange={(backups) => update({ backups })} />
           </Card>
