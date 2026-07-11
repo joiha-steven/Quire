@@ -80,6 +80,10 @@ export function Toc({
       current ? 'font-medium text-heading' : 'text-meta'
     }`
 
+  // Only nest visually when the post MIXES levels: an H3 under H2s reads as a child
+  // (smaller + inset). A post that is all-H2 or all-H3 stays uniform.
+  const mixed = headings.some((h) => h.level === 2) && headings.some((h) => h.level === 3)
+
   return (
     <nav aria-label={title}>
       <h2 className="mb-3 pl-3.5 t-small font-semibold text-heading">{title}</h2>
@@ -95,7 +99,7 @@ export function Toc({
               href={`#${h.id}`}
               onClick={(e) => goId(e, h.id)}
               aria-current={active === h.id ? 'location' : undefined}
-              className={row(active === h.id)}
+              className={`${row(active === h.id)}${mixed && h.level === 3 ? ' rail-sub' : ''}`}
             >
               {h.text}
             </a>
