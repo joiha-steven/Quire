@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-**Reading — nested table of contents.** When a post mixes heading levels (H2 + H3), the H3 rows in the
-rail now read as children: slightly smaller and prefixed with a dot. A post that is all-H2 or all-H3
-stays uniform, as before.
+**Reading — nested table of contents.** When a post mixes heading levels (H2 + H3), the top-level (H2)
+rows get a bigger dot marker and the child (H3) rows go smaller with no dot — a few big markers over
+quieter children. A post that is all-H2 or all-H3 stays uniform, as before.
 
 **Admin — a fuller Overview.** The dashboard gains an **SEO health** card (published count + how many
 posts miss an excerpt or a cover image, each linking to Content), a **Traffic sources** card (top
