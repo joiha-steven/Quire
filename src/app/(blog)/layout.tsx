@@ -37,6 +37,9 @@ function railCss(contentWidth: number): string {
     `overflow:visible;transform:none;text-align:right}` +
     `.rail::after{content:"";position:absolute;top:0;bottom:0;` +
     `right:-${divider}px;width:1px;background:var(--c-rule)}` +
+    // The rail-inner is sticky (pins as you read). Cap it to the viewport and let it
+    // scroll internally, so a long ToC's tail is reachable instead of pinned off-screen.
+    `.rail-inner{max-height:calc(100dvh - 2.5rem - 1.5rem);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}` +
     `.rail h2,.rail .rail-tags{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail .rail-tags{justify-content:flex-end}` +
     `.rail li a{justify-content:flex-end}` +
