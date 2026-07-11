@@ -16,11 +16,10 @@ import { useEffect, useState, type ReactNode } from 'react'
 import type { SiteLang } from '@/types'
 import { useAdminT } from './I18nProvider'
 import { SIDEBAR_NAV, SIDEBAR_NAV_ACTIVE } from './headerActions'
-import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import {
   IconHome, IconAnalytics, IconContent, IconComment, IconMedia, IconTrash, IconSettings,
-  IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft, IconHelp,
+  IconLog, IconExternal, IconSignOut, IconChevronLeft, IconHelp,
 } from './navIcons'
 
 const STORE_KEY = 'vb-admin-nav-collapsed'
@@ -34,6 +33,7 @@ export function AdminSidebar({
 }) {
   const t = useAdminT()
   const pathname = usePathname()
+  const editorMode = pathname.startsWith('/admin/editor') || pathname.startsWith('/admin/page-editor')
   const [open, setOpen] = useState(false) // mobile drawer
   const [collapsed, setCollapsed] = useState(false) // desktop rail
   const close = () => setOpen(false)
@@ -47,12 +47,16 @@ export function AdminSidebar({
   // expanded so hydration matches, then we sync). Deferred a microtask so the
   // setState isn't in the effect body.
   useEffect(() => {
+    if (editorMode) {
+      applyWidthVar(true)
+      return
+    }
     Promise.resolve().then(() => {
       const c = localStorage.getItem(STORE_KEY) === '1'
       setCollapsed(c)
       applyWidthVar(c)
     })
-  }, [])
+  }, [editorMode])
 
   function toggleCollapsed() {
     setCollapsed((v) => {
@@ -109,7 +113,6 @@ export function AdminSidebar({
   const controls = (c: boolean): ReactNode => (
     <>
       <ThemeToggle lang={lang} variant={c ? 'icon' : 'text'} triggerClassName={c ? undefined : rowClass(false)} />
-      <CacheButton className={rowClass(c)} icon={c ? <IconCache /> : undefined} collapsed={c} />
       <div className="mt-1 border-t border-neutral-200 pt-1 dark:border-neutral-800">
         <form action={signOut} className="contents">
           <button className={rowClass(c)} title={c ? t.signOut : undefined}>
@@ -147,7 +150,7 @@ export function AdminSidebar({
     <>
       {/* Desktop: sticky full-height left column; width animates on collapse */}
       <aside
-        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-4 transition-[width] duration-200 md:flex dark:border-neutral-800 dark:bg-neutral-900 ${
+        className={`sticky top-0 h-screen shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-4 transition-[width] duration-200 dark:border-neutral-800 dark:bg-neutral-900 ${editorMode ? 'hidden' : 'hidden md:flex'} ${
           collapsed ? 'md:w-16' : 'md:w-52'
         }`}
       >
@@ -161,7 +164,7 @@ export function AdminSidebar({
       </aside>
 
       {/* Mobile: top bar + drawer (always icon+label) */}
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
+      <header className={`sticky top-0 z-20 items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900 ${editorMode ? 'hidden' : 'flex md:hidden'}`}>
         {wordmark(false)}
         <button
           type="button"

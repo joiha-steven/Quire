@@ -4,6 +4,7 @@
 // Handles auto-save, manual save (draft/publish) and the media picker modal.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { PostWithContent, PostRevision, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -56,6 +57,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [picker, setPicker] = useState<PickTarget | null>(null)
   const [timeMachine, setTimeMachine] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(true)
   // Unsaved-changes flag: drives button states, autosave and the exit warning.
   const [dirty, setDirty] = useState(false)
   const [savedSlug, setSavedSlug] = useState<string | null>(initial?.slug ?? null)
@@ -276,13 +278,24 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   }
 
   return (
-    <div className="pb-24">
-      <input
-        value={draft.title}
-        onChange={(e) => update({ title: e.target.value })}
-        placeholder={t.titlePlaceholder}
-        className="mb-6 w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
-      />
+    <div>
+      <div className="sticky top-0 z-20 -mx-4 -mt-6 mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-12 lg:-mt-8 lg:px-12 dark:border-neutral-800 dark:bg-neutral-950/95">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link href="/admin/content" className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">← {t.navDashboard}</Link>
+          <span className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+          <span className="hidden text-sm text-neutral-400 sm:block">
+            {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : dirty ? 'Chưa lưu' : ''}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setSettingsOpen((v) => !v)} className="border border-neutral-200 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800">
+            {settingsOpen ? 'Ẩn thuộc tính' : 'Thuộc tính'}
+          </button>
+          {savedSlug && <button type="button" onClick={openPreview} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">{t.previewDraft}</button>}
+          <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving || !dirty}>{t.saveDraft}</Button>
+          <Button onClick={() => handleSave('published', t.published)} disabled={saving || (!dirty && draft.status === 'published')}>{t.publish}</Button>
+        </div>
+      </div>
 
       {localRecovered && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
@@ -300,51 +313,30 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <Editor
-          initialContent={draft.content}
-          onChange={(md) => { contentRef.current = md }}
-          onDirty={() => setDirty(true)}
-          onPickImage={() => setPicker('editor')}
-          onPickGallery={() => setPicker('gallery')}
-          onUploadFile={uploadInline}
-          apiRef={editorApi}
-          contentWidth={contentWidth}
-        />
-        <PostSettings
-          draft={draft}
-          update={update}
-          allCategories={allCategories}
-          allTags={allTags}
-          onPickFeatured={() => setPicker('featured')}
-        />
-      </div>
-
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur md:left-[var(--admin-nav-w,13rem)] dark:border-neutral-800 dark:bg-neutral-900/90">
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-[100px]">
-          <span className="text-sm text-neutral-400 dark:text-neutral-500">
-            {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
-          </span>
-          <div className="flex items-center gap-2">
-            {savedSlug && (
-              <button type="button" onClick={() => setTimeMachine(true)} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                Cỗ máy thời gian
-              </button>
-            )}
-            {savedSlug && (
-              <button type="button" onClick={openPreview} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.previewDraft}
-              </button>
-            )}
-            {draft.status === 'published' && savedSlug && (
-              <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                {t.viewPost}
-              </a>
-            )}
-            <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving || !dirty}> {t.saveDraft} </Button>
-            <Button onClick={() => handleSave('published', t.published)} disabled={saving || (!dirty && draft.status === 'published')}> {t.publish} </Button>
+      <div className={`grid items-start gap-8 ${settingsOpen ? 'xl:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
+        <div className="min-w-0">
+          <div className="mx-auto mb-6 w-full" style={{ maxWidth: contentWidth }}>
+            <input
+              value={draft.title}
+              onChange={(e) => update({ title: e.target.value })}
+              placeholder={t.titlePlaceholder}
+              className="w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
+            />
           </div>
+          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} />
         </div>
+        {settingsOpen && (
+          <aside className="border-l border-neutral-200 pl-6 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto dark:border-neutral-800">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Thuộc tính</h2>
+              <div className="flex gap-3 text-xs">
+                {savedSlug && <button type="button" onClick={() => setTimeMachine(true)} className="text-neutral-500 hover:text-neutral-900">Lịch sử</button>}
+                {draft.status === 'published' && savedSlug && <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="text-neutral-500 hover:text-neutral-900">{t.viewPost}</a>}
+              </div>
+            </div>
+            <PostSettings draft={draft} update={update} allCategories={allCategories} allTags={allTags} onPickFeatured={() => setPicker('featured')} />
+          </aside>
+        )}
       </div>
 
       {picker && (

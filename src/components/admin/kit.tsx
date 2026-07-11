@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 
 // Canonical card surface. ONE radius + border + shadow for every admin panel.
 export const CARD =
-  'rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900'
+  'border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'
 
 // Card: a titled panel. `title` optional (stat-style panels pass none). `actions`
 // renders on the right of the header row.
@@ -26,7 +26,7 @@ export function Card({
   bodyClassName?: string
 }) {
   return (
-    <section className={`${CARD} p-5 ${className}`}>
+    <section className={`${CARD} p-6 ${className}`}>
       {(title || actions) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {title && <h2 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">{title}</h2>}
@@ -54,7 +54,7 @@ export function PageHeader({
   return (
     <div className={`mb-6 flex flex-wrap items-start justify-between gap-3 ${className}`}>
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         {description && <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -149,12 +149,12 @@ export function StatCard({
   )
   if (href) {
     return (
-      <Link href={href} className={`${CARD} block p-4 transition-colors hover:border-neutral-300 dark:hover:border-neutral-700`}>
+      <Link href={href} className={`${CARD} block p-5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/40`}>
         {inner}
       </Link>
     )
   }
-  return <div className={`${CARD} p-4`}>{inner}</div>
+  return <div className={`${CARD} p-5`}>{inner}</div>
 }
 
 // Empty / zero state — centered muted message, optional icon + action.

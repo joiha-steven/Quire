@@ -97,7 +97,7 @@ export function PostsTable({
       {filtered.length === 0 ? (
         <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.filterEmpty}</p>
       ) : (
-    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="overflow-hidden border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500 whitespace-nowrap">
           <tr>
@@ -118,6 +118,9 @@ export function PostsTable({
                 <Link href={`/admin/editor/${p.slug}`} className="hover:underline">
                   {p.title || t.untitled}
                 </Link>
+                {p.categories.length > 0 && (
+                  <div className="mt-1 text-xs font-normal text-neutral-400 md:hidden">{p.categories.join(', ')}</div>
+                )}
               </td>
               <td className="px-4 py-3">
                 <StatusPill published={p.status === 'published'} label={p.status === 'published' ? t.statusPublished : t.statusDraft} />

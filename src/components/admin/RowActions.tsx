@@ -64,13 +64,8 @@ export function RowActions({
 // Monochrome status pill (no color): published vs draft. Never wraps.
 export function StatusPill({ published, label }: { published: boolean; label: string }) {
   return (
-    <span
-      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        published
-          ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-          : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300'
-      }`}
-    >
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-neutral-600 dark:text-neutral-300">
+      <span className={`h-1.5 w-1.5 ${published ? 'bg-emerald-500' : 'bg-neutral-300 dark:bg-neutral-600'}`} aria-hidden />
       {label}
     </span>
   )

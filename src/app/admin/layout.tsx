@@ -44,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             now); ~100px gutters on desktop, tight padding on mobile. The dotted-grid
             canvas sits behind the floating cards (admin-canvas in globals.css). */}
         <main className="admin-canvas min-w-0 flex-1">
-          <div className="w-full px-4 py-6 sm:px-6 lg:px-[100px] lg:py-8">{children}</div>
+          <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8 lg:px-12 lg:py-8">{children}</div>
         </main>
       </div>
     </AdminI18nProvider>
