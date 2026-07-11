@@ -4,7 +4,7 @@
 
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { revalidateEverything, warmCache } from '@/lib/revalidate'
+import { purgeAndWarm } from '@/lib/revalidate'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -19,10 +19,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('Unauthorized', 401)
     }
 
-    // Purge every public route, then warm the home + newest detail pages so the
-    // next visitor gets a warm cache. Warm is best-effort (never fails the call).
-    revalidateEverything()
-    const warmed = await warmCache(new URL(req.url).origin)
+    // Purge everything (origin ISR + the Cloudflare zone), THEN warm the home + newest
+    // pages through Cloudflare so the edge re-caches fresh content immediately.
+    const warmed = await purgeAndWarm(new URL(req.url).origin)
 
     after(() => logActivity('cache.clear'))
     logRequest(req, 200, start)

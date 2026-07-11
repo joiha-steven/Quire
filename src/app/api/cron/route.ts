@@ -9,7 +9,7 @@ import type { NextRequest } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
 import { db } from '@/lib/db'
 import { finalizePendingVariants, finalizePendingThumbs } from '@/lib/media'
-import { revalidateEverything } from '@/lib/revalidate'
+import { revalidateEverything, purgeAndWarm } from '@/lib/revalidate'
 import { maybeRunBackup } from '@/lib/backup'
 import { ok, fail, logRequest, logError } from '@/lib/api'
 
@@ -37,10 +37,13 @@ export async function GET(req: NextRequest): Promise<Response> {
     // Keep-alive: any request keeps the project active; this is the cheapest read.
     await db().from('settings').select('id').limit(1)
     // Deploy hook: `?purge=1` forces a full cache clear (Next data/paths + the
-    // Cloudflare zone) so a code deploy — which doesn't run any admin write — still
-    // flushes the edge. Same auth as the cron itself (CRON_SECRET).
+    // Cloudflare zone) THEN warms the key pages, so a code deploy — which runs no admin
+    // write — flushes AND re-primes the edge. Same auth as the cron (CRON_SECRET). Call
+    // it via the PUBLIC host so the warm fetches route through Cloudflare (re-caching the
+    // edge), not the origin loopback (which would warm only the origin ISR).
     const doPurge = req.nextUrl.searchParams.get('purge') === '1'
-    if (doPurge) revalidateEverything()
+    let warmed = 0
+    if (doPurge) warmed = await purgeAndWarm(new URL(req.url).origin)
     // Isolate the maintenance steps: a finalize failure must NOT skip the backup.
     let finalized = 0
     let thumbs = 0
@@ -62,7 +65,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       return { ran: false, error: (e as Error).message }
     })
     logRequest(req, 200, start)
-    return ok({ alive: true, purged: doPurge, finalized, thumbs, backup })
+    return ok({ alive: true, purged: doPurge, warmed, finalized, thumbs, backup })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)
