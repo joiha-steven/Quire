@@ -52,7 +52,7 @@ export function ImageUploader({ onUploaded }: { onUploaded: (items: MediaItem[])
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/svg+xml,image/gif"
+          accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml,image/gif"
           multiple
           className="hidden"
           onChange={(e) => {

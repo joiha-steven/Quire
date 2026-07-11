@@ -4,7 +4,7 @@
 import sharp from 'sharp'
 
 export const RASTER = /^image\/(jpeg|png)$/ // full responsive pipeline
-export const PASSTHROUGH = /^image\/(svg\+xml|gif|webp)$/ // stored as-is, no variants
+export const PASSTHROUGH = /^image\/(svg\+xml|gif|webp|avif)$/ // stored as-is, no variants (avif is already efficient)
 export const SIZES = [1024, 1600] as const // display widths (in-column / wider)
 const THUMB_WIDTH = 400
 

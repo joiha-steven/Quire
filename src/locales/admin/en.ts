@@ -406,6 +406,7 @@ const en = {
   restoreFailed: 'Restore failed',
   deletePermanently: 'Delete permanently',
   confirmPurge: 'Permanently delete this item? This cannot be undone.',
+  confirmPurgeInUse: '{n} image(s) here are still used in a post. Permanently delete anyway?',
   emptyTrash: 'Empty trash',
   confirmEmptyTrash: 'Permanently delete everything in this trash? This cannot be undone.',
   trashEmptied: 'Trash emptied',

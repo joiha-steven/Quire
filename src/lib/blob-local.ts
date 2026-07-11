@@ -22,11 +22,20 @@ export function resolveSafe(pathname: string): string {
   return abs
 }
 
-// Write a binary and return its store-relative public URL.
-export async function put(pathname: string, body: ArrayBuffer | Buffer): Promise<string> {
+// Write a binary and return its store-relative public URL. `exclusive` uses an
+// O_EXCL write (flag 'wx') that FAILS with EEXIST if the file already exists —
+// the atomic gate that lets two concurrent uploads racing for the same name never
+// overwrite each other (the loser retries a fresh name). Derivatives (thumb/variants)
+// write without it, so a re-run harmlessly overwrites its own identical bytes.
+export async function put(
+  pathname: string,
+  body: ArrayBuffer | Buffer,
+  opts?: { exclusive?: boolean },
+): Promise<string> {
   const abs = resolveSafe(pathname)
   await fs.mkdir(path.dirname(abs), { recursive: true })
-  await fs.writeFile(abs, Buffer.isBuffer(body) ? body : Buffer.from(body))
+  const buf = Buffer.isBuffer(body) ? body : Buffer.from(body)
+  await fs.writeFile(abs, buf, opts?.exclusive ? { flag: 'wx' } : undefined)
   return `/uploads/${pathname}`
 }
 

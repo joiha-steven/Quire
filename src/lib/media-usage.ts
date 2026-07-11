@@ -22,10 +22,10 @@ function refsIn(text: string | undefined): string[] {
   return [...collapseBlob(text).matchAll(MEDIA_RE)].map((m) => m[0])
 }
 
-// Absolute URLs of media items referenced by no post, page, setting, or
-// revision. `getMedia()` already returns expanded URLs (same form the client
-// holds), so we hand those straight back for an exact match in the grid.
-export async function findUnusedMedia(): Promise<string[]> {
+// Every store-relative media key referenced anywhere it matters for keeping a blob:
+// post + page bodies/featured images, site settings, AND every revision snapshot.
+// Purge/unused both build on this ONE definition of "still needed".
+export async function usedMediaKeys(): Promise<Set<string>> {
   const used = new Set<string>()
   const add = (text?: string) => refsIn(text).forEach((r) => used.add(r))
 
@@ -46,7 +46,14 @@ export async function findUnusedMedia(): Promise<string[]> {
   const s = await getSettings()
   add(s.logoUrl)
   add(s.seo.ogFallbackImage)
+  return used
+}
 
+// Absolute URLs of media items referenced by no post, page, setting, or
+// revision. `getMedia()` already returns expanded URLs (same form the client
+// holds), so we hand those straight back for an exact match in the grid.
+export async function findUnusedMedia(): Promise<string[]> {
+  const used = await usedMediaKeys()
   const media = await getMedia()
   return media.filter((m) => !used.has(collapseBlob(m.url))).map((m) => m.url)
 }

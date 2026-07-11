@@ -406,6 +406,7 @@ const ja = {
   restoreFailed: '復元に失敗しました',
   deletePermanently: '完全に削除',
   confirmPurge: 'この項目を完全に削除しますか？取り消せません。',
+  confirmPurgeInUse: 'ここにある{n}件の画像はまだ投稿で使用されています。それでも完全に削除しますか？',
   emptyTrash: 'ゴミ箱を空にする',
   confirmEmptyTrash: 'このゴミ箱の中身をすべて完全に削除しますか？取り消せません。',
   trashEmptied: 'ゴミ箱を空にしました',

@@ -13,7 +13,7 @@ import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export const maxDuration = 60 // thumbnailing a big batch can take a moment
 
-const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif']
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif', 'image/avif']
 
 export async function POST(req: NextRequest): Promise<Response> {
   const start = Date.now()
