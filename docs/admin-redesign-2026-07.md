@@ -42,6 +42,7 @@ Bring the admin closer to Quire's reading-first identity without changing the pu
 - Hides the global sidebar while editing to create a focus mode.
 - Moves save, preview, publish, and property controls into a sticky editor header.
 - Aligns the title with the public reading column.
+- Lets long titles wrap naturally while the property inspector is open.
 - Makes the property inspector collapsible and sticky on wide screens.
 - Removes the bottom action bar so it no longer covers the end of long posts.
 - Consolidates H1–H5 controls into a paragraph-style selector.

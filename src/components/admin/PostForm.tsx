@@ -316,11 +316,12 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
       <div className={`grid items-start gap-8 ${settingsOpen ? 'xl:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
         <div className="min-w-0">
           <div className="mx-auto mb-6 w-full" style={{ maxWidth: contentWidth }}>
-            <input
+            <textarea
               value={draft.title}
               onChange={(e) => update({ title: e.target.value })}
               placeholder={t.titlePlaceholder}
-              className="w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
+              rows={2}
+              className="w-full resize-none overflow-hidden bg-transparent text-3xl font-bold leading-tight tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
             />
           </div>
           <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} />
