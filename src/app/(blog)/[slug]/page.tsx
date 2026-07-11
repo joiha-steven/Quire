@@ -55,7 +55,12 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
   const [post, page, settings] = await Promise.all([getPost(slug), getPage(slug), getSettings()])
   const base = resolveSiteUrl(settings)
   if (post && isPublicallyVisible(post.status, post.date)) {
-    const og = ogImageUrl(settings, base, { title: post.title, featuredImage: post.featuredImage })
+    const og = ogImageUrl(settings, base, {
+      title: post.title,
+      featuredImage: post.featuredImage,
+      desc: post.excerpt || undefined,
+      date: formatDate(post.date, settings.language),
+    })
     const images = og ? [og] : undefined
     return {
       title: post.title,
