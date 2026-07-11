@@ -376,17 +376,20 @@ hr {
   position: relative;
   padding-left: var(--rail-pad);
 }
-/* Sub-level ToC row (H3 when the post also has H2s): slightly smaller, prefixed with
-   a dot so it reads as a child. Only added when levels are MIXED — a single-level ToC
-   stays uniform. The dot is an inline ::before, so it flows with the text and needs no
-   left/right handling for the rail's two orientations. */
+/* Nested ToC (only when a post MIXES H2 + H3; a single-level ToC stays uniform).
+   Top-level rows (H2) carry ONE bigger dot as a section marker; child rows (H3) are
+   just smaller, no dot — so it reads as few big markers over quieter children, not a
+   column of small dots. The dot is an inline ::before, so it flows for both rail
+   orientations (left in the drawer, right in the gutter) with no side handling. */
+.rail-lead::before {
+  content: '•';
+  font-size: 0.72em;
+  margin-inline-end: 0.5em;
+  vertical-align: 0.12em;
+  color: var(--c-meta);
+}
 .rail-sub {
   font-size: var(--fs-caption);
-}
-.rail-sub::before {
-  content: '·';
-  margin-inline-end: 0.4em;
-  color: var(--c-meta);
 }
 /* Post counts sit in their own right-aligned column so the labels beside them stay
    aligned however many digits a count carries. The column is exactly as wide as the

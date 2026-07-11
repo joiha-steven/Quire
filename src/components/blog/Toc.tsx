@@ -80,8 +80,8 @@ export function Toc({
       current ? 'font-medium text-heading' : 'text-meta'
     }`
 
-  // Only nest visually when the post MIXES levels: an H3 under H2s reads as a child
-  // (smaller + inset). A post that is all-H2 or all-H3 stays uniform.
+  // Only nest visually when the post MIXES levels: H2 rows get a bigger dot marker,
+  // H3 rows go smaller (no dot). A post that is all-H2 or all-H3 stays uniform.
   const mixed = headings.some((h) => h.level === 2) && headings.some((h) => h.level === 3)
 
   return (
@@ -99,7 +99,7 @@ export function Toc({
               href={`#${h.id}`}
               onClick={(e) => goId(e, h.id)}
               aria-current={active === h.id ? 'location' : undefined}
-              className={`${row(active === h.id)}${mixed && h.level === 3 ? ' rail-sub' : ''}`}
+              className={`${row(active === h.id)}${mixed ? (h.level === 3 ? ' rail-sub' : ' rail-lead') : ''}`}
             >
               {h.text}
             </a>
