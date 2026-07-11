@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## Unreleased
+## v1.4.3 — 2026-07-11 (the reading layout: sidebar rail, built-in fonts, nested ToC, SEO & dashboard)
+
+Consolidates the whole 1.4.1–1.4.3 line into one entry: the sidebar rail + accent colour, four (then
+five) layout toggles, built-in reading fonts + book-page text, the nested/scrolling table of contents,
+SEO (canonical + breadcrumbs) and cache-clear-on-deploy, a fuller admin dashboard, and MCP `patch_post`.
+Nothing here changes an existing install's hue or breaks its settings.
 
 **Reading — nested table of contents.** When a post mixes heading levels (H2 + H3), the top-level (H2)
 rows get a bigger dot marker and the child (H3) rows go smaller with no dot — a few big markers over
@@ -24,8 +29,6 @@ were never indexable; no change there.)
 `revalidateEverything()` — Next paths + the whole Cloudflare zone — so a code deploy, which runs no
 admin write, still clears the edge. Content saves and the "Clear all cache" button already purge the
 zone when the CF token+zone are set.
-
-## v1.4.2 — 2026-07-11 (built-in reading fonts, book-page text, patch_post)
 
 **New — built-in fonts** (Admin → Appearance → Font). Four self-hosted families: Inter, Source
 Sans 3, Literata, Source Serif 4. Each is subset per unicode-range, so a family downloads only when
@@ -63,11 +66,6 @@ and the empty-slug row was unreachable from the editor and Trash (couldn't be ed
 a very black 700 bold that out-weighed the 600 headings, so bold read like a second heading. Body drops
 to 18px (Literata) / 18.4px (Source Serif); presets now carry `readingBold: 600` (`--reading-bold`) so
 `.prose` bold stays emphasis beneath the headings. Sans faces are unchanged.
-
-## v1.4.1 — 2026-07-10 (the sidebar rail, an accent colour, four layout toggles)
-
-A reading-layout release. The blog gains a real sidebar and, with it, the site's first accent
-colour. Nothing here changes an existing install's hue or breaks its settings.
 
 **New — the sidebar rail.** Categories + tags (home) and a post's table of contents now live in the
 left gutter, sticky, ranged right against a hairline divider, their first line level with the
