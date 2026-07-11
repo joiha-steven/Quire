@@ -426,7 +426,7 @@ export type AdminStrings = {
   tmLatest: string
   tmEmpty: string
   revisionLoaded: string
-  previewLinkCopied: string
+  previewDraft: string
   // analytics (Admin → Analytics)
   navAnalytics: string
   analyticsTitle: string

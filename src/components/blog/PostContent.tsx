@@ -78,7 +78,7 @@ function dedupeHeadingIds(html: string): string {
 export type ImageDims = Map<string, { width: number; height: number }>
 
 // Figure placement from the src fragment: #left|#right (align, default center),
-// #wide (30% wider, breaks out). Caption = alt.
+// #wide (noses right into the gutter on wide screens). Caption = alt.
 function imgClasses(frag: string): string {
   // Exact hyphen tokens so `#bright` can't match `right`: left|right|wide|left-wide|right-wide.
   const tokens = frag.split('-')

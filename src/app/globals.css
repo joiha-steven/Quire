@@ -632,35 +632,15 @@ hr {
   margin-left: auto;
   margin-right: 0;
 }
-/* 30% wider than the column; alignment decides which way it overflows. */
+/* "Large" image: column width by DEFAULT, so it never overflows on phones,
+   tablets, or any viewport below the rail breakpoint. Only when the reading
+   column has a free right gutter (same breakpoint as the ToC rail) does the
+   layout inject a rule that noses it right by exactly one rail width — see
+   railCss() in (blog)/layout.tsx. Alignment doesn't apply to a large image:
+   its left edge stays on the column and it grows rightward into the gutter. */
 .prose figure.img-wide {
-  width: 130%;
-  max-width: 130%;
-}
-.prose figure.img-wide.img-center {
-  margin-left: -15%;
-  margin-right: -15%;
-}
-.prose figure.img-wide.img-left {
-  margin-left: 0;
-  margin-right: -30%;
-}
-.prose figure.img-wide.img-right {
-  margin-left: -30%;
-  margin-right: 0;
-}
-/* On phones a 130%-wide image would force horizontal scrolling — clamp every
-   wide variant back to the column so the page never overflows sideways. */
-@media (max-width: 767px) {
-  .prose figure.img-wide,
-  .prose figure.img-wide.img-center,
-  .prose figure.img-wide.img-left,
-  .prose figure.img-wide.img-right {
-    width: 100%;
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  width: 100%;
+  max-width: 100%;
 }
 /* Gallery: a run of #grid images becomes a responsive grid (auto-fit columns).
    Each item stays a normal <figure> so captions still work; the grid owns the
