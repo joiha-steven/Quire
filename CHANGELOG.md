@@ -3,7 +3,7 @@
 ## Unreleased
 
 **OG card — post share previews show title + excerpt + date.** The generated Open Graph / Twitter card
-for a post replaces the bottom "site name" line with the post's excerpt (3-line-clamped) and its publish
+for a post replaces the bottom "site name" line with a fuller excerpt (up to 320 chars, 4-line-clamped) and its publish
 date, so a shared link reads like the homepage entry. Home/category/tag cards are unchanged. `/og` gains
 `desc` + `date` query params.
 
