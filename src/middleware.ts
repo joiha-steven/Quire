@@ -28,6 +28,17 @@ function isPublicApi(pathname: string): boolean {
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  // Page 1 IS the base ('/', '/category/x', '/tag/x') — 308 to it. This MUST live in
+  // middleware: a page-level redirect() runs after `loading.tsx` has streamed, so Next
+  // downgrades it to a client meta-refresh (200), not a real HTTP redirect. Middleware
+  // runs before any render, so the crawler gets a clean 308.
+  const pageOne = pathname.match(/^(\/(?:category|tag)\/[^/]+)?\/page\/1$/)
+  if (pageOne) return NextResponse.redirect(new URL(pageOne[1] ?? '/', req.url), 308)
+
+  // The owner guard only concerns /admin + /api; skip the JWT read for public pages.
+  if (!pathname.startsWith('/admin') && !pathname.startsWith('/api')) return
+
   // Read + verify the NextAuth JWT directly (no provider config, no DB) so this
   // stays edge-safe even though the full auth config reads keys from Postgres.
   const token = await getToken({ req, secret: process.env.AUTH_SECRET, secureCookie: req.nextUrl.protocol === 'https:' })
@@ -47,5 +58,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*'],
+  matcher: ['/admin/:path*', '/api/:path*', '/page/:n', '/category/:slug/page/:n', '/tag/:slug/page/:n'],
 }

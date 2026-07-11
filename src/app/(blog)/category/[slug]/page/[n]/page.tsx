@@ -1,5 +1,5 @@
 // Category pagination: /category/[slug]/page/2, … (page 1 lives at /category/[slug]).
-import { notFound, permanentRedirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getPublicPosts } from '@/lib/posts'
 import { resolveTerm } from '@/lib/taxonomy'
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<'/category/[slug]/p
 
 export default async function CategoryPaged({ params }: PageProps<'/category/[slug]/page/[n]'>) {
   const { slug, n } = await params
-  if (n === '1') permanentRedirect(`/category/${slug}`) // page 1 lives at the base
+  // /category/<x>/page/1 is 308'd to the base in middleware; only junk/out-of-range reach here.
   const page = parsePathPage(n)
   if (page === null) notFound()
   const [posts, { language }] = await Promise.all([getPublicPosts(), getSettings()])
