@@ -783,7 +783,7 @@ hr {
    cards sit on solid surfaces above it). Admin chrome is monochrome by design, so
    the dot colour is a fixed faint neutral per mode (NOT a public theme token). */
 .admin-canvas {
-  background: #f7f7f5;
+  background: #f5f5f5;
 }
 .dark .admin-canvas {
   background: #0d0d0d;

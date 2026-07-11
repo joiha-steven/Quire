@@ -50,7 +50,7 @@ Bring the admin closer to Quire's reading-first identity without changing the pu
 
 ### Settings
 
-- Replaced two-column masonry layouts with a single readable form column.
+- Kept the efficient two-column desktop layout, with consistent panel chrome, aligned gaps, and a single-column mobile fallback.
 - Preserved the existing task tabs and save semantics.
 - Integration panels now follow a predictable top-to-bottom order instead of competing side by side.
 
