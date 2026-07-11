@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+**Cache — "Clear all cache" (and the deploy flush) now re-prime the edge in the right order.** The warm
+step used to run BEFORE the Cloudflare purge (which fired post-response), so it re-cached stale bytes that
+the purge then wiped — leaving the edge cold. `purgeAndWarm()` now purges the origin ISR + the whole CF
+zone FIRST, then warms the home + newest pages THROUGH Cloudflare, so the fresh render lands in both the
+origin ISR and the origin-region CF POP at once. (CF cache is per-datacentre, so a distant reader's POP
+still fills on first visit — enable CF Tiered Cache to have it pull from the warm tier, not the far origin.)
+
 **Fix — no more "stuck on the loading skeleton after a deploy."** A frequent deploy left already-open
 tabs on the old build; a soft navigation then mixed an old client runtime with new-build RSC/chunks and
 the router hung on the skeleton until a manual reload. `next.config` now sets a per-deploy `deploymentId`
