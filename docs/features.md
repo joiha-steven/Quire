@@ -46,7 +46,9 @@
   nothing otherwise). When the post MIXES levels (H2 + H3), top-level rows get `.rail-lead` (a bigger
   `•` dot marker via `::before`) and child rows get `.rail-sub` (smaller, no dot) — so it reads as a
   few big markers over quieter children; the dot is inline so it flows for both rail orientations. An
-  all-H2 or all-H3 ToC stays uniform. Header: clickable **"Tiêu đề"** (`tocTitle`) that scrolls to top when there
+  all-H2 or all-H3 ToC stays uniform. In the gutter rail the ToC is sticky (`.rail-inner`); `railCss`
+  caps it to the viewport with `overflow-y:auto`, so a ToC longer than the screen scrolls inside its own
+  box instead of pinning its tail off-screen (the drawer already scrolls via `.rail`). Header: clickable **"Tiêu đề"** (`tocTitle`) that scrolls to top when there
   ARE headings, else a plain non-clickable **"Mục lục"** (`tocIndex`). One line under it joins the
   present tags/categories/comments labels (comments prefixed with their server-rendered count) and
   jumps to the first existing section via `TOC_ANCHORS` + `scroll-mt-24` targets. Collapsible on
