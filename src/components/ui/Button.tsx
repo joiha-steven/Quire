@@ -13,7 +13,7 @@ const STYLES: Record<Variant, string> = {
   secondary:
     'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700',
   ghost: 'bg-transparent text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+  danger: 'bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200',
 }
 
 export function Button({ variant = 'primary', className = '', ...props }: Props) {

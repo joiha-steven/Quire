@@ -164,7 +164,7 @@ export function BackupFields({ backups, onChange }: { backups: BackupSettings; o
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-neutral-400 dark:text-neutral-500">
             {t.backupLastRun}: {status?.lastRunAt ? formatDateTimeShort(status.lastRunAt) : t.backupNever}
-            {status?.lastStatus === 'error' && <span className="ml-1 text-red-600 dark:text-red-400">({t.backupToastFail})</span>}
+            {status?.lastStatus === 'error' && <span className="ml-1 font-medium text-neutral-900 dark:text-white">({t.backupToastFail})</span>}
           </p>
           <Button type="button" disabled={busy || !status?.connected} onClick={() => act(() => fetch('/api/backup', { method: 'POST' }), t.backupToastOk)}>
             {t.backupNow}

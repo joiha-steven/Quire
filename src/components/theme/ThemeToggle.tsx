@@ -81,7 +81,7 @@ export function ThemeToggle({
       {open && (
         <>
           <button className="fixed inset-0 z-40 cursor-default" aria-hidden onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-rule bg-bg py-1 shadow-lg">
+          <div className={`absolute z-50 w-44 overflow-hidden border py-1 shadow-lg ${variant === 'text' ? 'bottom-0 left-full ml-2 border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900' : 'right-0 mt-2 border-rule bg-bg'}`}>
             {items.map((it) => (
               <button
                 key={it.key}
@@ -90,8 +90,10 @@ export function ThemeToggle({
                   setMode(it.key)
                   setOpen(false)
                 }}
-                className={`flex w-full items-center justify-between px-3 py-2 text-left t-small hover:bg-rule ${
-                  mode === it.key ? 'font-semibold text-heading' : 'text-meta'
+                className={`flex w-full items-center justify-between px-3 py-2 text-left t-small ${variant === 'text' ? 'hover:bg-neutral-100 dark:hover:bg-neutral-800' : 'hover:bg-rule'} ${
+                  mode === it.key
+                    ? variant === 'text' ? 'font-semibold text-neutral-900 dark:text-white' : 'font-semibold text-heading'
+                    : variant === 'text' ? 'text-neutral-500 dark:text-neutral-400' : 'text-meta'
                 }`}
               >
                 {it.label}

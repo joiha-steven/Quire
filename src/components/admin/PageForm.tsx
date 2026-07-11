@@ -209,15 +209,15 @@ export function PageForm({ initial, contentWidth }: Props) {
       />
 
       {localRecovered && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
-          <span className="text-amber-800 dark:text-amber-200">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+          <span className="text-neutral-800 dark:text-neutral-200">
             {t.localDraftFound} · {formatTime(localRecovered.at)}
           </span>
           <div className="flex gap-2">
-            <button type="button" onClick={restoreLocal} className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700">
+            <button type="button" onClick={restoreLocal} className="bg-neutral-900 px-3 py-1 text-xs font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900">
               {t.localDraftRestore}
             </button>
-            <button type="button" onClick={dismissLocal} className="rounded-md px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-500/20">
+            <button type="button" onClick={dismissLocal} className="px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800">
               {t.localDraftDiscard}
             </button>
           </div>

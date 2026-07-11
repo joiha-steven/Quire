@@ -65,7 +65,7 @@ export function RowActions({
 export function StatusPill({ published, label }: { published: boolean; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-neutral-600 dark:text-neutral-300">
-      <span className={`h-1.5 w-1.5 ${published ? 'bg-emerald-500' : 'bg-neutral-300 dark:bg-neutral-600'}`} aria-hidden />
+      <span className={`h-1.5 w-1.5 ${published ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-600'}`} aria-hidden />
       {label}
     </span>
   )

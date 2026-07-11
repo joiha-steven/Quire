@@ -186,7 +186,7 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
                     </td>
                     <td className="hidden whitespace-nowrap px-3 py-2 sm:table-cell">
                       {tok.expired ? (
-                        <span className="text-red-600 dark:text-red-400">{t.mcpExpired}</span>
+                        <span className="font-medium text-neutral-900 dark:text-white">{t.mcpExpired}</span>
                       ) : (
                         <span className="text-neutral-500 dark:text-neutral-400">{formatDateTimeShort(tok.expiresAt)}</span>
                       )}
