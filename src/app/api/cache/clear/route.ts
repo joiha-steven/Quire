@@ -19,9 +19,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail('Unauthorized', 401)
     }
 
-    // Purge everything (origin ISR + the Cloudflare zone), THEN warm the home + newest
-    // pages through Cloudflare so the edge re-caches fresh content immediately.
-    const warmed = await purgeAndWarm(new URL(req.url).origin)
+    // Purge everything (origin ISR + the Cloudflare zone), THEN re-warm the origin ISR
+    // (home + newest pages) so the next reader's cache miss renders fast.
+    const warmed = await purgeAndWarm()
 
     after(() => logActivity('cache.clear'))
     logRequest(req, 200, start)

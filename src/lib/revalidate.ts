@@ -75,29 +75,32 @@ export function revalidateEverything(): void {
   revalidatePath('/', 'layout')
 }
 
-// Prime the cache after a purge (home + newest pages). Best-effort, never throws.
+// Prime the ORIGIN render cache (ISR) after a purge: re-fetch home + newest pages over
+// the LOCAL loopback (127.0.0.1), NOT the public host — a self-request through Cloudflare
+// loops and is flaky, and would only warm the origin-region POP anyway. Warming the ISR
+// is what helps every reader: their first post-purge cache MISS (at any CF POP) then gets
+// a pre-rendered origin response instead of a cold render. Best-effort, never throws.
 const WARM_LIMIT = 12 // home + this many of the newest posts/pages
-export async function warmCache(origin: string, limit = WARM_LIMIT): Promise<number> {
+const LOCAL_ORIGIN = `http://127.0.0.1:${process.env.PORT || 3000}`
+export async function warmCache(limit = WARM_LIMIT): Promise<number> {
   const [posts, pages] = await Promise.all([getPublicPosts(), getPublicPages()])
   const slugs = [...posts.map((p) => p.slug), ...pages.map((p) => p.slug)].slice(0, limit)
   const paths = ['/', ...slugs.map((s) => `/${s}`)]
   const warmed = await Promise.allSettled(
-    paths.map((p) => fetch(`${origin}${p}`, { cache: 'no-store' })),
+    paths.map((p) => fetch(`${LOCAL_ORIGIN}${p}`, { cache: 'no-store' })),
   )
   return warmed.filter((r) => r.status === 'fulfilled').length
 }
 
-// Full purge + warm, in the ONLY order that actually re-primes the edge: purge the
-// origin ISR AND the whole Cloudflare zone FIRST (awaited), THEN warm — re-fetch the
-// key pages THROUGH Cloudflare (`origin` is the public host, which resolves to CF) so
-// the fresh render lands in both the origin ISR and the CF POP nearest the origin.
-// (Warming before the purge just re-caches stale bytes that the purge then wipes.)
-// Caveat: CF cache is per-datacentre, so this warms the origin-region POP; a distant
-// reader's POP still fills on first visit unless CF Tiered Cache is on (pulls from the
-// warm tier, not the far origin). Used by "Clear all cache" and the deploy flush.
-export async function purgeAndWarm(origin: string, limit = WARM_LIMIT): Promise<number> {
+// Full purge + warm, in the ONLY order that re-primes correctly: purge the origin ISR
+// AND the whole Cloudflare zone FIRST (awaited), THEN warm the origin ISR (warming before
+// the purge just re-caches stale bytes the purge then wipes). Used by "Clear all cache"
+// and the deploy flush. NOTE: this warms the ORIGIN render cache, not Cloudflare's edge —
+// CF cache is per-datacentre and can't be pre-filled for a distant reader's POP from here;
+// enable CF Tiered Cache so a POP miss pulls from a warm tier, not the far origin.
+export async function purgeAndWarm(limit = WARM_LIMIT): Promise<number> {
   revalidateTag(DB_TAG, 'max')
   revalidatePath('/', 'layout')
   await purgeCloudflare()
-  return warmCache(origin, limit)
+  return warmCache(limit)
 }

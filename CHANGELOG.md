@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-**Cache — "Clear all cache" (and the deploy flush) now re-prime the edge in the right order.** The warm
-step used to run BEFORE the Cloudflare purge (which fired post-response), so it re-cached stale bytes that
-the purge then wiped — leaving the edge cold. `purgeAndWarm()` now purges the origin ISR + the whole CF
-zone FIRST, then warms the home + newest pages THROUGH Cloudflare, so the fresh render lands in both the
-origin ISR and the origin-region CF POP at once. (CF cache is per-datacentre, so a distant reader's POP
-still fills on first visit — enable CF Tiered Cache to have it pull from the warm tier, not the far origin.)
+**Cache — "Clear all cache" (and the deploy flush) now re-prime in the right order.** The warm step used
+to run BEFORE the Cloudflare purge (which fired post-response), so it re-cached stale bytes the purge then
+wiped — leaving the cache cold. `purgeAndWarm()` now purges the origin ISR + the whole CF zone FIRST, then
+re-warms the origin render cache (home + newest pages, over loopback so it's reliable). This primes the
+**origin** render cache — a reader's first post-purge miss renders fast instead of cold. (Pre-filling the
+CF edge for a distant reader's region isn't possible from the origin — CF cache is per-datacentre; enable
+**CF Tiered Cache** so a POP miss pulls from a warm tier instead of the far origin.)
 
 **Fix — no more "stuck on the loading skeleton after a deploy."** A frequent deploy left already-open
 tabs on the old build; a soft navigation then mixed an old client runtime with new-build RSC/chunks and

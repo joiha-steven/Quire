@@ -24,7 +24,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
     // Theme/menu/title/SEO live site-wide, so purge everything then re-warm the
     // key pages so the change is visible without a cold first hit.
     revalidateEverything()
-    await warmCache(new URL(req.url).origin)
+    await warmCache()
     after(() => logActivity('settings.save'))
     logRequest(req, 200, start)
     return ok(next)
