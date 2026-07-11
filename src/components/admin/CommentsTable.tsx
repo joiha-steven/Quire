@@ -103,7 +103,7 @@ export function CommentsTable({ initial }: { initial: AdminComment[] }) {
                   <button
                     type="button"
                     onClick={() => handleDelete(c.id)}
-                    className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400"
+                    className="text-xs font-medium text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white"
                   >
                     {t.commentsColDelete}
                   </button>

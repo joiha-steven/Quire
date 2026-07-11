@@ -124,7 +124,7 @@ export function FileLibrary() {
           <button type="button" onClick={() => setSelected(new Set())} className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
             {t.clearSelection}
           </button>
-          <button type="button" onClick={deleteSelected} className="text-sm font-medium text-red-600 hover:text-red-700">
+          <button type="button" onClick={deleteSelected} className="text-sm font-medium text-neutral-800 hover:text-black dark:text-neutral-200 dark:hover:text-white">
             {t.deleteSelected} ({selected.size})
           </button>
         </div>

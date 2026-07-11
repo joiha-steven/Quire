@@ -41,14 +41,14 @@ export function AdminSidebar({
   // Publish the current desktop rail width as a CSS var so fixed-position chrome
   // (e.g. the settings save bar) can offset past the sidebar at any collapse state.
   const applyWidthVar = (c: boolean) =>
-    document.documentElement.style.setProperty('--admin-nav-w', c ? '4rem' : '13rem')
+    document.documentElement.style.setProperty('--admin-nav-w', c ? '3.5rem' : '11rem')
 
   // Restore the desktop collapsed state after mount (client-only; server renders
   // expanded so hydration matches, then we sync). Deferred a microtask so the
   // setState isn't in the effect body.
   useEffect(() => {
     if (editorMode) {
-      applyWidthVar(true)
+      document.documentElement.style.setProperty('--admin-nav-w', '0px')
       return
     }
     Promise.resolve().then(() => {
@@ -151,7 +151,7 @@ export function AdminSidebar({
       {/* Desktop: sticky full-height left column; width animates on collapse */}
       <aside
         className={`sticky top-0 h-screen shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-4 transition-[width] duration-200 dark:border-neutral-800 dark:bg-neutral-900 ${editorMode ? 'hidden' : 'hidden md:flex'} ${
-          collapsed ? 'md:w-16' : 'md:w-52'
+          collapsed ? 'md:w-14' : 'md:w-44'
         }`}
       >
         {/* Top: wordmark + collapse control. Stacked when collapsed (no room for a row). */}
@@ -179,11 +179,14 @@ export function AdminSidebar({
         </button>
       </header>
       {open && (
-        <nav className="flex flex-col gap-1 border-b border-neutral-200 bg-white px-3 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
-          {navItems(false)}
-          <span className="my-1 h-px w-full bg-neutral-200 dark:bg-neutral-700" aria-hidden />
-          {controls(false)}
-        </nav>
+        <>
+          <button type="button" aria-label={t.navHome} onClick={close} className="fixed inset-0 top-[65px] z-20 bg-black/20 md:hidden" />
+          <nav className="fixed inset-x-0 top-[65px] z-30 max-h-[calc(100dvh-65px)] overflow-y-auto border-b border-neutral-200 bg-white px-3 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
+            {navItems(false)}
+            <span className="my-1 block h-px w-full bg-neutral-200 dark:bg-neutral-700" aria-hidden />
+            {controls(false)}
+          </nav>
+        </>
       )}
     </>
   )

@@ -44,7 +44,7 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
               type="button"
               onClick={clear}
               disabled={busy}
-              className="text-sm text-neutral-500 transition-colors hover:text-red-600 disabled:opacity-50 dark:text-neutral-400"
+              className="text-sm text-neutral-500 transition-colors hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-white"
             >
               {t.logClear}
             </button>
@@ -53,7 +53,7 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
       />
 
       {!enabled && (
-        <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300">
+        <p className="border border-neutral-300 bg-neutral-100 px-4 py-3 text-sm text-neutral-800 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200">
           {t.logDisabled}
         </p>
       )}
@@ -79,7 +79,7 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
                     <span
                       className={`rounded-md px-2 py-0.5 text-xs ${
                         e.action === 'error'
-                          ? 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300'
+                          ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
                           : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'
                       }`}
                     >

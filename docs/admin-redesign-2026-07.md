@@ -69,3 +69,15 @@ Bring the admin closer to Quire's reading-first identity without changing the pu
 - Convert very narrow content tables to stacked list rows.
 - Split Integrations into an internal secondary navigation if the number of integrations grows.
 - Replace native link prompt in the editor with a small accessible popover.
+
+## Monochrome refinement
+
+The second visual pass tightened the system after reviewing every admin surface on production:
+
+- Admin feedback, status, analytics trends, media selection, warnings, destructive actions, and recovery banners now use only black, white, and neutral gray.
+- Theme selection opens beside the bottom sidebar control instead of below the viewport.
+- The mobile admin menu is an overlay and no longer pushes page content downward.
+- The expanded sidebar is narrower (176px); collapsed width is 56px.
+- H1–H5 are restored as always-visible editor controls because they are frequent writing actions.
+- Legacy table and analytics panels no longer carry isolated shadows or card styling.
+- Admin theme dropdown colors are isolated from the public site's configurable palette.

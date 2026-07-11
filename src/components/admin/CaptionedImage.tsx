@@ -86,7 +86,7 @@ function CaptionedImageView({ node, updateAttributes, selected }: NodeViewProps)
         </div>
       )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={clean} alt={caption} className={`w-full rounded-lg ${selected ? 'ring-2 ring-blue-400' : ''}`} />
+      <img src={clean} alt={caption} className={`w-full rounded-lg ${selected ? 'ring-2 ring-neutral-900 dark:ring-white' : ''}`} />
       <input
         value={caption}
         onChange={(e) => updateAttributes({ alt: e.target.value })}

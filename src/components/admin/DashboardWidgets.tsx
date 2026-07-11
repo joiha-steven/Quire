@@ -119,7 +119,7 @@ function NeedsAttentionCard({ needs }: { needs: DashboardData['needs'] }) {
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${
                     i.count > 0
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
                       : 'bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500'
                   }`}
                 >

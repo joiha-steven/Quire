@@ -177,7 +177,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
             key={m.url}
             className={`relative overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 ${
               (mode === 'page' || multi) && selected.has(m.url)
-                ? 'border-blue-500 ring-2 ring-blue-500'
+                ? 'border-neutral-900 ring-2 ring-neutral-900 dark:border-white dark:ring-white'
                 : 'border-neutral-200 dark:border-neutral-800'
             }`}
           >
@@ -187,7 +187,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
                 checked={selected.has(m.url)}
                 onChange={() => toggleSelect(m.url)}
                 aria-label={m.filename}
-                className="absolute left-1.5 top-1.5 z-10 h-4 w-4 accent-blue-600 dark:accent-blue-400"
+                className="absolute left-1.5 top-1.5 z-10 h-4 w-4 accent-neutral-900 dark:accent-white"
               />
             )}
             <button
@@ -199,7 +199,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.thumb ?? m.url} alt={m.filename} className="h-full w-full object-cover" />
               {unused?.has(m.url) && (
-                <span className="absolute right-1.5 top-1.5 rounded bg-amber-500 px-1.5 py-0.5 text-xs font-medium text-white">
+                <span className="absolute right-1.5 top-1.5 bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
                   {t.unusedBadge}
                 </span>
               )}
@@ -220,7 +220,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
                   <a href={m.url} download={m.filename} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                     {t.downloadOriginal}
                   </a>
-                  <button onClick={() => handleDelete(m.url)} className="text-red-600 hover:text-red-700">
+                  <button onClick={() => handleDelete(m.url)} className="font-medium text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white">
                     {t.delete}
                   </button>
                 </div>
@@ -250,7 +250,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
               <button
                 type="button"
                 onClick={deleteSelected}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
+                className="text-sm font-medium text-neutral-800 hover:text-black dark:text-neutral-200 dark:hover:text-white"
               >
                 {t.deleteSelected} ({selected.size})
               </button>
@@ -269,7 +269,7 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
                 type="button"
                 onClick={deleteAllUnused}
                 disabled={deletingAll}
-                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                className="text-sm font-medium text-neutral-800 hover:text-black disabled:opacity-50 dark:text-neutral-200 dark:hover:text-white"
               >
                 {t.deleteAllUnused} ({unused.size})
               </button>

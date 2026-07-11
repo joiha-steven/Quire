@@ -38,7 +38,7 @@ function Section({
   onAct: (kind: Kind, name: string, action: 'rename' | 'delete') => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="overflow-hidden border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="border-b border-neutral-200 px-4 py-3 text-sm font-semibold dark:border-neutral-800">{title}</h2>
       {terms.length === 0 ? (
         <p className="px-4 py-6 text-sm text-neutral-500 dark:text-neutral-400">{t.noTerms}</p>
