@@ -69,21 +69,23 @@ export function Toolbar({
         <code className="">{'`'}</code>
       </button>
       {sep}
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cls(editor.isActive('heading', { level: 1 }))}>
-        H1
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={cls(editor.isActive('heading', { level: 2 }))}>
-        H2
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={cls(editor.isActive('heading', { level: 3 }))}>
-        H3
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} className={cls(editor.isActive('heading', { level: 4 }))}>
-        H4
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()} className={cls(editor.isActive('heading', { level: 5 }))}>
-        H5
-      </button>
+      <select
+        aria-label="Kiểu đoạn văn"
+        value={editor.isActive('heading', { level: 1 }) ? '1' : editor.isActive('heading', { level: 2 }) ? '2' : editor.isActive('heading', { level: 3 }) ? '3' : editor.isActive('heading', { level: 4 }) ? '4' : editor.isActive('heading', { level: 5 }) ? '5' : 'p'}
+        onChange={(e) => {
+          const value = e.target.value
+          if (value === 'p') editor.chain().focus().setParagraph().run()
+          else editor.chain().focus().toggleHeading({ level: Number(value) as 1 | 2 | 3 | 4 | 5 }).run()
+        }}
+        className="border-0 bg-transparent px-2 py-1 text-sm text-neutral-600 outline-none dark:text-neutral-300"
+      >
+        <option value="p">Đoạn văn</option>
+        <option value="1">Tiêu đề 1</option>
+        <option value="2">Tiêu đề 2</option>
+        <option value="3">Tiêu đề 3</option>
+        <option value="4">Tiêu đề 4</option>
+        <option value="5">Tiêu đề 5</option>
+      </select>
       {sep}
       <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>
         • {t.tbList}

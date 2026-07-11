@@ -237,7 +237,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} />
       {/* Floating menu on a text selection / link — not in raw source mode. */}
       {!raw && <BubbleBar editor={editor} />}

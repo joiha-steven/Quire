@@ -783,16 +783,10 @@ hr {
    cards sit on solid surfaces above it). Admin chrome is monochrome by design, so
    the dot colour is a fixed faint neutral per mode (NOT a public theme token). */
 .admin-canvas {
-  background-color: #fafafa; /* neutral-50 */
-  background-image: radial-gradient(rgba(0, 0, 0, 0.11) 1.2px, transparent 1.2px);
-  background-size: 15px 15px;
-  /* Origin at the top-left edge, one full gap of clear space, then the first dot
-     (dots are tile-centred, so +7.5px lands the first dot one 15px gap in). */
-  background-position: 7.5px 7.5px;
+  background: #f7f7f5;
 }
 .dark .admin-canvas {
-  background-color: #0a0a0a; /* neutral-950 */
-  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+  background: #0d0d0d;
 }
 
 /* Native colour picker (admin theme): strip the default inner padding/border so

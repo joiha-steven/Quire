@@ -38,15 +38,17 @@ export function ContentDashboard({
 
   return (
     <div>
-      <PageHeader title={t.dashboardTitle} />
-
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <Tabs tabs={tabs} value={tab} onChange={setTab} variant="segment" />
-        {tab !== 'taxonomy' && (
+      <PageHeader
+        title={t.navDashboard}
+        actions={tab !== 'taxonomy' ? (
           <Link href={tab === 'posts' ? '/admin/editor' : '/admin/page-editor'}>
             <Button>{tab === 'posts' ? t.newPost : t.newPage}</Button>
           </Link>
-        )}
+        ) : undefined}
+      />
+
+      <div className="mb-5 border-b border-neutral-200 dark:border-neutral-800">
+        <Tabs tabs={tabs} value={tab} onChange={setTab} variant="underline" />
       </div>
 
       {tab === 'posts' && (

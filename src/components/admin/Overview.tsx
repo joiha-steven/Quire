@@ -1,20 +1,19 @@
 'use client'
 
-// Admin home dashboard: stat cards (posts, pages, comments, media, storage) +
-// quick actions + recent activity + taxonomy breakdown + a System reference panel.
+// Quiet, action-first admin home. Detailed analytics, taxonomy and runtime data
+// already have dedicated screens; the home only surfaces state that helps the
+// owner decide what to do next.
 import Link from 'next/link'
 import type { ActivityEntry } from '@/lib/activity'
 import { formatBytes, formatDateTimeShort } from '@/lib/utils'
-import { Card, PageHeader, StatCard } from './kit'
+import { PageHeader, StatCard } from './kit'
 import { DashboardWidgets, type DashboardData } from './DashboardWidgets'
-import { CacheButton } from './CacheButton'
 import { useAdminT } from './I18nProvider'
 
 type Taxo = { name: string; count: number }
 type SourceRow = { label: string; visitors: number }
 export type SeoHealth = { published: number; noExcerpt: number; noImage: number }
 export type TrafficSources = { referrers: SourceRow[]; countries: SourceRow[] }
-
 export type SystemInfo = {
   hosting: string
   site: string
@@ -29,10 +28,6 @@ export type SystemInfo = {
   backupOn: boolean
   backupLastRun?: string | null
 }
-
-// Shared style for the small header pills (version + license) so they stay identical.
-const PILL =
-  'rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200'
 
 type Props = {
   posts: number
@@ -53,239 +48,55 @@ type Props = {
   sources: TrafficSources
 }
 
-function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty: string }) {
-  return (
-    <Card title={title}>
-      {items.length === 0 ? (
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">{empty}</p>
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {items.map((it) => (
-            <li
-              key={it.name}
-              className="flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 text-sm dark:bg-neutral-800"
-            >
-              <span className="text-neutral-700 dark:text-neutral-200">{it.name}</span>
-              <span className="rounded-full bg-neutral-200 px-1.5 text-xs text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300">
-                {it.count}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  )
-}
-
-// One shared pill style for the quick-action row (links + the cache button).
-const QUICK_PILL =
-  'rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800'
-
-// Quick actions — the few things the owner reaches for most, one click from home.
-function QuickActions({ siteHref }: { siteHref?: string }) {
+export function Overview(props: Props) {
   const t = useAdminT()
+  const { posts, pages, comments, originals, totalBytes, recent, activityEnabled, version, system, dashboard } = props
   return (
-    <Card title={t.quickTitle}>
-      <div className="flex flex-wrap gap-2">
-        <Link href="/admin/editor" className={QUICK_PILL}>{t.newPost}</Link>
-        <Link href="/admin/page-editor" className={QUICK_PILL}>{t.newPage}</Link>
-        <Link href="/admin/media" className={QUICK_PILL}>{t.navMedia}</Link>
-        <Link href="/admin/settings" className={QUICK_PILL}>{t.navSettings}</Link>
-        <CacheButton className={QUICK_PILL} />
-        {siteHref && (
-          <a href={siteHref} target="_blank" rel="noopener noreferrer" className={QUICK_PILL}>{t.viewSite}</a>
-        )}
-      </div>
-    </Card>
-  )
-}
-
-// SEO health — cheap, metadata-only content signals the owner can act on.
-function SeoHealth({ seo }: { seo: SeoHealth }) {
-  const t = useAdminT()
-  const clean = seo.noExcerpt === 0 && seo.noImage === 0
-  return (
-    <Card title={t.seoTitle}>
-      {clean ? (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.seoAllGood}</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatCard label={t.tabPosts} value={seo.published} />
-          <StatCard label={t.seoNoExcerpt} value={seo.noExcerpt} href="/admin/content" />
-          <StatCard label={t.seoNoImage} value={seo.noImage} href="/admin/content" />
-        </div>
-      )}
-    </Card>
-  )
-}
-
-// Traffic sources — top referrers + countries over 30 days (distinct visitors).
-// An empty label (direct hit / unknown country) reads as "Direct / none".
-function SourceList({ title, rows, empty }: { title: string; rows: SourceRow[]; empty: string }) {
-  const t = useAdminT()
-  return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">{title}</h3>
-      {rows.length === 0 ? (
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">{empty}</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {rows.slice(0, 6).map((r) => (
-            <li key={r.label || 'direct'} className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="truncate text-neutral-700 dark:text-neutral-200">{r.label || t.sourcesDirect}</span>
-              <span className="tabular-nums text-neutral-400 dark:text-neutral-500">{r.visitors}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
-
-function TrafficSources({ sources }: { sources: TrafficSources }) {
-  const t = useAdminT()
-  return (
-    <Card title={t.sourcesTitle}>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <SourceList title={t.sourcesReferrers} rows={sources.referrers} empty={t.sourcesEmpty} />
-        <SourceList title={t.sourcesCountries} rows={sources.countries} empty={t.sourcesEmpty} />
-      </div>
-    </Card>
-  )
-}
-
-// Recent activity — the last few admin mutations, linking to the full log.
-function RecentActivity({ recent, enabled }: { recent: ActivityEntry[]; enabled: boolean }) {
-  const t = useAdminT()
-  return (
-    <Card
-      title={t.recentActivity}
-      actions={
-        <Link href="/admin/log" className="text-xs text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200">
-          {t.recentViewAll}
-        </Link>
-      }
-    >
-      {!enabled || recent.length === 0 ? (
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">{t.logEmpty}</p>
-      ) : (
-        <ul className="space-y-2">
-          {recent.map((e) => (
-            <li key={e.id} className="flex items-center gap-2 text-sm">
-              <span className="shrink-0 rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                {e.action}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-neutral-600 dark:text-neutral-300">{e.detail}</span>
-              <span className="shrink-0 whitespace-nowrap text-xs text-neutral-400 dark:text-neutral-500">
-                {formatDateTimeShort(e.at)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  )
-}
-
-function SystemCard({ system }: { system: SystemInfo }) {
-  const t = useAdminT()
-  const rows: { label: string; value: string; ok?: boolean; href?: string }[] = [
-    { label: t.sysHosting, value: system.hosting },
-    { label: t.sysSite, value: system.site, href: system.siteHref },
-    { label: t.sysEnv, value: system.env },
-    { label: t.sysFramework, value: system.framework },
-    { label: t.sysRuntime, value: system.runtime },
-    { label: t.sysDatabase, value: system.database },
-    { label: t.sysDbStatus, value: system.dbReachable ? t.sysReachable : t.sysUnreachable, ok: system.dbReachable },
-    { label: t.sysStorage, value: system.storage },
-    { label: t.sysMcp, value: system.mcpEnabled ? t.sysOn : t.sysOff, ok: system.mcpEnabled || undefined },
-    {
-      label: t.sysBackup,
-      // When on, show the last run (or "never") instead of a bare "On" — it's the fact worth seeing.
-      value: system.backupOn
-        ? system.backupLastRun
-          ? `${t.sysBackupLast}: ${formatDateTimeShort(system.backupLastRun)}`
-          : `${t.sysOn} · ${t.sysBackupNever}`
-        : t.sysOff,
-      ok: system.backupOn || undefined,
-    },
-  ]
-  return (
-    <Card title={t.sysTitle}>
-      <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-        {rows.map((r) => (
-          <div key={r.label} className="flex items-baseline justify-between gap-3 border-b border-neutral-100 py-1 dark:border-neutral-800/60">
-            <dt className="shrink-0 text-sm text-neutral-500 dark:text-neutral-400">{r.label}</dt>
-            <dd
-              className={`truncate text-right text-sm font-medium ${
-                r.ok === false ? 'text-red-600 dark:text-red-400' : r.ok === true ? 'text-green-600 dark:text-green-400' : 'text-neutral-800 dark:text-neutral-100'
-              }`}
-              title={r.value}
-            >
-              {r.href ? (
-                <a href={r.href} target="_blank" rel="noopener noreferrer" className="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-600 dark:decoration-neutral-600 dark:hover:decoration-neutral-300">
-                  {r.value}
-                </a>
-              ) : (
-                r.value
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </Card>
-  )
-}
-
-export function Overview({
-  posts, pages, comments, originals, variants, files, totalBytes,
-  categories, tags, recent, activityEnabled, version, system, dashboard, seo, sources,
-}: Props) {
-  const t = useAdminT()
-  return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={t.overviewTitle}
         actions={
-          // Version + license pills share ONE class so they can't drift. The MIT
-          // pill links to the LICENSE — the platform code is open source (the blog
-          // content it publishes is the owner's, all rights reserved).
-          <>
-            <a href="https://github.com/joiha-steven/Quire" target="_blank" rel="noopener noreferrer" className={PILL}>
-              <span className="font-semibold">quire</span>blog v{version}
-            </a>
-            <a href="https://github.com/joiha-steven/Quire/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title={t.licenseTitle} className={PILL}>
-              MIT
-            </a>
-          </>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-neutral-400">quireblog v{version}</span>
+            <Link href="/admin/editor" className="bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900">{t.newPost}</Link>
+          </div>
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-px overflow-hidden border border-neutral-200 bg-neutral-200 sm:grid-cols-3 lg:grid-cols-5 dark:border-neutral-800 dark:bg-neutral-800">
         <StatCard label={t.statPosts} value={posts} href="/admin/content" />
         <StatCard label={t.statPages} value={pages} href="/admin/content" />
         <StatCard label={t.statComments} value={comments} href="/admin/comments" />
-        <StatCard label={t.statMedia} value={originals} sub={`${variants} ${t.statVariants} · ${files} ${t.statFiles}`} href="/admin/media" />
+        <StatCard label={t.statMedia} value={originals} href="/admin/media" />
         <StatCard label={t.statStorage} value={formatBytes(totalBytes)} />
       </div>
 
       <DashboardWidgets data={dashboard} />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SeoHealth seo={seo} />
-        <TrafficSources sources={sources} />
+      <section className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold">{t.recentActivity}</h2>
+          <Link href="/admin/log" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">{t.recentViewAll}</Link>
+        </div>
+        {!activityEnabled || recent.length === 0 ? (
+          <p className="text-sm text-neutral-400">{t.logEmpty}</p>
+        ) : (
+          <ul className="divide-y divide-neutral-100 border-y border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+            {recent.slice(0, 6).map((entry) => (
+              <li key={entry.id} className="grid gap-2 py-3 text-sm sm:grid-cols-[120px_minmax(0,1fr)_auto]">
+                <span className={entry.action === 'error' ? 'text-red-600 dark:text-red-400' : 'text-neutral-500'}>{entry.action}</span>
+                <span className="truncate text-neutral-700 dark:text-neutral-300">{entry.detail}</span>
+                <time className="text-xs text-neutral-400">{formatDateTimeShort(entry.at)}</time>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4 text-xs text-neutral-400 dark:border-neutral-800">
+        <span>{system.dbReachable ? 'PostgreSQL · online' : 'PostgreSQL · offline'} · {system.storage}</span>
+        {system.siteHref && <a href={system.siteHref} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-900 dark:hover:text-white">{t.viewSite} ↗</a>}
       </div>
-
-      <QuickActions siteHref={system.siteHref} />
-
-      <RecentActivity recent={recent} enabled={activityEnabled} />
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TaxoList title={`${t.statCategories} (${categories.length})`} items={categories} empty={t.statEmpty} />
-        <TaxoList title={`${t.statTags} (${tags.length})`} items={tags} empty={t.statEmpty} />
-      </div>
-
-      <SystemCard system={system} />
     </div>
   )
 }

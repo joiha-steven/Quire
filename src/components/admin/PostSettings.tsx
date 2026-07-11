@@ -30,7 +30,7 @@ type Props = {
 export function PostSettings({ draft, update, allCategories, allTags, onPickFeatured }: Props) {
   const t = useAdminT()
   return (
-    <aside className="space-y-5">
+    <div className="space-y-5">
       <Input
         label={t.slug}
         value={draft.slug}
@@ -107,6 +107,6 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
         onChange={(e) => update({ excerpt: e.target.value })}
         placeholder={t.excerptPlaceholder}
       />
-    </aside>
+    </div>
   )
 }
