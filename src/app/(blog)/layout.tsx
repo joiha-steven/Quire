@@ -41,7 +41,6 @@ function railCss(contentWidth: number): string {
     `.rail .rail-tags{justify-content:flex-end}` +
     `.rail li a{justify-content:flex-end}` +
     `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
-    `.rail-sub{padding-left:0;padding-right:calc(var(--rail-pad) + var(--rail-sub-indent))}` +
     `.rail-row[aria-current]::before{left:auto;right:0}` +
     `.rail-handle,.rail-scrim{display:none}}`
   )

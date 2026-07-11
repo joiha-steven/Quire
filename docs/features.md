@@ -44,8 +44,8 @@
   `.skeleton`, motion-engine-gated).
 - `Toc` shows whenever a post has headings OR an in-page jump (`showToc` in the page; renders
   nothing otherwise). When the post MIXES levels (H2 + H3), H3 rows get the `.rail-sub` class (smaller
-  + inset off the start edge — left in the drawer, right in the gutter rail via `railCss`); an
-  all-H2 or all-H3 ToC stays uniform. Header: clickable **"Tiêu đề"** (`tocTitle`) that scrolls to top when there
+  + a leading `·` dot via `::before`, so it flows for both rail orientations); an all-H2 or all-H3 ToC
+  stays uniform. Header: clickable **"Tiêu đề"** (`tocTitle`) that scrolls to top when there
   ARE headings, else a plain non-clickable **"Mục lục"** (`tocIndex`). One line under it joins the
   present tags/categories/comments labels (comments prefixed with their server-rendered count) and
   jumps to the first existing section via `TOC_ANCHORS` + `scroll-mt-24` targets. Collapsible on
