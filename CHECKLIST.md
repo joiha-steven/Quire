@@ -26,12 +26,11 @@
 - [ ] Editing a post slug: old slug returns 404, new slug works
 - [ ] Deleting a post: slug returns 404, removed from home list
 - [ ] `STORAGE_LOCAL_DIR` is set and writable by the app user; uploads land under it and render at `/uploads/...`
-- [ ] **After a code deploy** (which runs no admin write), flush + re-prime the edge: `GET /api/cron?purge=1`
-  with the `CRON_SECRET` bearer → `purgeAndWarm()` (purge Next paths + the Cloudflare zone, THEN warm the
-  key pages). Call it via the **public host** (`https://<site>/api/cron?purge=1`), NOT `127.0.0.1`, so the
-  warm fetches route through Cloudflare and re-cache the edge (origin-region POP) — a loopback call warms
-  only the origin ISR. "Clear all cache" runs the same purge-then-warm. (CF cache is per-POP; a distant
-  reader's POP still fills on first visit unless CF Tiered Cache is enabled.)
+- [ ] **After a code deploy** (which runs no admin write), flush + re-prime: `GET /api/cron?purge=1` with
+  the `CRON_SECRET` bearer → `purgeAndWarm()` (purge Next paths + the Cloudflare zone, THEN re-warm the
+  origin ISR over loopback). "Clear all cache" runs the same. NOTE: the warm primes the **origin render
+  cache**, not the CF edge — CF cache is per-POP and can't be pre-filled for a distant reader's region
+  from the origin. Enable **CF Tiered Cache** so a reader's POP miss pulls from a warm tier, not the far origin.
 - [ ] **Version-skew protection:** the deploy MUST write a fresh unique id to `.deployment-id` (e.g.
   `date +%s > .deployment-id`) BEFORE `next build`, so `next.config` bakes a new `deploymentId` each
   deploy. Without it, an already-open tab on the old build hangs on the loading skeleton after a soft
