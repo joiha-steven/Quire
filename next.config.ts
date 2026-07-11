@@ -1,6 +1,25 @@
 import type { NextConfig } from 'next'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+// Version-skew protection. A frequent deploy leaves already-open tabs on the OLD
+// build; a soft navigation then mixes an old client runtime with new-build RSC/chunks
+// and the router hangs on the loading skeleton (reload fixes it). With a deploymentId,
+// every asset/RSC request carries `?dpl=<id>` and the client hard-navigates the moment
+// it sees a different id from the server — so it self-heals instead of getting stuck.
+// The SAME id must resolve at build AND at `next start`, so the deploy writes it to a
+// `.deployment-id` file (the server has no .git); env wins if set.
+function deploymentId(): string | undefined {
+  if (process.env.NEXT_DEPLOYMENT_ID) return process.env.NEXT_DEPLOYMENT_ID
+  try {
+    return readFileSync(join(process.cwd(), '.deployment-id'), 'utf8').trim() || undefined
+  } catch {
+    return undefined
+  }
+}
 
 const nextConfig: NextConfig = {
+  deploymentId: deploymentId(),
   // Self-contained server bundle for the self-host image (`.next/standalone`), run as a
   // plain Node process. The build needs no backend: the data layer degrades to empty on
   // a missing DB (posts/pages readIndex catch), so `generateStaticParams` returns [] and

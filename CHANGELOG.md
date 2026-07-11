@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+**Fix — no more "stuck on the loading skeleton after a deploy."** A frequent deploy left already-open
+tabs on the old build; a soft navigation then mixed an old client runtime with new-build RSC/chunks and
+the router hung on the skeleton until a manual reload. `next.config` now sets a per-deploy `deploymentId`
+(read from a `.deployment-id` file the deploy writes before build), so Next tags every asset/RSC request
+with `?dpl=<id>` and the client hard-reloads the instant it sees a different id from the server — it
+self-heals instead of getting stuck.
+
 **OG card — post share previews show title + excerpt + date.** The generated Open Graph / Twitter card
 for a post replaces the bottom "site name" line with a fuller excerpt (up to 320 chars, 4-line-clamped) and its publish
 date, so a shared link reads like the homepage entry. Home/category/tag cards are unchanged. `/og` gains
