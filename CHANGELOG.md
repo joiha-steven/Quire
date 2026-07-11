@@ -1,6 +1,33 @@
 # CHANGELOG
 
-## Unreleased
+## v1.4.4 — 2026-07-11 (stable: reading layout, admin redesign, media hardening)
+
+Consolidates the whole 1.4.1–1.4.4 line into one stable entry: the sidebar rail + accent colour and
+layout toggles, built-in reading fonts + book-page text, the nested/scrolling table of contents, SEO
+(canonical + breadcrumbs), cache-clear-on-deploy, a fuller admin dashboard + Help page, an editorial
+redesign of the admin workspace, full-bleed mobile images, and a hardened image upload/delete path.
+Nothing here changes an existing install's hue or breaks its settings.
+
+**Admin — an editorial redesign of the workspace.** The admin adopts a calmer, monochrome design system:
+the editor chrome and the settings grid are realigned, the action header is framed, and long editor titles
+wrap instead of overflowing. Structure and behaviour are unchanged — it just reads cleaner.
+
+**Reading — large images go full-bleed on phones.** On a phone every in-body image now spans edge to edge
+of the screen (gallery grids excepted) for an editorial look — no horizontal scroll. On wide screens the
+"large" size (renamed from "Wide +30%") noses right into the free gutter by one rail width instead of
+overflowing both sides / colliding with the ToC rail; on tablets and narrow desktop it sits at the column
+width.
+
+**Editor — the draft preview opens in a new tab and is always current.** The "Preview draft" button (was a
+copy-link) saves any pending edits first, then opens `/preview/{slug}` in a new tab; the preview page reads
+live (`fetchCache='force-no-store'`) so it never shows a stale revision after a save.
+
+**Media — upload & delete hardened.** The original is written with an exclusive (O_EXCL) file write, so two
+concurrent uploads that pick the same name retry a fresh name instead of overwriting each other and 500-ing
+on the `path` primary key. Dimensions + the thumbnail are best-effort — a valid image never fails the upload
+because thumbnailing hiccuped. AVIF is accepted; unsupported types show a clear message. Purging a trashed
+image still referenced by a post/page/revision/setting now asks for confirmation before it can break a live
+page.
 
 **Admin — a Help / Guide page.** A new sidebar item (`/admin/help`) with a concise, sectioned index:
 writing &amp; publishing, the five settings tabs, server &amp; self-host, Cloudflare (Cache Rules, Tiered
@@ -27,13 +54,6 @@ self-heals instead of getting stuck.
 for a post replaces the bottom "site name" line with a fuller excerpt (up to 320 chars, 4-line-clamped) and its publish
 date, so a shared link reads like the homepage entry. Home/category/tag cards are unchanged. `/og` gains
 `desc` + `date` query params.
-
-## v1.4.3 — 2026-07-11 (the reading layout: sidebar rail, built-in fonts, nested ToC, SEO & dashboard)
-
-Consolidates the whole 1.4.1–1.4.3 line into one entry: the sidebar rail + accent colour, four (then
-five) layout toggles, built-in reading fonts + book-page text, the nested/scrolling table of contents,
-SEO (canonical + breadcrumbs) and cache-clear-on-deploy, a fuller admin dashboard, and MCP `patch_post`.
-Nothing here changes an existing install's hue or breaks its settings.
 
 **Reading — nested table of contents.** When a post mixes heading levels (H2 + H3), the top-level (H2)
 rows get a bigger dot marker and the child (H3) rows go smaller with no dot — a few big markers over
