@@ -129,12 +129,16 @@
   **dashboard widgets** (`DashboardWidgets.tsx`): a **Traffic** card (30-day views + visitors with an
   inline sparkline + last-7-days, from `getAnalytics(30)`), **Most viewed** (top 5 posts/pages by
   all-time views, `getViewTotals` mapped to titles), and **Needs attention** (draft + unused-media
-  counts; no "pending comments" — comments publish on submit, there is no moderation queue). Then a
-  **Quick actions** row, a **Recent activity** card (latest 6 from `getActivity`, gated by
-  `features.activityLog`), taxonomy breakdown, and the System panel at the bottom.
+  counts; no "pending comments" — comments publish on submit, there is no moderation queue). Then an
+  **SEO health** card (published count + posts missing an excerpt / cover image, metadata-only so it's
+  cheap — no body scan — each linking to Content) and a **Traffic sources** card (top referrers +
+  countries over 30 days by distinct visitor, from `getAnalytics(30).topReferrers/topCountries`; an
+  empty label = "Direct / none"). Then a **Quick actions** row (New post/page, Media, Settings, plus a
+  **Clear cache** button and a **View site** link), a **Recent activity** card (latest 6 from
+  `getActivity`, gated by `features.activityLog`), taxonomy breakdown, and the System panel at the bottom.
 - **System panel** (`getSystemInfo()`): hosting/URL/env/git + database
-  (Postgres, live reachability) + storage host + **MCP on/off** + **Backups on** (= enabled AND Drive
-  connected); rows may deep-link. The Images card splits media into **originals / variants / files**
+  (Postgres, live reachability) + storage host + **MCP on/off** + **Backups** (on = enabled AND Drive
+  connected; shows the **last run** or "never"); rows may deep-link. The Images card splits media into **originals / variants / files**
   (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
   (`getViewTotals`). Shows total views + unique visitors (with **period-over-period trend** and a

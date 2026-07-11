@@ -39,6 +39,7 @@ async function getSystemInfo(): Promise<SystemInfo> {
   return {
     mcpEnabled: settings.mcp.enabled,
     backupOn: settings.backups.enabled && !!backup.refreshToken,
+    backupLastRun: backup.lastRunAt,
     hosting: 'Self-hosted',
     site: siteHost || '—',
     siteHref: siteHost ? `https://${siteHost}` : undefined,
@@ -104,6 +105,19 @@ export default async function AdminHome() {
     needs: { drafts },
   }
 
+  // SEO health: metadata-only signals over PUBLISHED posts (cheap — no body scan).
+  const published = posts.filter((p) => p.status === 'published')
+  const seo = {
+    published: published.length,
+    noExcerpt: published.filter((p) => !p.excerpt?.trim()).length,
+    noImage: published.filter((p) => !p.featuredImage).length,
+  }
+  // Traffic sources (present once the analytics-deepening migration is applied).
+  const sources = {
+    referrers: (analytics30.topReferrers ?? []).map((r) => ({ label: r.host, visitors: r.visitors })),
+    countries: (analytics30.topCountries ?? []).map((c) => ({ label: c.country, visitors: c.visitors })),
+  }
+
   // Media blobs split into originals vs derived variants (thumb + -1024/-1600
   // AVIF/WebP, named by convention), plus the files/ attachment+icon+font blobs.
   const isVariant = (p: string) => /-(?:thumb|\d+)\.(?:avif|webp)$/.test(p)
@@ -129,6 +143,8 @@ export default async function AdminHome() {
       version={pkg.version}
       system={system}
       dashboard={dashboard}
+      seo={seo}
+      sources={sources}
     />
   )
 }

@@ -7,9 +7,13 @@ import type { ActivityEntry } from '@/lib/activity'
 import { formatBytes, formatDateTimeShort } from '@/lib/utils'
 import { Card, PageHeader, StatCard } from './kit'
 import { DashboardWidgets, type DashboardData } from './DashboardWidgets'
+import { CacheButton } from './CacheButton'
 import { useAdminT } from './I18nProvider'
 
 type Taxo = { name: string; count: number }
+type SourceRow = { label: string; visitors: number }
+export type SeoHealth = { published: number; noExcerpt: number; noImage: number }
+export type TrafficSources = { referrers: SourceRow[]; countries: SourceRow[] }
 
 export type SystemInfo = {
   hosting: string
@@ -23,6 +27,7 @@ export type SystemInfo = {
   framework: string
   mcpEnabled: boolean
   backupOn: boolean
+  backupLastRun?: string | null
 }
 
 // Shared style for the small header pills (version + license) so they stay identical.
@@ -44,6 +49,8 @@ type Props = {
   version: string
   system: SystemInfo
   dashboard: DashboardData
+  seo: SeoHealth
+  sources: TrafficSources
 }
 
 function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty: string }) {
@@ -70,27 +77,78 @@ function TaxoList({ title, items, empty }: { title: string; items: Taxo[]; empty
   )
 }
 
+// One shared pill style for the quick-action row (links + the cache button).
+const QUICK_PILL =
+  'rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800'
+
 // Quick actions — the few things the owner reaches for most, one click from home.
-function QuickActions() {
+function QuickActions({ siteHref }: { siteHref?: string }) {
   const t = useAdminT()
-  const actions = [
-    { href: '/admin/editor', label: t.newPost },
-    { href: '/admin/page-editor', label: t.newPage },
-    { href: '/admin/media', label: t.navMedia },
-    { href: '/admin/settings', label: t.navSettings },
-  ]
   return (
     <Card title={t.quickTitle}>
       <div className="flex flex-wrap gap-2">
-        {actions.map((a) => (
-          <Link
-            key={a.href}
-            href={a.href}
-            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
-          >
-            {a.label}
-          </Link>
-        ))}
+        <Link href="/admin/editor" className={QUICK_PILL}>{t.newPost}</Link>
+        <Link href="/admin/page-editor" className={QUICK_PILL}>{t.newPage}</Link>
+        <Link href="/admin/media" className={QUICK_PILL}>{t.navMedia}</Link>
+        <Link href="/admin/settings" className={QUICK_PILL}>{t.navSettings}</Link>
+        <CacheButton className={QUICK_PILL} />
+        {siteHref && (
+          <a href={siteHref} target="_blank" rel="noopener noreferrer" className={QUICK_PILL}>{t.viewSite}</a>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+// SEO health — cheap, metadata-only content signals the owner can act on.
+function SeoHealth({ seo }: { seo: SeoHealth }) {
+  const t = useAdminT()
+  const clean = seo.noExcerpt === 0 && seo.noImage === 0
+  return (
+    <Card title={t.seoTitle}>
+      {clean ? (
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.seoAllGood}</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <StatCard label={t.tabPosts} value={seo.published} />
+          <StatCard label={t.seoNoExcerpt} value={seo.noExcerpt} href="/admin/content" />
+          <StatCard label={t.seoNoImage} value={seo.noImage} href="/admin/content" />
+        </div>
+      )}
+    </Card>
+  )
+}
+
+// Traffic sources — top referrers + countries over 30 days (distinct visitors).
+// An empty label (direct hit / unknown country) reads as "Direct / none".
+function SourceList({ title, rows, empty }: { title: string; rows: SourceRow[]; empty: string }) {
+  const t = useAdminT()
+  return (
+    <div>
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">{title}</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">{empty}</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {rows.slice(0, 6).map((r) => (
+            <li key={r.label || 'direct'} className="flex items-baseline justify-between gap-3 text-sm">
+              <span className="truncate text-neutral-700 dark:text-neutral-200">{r.label || t.sourcesDirect}</span>
+              <span className="tabular-nums text-neutral-400 dark:text-neutral-500">{r.visitors}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function TrafficSources({ sources }: { sources: TrafficSources }) {
+  const t = useAdminT()
+  return (
+    <Card title={t.sourcesTitle}>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <SourceList title={t.sourcesReferrers} rows={sources.referrers} empty={t.sourcesEmpty} />
+        <SourceList title={t.sourcesCountries} rows={sources.countries} empty={t.sourcesEmpty} />
       </div>
     </Card>
   )
@@ -141,7 +199,16 @@ function SystemCard({ system }: { system: SystemInfo }) {
     { label: t.sysDbStatus, value: system.dbReachable ? t.sysReachable : t.sysUnreachable, ok: system.dbReachable },
     { label: t.sysStorage, value: system.storage },
     { label: t.sysMcp, value: system.mcpEnabled ? t.sysOn : t.sysOff, ok: system.mcpEnabled || undefined },
-    { label: t.sysBackup, value: system.backupOn ? t.sysOn : t.sysOff, ok: system.backupOn || undefined },
+    {
+      label: t.sysBackup,
+      // When on, show the last run (or "never") instead of a bare "On" — it's the fact worth seeing.
+      value: system.backupOn
+        ? system.backupLastRun
+          ? `${t.sysBackupLast}: ${formatDateTimeShort(system.backupLastRun)}`
+          : `${t.sysOn} · ${t.sysBackupNever}`
+        : t.sysOff,
+      ok: system.backupOn || undefined,
+    },
   ]
   return (
     <Card title={t.sysTitle}>
@@ -172,7 +239,7 @@ function SystemCard({ system }: { system: SystemInfo }) {
 
 export function Overview({
   posts, pages, comments, originals, variants, files, totalBytes,
-  categories, tags, recent, activityEnabled, version, system, dashboard,
+  categories, tags, recent, activityEnabled, version, system, dashboard, seo, sources,
 }: Props) {
   const t = useAdminT()
   return (
@@ -204,7 +271,12 @@ export function Overview({
 
       <DashboardWidgets data={dashboard} />
 
-      <QuickActions />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SeoHealth seo={seo} />
+        <TrafficSources sources={sources} />
+      </div>
+
+      <QuickActions siteHref={system.siteHref} />
 
       <RecentActivity recent={recent} enabled={activityEnabled} />
 
