@@ -1,7 +1,8 @@
 'use client'
 
 // Custom image node: a figure with an editable caption, alignment (left/center/
-// right), a "wide" toggle (30% past the column), and a "grid" toggle (gallery
+// right), a "wide" toggle (noses right into the gutter on wide screens; column
+// width otherwise), and a "grid" toggle (gallery
 // item — consecutive #grid images render as a CSS grid, see PostContent). Placement
 // is encoded as a fragment on the src (e.g. ![caption](url#right-wide) or url#grid)
 // and the caption lives in the alt, so the node still serializes to plain Markdown.

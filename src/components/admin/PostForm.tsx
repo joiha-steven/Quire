@@ -234,17 +234,33 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
     notify(t.revisionLoaded)
   }
 
-  // Copy a shareable draft-preview URL (tokened, viewable without signing in).
-  async function copyPreviewLink() {
+  // Open the tokened draft preview in a new tab. Saves any pending edits FIRST so
+  // the preview reflects the latest content (autosave is local-only, never server),
+  // then points the tab at /preview/{slug}?key=. The tab is opened synchronously
+  // (before the await) or the popup blocker kills a post-await window.open.
+  async function openPreview() {
+    const tab = window.open('', '_blank')
+    if (dirtyRef.current) {
+      const saved = await enqueueSave()
+      if (!saved) {
+        tab?.close()
+        return // enqueueSave already surfaced the error
+      }
+    }
     const slug = currentSlug.current
-    if (!slug) return
+    if (!slug) {
+      tab?.close()
+      return
+    }
     try {
       const res = await fetch(`/api/preview-link?slug=${encodeURIComponent(slug)}`)
       const json = (await res.json()) as ApiResponse<{ token: string }>
       if (!json.success || !json.data) throw new Error()
-      await navigator.clipboard.writeText(`${window.location.origin}/preview/${slug}?key=${json.data.token}`)
-      notify(t.previewLinkCopied)
+      const url = `${window.location.origin}/preview/${slug}?key=${json.data.token}`
+      if (tab) tab.location.href = url
+      else window.open(url, '_blank') // popup was blocked — best-effort second try
     } catch {
+      tab?.close()
       notify(t.saveFailed, 'error')
     }
   }
@@ -316,8 +332,8 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
               </button>
             )}
             {savedSlug && (
-              <button type="button" onClick={copyPreviewLink} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                Link nháp
+              <button type="button" onClick={openPreview} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+                {t.previewDraft}
               </button>
             )}
             {draft.status === 'published' && savedSlug && (

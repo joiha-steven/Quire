@@ -46,7 +46,14 @@ function railCss(contentWidth: number): string {
     `.rail li a{justify-content:flex-end}` +
     `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail-row[aria-current]::before{left:auto;right:0}` +
-    `.rail-handle,.rail-scrim{display:none}}`
+    `.rail-handle,.rail-scrim{display:none}` +
+    // "Large" images: the breakpoint that gives the rail a left gutter also gives
+    // the column a free RIGHT gutter of the same size, so a large image noses right
+    // by exactly one rail width (gap + rail). Left edge stays on the column; below
+    // this width it falls back to the column-width default in globals.css (no overflow).
+    `.prose figure.img-wide{width:calc(100% + var(--rail-w) + var(--rail-gap));` +
+    `max-width:none;margin-left:0;` +
+    `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)))}}`
   )
 }
 

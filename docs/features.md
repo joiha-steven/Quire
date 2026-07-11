@@ -63,9 +63,10 @@
 - **Link hrefs are sanitized** (`safeHref` in PostContent drops `javascript:`/`data:`/`vbscript:`)
   — marked v5+ no longer does. Raw HTML in markdown is already escaped (the `html` renderer →
   `escapeHtml`), so `<script>`/`<img onerror>` render as visible text.
-- **Draft preview:** `/preview/[slug]?key=<hmac>` (force-dynamic, noindex);
-  `previewToken` = HMAC(slug, `AUTH_SECRET`); editor "Link nháp" button. Separate route keeps
-  `/[slug]` SSG + published-only.
+- **Draft preview:** `/preview/[slug]?key=<hmac>` (force-dynamic + `fetchCache='force-no-store'`
+  so it's never stale, noindex); `previewToken` = HMAC(slug, `AUTH_SECRET`). The editor's
+  "Preview draft" button saves pending edits first, then opens the URL in a new tab. Separate
+  route keeps `/[slug]` SSG + published-only.
 
 ## Editor (Admin → editor) — `components/admin/Editor.tsx`
 

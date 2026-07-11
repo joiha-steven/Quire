@@ -11,6 +11,11 @@ import { PostContent } from '@/components/blog/PostContent'
 import { verifyPreview } from '@/lib/preview'
 
 export const dynamic = 'force-dynamic'
+// `force-dynamic` alone does NOT de-cache `db()`'s tagged reads (they carry an
+// explicit next.tags:['db'] and stay in the 1h Data Cache) — so a preview opened
+// right after a save could show the PRIOR revision. Force every read live so the
+// preview always reflects the latest saved content. (Same gotcha as /admin.)
+export const fetchCache = 'force-no-store'
 
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
