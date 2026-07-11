@@ -29,6 +29,10 @@
 - [ ] **After a code deploy** (which runs no admin write), flush the edge: `GET /api/cron?purge=1`
   with the `CRON_SECRET` bearer → `revalidateEverything()` (Next paths + the Cloudflare zone). A save
   or the "Clear all cache" button already purges Cloudflare when the CF token+zone are set in Integrations.
+- [ ] **Version-skew protection:** the deploy MUST write a fresh unique id to `.deployment-id` (e.g.
+  `date +%s > .deployment-id`) BEFORE `next build`, so `next.config` bakes a new `deploymentId` each
+  deploy. Without it, an already-open tab on the old build hangs on the loading skeleton after a soft
+  navigation (mismatched runtime vs new-build RSC/chunks); with it the client hard-reloads to recover.
 
 ## Pagination (path-based)
 - [ ] Home `/page/2` works; `/page/1` **308-redirects to `/`**; out-of-range `/page/999` soft-404s (200 + `noindex`)

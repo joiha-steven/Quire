@@ -52,3 +52,4 @@ audit/legacy-blob-backup-*/
 
 # Local env backups
 .env.local.bak*
+.deployment-id
