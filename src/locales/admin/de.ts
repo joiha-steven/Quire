@@ -406,6 +406,7 @@ const de = {
   restoreFailed: 'Wiederherstellen fehlgeschlagen',
   deletePermanently: 'Endgültig löschen',
   confirmPurge: 'Dieses Element endgültig löschen? Das kann nicht rückgängig gemacht werden.',
+  confirmPurgeInUse: '{n} Bild(er) hier werden noch in einem Beitrag verwendet. Trotzdem endgültig löschen?',
   emptyTrash: 'Papierkorb leeren',
   confirmEmptyTrash: 'Alles in diesem Papierkorb endgültig löschen? Das kann nicht rückgängig gemacht werden.',
   trashEmptied: 'Papierkorb geleert',

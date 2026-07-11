@@ -193,8 +193,9 @@ export function PageForm({ initial, contentWidth }: Props) {
     try {
       const [item] = await uploadImages([file])
       return item?.url ?? null
-    } catch {
-      notify(t.imageUploadFailed, 'error')
+    } catch (err) {
+      const unsupported = err instanceof Error && err.message === 'unsupported_type'
+      notify(unsupported ? t.unsupportedType : t.imageUploadFailed, 'error')
       return null
     }
   }

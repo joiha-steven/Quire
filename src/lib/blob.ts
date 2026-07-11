@@ -53,11 +53,16 @@ export async function uploadFile(
   pathname: string,
   body: ArrayBuffer | Buffer,
   _contentType: string,
+  opts?: { exclusive?: boolean },
 ): Promise<string> {
   try {
-    return (await import('./blob-local')).put(pathname, body)
+    return (await import('./blob-local')).put(pathname, body, opts)
   } catch (error) {
-    console.error(`[ERROR] blob.uploadFile(${pathname}): ${(error as Error).message}`)
+    // EEXIST from an exclusive write is an EXPECTED race signal (a concurrent upload
+    // claimed this name first) — the caller retries a fresh name, so don't log it.
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+      console.error(`[ERROR] blob.uploadFile(${pathname}): ${(error as Error).message}`)
+    }
     throw error
   }
 }

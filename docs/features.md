@@ -13,6 +13,10 @@
   rendering; the blob is removed only on purge. So `/api/media/delete` no longer purges the page
   cache (it used to). A trashed row **keeps its slug** (still reserved via `ensureSlugFree`) so
   restore never collides.
+- **Purge-in-use guard:** a media `purge`/`empty` first checks `usedMediaKeys()` (posts + pages +
+  revisions + settings); if any target image is still referenced it returns `in_use:<n>` (409) and
+  `TrashView` re-asks with a stronger confirm, retrying with `force:true`. Stops a purge silently
+  breaking a live page.
 - Per kind the lib exports `restoreX`, `purgeX` (hard delete: row + revisions/blobs),
   `getTrashedX`, `emptyXTrash`. The Trash page server-loads all four lists; `TrashView` (4 tabs)
   acts via **`POST /api/trash`** `{ kind, action: restore|purge|empty, ids? }` (owner-gated) then

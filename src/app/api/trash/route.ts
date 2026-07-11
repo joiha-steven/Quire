@@ -7,7 +7,9 @@ import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { restorePost, purgePost, emptyPostsTrash } from '@/lib/posts'
 import { restorePage, purgePage, emptyPagesTrash } from '@/lib/pages'
-import { restoreMediaBatch, purgeMediaBatch, emptyMediaTrash } from '@/lib/media'
+import { restoreMediaBatch, purgeMediaBatch, emptyMediaTrash, getTrashedMedia } from '@/lib/media'
+import { usedMediaKeys } from '@/lib/media-usage'
+import { collapseBlob } from '@/lib/blob'
 import { restoreFilesBatch, purgeFilesBatch, emptyFilesTrash } from '@/lib/files'
 import { restoreComment, purgeComment, emptyCommentsTrash } from '@/lib/comments'
 import { revalidatePost, revalidatePage, revalidateEverything } from '@/lib/revalidate'
@@ -30,9 +32,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       logRequest(req, 401, start)
       return fail('Unauthorized', 401)
     }
-    const body = (await req.json().catch(() => ({}))) as { kind?: unknown; action?: unknown; ids?: unknown }
+    const body = (await req.json().catch(() => ({}))) as { kind?: unknown; action?: unknown; ids?: unknown; force?: unknown }
     const kind = body.kind as Kind
     const action = body.action as Action
+    const force = body.force === true
     if (!KINDS.includes(kind) || !ACTIONS.includes(action)) {
       logRequest(req, 400, start)
       return fail('Invalid kind or action', 400)
@@ -66,8 +69,22 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
         break
       case 'media':
-        if (action === 'restore') await restoreMediaBatch(ids)
-        else if (action === 'purge') { await purgeMediaBatch(ids); revalidateEverything() }
+        if (action === 'restore') { await restoreMediaBatch(ids); break }
+        // Guard: refuse to PERMANENTLY delete an image still referenced by a live
+        // post/page/revision/setting unless the caller confirms (force) — otherwise
+        // a purge silently breaks a published page. `in_use:<n>` lets the UI re-ask.
+        if (!force) {
+          const targets = action === 'purge' ? ids : (await getTrashedMedia()).map((m) => m.url)
+          if (targets.length > 0) {
+            const used = await usedMediaKeys()
+            const inUse = targets.filter((u) => used.has(collapseBlob(u)))
+            if (inUse.length > 0) {
+              logRequest(req, 409, start)
+              return fail(`in_use:${inUse.length}`, 409)
+            }
+          }
+        }
+        if (action === 'purge') { await purgeMediaBatch(ids); revalidateEverything() }
         else { count = await emptyMediaTrash(); revalidateEverything() }
         break
       case 'files':

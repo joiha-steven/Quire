@@ -406,6 +406,7 @@ const ko = {
   restoreFailed: '복원 실패',
   deletePermanently: '영구 삭제',
   confirmPurge: '이 항목을 영구 삭제할까요? 되돌릴 수 없습니다.',
+  confirmPurgeInUse: '여기 이미지 {n}개가 아직 게시물에서 사용 중입니다. 그래도 영구 삭제할까요?',
   emptyTrash: '휴지통 비우기',
   confirmEmptyTrash: '이 휴지통의 모든 항목을 영구 삭제할까요? 되돌릴 수 없습니다.',
   trashEmptied: '휴지통을 비웠습니다',

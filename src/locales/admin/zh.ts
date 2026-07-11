@@ -406,6 +406,7 @@ const zh = {
   restoreFailed: '恢复失败',
   deletePermanently: '永久删除',
   confirmPurge: '永久删除此项目？此操作无法撤销。',
+  confirmPurgeInUse: '这里有 {n} 张图片仍在文章中使用。仍要永久删除吗？',
   emptyTrash: '清空回收站',
   confirmEmptyTrash: '永久删除此回收站中的所有内容？此操作无法撤销。',
   trashEmptied: '回收站已清空',

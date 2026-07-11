@@ -55,38 +55,59 @@ export function TrashView({
     { key: 'comments', label: `${t.commentsNavTitle} (${counts.comments})` },
   ]
 
-  async function act(kind: Kind, action: 'restore' | 'purge' | 'empty', ids?: string[]): Promise<boolean> {
+  async function act(
+    kind: Kind,
+    action: 'restore' | 'purge' | 'empty',
+    ids?: string[],
+    force?: boolean,
+  ): Promise<{ ok: boolean; error?: string }> {
     setPending(true)
     try {
       const res = await fetch('/api/trash', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ kind, action, ids }),
+        body: JSON.stringify({ kind, action, ids, force }),
       })
       const json = (await res.json()) as ApiResponse
-      if (!json.success) throw new Error(json.error)
+      if (!json.success) return { ok: false, error: json.error }
       router.refresh()
-      return true
+      return { ok: true }
     } catch {
-      return false
+      return { ok: false }
     } finally {
       setPending(false)
     }
   }
 
+  // A media purge/empty may come back `in_use:<n>` (image still used by a live page).
+  // Returns whether the owner confirmed the second, stronger prompt (false = declined
+  // or not an in-use error). Other kinds never hit this path.
+  function askInUse(error: string | undefined): boolean {
+    if (!error?.startsWith('in_use')) return false
+    return confirm(t.confirmPurgeInUse.replace('{n}', error.split(':')[1] ?? ''))
+  }
+
   async function onRestore(kind: Kind, id: string) {
-    const oked = await act(kind, 'restore', [id])
-    notify(oked ? t.restored : t.restoreFailed, oked ? undefined : 'error')
+    const { ok } = await act(kind, 'restore', [id])
+    notify(ok ? t.restored : t.restoreFailed, ok ? undefined : 'error')
   }
   async function onPurge(kind: Kind, id: string) {
     if (!confirm(t.confirmPurge)) return
-    const oked = await act(kind, 'purge', [id])
-    notify(oked ? t.purged : t.purgeFailed, oked ? undefined : 'error')
+    let r = await act(kind, 'purge', [id])
+    if (!r.ok && r.error?.startsWith('in_use')) {
+      if (!askInUse(r.error)) return // owner declined — leave it in Trash, no error toast
+      r = await act(kind, 'purge', [id], true)
+    }
+    notify(r.ok ? t.purged : t.purgeFailed, r.ok ? undefined : 'error')
   }
   async function onEmpty(kind: Kind) {
     if (!confirm(t.confirmEmptyTrash)) return
-    const oked = await act(kind, 'empty')
-    notify(oked ? t.trashEmptied : t.purgeFailed, oked ? undefined : 'error')
+    let r = await act(kind, 'empty')
+    if (!r.ok && r.error?.startsWith('in_use')) {
+      if (!askInUse(r.error)) return
+      r = await act(kind, 'empty', undefined, true)
+    }
+    notify(r.ok ? t.trashEmptied : t.purgeFailed, r.ok ? undefined : 'error')
   }
 
   return (

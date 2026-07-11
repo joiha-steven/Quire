@@ -406,6 +406,7 @@ const vi = {
   restoreFailed: 'Khôi phục thất bại',
   deletePermanently: 'Xoá vĩnh viễn',
   confirmPurge: 'Xoá vĩnh viễn mục này? Không thể hoàn tác.',
+  confirmPurgeInUse: 'Có {n} ảnh ở đây còn được dùng trong bài viết. Vẫn xoá vĩnh viễn?',
   emptyTrash: 'Dọn sạch thùng rác',
   confirmEmptyTrash: 'Xoá vĩnh viễn mọi thứ trong thùng rác này? Không thể hoàn tác.',
   trashEmptied: 'Đã dọn sạch thùng rác',

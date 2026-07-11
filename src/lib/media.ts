@@ -95,55 +95,57 @@ function freePathname(base: string, ext: string, taken: Set<string>): string {
   return path
 }
 
-// Process one file: upload its blob(s) and return the row to insert. Does NOT
-// touch the DB — the caller inserts the whole batch at once.
+// Write the ORIGINAL under the first free name with an exclusive (O_EXCL) write, so
+// two concurrent uploads racing for the same name never overwrite each other: the
+// loser gets EEXIST and retries the next name (instead of a PK 500 + silent overwrite).
+async function writeUniqueOriginal(
+  base: string, ext: string, body: Buffer, contentType: string, taken: Set<string>,
+): Promise<string> {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const path = freePathname(base, ext, taken) // reserves the name in `taken`
+    try {
+      await uploadFile(path, body, contentType, { exclusive: true })
+      return path
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') continue // claimed; next name
+      throw error
+    }
+  }
+  throw new Error(`writeUniqueOriginal: no free name for ${base}.${ext}`)
+}
+
+const PASS_EXT: Record<string, string> = { 'image/svg+xml': 'svg', 'image/gif': 'gif', 'image/avif': 'avif' }
+
+// Process one file: upload its blob(s) and return the row to insert (DB write is the
+// caller's batch). Dimensions + thumb are BEST-EFFORT — a valid original must never
+// fail the upload because thumb/metadata hiccuped (it still renders; cron re-thumbs).
 async function processFile(
-  filename: string,
-  body: ArrayBuffer,
-  contentType: string,
-  taken: Set<string>,
+  filename: string, body: ArrayBuffer, contentType: string, taken: Set<string>,
 ): Promise<MediaRow> {
   const dot = filename.lastIndexOf('.')
   const base = slugify(dot >= 0 ? filename.slice(0, dot) : filename) || 'file'
-  const uploadedAt = new Date().toISOString()
+  const uploaded_at = new Date().toISOString()
 
   if (RASTER.test(contentType)) {
-    const ext = contentType === 'image/png' ? 'png' : 'jpg'
-    const origPath = freePathname(base, ext, taken)
-    const stem = origPath.replace(/\.[^.]+$/, '')
     const original = Buffer.from(body)
-    // ORIGINAL untouched + cheap thumb only; heavy variants deferred to finalizeVariants().
-    const { width, height } = await imageSize(original)
-    await uploadFile(origPath, original, contentType)
-    await uploadFile(`${stem}-thumb.webp`, await makeThumb(original), 'image/webp')
-    return {
-      path: origPath,
-      filename: origPath.replace(/^media\//, ''),
-      size: original.byteLength,
-      uploaded_at: uploadedAt,
-      width,
-      height,
-      thumb: `${stem}-thumb.webp`,
-      variants: false,
+    const path = await writeUniqueOriginal(base, contentType === 'image/png' ? 'png' : 'jpg', original, contentType, taken)
+    const stem = path.replace(/\.[^.]+$/, '')
+    const { width, height } = await safeSize(original) // never throws
+    let thumb = path // fall back to the original as its own thumb if webp encoding fails
+    try {
+      await uploadFile(`${stem}-thumb.webp`, await makeThumb(original), 'image/webp')
+      thumb = `${stem}-thumb.webp`
+    } catch (error) {
+      console.error(`[ERROR] media.processFile thumb(${path}): ${(error as Error).message}`)
     }
+    return { path, filename: path.replace(/^media\//, ''), size: original.byteLength, uploaded_at, width: width ?? null, height: height ?? null, thumb, variants: false }
   }
 
   if (PASSTHROUGH.test(contentType)) {
-    const ext = contentType === 'image/svg+xml' ? 'svg' : contentType === 'image/gif' ? 'gif' : 'webp'
-    const path = freePathname(base, ext, taken)
     const buf = Buffer.from(body)
-    await uploadFile(path, buf, contentType)
+    const path = await writeUniqueOriginal(base, PASS_EXT[contentType] ?? 'webp', buf, contentType, taken)
     const { width, height } = await safeSize(buf)
-    return {
-      path,
-      filename: path.replace(/^media\//, ''),
-      size: body.byteLength,
-      uploaded_at: uploadedAt,
-      width: width ?? null,
-      height: height ?? null,
-      thumb: path,
-      variants: false,
-    }
+    return { path, filename: path.replace(/^media\//, ''), size: body.byteLength, uploaded_at, width: width ?? null, height: height ?? null, thumb: path, variants: false }
   }
 
   throw new Error(`Unsupported file type: ${contentType}`)

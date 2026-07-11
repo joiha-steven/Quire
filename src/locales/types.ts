@@ -493,6 +493,7 @@ export type AdminStrings = {
   restoreFailed: string
   deletePermanently: string
   confirmPurge: string
+  confirmPurgeInUse: string
   emptyTrash: string
   confirmEmptyTrash: string
   trashEmptied: string
