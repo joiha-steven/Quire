@@ -367,6 +367,7 @@ const ko = {
   analyticsNoData: '아직 데이터가 없습니다.',
   analyticsPrivacyNote: '쿠키를 사용하지 않습니다. 방문자는 솔트가 적용된 IP + 사용자 에이전트 해시로 집계되며 개인 데이터는 저장되지 않습니다.',
   navLog: '로그',
+  navHelp: '도움말',
   featActivityLog: '활동 로그',
   featActivityLogDesc: '관리 작업(저장, 업로드, 삭제)을 로그 페이지에 기록합니다.',
   logTitle: '활동 로그',

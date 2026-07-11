@@ -367,6 +367,7 @@ const zh = {
   analyticsNoData: '暂无数据。',
   analyticsPrivacyNote: '不使用 Cookie。访客通过加盐的 IP + 浏览器标识哈希统计，不存储任何个人数据。',
   navLog: '日志',
+  navHelp: '帮助',
   featActivityLog: '活动日志',
   featActivityLogDesc: '将管理操作（保存、上传、删除）记录到日志页面。',
   logTitle: '活动日志',

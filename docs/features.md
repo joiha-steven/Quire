@@ -145,6 +145,10 @@
   (Postgres, live reachability) + storage host + **MCP on/off** + **Backups** (on = enabled AND Drive
   connected; shows the **last run** or "never"); rows may deep-link. The Images card splits media into **originals / variants / files**
   (variants = blobs matching `-(thumb|NNNN).(avif|webp)`); category/tag cards show their total count.
+- **Help / Guide:** Admin → Help (`/admin/help`, `HelpGuide.tsx`) — a concise, sectioned index (writing,
+  settings, self-host, Cloudflare, cache/ops, MCP) linking out to the repo docs. **Content is English by
+  design** (canonical, like the docs); only the nav label + title are localized (`navHelp`). Pure server
+  component, no client JS. Add a section here (not a new i18n dump) when a subsystem needs owner guidance.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
   (`getViewTotals`). Shows total views + unique visitors (with **period-over-period trend** and a
   **new-vs-returning** split), avg read depth, a daily bar series, **top pages by title** (a

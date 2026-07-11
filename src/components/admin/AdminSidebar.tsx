@@ -20,7 +20,7 @@ import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import {
   IconHome, IconAnalytics, IconContent, IconComment, IconMedia, IconTrash, IconSettings,
-  IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft,
+  IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft, IconHelp,
 } from './navIcons'
 
 const STORE_KEY = 'vb-admin-nav-collapsed'
@@ -72,6 +72,7 @@ export function AdminSidebar({
     { href: '/admin/trash', label: t.navTrash, icon: <IconTrash /> },
     { href: '/admin/settings', label: t.navSettings, icon: <IconSettings /> },
     { href: '/admin/log', label: t.navLog, icon: <IconLog /> },
+    { href: '/admin/help', label: t.navHelp, icon: <IconHelp /> },
   ]
 
   const isActive = (href: string): boolean =>

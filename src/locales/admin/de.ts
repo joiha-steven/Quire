@@ -367,6 +367,7 @@ const de = {
   analyticsNoData: 'Noch keine Daten.',
   analyticsPrivacyNote: 'Keine Cookies. Besucher werden über einen gesalzenen IP-+-User-Agent-Hash gezählt; es werden keine personenbezogenen Daten gespeichert.',
   navLog: 'Protokoll',
+  navHelp: 'Hilfe',
   featActivityLog: 'Aktivitätsprotokoll',
   featActivityLogDesc: 'Admin-Aktionen (Speichern, Uploads, Löschen) auf der Protokollseite aufzeichnen.',
   logTitle: 'Aktivitätsprotokoll',

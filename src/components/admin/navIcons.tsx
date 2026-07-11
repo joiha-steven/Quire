@@ -83,6 +83,16 @@ export function IconCache() {
     </svg>
   )
 }
+
+export function IconHelp() {
+  return (
+    <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.6 9.2a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1.1 .9-1.1 1.8" />
+      <path d="M12 16.5h.01" />
+    </svg>
+  )
+}
 export function IconSignOut() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
