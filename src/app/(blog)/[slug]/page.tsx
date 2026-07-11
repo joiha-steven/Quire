@@ -24,7 +24,7 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { Comments } from '@/components/blog/Comments'
 import { getCommentEnv } from '@/lib/comment-env'
 import { ogImageUrl } from '@/lib/og'
-import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls } from '@/lib/utils'
+import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls, toPlainText, clampExcerpt } from '@/lib/utils'
 
 // ISR-cached for fast reads. An edit to this post/page purges it immediately via
 // revalidatePath('/', 'layout') in the save route; the 1h window is a safety net.
@@ -58,7 +58,8 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
     const og = ogImageUrl(settings, base, {
       title: post.title,
       featuredImage: post.featuredImage,
-      desc: post.excerpt || undefined,
+      // A fuller preview than the ~200-char list excerpt: up to 320 chars from the body.
+      desc: clampExcerpt(toPlainText(post.content), 320) || post.excerpt || undefined,
       date: formatDate(post.date, settings.language),
     })
     const images = og ? [og] : undefined

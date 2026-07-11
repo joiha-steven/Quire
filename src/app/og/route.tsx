@@ -41,7 +41,8 @@ export async function GET(req: Request): Promise<Response> {
   const site = (searchParams.get('site') || '').slice(0, 120)
   // A post card adds an excerpt (a middle line) + the publish date (the bottom
   // line, replacing `site`). Cap the excerpt so it can't overflow the card.
-  const desc = (searchParams.get('desc') || '').slice(0, 150)
+  // Generous cap; the 4-line clamp below is what actually truncates (with an ellipsis).
+  const desc = (searchParams.get('desc') || '').slice(0, 340)
   const date = (searchParams.get('date') || '').slice(0, 60)
 
   const [latin, latinExt, vietnamese] = await Promise.all([
@@ -113,12 +114,12 @@ export async function GET(req: Request): Promise<Response> {
             <div
               style={{
                 marginTop: 24,
-                fontSize: 30,
-                lineHeight: 1.35,
+                fontSize: 28,
+                lineHeight: 1.4,
                 color: 'rgba(255,255,255,0.82)',
-                // Clamp to 3 lines so a long excerpt never pushes the date off the card.
+                // Clamp to 4 lines so a long excerpt never pushes the date off the card.
                 display: '-webkit-box',
-                WebkitLineClamp: 3,
+                WebkitLineClamp: 4,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
               }}

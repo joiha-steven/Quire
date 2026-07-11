@@ -49,7 +49,7 @@ export function formatTime(iso: string): string {
 export const EXCERPT_MAX_CHARS = 200
 
 // Strip markdown/HTML to plain text.
-function toPlainText(markdown: string): string {
+export function toPlainText(markdown: string): string {
   return markdown
     .replace(/```[\s\S]*?```/g, ' ') // code blocks
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // images
