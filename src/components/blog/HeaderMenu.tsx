@@ -10,8 +10,8 @@ import { ICON_BTN } from '@/components/ui/iconButton'
 
 function MenuIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M5 8h14M8 16h11" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+      <path d="M5 7.5h14M5 12h10M5 16.5h14" />
     </svg>
   )
 }

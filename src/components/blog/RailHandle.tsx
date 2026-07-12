@@ -36,8 +36,8 @@ export function RailHandle({ label }: { label: string }) {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        <svg width="14" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="m9 18 6-6-6-6" />
+        <svg width="10" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="m9.5 17 5-5-5-5" />
         </svg>
       </button>
     </>

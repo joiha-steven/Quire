@@ -24,27 +24,16 @@ function useIsDark(): boolean {
   )
 }
 
-const ICON = 'h-5 w-5'
-const STROKE = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
-
-function SunIcon() {
+function ContrastIcon() {
   return (
-    <svg viewBox="0 0 24 24" className={ICON} {...STROKE} aria-hidden>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+      <circle cx="12" cy="12" r="7" />
+      <path d="M12 5a7 7 0 0 0 0 14Z" fill="currentColor" stroke="none" />
     </svg>
   )
 }
 
-function MoonIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className={ICON} {...STROKE} aria-hidden>
-      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-    </svg>
-  )
-}
-
-// `variant` picks the trigger: 'icon' (public header — sun/moon) or 'text'
+// `variant` picks the trigger: 'icon' (public header — contrast) or 'text'
 // (admin header — the applied theme as a word, styled like the nav links via
 // `triggerClassName`). The dropdown is identical in both.
 export function ThemeToggle({
@@ -76,7 +65,7 @@ export function ThemeToggle({
         aria-label={s.theme}
         className={variant === 'text' ? triggerClassName : ICON_BTN}
       >
-        {variant === 'text' ? (isDark ? s.themeDark : s.themeLight) : isDark ? <MoonIcon /> : <SunIcon />}
+        {variant === 'text' ? (isDark ? s.themeDark : s.themeLight) : <ContrastIcon />}
       </button>
       {open && (
         <>
