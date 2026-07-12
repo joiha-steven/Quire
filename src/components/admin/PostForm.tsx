@@ -58,6 +58,8 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
   const [picker, setPicker] = useState<PickTarget | null>(null)
   const [timeMachine, setTimeMachine] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(true)
+  const [toolbarTop, setToolbarTop] = useState(0)
+  const actionHeaderRef = useRef<HTMLDivElement>(null)
   // Unsaved-changes flag: drives button states, autosave and the exit warning.
   const [dirty, setDirty] = useState(false)
   const [savedSlug, setSavedSlug] = useState<string | null>(initial?.slug ?? null)
@@ -92,6 +94,24 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
       if ('title' in partial && !slugTouched.current) next.slug = slugify(partial.title ?? '')
       return next
     })
+  }, [])
+
+  // Keep the formatting toolbar joined exactly to the sticky action header.
+  // The header height changes with translations and responsive wrapping, so a
+  // guessed Tailwind top offset leaves either a gap or an overlap.
+  useEffect(() => {
+    const header = actionHeaderRef.current
+    if (!header) return
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    const sync = () => setToolbarTop(desktop.matches ? Math.ceil(header.getBoundingClientRect().height + 16) : 0)
+    const observer = new ResizeObserver(sync)
+    observer.observe(header)
+    desktop.addEventListener('change', sync)
+    sync()
+    return () => {
+      observer.disconnect()
+      desktop.removeEventListener('change', sync)
+    }
   }, [])
 
   // One save at a time: every save runs after the previous finishes (chained),
@@ -280,7 +300,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
 
   return (
     <div>
-      <div className="z-20 mb-8 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur lg:sticky lg:top-4 dark:border-neutral-800 dark:bg-neutral-950/95">
+      <div ref={actionHeaderRef} className="z-20 mb-8 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur lg:sticky lg:top-4 dark:border-neutral-800 dark:bg-neutral-950/95">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/admin/content" className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">← {t.navDashboard}</Link>
           <span className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
@@ -325,7 +345,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
               className="w-full resize-none overflow-hidden bg-transparent text-3xl font-bold leading-tight tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
             />
           </div>
-          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarBelowHeader />
+          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarTop={toolbarTop} />
         </div>
         {settingsOpen && (
           <aside className="border-l border-neutral-200 pl-6 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto dark:border-neutral-800">
