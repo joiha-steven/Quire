@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-07-12 — UI follow-up and owner-approved baselines
+
+- **Public header icons:** restored the established search, three-circle palette, applied-theme
+  sun/moon, and asymmetric two-line menu glyphs after a replacement set failed visual review.
+  `ICON_BTN` remains the single source for their button size, alignment, and interaction chrome.
+- **Mobile reading rail:** reduced the edge handle from 24 × 76px to 16 × 64px and its chevron to
+  10 × 18px, with quieter neutral fill and opacity. The drawer behavior and reading-column layout
+  are unchanged.
+- **Documentation baseline:** recorded that public typography is intentionally unchanged, desktop
+  Settings remains two-column, H1–H5 remain directly available in the editor, the editor header is
+  framed and aligned to the writing surface, and Clear cache remains in the admin sidebar footer.
+
 ## v1.4.5 — 2026-07-11 (docs refresh)
 
 Documentation only — no code change. Brings the project "About" (README's *What it is*) and the internal

@@ -114,6 +114,11 @@
   no hardcoded `neutral-*`/hex/`white`/`black`
 - [ ] One `<hr>` divider style (global 50% left rule); no bespoke `border-t` dividers; no `uppercase`
 - [ ] Palette switch + light/dark/system/by-time both apply instantly with no FOUC on reload
+- [ ] Public header retains the approved search / three-circle palette / sun-or-moon / two-line
+  menu glyphs; all four triggers still reuse `ICON_BTN`
+- [ ] Mobile reading-rail handle is the narrow 16 × 64px edge tab, opens/closes reliably, and its
+  10 × 18px chevron reverses direction with the drawer
+- [ ] Admin footer exposes Clear cache in expanded, collapsed, and mobile navigation states
 
 ## Typography (per-role system)
 - [ ] No hardcoded font sizes on the PUBLIC site: `grep -rE "text-\[|text-(xs|sm|base|lg|xl|[2-6]xl)\b"
