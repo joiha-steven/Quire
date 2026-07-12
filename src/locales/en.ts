@@ -16,6 +16,7 @@ const en = {
   themeSystem: 'System',
   themeTime: 'By time',
   readingSuffix: 'min read',
+  wordsSuffix: 'words',
   search: 'Search',
   searchPlaceholder: 'Search posts...',
   searchHint: 'Type to search posts.',

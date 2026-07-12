@@ -4,6 +4,7 @@ import {
   deriveExcerpt,
   clampExcerpt,
   readingMinutes,
+  wordCount,
   isPublicallyVisible,
   extractImageUrls,
 } from '@/lib/utils'
@@ -22,6 +23,18 @@ describe('slugify', () => {
   it('returns empty for punctuation/emoji-only input', () => {
     expect(slugify('!!! --- ...')).toBe('')
     expect(slugify('🔦')).toBe('')
+  })
+})
+
+describe('wordCount', () => {
+  it('counts whitespace-split words with markup stripped', () => {
+    expect(wordCount('# Title\n\nHello **bold** world')).toBe(4) // Title, Hello, bold, world
+  })
+
+  it('agrees with readingMinutes (~200 wpm)', () => {
+    const words = Array(600).fill('word').join(' ')
+    expect(wordCount(words)).toBe(600)
+    expect(readingMinutes(words)).toBe(3)
   })
 })
 

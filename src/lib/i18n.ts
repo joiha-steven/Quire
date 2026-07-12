@@ -26,6 +26,12 @@ const DATE_LOCALE: Record<SiteLang, string> = {
   ko: 'ko-KR',
 }
 
+// Group a plain integer (e.g. a word count) for the reader's language: 1234 -> "1.234"
+// (vi/de) / "1,234" (en). Uses the same BCP-47 tag as dates.
+export function formatCount(n: number, lang: SiteLang): string {
+  return n.toLocaleString(DATE_LOCALE[lang] ?? 'en-US')
+}
+
 export function formatDate(iso: string, lang: SiteLang): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso

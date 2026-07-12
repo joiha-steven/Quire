@@ -80,10 +80,16 @@ export function extractImageUrls(content: string): string[] {
   return [...new Set(content.match(re) ?? [])]
 }
 
+// Body word count (whitespace-split, markup stripped). Reused by readingMinutes so
+// the two always agree. Note: whitespace-split, so CJK (no word spaces) undercounts —
+// fine for space-delimited languages; the reading estimate has always worked this way.
+export function wordCount(markdown: string): number {
+  return toPlainText(markdown).split(' ').filter(Boolean).length
+}
+
 // Estimated reading time in whole minutes (>= 1), ~200 words per minute.
 export function readingMinutes(markdown: string): number {
-  const words = toPlainText(markdown).split(' ').filter(Boolean).length
-  return Math.max(1, Math.round(words / 200))
+  return Math.max(1, Math.round(wordCount(markdown) / 200))
 }
 
 export type Heading = { id: string; text: string; level: 2 | 3 }

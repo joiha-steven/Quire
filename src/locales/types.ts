@@ -17,6 +17,7 @@ export type Dict = {
   themeSystem: string
   themeTime: string
   readingSuffix: string
+  wordsSuffix: string
   search: string
   searchPlaceholder: string
   searchHint: string
