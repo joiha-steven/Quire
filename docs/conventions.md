@@ -24,7 +24,11 @@
   the original only for vector/animated logos. The `<img>` carries `width`+`height`
   (`logoRenderHeight`) → no CLS. `saveSettings` regenerates on source/width change and deletes
   the old derived file (one ever exists). PageSpeed image-delivery fix.
-- Icons are one set: 20px, viewBox 24, stroke 1.8, round caps.
+- The four public-header glyphs are an owner-approved set: search circle, three overlapping
+  palette circles, applied-theme sun/moon, and the asymmetric two-line menu. They use a 24px
+  viewBox and render at 20px with 1.5–1.6px round strokes. A four-dot palette, split-contrast
+  theme mark, and three-line menu were tried on 2026-07-12 and reverted; do not reintroduce
+  them without visual approval. Their shared 40px button chrome still comes from `ICON_BTN`.
 - Theme default = **system** (no-FOUC script + `ThemeProvider` both `|| 'system'`); the toggle
   reflects the *applied* theme (`useSyncExternalStore` on `<html>.dark`; server snapshot =
   light → no hydration mismatch).
@@ -77,8 +81,8 @@
   (`AdminSidebar.tsx`): each item has an icon (`navIcons.tsx`) + label; a toggle collapses the rail
   to icon-only (persisted in localStorage; it publishes its width as `--admin-nav-w` so the fixed
   settings/editor save bars offset past it). Nav links use `headerActions.ts` `SIDEBAR_NAV` (active
-  links add `SIDEBAR_NAV_ACTIVE`); the footer holds only the **light/dark toggle + Sign out** (palette
-  selection moved to the public site, cache-clearing left the persistent nav); on mobile
+  links add `SIDEBAR_NAV_ACTIVE`); the footer holds the **light/dark toggle + Clear cache + Sign out**
+  (palette selection moved to the public site); on mobile
   it's a hamburger drawer (always icon+label). (`ADMIN_NAV` is the older horizontal variant.)
   Public header's 40px icon buttons → `ICON_BTN` (`ui/iconButton.ts`). Adding an item = reuse the
   constant, never copy a class list.
@@ -95,7 +99,9 @@
   in `(blog)/layout.tsx` — a media query cannot read a CSS variable — so a wider column simply
   keeps the rail hidden for longer. Below it the SAME DOM becomes a slide-out drawer behind a
   small edge handle (`RailHandle` toggles `<html data-rail>`; the drawer, handle and scrim all
-  react in CSS). In the gutter the rail is type on the page: no border, no shadow, no background.
+  react in CSS). The approved mobile handle is deliberately narrow (16 × 64px; chevron 10 × 18px),
+  not a full-width label or a large protruding button. In the gutter the rail is type on the page:
+  no border, no shadow, no background.
 - **Built-in fonts (`fontPreset`).** Four self-hosted families in `FONT_PRESETS` (lib/themes.ts):
   Inter, Source Sans 3, Literata, Source Serif 4 — each declared per unicode-range in globals.css,
   so a family downloads ONLY when the chosen preset uses it. Each preset carries the typography

@@ -7,7 +7,7 @@ Bring the admin closer to Quire's reading-first identity without changing the pu
 ## Design principles
 
 - Typography remains unchanged. Public reading settings and font presets are deliberately out of scope.
-- Use a flat neutral canvas; visual hierarchy comes from spacing and rules, not decoration.
+- Use a flat light-gray neutral canvas; visual hierarchy comes from spacing and rules, not decoration.
 - Cards are reserved for genuinely independent data. Shadows are reserved for overlays.
 - Writing is the primary admin task. The editor gets the full desktop width and hides global navigation.
 - Detailed analytics, taxonomy, integrations, and system information stay on their dedicated screens instead of competing on the home page.
@@ -17,11 +17,11 @@ Bring the admin closer to Quire's reading-first identity without changing the pu
 
 ### Admin shell
 
-- Replaced the dotted canvas with a quiet warm-neutral surface.
+- Replaced the dotted canvas with a quiet light-gray neutral surface (no warm/yellow cast).
 - Standardized flat panels without shadows or large radii.
 - Reduced page gutters and capped the working width for more consistent density.
 - Changed active navigation from a filled block to a slim position marker.
-- Removed cache clearing from persistent navigation; it remains available where operational controls belong.
+- Kept cache clearing in the persistent sidebar footer so it remains reachable from every admin screen.
 
 ### Dashboard
 
@@ -81,10 +81,18 @@ The second visual pass tightened the system after reviewing every admin surface 
 - H1–H5 are restored as always-visible editor controls because they are frequent writing actions.
 - The editor action header uses the same bordered surface and internal padding as the writing frame, rather than a flush edge-to-edge strip.
 - The formatting toolbar has its own sticky offset below the desktop action header; on mobile the action header scrolls away and formatting remains pinned.
-- Admin navigation and public chrome use a lighter, custom Quire line-icon language with open contours and consistent 20px geometry.
+- Admin navigation uses the custom Quire line-icon language. The four public-header glyphs retain their established designs (search circle, three-circle palette, sun/moon, and two-line menu); a July 12 replacement was rejected and reverted.
 - Tag labels render lowercase across the public rail, tag archives, post metadata, editor selections, and taxonomy management without mutating stored values.
-- The mobile reading-rail handle has a wider touch target and a calmer, longer edge-tab proportion.
+- The mobile reading-rail handle is a restrained 16 × 64px edge tab with a 10 × 18px chevron. Keep it narrow; do not restore the earlier 24 × 76px footprint without a mobile review.
 - The formatting toolbar offset is measured from the real action-header height, eliminating viewport- and translation-dependent gaps.
 - Clear cache is restored to the admin operations footer; it remains available in both expanded and collapsed navigation.
 - Legacy table and analytics panels no longer carry isolated shadows or card styling.
 - Admin theme dropdown colors are isolated from the public site's configurable palette.
+
+## Owner-approved visual decisions
+
+- Do not change the public reading typography as part of admin-polish work; the current fonts and type settings are intentional.
+- Keep Settings in two columns on desktop and one column only at the mobile breakpoint.
+- Keep H1–H5 visible in the editor toolbar; these are frequent actions and must not be hidden inside a selector.
+- Preserve the established four public-header icons unless a replacement is reviewed visually first. Shared button sizing still comes from `ICON_BTN`; preserving glyphs does not permit per-button chrome drift.
+- Keep the editor action header framed and aligned to the editor surface, with the formatting toolbar sticky beneath its measured height.
