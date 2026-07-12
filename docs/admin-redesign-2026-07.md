@@ -84,5 +84,7 @@ The second visual pass tightened the system after reviewing every admin surface 
 - Admin navigation and public chrome use a lighter, custom Quire line-icon language with open contours and consistent 20px geometry.
 - Tag labels render lowercase across the public rail, tag archives, post metadata, editor selections, and taxonomy management without mutating stored values.
 - The mobile reading-rail handle has a wider touch target and a calmer, longer edge-tab proportion.
+- The formatting toolbar offset is measured from the real action-header height, eliminating viewport- and translation-dependent gaps.
+- Clear cache is restored to the admin operations footer; it remains available in both expanded and collapsed navigation.
 - Legacy table and analytics panels no longer carry isolated shadows or card styling.
 - Admin theme dropdown colors are isolated from the public site's configurable palette.

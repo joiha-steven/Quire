@@ -16,10 +16,11 @@ import { useEffect, useState, type ReactNode } from 'react'
 import type { SiteLang } from '@/types'
 import { useAdminT } from './I18nProvider'
 import { SIDEBAR_NAV, SIDEBAR_NAV_ACTIVE } from './headerActions'
+import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import {
   IconHome, IconAnalytics, IconContent, IconComment, IconMedia, IconTrash, IconSettings,
-  IconLog, IconExternal, IconSignOut, IconChevronLeft, IconHelp,
+  IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft, IconHelp,
 } from './navIcons'
 
 const STORE_KEY = 'vb-admin-nav-collapsed'
@@ -113,6 +114,7 @@ export function AdminSidebar({
   const controls = (c: boolean): ReactNode => (
     <>
       <ThemeToggle lang={lang} variant={c ? 'icon' : 'text'} triggerClassName={c ? undefined : rowClass(false)} />
+      <CacheButton className={rowClass(c)} icon={<IconCache />} collapsed={c} />
       <div className="mt-1 border-t border-neutral-200 pt-1 dark:border-neutral-800">
         <form action={signOut} className="contents">
           <button className={rowClass(c)} title={c ? t.signOut : undefined}>
