@@ -25,7 +25,7 @@ function useIsDark(): boolean {
 }
 
 const ICON = 'h-5 w-5'
-const STROKE = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+const STROKE = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
 
 function SunIcon() {
   return (

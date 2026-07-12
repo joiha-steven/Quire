@@ -80,5 +80,9 @@ The second visual pass tightened the system after reviewing every admin surface 
 - The expanded sidebar is narrower (176px); collapsed width is 56px.
 - H1–H5 are restored as always-visible editor controls because they are frequent writing actions.
 - The editor action header uses the same bordered surface and internal padding as the writing frame, rather than a flush edge-to-edge strip.
+- The formatting toolbar has its own sticky offset below the desktop action header; on mobile the action header scrolls away and formatting remains pinned.
+- Admin navigation and public chrome use a lighter, custom Quire line-icon language with open contours and consistent 20px geometry.
+- Tag labels render lowercase across the public rail, tag archives, post metadata, editor selections, and taxonomy management without mutating stored values.
+- The mobile reading-rail handle has a wider touch target and a calmer, longer edge-tab proportion.
 - Legacy table and analytics panels no longer carry isolated shadows or card styling.
 - Admin theme dropdown colors are isolated from the public site's configurable palette.

@@ -31,7 +31,7 @@ export default async function TagPaged({ params }: PageProps<'/tag/[slug]/page/[
         page={page}
         basePath={`/tag/${slug}`}
         emptyText={t(language).emptyTag}
-        heading={<h1 className="mb-8 fs-h1 font-bold">{t(language).tagLabel}: #{name}</h1>}
+        heading={<h1 className="mb-8 fs-h1 font-bold">{t(language).tagLabel}: <span className="lowercase">#{name}</span></h1>}
       />
     </section>
   )

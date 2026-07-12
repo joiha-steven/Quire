@@ -74,6 +74,7 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
         value={draft.tags}
         options={allTags}
         onChange={(tags) => update({ tags })}
+        lowercase
       />
 
       <div className="space-y-1.5">

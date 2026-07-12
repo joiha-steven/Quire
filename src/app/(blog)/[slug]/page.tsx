@@ -39,11 +39,11 @@ export async function generateStaticParams() {
 }
 
 // Render a taxonomy list as comma-separated links: "a, b, c".
-function taxoLinks(items: string[], make: (s: string) => string) {
+function taxoLinks(items: string[], make: (s: string) => string, lower = false) {
   return items.map((it, i) => (
     <span key={it}>
       {i > 0 && ', '}
-      <Link href={make(it)} className="hover:text-heading">
+      <Link href={make(it)} className={lower ? 'lowercase hover:text-heading' : 'hover:text-heading'}>
         {it}
       </Link>
     </span>
@@ -203,7 +203,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             <footer className="mt-6 space-y-1 t-small text-meta">
               {post.tags.length > 0 && (
                 <p id={TOC_ANCHORS.tags} className="scroll-mt-24">
-                  {tx.tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${termSlug(s)}`)}
+                  {tx.tagLabel}: {taxoLinks(post.tags, (s) => `/tag/${termSlug(s)}`, true)}
                 </p>
               )}
               {post.categories.length > 0 && (

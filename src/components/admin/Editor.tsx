@@ -82,9 +82,10 @@ type Props = {
   apiRef: React.MutableRefObject<EditorApi | null>
   // Width of the public single-post column, so typing mirrors the live layout.
   contentWidth: number
+  toolbarBelowHeader?: boolean
 }
 
-export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickGallery, onUploadFile, apiRef, contentWidth }: Props) {
+export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickGallery, onUploadFile, apiRef, contentWidth, toolbarBelowHeader = false }: Props) {
   const t = useAdminT()
   // Markdown source view: edit the raw markdown directly (still saves live).
   const [raw, setRaw] = useState(false)
@@ -238,7 +239,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
 
   return (
     <div className="border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-      <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} />
+      <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} belowHeader={toolbarBelowHeader} />
       {/* Floating menu on a text selection / link — not in raw source mode. */}
       {!raw && <BubbleBar editor={editor} />}
       {/* Center the writing column at the public single-post width so what you
