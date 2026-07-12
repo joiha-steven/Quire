@@ -13,9 +13,9 @@ export function SearchTrigger({ lang }: { lang: SiteLang }) {
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label={t(lang).search} className={ICON_BTN}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <circle cx="10.5" cy="10.5" r="6.5" />
-          <path d="m15.5 15.5 4.5 4.5" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+          <circle cx="10.25" cy="10.25" r="5.75" />
+          <path d="m14.75 14.75 4.75 4.75" />
         </svg>
       </button>
       {open && <SearchOverlay lang={lang} onClose={() => setOpen(false)} />}

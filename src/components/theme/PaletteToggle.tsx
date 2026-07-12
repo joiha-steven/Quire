@@ -51,13 +51,14 @@ function Swatch({ c }: { c: ThemeColors }) {
   )
 }
 
-// Three overlapping color swatches — a clean, recognizable "color theme" glyph.
+// Four quiet tones: a compact palette mark that stays legible at header size.
 function PaletteIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="8" r="4.5" />
-      <circle cx="8" cy="15" r="4.5" />
-      <circle cx="16" cy="15" r="4.5" />
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden>
+      <circle cx="8" cy="8" r="2.25" />
+      <circle cx="16" cy="8" r="2.25" opacity=".72" />
+      <circle cx="8" cy="16" r="2.25" opacity=".48" />
+      <circle cx="16" cy="16" r="2.25" opacity=".24" />
     </svg>
   )
 }
