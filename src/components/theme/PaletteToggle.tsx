@@ -54,7 +54,7 @@ function Swatch({ c }: { c: ThemeColors }) {
 // Three overlapping color swatches — a clean, recognizable "color theme" glyph.
 function PaletteIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="8" r="4.5" />
       <circle cx="8" cy="15" r="4.5" />
       <circle cx="16" cy="15" r="4.5" />

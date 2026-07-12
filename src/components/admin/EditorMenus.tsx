@@ -22,12 +22,14 @@ export function Toolbar({
   onPickGallery,
   raw,
   onToggleRaw,
+  belowHeader,
 }: {
   editor: TiptapEditor
   onPickImage: () => void
   onPickGallery: () => void
   raw: boolean
   onToggleRaw: () => void
+  belowHeader: boolean
 }) {
   const t = useAdminT()
   const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
@@ -43,7 +45,7 @@ export function Toolbar({
   // In Markdown source mode the formatting buttons don't apply to plain text.
   if (raw) {
     return (
-      <div className="sticky top-0 z-10 flex items-center rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className={`sticky top-0 z-10 flex items-center border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900 ${belowHeader ? 'lg:top-20' : ''}`}>
         {toggle}
       </div>
     )
@@ -51,7 +53,7 @@ export function Toolbar({
   // Wrap to a second row when the buttons don't fit — a horizontal scrollbar here
   // fights the browser's own scrollbar, so wrapping is the lesser evil.
   return (
-    <div className="sticky top-0 z-10 rounded-t-xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className={`sticky top-0 z-10 border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900 ${belowHeader ? 'lg:top-20' : ''}`}>
       <div className="flex flex-wrap items-center gap-0.5">
       <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
         <strong>B</strong>

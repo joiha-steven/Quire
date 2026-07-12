@@ -323,10 +323,10 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 56px;
+  width: 24px;
+  height: 76px;
   translate: 0 -50%;
-  color: var(--c-meta);
+  color: color-mix(in srgb, var(--c-meta) 82%, var(--c-heading));
   background: var(--c-bg);
   border: 1px solid var(--c-rule);
   border-left: 0;
@@ -335,6 +335,7 @@ hr {
 }
 .rail-handle:hover {
   color: var(--c-heading);
+  background: color-mix(in srgb, var(--c-bg) 88%, var(--c-rule));
 }
 .rail-handle svg {
   transition: transform var(--dur-base) var(--ease);

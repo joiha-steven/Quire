@@ -280,7 +280,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
 
   return (
     <div>
-      <div className="sticky top-4 z-20 mb-8 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
+      <div className="z-20 mb-8 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur lg:sticky lg:top-4 dark:border-neutral-800 dark:bg-neutral-950/95">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/admin/content" className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">← {t.navDashboard}</Link>
           <span className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
@@ -325,7 +325,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
               className="w-full resize-none overflow-hidden bg-transparent text-3xl font-bold leading-tight tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
             />
           </div>
-          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} />
+          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarBelowHeader />
         </div>
         {settingsOpen && (
           <aside className="border-l border-neutral-200 pl-6 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto dark:border-neutral-800">

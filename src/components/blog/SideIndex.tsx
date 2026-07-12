@@ -50,7 +50,7 @@ export function TagCloud({ title, links, activeHref }: { title: string; links: I
             key={l.href}
             href={l.href}
             aria-current={l.href === activeHref ? 'page' : undefined}
-            className={`link-accent t-small hover:text-heading ${
+            className={`link-accent t-small lowercase hover:text-heading ${
               l.href === activeHref ? 'font-medium text-heading underline decoration-accent underline-offset-4' : 'text-meta'
             }`}
           >

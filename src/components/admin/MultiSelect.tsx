@@ -10,9 +10,10 @@ type Props = {
   options: string[]
   placeholder?: string
   onChange: (next: string[]) => void
+  lowercase?: boolean
 }
 
-export function MultiSelect({ label, value, options, placeholder, onChange }: Props) {
+export function MultiSelect({ label, value, options, placeholder, onChange, lowercase = false }: Props) {
   const t = useAdminT()
   const [draft, setDraft] = useState('')
   // Every not-yet-picked term is offered (no cap — the editor must show them all);
@@ -32,7 +33,7 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
       <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
       <div className="flex flex-wrap gap-1.5">
         {value.map((v) => (
-          <span key={v} className="flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1 text-xs text-white dark:bg-neutral-200 dark:text-neutral-900">
+          <span key={v} className={`flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1 text-xs text-white dark:bg-neutral-200 dark:text-neutral-900 ${lowercase ? 'lowercase' : ''}`}>
             {v}
             <button type="button" onClick={() => onChange(value.filter((x) => x !== v))} aria-label={t.removeAria}>
               ×
@@ -59,7 +60,7 @@ export function MultiSelect({ label, value, options, placeholder, onChange }: Pr
               key={o}
               type="button"
               onClick={() => add(o)}
-              className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200"
+              className={`rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 ${lowercase ? 'lowercase' : ''}`}
             >
               + {o}
             </button>

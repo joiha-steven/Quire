@@ -1,38 +1,42 @@
 // Line icons for the admin sidebar — one uniform style (viewBox 24, stroke 1.8,
 // round caps, currentColor) so the rail reads as a single set. Sized by the caller.
 
-const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
-const C = 'h-[18px] w-[18px] shrink-0'
+// Quire line set: quiet 20px drawings with a lighter 1.55 stroke. Shapes favour
+// open contours and asymmetric details so the set feels editorial, not like a
+// generic dashboard icon pack.
+const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.55, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+const C = 'h-5 w-5 shrink-0'
 
 export function IconHome() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <path d="M4 10.5 12 4l8 6.5" />
+      <path d="M6.5 9.5V20h11V9.5M10 20v-6h4v6" />
     </svg>
   )
 }
 export function IconAnalytics() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+      <path d="M3 19h18" />
+      <path d="m5 15 4-5 4 2 6-7" />
+      <circle cx="5" cy="15" r="1" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="5" r="1" fill="currentColor" stroke="none" />
     </svg>
   )
 }
 export function IconContent() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-      <path d="M14 3v5h5M8.5 13h7M8.5 17h7" />
+      <path d="M5 4.5h10.5L19 8v12H5z" />
+      <path d="M15.5 4.5V8H19M8.5 12h7M8.5 15.5h5" />
     </svg>
   )
 }
 export function IconMedia() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <rect x="3.5" y="4.5" width="17" height="15" rx="1" />
       <circle cx="8.5" cy="9.5" r="1.5" />
       <path d="m4 17 5-5 4 4 3-3 4 4" />
     </svg>
@@ -48,22 +52,25 @@ export function IconTrash() {
 export function IconSettings() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 0 1-4 0v-.1A1.7 1.7 0 0 0 7 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 0 1 0-4h.1A1.7 1.7 0 0 0 4.7 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.6 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+      <path d="M4 7h10M18 7h2M4 17h2M10 17h10M8 4v6M16 14v6" />
+      <circle cx="8" cy="7" r="2" />
+      <circle cx="16" cy="17" r="2" />
     </svg>
   )
 }
 export function IconLog() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <path d="M3 12h4l2 5 4-12 2 5h6" />
+      <path d="M4 5v14h16" />
+      <path d="M7 15h3v-4h3V8h3V5h3" />
     </svg>
   )
 }
 export function IconComment() {
   return (
     <svg viewBox="0 0 24 24" className={C} {...S} aria-hidden>
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      <path d="M4 5h16v11H9l-5 4z" />
+      <path d="M8 9h8M8 12.5h5" />
     </svg>
   )
 }
