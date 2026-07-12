@@ -16,6 +16,7 @@ const zh = {
   themeSystem: '跟随系统',
   themeTime: '按时间',
   readingSuffix: '分钟阅读',
+  wordsSuffix: '词',
   search: '搜索',
   searchPlaceholder: '搜索文章...',
   searchHint: '输入关键词搜索文章。',

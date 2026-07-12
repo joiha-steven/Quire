@@ -16,6 +16,7 @@ const de = {
   themeSystem: 'System',
   themeTime: 'Nach Uhrzeit',
   readingSuffix: 'Min. Lesezeit',
+  wordsSuffix: 'Wörter',
   search: 'Suche',
   searchPlaceholder: 'Beiträge suchen...',
   searchHint: 'Tippen, um Beiträge zu suchen.',

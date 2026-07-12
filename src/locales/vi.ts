@@ -16,6 +16,7 @@ const vi = {
   themeSystem: 'Theo hệ thống',
   themeTime: 'Theo giờ',
   readingSuffix: 'phút đọc',
+  wordsSuffix: 'chữ',
   search: 'Tìm kiếm',
   searchPlaceholder: 'Tìm bài viết...',
   searchHint: 'Nhập từ khoá để tìm bài viết.',

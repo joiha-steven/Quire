@@ -16,6 +16,7 @@ const ko = {
   themeSystem: '시스템',
   themeTime: '시간대별',
   readingSuffix: '분 읽기',
+  wordsSuffix: '단어',
   search: '검색',
   searchPlaceholder: '게시물 검색...',
   searchHint: '키워드를 입력해 게시물을 검색하세요.',

@@ -16,6 +16,7 @@ const ja = {
   themeSystem: 'システム',
   themeTime: '時間帯で切替',
   readingSuffix: '分で読めます',
+  wordsSuffix: '語',
   search: '検索',
   searchPlaceholder: '投稿を検索...',
   searchHint: 'キーワードを入力して投稿を検索します。',

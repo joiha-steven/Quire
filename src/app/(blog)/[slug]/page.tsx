@@ -10,7 +10,7 @@ import { getPage, getPublicPages } from '@/lib/pages'
 import { getMedia } from '@/lib/media'
 import { collapseBlob } from '@/lib/blob'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
-import { formatDate, t } from '@/lib/i18n'
+import { formatDate, formatCount, t } from '@/lib/i18n'
 import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema, breadcrumbSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
@@ -24,7 +24,7 @@ import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { Comments } from '@/components/blog/Comments'
 import { getCommentEnv } from '@/lib/comment-env'
 import { ogImageUrl } from '@/lib/og'
-import { isPublicallyVisible, readingMinutes, extractHeadings, extractImageUrls, toPlainText, clampExcerpt } from '@/lib/utils'
+import { isPublicallyVisible, readingMinutes, wordCount, extractHeadings, extractImageUrls, toPlainText, clampExcerpt } from '@/lib/utils'
 
 // ISR-cached for fast reads. An edit to this post/page purges it immediately via
 // revalidatePath('/', 'layout') in the save route; the 1h window is a safety net.
@@ -110,6 +110,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const { features } = settings
     const headings = features.toc ? extractHeadings(post.content) : []
     const minutes = readingMinutes(post.content)
+    const words = wordCount(post.content)
     const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
     const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
@@ -172,7 +173,8 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               </>
             )}
             {formatDate(post.date, language)}
-            {features.readingTime && ` · ${minutes} ${t(language).readingSuffix}`}
+            {features.readingTime &&
+              ` · ${formatCount(words, language)} ${t(language).wordsSuffix} · ${minutes} ${t(language).readingSuffix}`}
           </p>
           {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
           <h1 className="reading-font mt-2 fs-h1 font-semibold">{post.title}</h1>
