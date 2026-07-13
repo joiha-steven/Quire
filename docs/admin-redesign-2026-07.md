@@ -108,4 +108,8 @@ The second visual pass tightened the system after reviewing every admin surface 
 - Content, Settings, Analytics, Media, Trash, Comments, Log, and Help share segmented tabs, rounded tables/panels, standard controls, and row hover feedback.
 - Editor focus mode is preserved. The action header, writing frame, and property inspector are separate related surfaces; sticky toolbar, autosave, preview, revisions, media, taxonomy, and publish flows are unchanged.
 - Editor formatting is a single non-wrapping icon row with horizontal overflow on narrow screens. The editor frame must not use `overflow-hidden`, because that breaks the nested sticky toolbar. Titles use content-driven height so long titles are never clipped.
+- The formatting row centers its controls when they fit and naturally starts at the leading edge when it overflows; mobile remains a single horizontally scrollable line.
 - Sidebar footer controls always use the same icon + label row structure; the theme control must show its sun/moon glyph before the applied mode label.
+- Palette cards must remain readable in every state. Use neutral border/surface hierarchy for selected, available, and hidden palettes; never lower opacity on the entire card or its labels.
+- Backup scheduling and import controls use shared rounded inputs and buttons. Native file-input chrome must stay visually hidden behind an accessible labeled trigger.
+- The light admin canvas is neutral `#f5f5f5`; do not introduce cool blue-gray backgrounds into the application shell.
