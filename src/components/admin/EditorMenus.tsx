@@ -73,7 +73,7 @@ export function Toolbar({
   return (
     <div className="sticky z-10 rounded-t-2xl border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900" style={{ top: stickyTop }}>
       <div className="overflow-x-auto overscroll-x-contain p-2 [scrollbar-width:thin]">
-        <div className="flex w-max min-w-full flex-nowrap items-center gap-0.5">
+        <div className="flex w-max min-w-full flex-nowrap items-center justify-center gap-0.5">
       <ToolButton label={t.tbBold} active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><strong>B</strong></ToolButton>
       <ToolButton label={t.tbItalic} active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></ToolButton>
       <ToolButton label={t.tbUnderline} active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></ToolButton>

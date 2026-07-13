@@ -124,32 +124,32 @@ export function BackupFields({ backups, onChange }: { backups: BackupSettings; o
       </div>
 
       {/* Schedule (flows through the settings save) — only meaningful once connected */}
-      <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/40">
         <ToggleRow
           label={t.backupAuto}
           desc={t.backupAutoDesc}
           checked={backups.enabled}
           onChange={(enabled) => onChange({ ...backups, enabled })}
         />
-        <div className="grid grid-cols-2 gap-3 border-t border-neutral-200 p-4 dark:border-neutral-800">
-          <label className="block text-xs">
-            <span className="text-neutral-500 dark:text-neutral-400">{t.backupIntervalLabel}</span>
+        <div className="grid gap-4 border-t border-neutral-200 p-4 sm:grid-cols-2 sm:p-5 dark:border-neutral-800">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <span>{t.backupIntervalLabel}</span>
             <select
               value={backups.intervalDays}
               onChange={(e) => onChange({ ...backups, intervalDays: Number(e.target.value) })}
-              className="mt-1 w-full rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 dark:border-neutral-700 dark:bg-neutral-900"
+              className="mt-2 min-h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-normal shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-white dark:focus:ring-white/10"
             >
               {INTERVALS.map((n) => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
           </label>
-          <label className="block text-xs">
-            <span className="text-neutral-500 dark:text-neutral-400">{t.backupKeepLabel}</span>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <span>{t.backupKeepLabel}</span>
             <select
               value={backups.keep}
               onChange={(e) => onChange({ ...backups, keep: Number(e.target.value) })}
-              className="mt-1 w-full rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 dark:border-neutral-700 dark:bg-neutral-900"
+              className="mt-2 min-h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-normal shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-white dark:focus:ring-white/10"
             >
               {KEEPS.map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -161,7 +161,7 @@ export function BackupFields({ backups, onChange }: { backups: BackupSettings; o
 
       {/* Snapshots + manual run */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-neutral-400 dark:text-neutral-500">
             {t.backupLastRun}: {status?.lastRunAt ? formatDateTimeShort(status.lastRunAt) : t.backupNever}
             {status?.lastStatus === 'error' && <span className="ml-1 font-medium text-neutral-900 dark:text-white">({t.backupToastFail})</span>}

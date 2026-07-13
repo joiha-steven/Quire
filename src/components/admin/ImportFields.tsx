@@ -8,6 +8,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
+import { Button } from '@/components/ui/Button'
 import { useAdminT } from './I18nProvider'
 
 type ImportResult = { posts: number; pages: number; skipped: number }
@@ -42,24 +43,27 @@ export function ImportFields() {
   }
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.importHelp}</p>
+    <div className="space-y-4">
+      <p className="text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">{t.importHelp}</p>
       <input
         ref={inputRef}
         type="file"
         accept=".xml,text/xml,application/xml"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        className="block w-full text-sm text-neutral-600 file:mr-3 file:border file:border-neutral-300 file:bg-neutral-50 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-neutral-100 dark:text-neutral-400 dark:file:border-neutral-700 dark:file:bg-neutral-900"
+        className="sr-only"
         aria-label={t.importChoose}
       />
-      <button
-        type="button"
-        onClick={run}
-        disabled={busy || !file}
-        className="bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-      >
+      <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50/60 p-4 dark:border-neutral-700 dark:bg-neutral-900/50">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="button" variant="secondary" onClick={() => inputRef.current?.click()}>
+            {t.importChoose}
+          </Button>
+          {file && <span className="min-w-0 truncate text-sm text-neutral-600 dark:text-neutral-300">{file.name}</span>}
+        </div>
+      </div>
+      <Button type="button" onClick={run} disabled={busy || !file}>
         {busy ? `${t.importRun}…` : t.importRun}
-      </button>
+      </Button>
     </div>
   )
 }

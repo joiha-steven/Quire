@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-07-13 — admin form and toolbar visual correction
+
+- Centered the editor formatting row whenever it fits, while retaining one-line horizontal scrolling
+  on narrow screens.
+- Reworked palette selection so inactive and hidden themes remain legible; selection, visibility, and
+  default state now use neutral borders and surfaces instead of fading the complete control.
+- Standardized backup scheduling and WordPress import around the shared rounded inputs and buttons.
+  The native file-picker chrome is hidden behind an accessible, labeled control; all behavior is unchanged.
+- Confirmed the light admin canvas remains a true neutral gray (`#f5f5f5`) with no blue tint.
+
 ## 2026-07-13 — editor toolbar and admin footer correction
 
 - **Editor toolbar:** converted descriptive actions to compact line icons while preserving B/I/U/S,

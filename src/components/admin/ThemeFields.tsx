@@ -57,23 +57,27 @@ function PresetCard({
   onPick: () => void
   onToggleShown: () => void
 }) {
-  // No borders: the selected palette reads via full opacity + a bold name; the
-  // rest sit dimmed until hovered. A hidden (not-shown) palette dims further so
-  // it reads as "off" at a glance — but stays fully editable.
-  const dim = editing ? '' : shown ? 'opacity-40 hover:opacity-100' : 'opacity-25 hover:opacity-100'
+  const state = editing
+    ? 'border-neutral-900 bg-neutral-50 shadow-sm dark:border-white dark:bg-neutral-800'
+    : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:hover:bg-neutral-800'
   return (
-    <div className={`group transition ${dim}`}>
-      <button type="button" onClick={onPick} aria-pressed={editing} className="block w-full text-left">
-        <div className="flex h-11 overflow-hidden rounded-lg">
+    <div className="group">
+      <button
+        type="button"
+        onClick={onPick}
+        aria-pressed={editing}
+        className={`block w-full rounded-xl border p-2 text-left transition ${state}`}
+      >
+        <div className={`flex h-12 overflow-hidden rounded-lg transition ${shown ? '' : 'grayscale opacity-60'}`}>
           <MiniMode c={theme.light} />
           <MiniMode c={theme.dark} />
         </div>
-        <div className="mt-1.5 flex items-center justify-between gap-1 px-0.5">
+        <div className="mt-2 flex min-h-5 items-center justify-between gap-1 px-0.5">
           <span className={`text-xs ${editing ? 'font-semibold text-neutral-900 dark:text-white' : 'font-medium text-neutral-500 dark:text-neutral-400'}`}>
             {name}
           </span>
           {isDefault && (
-            <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
+            <span className="rounded-md bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
               {defaultLabel}
             </span>
           )}
@@ -81,13 +85,13 @@ function PresetCard({
       </button>
       {/* Visibility toggle. The default palette is always shown (locked), so the
           visitor never ends up with zero palettes. */}
-      <label className={`mt-1 flex items-center gap-1.5 px-0.5 text-xs ${isDefault ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600' : 'cursor-pointer text-neutral-500 dark:text-neutral-400'}`}>
+      <label className={`mt-1.5 flex items-center gap-1.5 px-1 text-xs ${isDefault ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600' : 'cursor-pointer text-neutral-600 dark:text-neutral-400'}`}>
         <input
           type="checkbox"
           checked={shown}
           disabled={isDefault}
           onChange={onToggleShown}
-          className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600"
+          className="h-3.5 w-3.5 rounded border-neutral-300 accent-neutral-900 dark:border-neutral-600 dark:accent-white"
         />
         {shownLabel}
       </label>
@@ -183,7 +187,7 @@ export function ThemeFields({ presets, themes, defaultId, enabled, onChangeTheme
 
       <div className="space-y-2">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.themePreset}</span>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {presets.map((p) => (
             <PresetCard
               key={p.id}
