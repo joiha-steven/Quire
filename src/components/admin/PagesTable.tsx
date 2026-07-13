@@ -34,7 +34,7 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
   }
 
   return (
-    <div className="overflow-hidden border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500 whitespace-nowrap">
           <tr>
@@ -47,7 +47,7 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
         </thead>
         <tbody>
           {pages.map((p) => (
-            <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
+            <tr key={p.slug} className="border-b border-neutral-100 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40 last:border-0">
               <td className="px-4 py-3 font-medium">
                 <Link href={`/admin/page-editor/${p.slug}`} className="hover:underline">
                   {p.title || t.untitled}

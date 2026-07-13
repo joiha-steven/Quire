@@ -18,7 +18,7 @@ export const ADMIN_NAV =
 // string so the column reads as a single uniform set and can't drift — same rule as
 // ADMIN_NAV, just laid out as rows. Active links add `SIDEBAR_NAV_ACTIVE`.
 export const SIDEBAR_NAV =
-  'relative flex h-9 w-full items-center px-3 text-left text-sm text-neutral-500 transition-colors hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-white'
+  'relative flex h-10 w-full items-center rounded-lg px-3 text-left text-sm text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white'
 
 export const SIDEBAR_NAV_ACTIVE =
-  'font-medium text-neutral-900 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:bg-neutral-900 dark:text-white dark:before:bg-white'
+  'bg-neutral-100 font-medium text-neutral-950 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.03)] dark:bg-neutral-800 dark:text-white dark:shadow-none'

@@ -137,7 +137,7 @@ function NeedsAttentionCard({ needs }: { needs: DashboardData['needs'] }) {
 export function DashboardWidgets({ data }: { data: DashboardData }) {
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TrafficCard traffic={data.traffic} />
         </div>

@@ -47,9 +47,7 @@ export function ContentDashboard({
         ) : undefined}
       />
 
-      <div className="mb-5 border-b border-neutral-200 dark:border-neutral-800">
-        <Tabs tabs={tabs} value={tab} onChange={setTab} variant="underline" />
-      </div>
+      <Tabs tabs={tabs} value={tab} onChange={setTab} variant="underline" className="mb-6" />
 
       {tab === 'posts' && (
         <PostsTable initialPosts={posts} views={views} commentCounts={commentCounts} commentsEnabled={commentsEnabled} />
