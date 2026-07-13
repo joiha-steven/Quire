@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-07-13 — editor focus and typewriter feedback
+
+- Removed the global admin focus rectangle from the TipTap writing surface; keyboard focus remains
+  visible on actual controls, while the editor continues to sit inside its bordered card.
+- Added a restrained typewriter response to the active block when inserting or deleting text. It uses
+  compositor-only DOM animation, replaces repeated pulses during fast typing, does not alter editor
+  content or selection, and respects both the site motion switch and reduced-motion preferences.
+
 ## 2026-07-13 — admin form and toolbar visual correction
 
 - Centered the editor formatting row whenever it fits, while retaining one-line horizontal scrolling
