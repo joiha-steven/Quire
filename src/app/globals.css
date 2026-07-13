@@ -795,6 +795,12 @@ hr {
 .dark .admin-shell :focus-visible {
   outline-color: #a3a3a3;
 }
+/* The editor is a large writing surface, not a discrete button/input. Its card
+   already communicates the active workspace; the global admin focus ring would
+   draw a harsh rectangle around the public-width prose column. */
+.admin-shell .ProseMirror:focus-visible {
+  outline: none;
+}
 
 /* Native colour picker (admin theme): strip the default inner padding/border so
    the swatch is one clean, obviously-clickable colour chip — clicking it opens

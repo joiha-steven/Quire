@@ -69,6 +69,46 @@ function videoUrlsToNodes(editor: TiptapEditor): void {
   editor.view.dispatch(tr)
 }
 
+// A restrained typewriter response on the block currently being edited. This
+// uses a compositor-only animation on the existing DOM node: no character
+// wrappers, document mutations, selection changes, or Vietnamese IME conflicts.
+// Repeated keys replace the prior pulse so fast typing never builds a queue.
+const typingAnimations = new WeakMap<HTMLElement, Animation>()
+function pulseTypewriterInput(view: TiptapEditor['view'], event: InputEvent): void {
+  const inputType = event.inputType
+  const deleting = inputType.startsWith('delete')
+  if (!deleting && !inputType.startsWith('insert')) return
+  if (
+    document.documentElement.dataset.motion === 'off' ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) return
+
+  requestAnimationFrame(() => {
+    const anchor = view.dom.ownerDocument.getSelection()?.anchorNode
+    const origin = anchor?.nodeType === 1 ? (anchor as Element) : anchor?.parentElement
+    const block = origin?.closest<HTMLElement>('p, h1, h2, h3, h4, h5, li, blockquote, pre')
+    if (!block || !view.dom.contains(block)) return
+
+    typingAnimations.get(block)?.cancel()
+    const animation = block.animate(
+      deleting
+        ? [
+            { opacity: 0.86, transform: 'translateX(-0.7px)' },
+            { opacity: 1, transform: 'translateX(0)' },
+          ]
+        : [
+            { opacity: 0.9, transform: 'translateY(0.6px)', textShadow: '0 0 0.3px currentColor' },
+            { opacity: 1, transform: 'translateY(0)', textShadow: '0 0 0 transparent' },
+          ],
+      { duration: 110, easing: 'cubic-bezier(.2,.8,.2,1)' },
+    )
+    typingAnimations.set(block, animation)
+    animation.onfinish = () => {
+      if (typingAnimations.get(block) === animation) typingAnimations.delete(block)
+    }
+  })
+}
+
 type Props = {
   initialContent: string
   // Latest Markdown, pushed on a trailing debounce (keeps fast typing smooth).
@@ -136,6 +176,12 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
     content: initialContent,
     editorProps: {
       attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4' },
+      handleDOMEvents: {
+        beforeinput(view, event) {
+          if (event instanceof InputEvent) pulseTypewriterInput(view, event)
+          return false
+        },
+      },
       handleDrop(view, event) {
         const files = Array.from(event.dataTransfer?.files ?? []).filter((f) => f.type.startsWith('image/'))
         if (files.length === 0) return false
