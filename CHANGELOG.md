@@ -7,7 +7,7 @@
 - Added a visible block-style typewriter caret plus distinct insert/delete strikes on the active line.
   The caret is an overlay, so it never enters the ProseMirror document or changes selection; its blink
   and strikes respect both the site motion switch and reduced-motion preferences.
-- Added generated mechanical key clicks, raised from 20% to 30% internal volume: insertion is short and crisp, deletion
+- Added generated mechanical key clicks, ultimately raised from 20% to 45% internal volume after production review: insertion is short and crisp, deletion
   is slightly lower. Audio is created locally with Web Audio, has no asset/network request, and only
   runs from direct editor input (composition updates are excluded).
 - Added an Appearance → Rendering switch for all typewriter feedback. It persists in the existing

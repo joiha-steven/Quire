@@ -37,7 +37,7 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 
 | Area | What you get |
 |:---|:---|
-| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · drag-drop / paste image upload (JPG · PNG · WebP · AVIF · GIF · SVG) with responsive `sharp` variants (original + AVIF/WebP) · captioned figures (left/center/right, column / large / full-bleed / gallery grid) · tables · video embeds · 3-version time machine · offline local autosave · one-click draft preview |
+| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · sticky one-row toolbar · optional typewriter caret + key feedback · drag-drop / paste image upload (JPG · PNG · WebP · AVIF · GIF · SVG) with responsive `sharp` variants (original + AVIF/WebP) · captioned figures (left/center/right, column / large / full-bleed / gallery grid) · tables · video embeds · 3-version time machine · offline local autosave · one-click draft preview |
 | 🎨&nbsp;**Look** | a calm, editorial admin · 6 customizable light+dark palettes (+ an accent) · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · four built-in reading fonts (or upload a custom font per weight), scoped to reading text |
 | 🌍&nbsp;**i18n** | Admin + site in `en · vi · de · ja · zh · ko` |
 | 🔍&nbsp;**Reading** | instant local + Postgres full-text search · a left sidebar rail (categories + tags, or a post's ToC) · related posts · reading time · progress bar · full-bleed images on mobile |
@@ -181,7 +181,10 @@ Add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm
 - `/` — public blog (published, date-reached posts) · `/category/<slug>`, `/tag/<slug>` (slugified) · header search overlay · path-based pagination (`/page/2`).
 - `/admin` — dashboard, editor, media, analytics, settings (owner only).
 - **Settings** is one form / one Save, five tabs — **Site**, **Content** (reader features, comments), **Appearance** (palettes, built-in + custom fonts, the per-role text-size table, custom CSS), **SEO**, **Integrations** (MCP, backups, Cloudflare, WordPress import). Everything is injected as CSS variables, so changes apply site-wide with **no redeploy**.
+- **Writing feedback** is optional under *Settings → Appearance → Rendering*: it adds the editor's block caret, insert/delete movement and a restrained synthesized key sound. The master Motion setting and reduced-motion preference still win.
 - **Performance:** public pages are ISR-cached; every admin save purges exactly the affected pages through one place ([`src/lib/revalidate.ts`](./src/lib/revalidate.ts)), so edits are live next request without ever serving stale. Full design + the *why* in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+The July 2026 admin redesign is documented in [`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md); the complete 13 July implementation/deployment log is in [`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
 
 ---
 

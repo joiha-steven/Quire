@@ -9,6 +9,9 @@ Thanks for helping. Quire values small, correct, well-scoped changes.
   [`README.md`](./README.md) and [`docs/self-host-native.md`](./docs/self-host-native.md).
 - Read [`CLAUDE.md`](./CLAUDE.md) (operating rules + invariants) and
   [`ARCHITECTURE.md`](./ARCHITECTURE.md) (the *why*) before a non-trivial change.
+- For admin/editor work, also read [`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md)
+  and the latest concrete implementation record, currently
+  [`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
 
 ## Before you open a PR — Definition of Done
 
@@ -20,6 +23,8 @@ same plus `npm run build`.
 If your change touches behaviour that a check doesn't cover, **add a test in the same
 commit**. If it changes behaviour, **update the matching docs in the same commit**
 (CLAUDE.md rules, the relevant `docs/*`, ARCHITECTURE.md, README.md).
+For a broad visual pass, keep one dated worklog as the canonical detailed record and update the
+short contracts in the living docs; do not rewrite historical audit reports to describe new state.
 
 ## House rules (the short version)
 

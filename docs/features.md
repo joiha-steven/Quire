@@ -79,6 +79,15 @@
 - **Menus live in `EditorMenus.tsx`** (Toolbar + BubbleBar). The editor sets
   `shouldRerenderOnTransaction: true` — TipTap 3 disables it by default, which leaves every
   `isActive()` (toolbar highlights, the table-tools row) stale until an unrelated re-render.
+- **Writing shell:** the title grows instead of clipping; the editor header and document frame share
+  one bounded gutter; the toolbar is sticky, vertically centred, never wraps, and scrolls horizontally
+  on narrow screens. Icon actions keep localized accessible names. Focusing prose must not draw a
+  black outline around the document.
+- **Optional typewriter feedback:** `settings.motion.typewriter` enables the block caret, subtle
+  insert/delete response, and a synthesized filtered-noise key click (45% internal volume; no audio
+  file). It ignores composition, modifier/navigation keys, paste, and held repeats. The master
+  `settings.motion.enabled` and `prefers-reduced-motion` still gate the visual feedback; disabling
+  typewriter feedback makes the editor standard and silent.
 - **BubbleBar:** a floating `BubbleMenu` (`@tiptap/react/menus`) over a text selection or with the
   cursor in a link — bold/italic/underline/strike/code + link edit/remove. `shouldShow` skips node
   selections (image/video) so it never covers their own controls.
@@ -173,8 +182,9 @@
   class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
   **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontFields`
-  (built-in `fontPreset` picker + `fontChromeInter` toggle)/`FontUpload`/`TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine
-  toggle → `settings.motion.enabled`) + custom-CSS; **SEO**
+  (built-in `fontPreset` picker + `fontChromeInter` toggle)/`FontUpload`/`TypographyFields`/`AdvancedFields`
+  (Rendering card: font smoothing + the **Motion** engine toggle → `settings.motion.enabled` + the
+  editor **Typewriter feedback** option → `settings.motion.typewriter`) + custom-CSS; **SEO**
   `SeoFields`; **Integrations** `BackupFields` + `McpFields` + `CloudflareFields` + `ImportFields`
   (WordPress import — see below). `McpFields` is the EXCEPTION to "no own
   state/save": the MCP enable toggle flows through the settings form, but its token manager has its

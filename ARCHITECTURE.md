@@ -89,6 +89,10 @@ can move without rewriting anything.
 | `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | SEO / feeds / dynamic share image. |
 | `src/components/{blog,admin,ui,theme}/` | UI. `ui/` = shared primitives (Button, Input, Switch, Toast). |
 
+The admin UI contract, editor layout decisions, and the 13 July 2026 production pass are recorded in
+[`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md) and
+[`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
+
 ## Design decisions (the *why*)
 
 - **Postgres for text, local files for binaries** → real queries (lists, taxonomy,
@@ -159,6 +163,13 @@ can move without rewriting anything.
   settings (title, palette color, uploaded icon); standalone launch only — offline is
   intentionally out of scope, so there is nothing to register/cache and admin/API are
   never served stale.
+- **Admin is a neutral application shell, separate from the public theme.** A quiet `#f5f5f5`
+  canvas, white surfaces, the shared 16/12/8px radius hierarchy, compact navigation, and reusable
+  kit primitives keep every admin screen coherent without changing its data flow or features. The
+  post editor owns a sticky header and sticky, single-row horizontally scrollable toolbar so writing
+  controls remain reachable. Optional typewriter feedback is persisted in `settings.motion.typewriter`;
+  it changes only editor feedback (caret, subtle line response, synthesized key sound), while
+  `settings.motion.enabled` remains the global visual-motion gate.
 - **Off-server backups to the owner's Google Drive.** Your Postgres + uploads dir are your primary
   data; Drive is *off-server redundancy* + a one-click restore point, not primary safety.
   A snapshot is one self-contained `.tar.gz` (DB dump + every binary) because a single file is the
