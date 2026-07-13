@@ -110,7 +110,7 @@ The second visual pass tightened the system after reviewing every admin surface 
 - Editor formatting is a single non-wrapping icon row with horizontal overflow on narrow screens. The editor frame must not use `overflow-hidden`, because that breaks the nested sticky toolbar. Titles use content-driven height so long titles are never clipped.
 - The formatting row centers its controls when they fit and naturally starts at the leading edge when it overflows; mobile remains a single horizontally scrollable line.
 - The prose `contenteditable` must not inherit the global admin focus outline. The surrounding editor card supplies the workspace boundary; focus rings remain on discrete controls.
-- Insert and delete input may use the lightweight active-block typewriter pulse. Keep it compositor-only, selection-safe, IME-safe, and governed by the global motion/reduced-motion settings.
+- Insert and delete input uses a block-style overlay caret, active-line pulse, and generated mechanical click. Keep visuals compositor-only, selection-safe, IME-safe, and governed by the global motion/reduced-motion settings; keep audio locally generated at the documented 20% internal volume and out of composition updates.
 - Sidebar footer controls always use the same icon + label row structure; the theme control must show its sun/moon glyph before the applied mode label.
 - Palette cards must remain readable in every state. Use neutral border/surface hierarchy for selected, available, and hidden palettes; never lower opacity on the entire card or its labels.
 - Backup scheduling and import controls use shared rounded inputs and buttons. Native file-input chrome must stay visually hidden behind an accessible labeled trigger.

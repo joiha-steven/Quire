@@ -4,9 +4,12 @@
 
 - Removed the global admin focus rectangle from the TipTap writing surface; keyboard focus remains
   visible on actual controls, while the editor continues to sit inside its bordered card.
-- Added a restrained typewriter response to the active block when inserting or deleting text. It uses
-  compositor-only DOM animation, replaces repeated pulses during fast typing, does not alter editor
-  content or selection, and respects both the site motion switch and reduced-motion preferences.
+- Added a visible block-style typewriter caret plus distinct insert/delete strikes on the active line.
+  The caret is an overlay, so it never enters the ProseMirror document or changes selection; its blink
+  and strikes respect both the site motion switch and reduced-motion preferences.
+- Added generated mechanical key clicks at 20% internal volume: insertion is short and crisp, deletion
+  is slightly lower. Audio is created locally with Web Audio, has no asset/network request, and only
+  runs from direct editor input (composition updates are excluded).
 
 ## 2026-07-13 — admin form and toolbar visual correction
 
