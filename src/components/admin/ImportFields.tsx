@@ -50,8 +50,7 @@ export function ImportFields() {
         type="file"
         accept=".xml,text/xml,application/xml"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        className="sr-only"
-        aria-label={t.importChoose}
+        className="hidden"
       />
       <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50/60 p-4 dark:border-neutral-700 dark:bg-neutral-900/50">
         <div className="flex flex-wrap items-center gap-3">
