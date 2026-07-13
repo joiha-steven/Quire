@@ -125,6 +125,10 @@
 - [ ] Mobile reading-rail handle is the narrow 16 × 64px edge tab, opens/closes reliably, and its
   10 × 18px chevron reverses direction with the drawer
 - [ ] Admin footer exposes Clear cache in expanded, collapsed, and mobile navigation states
+- [ ] Theme, Clear cache, and Sign out footer rows have identical height/padding/icon alignment;
+  expanded Theme shows its sun/moon icon and collapsed Theme remains icon-only
+- [ ] Post editor toolbar never wraps; it scrolls horizontally on narrow widths, remains sticky
+  while the document scrolls, and long titles auto-grow without clipping or a large blank gap
 
 ## Typography (per-role system)
 - [ ] No hardcoded font sizes on the PUBLIC site: `grep -rE "text-\[|text-(xs|sm|base|lg|xl|[2-6]xl)\b"

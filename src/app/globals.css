@@ -780,12 +780,12 @@ hr {
   pointer-events: none;
 }
 
-/* Admin canvas is a cool neutral workspace, isolated from public palette tokens. */
+/* Admin canvas is a true neutral gray, isolated from public palette tokens. */
 .admin-canvas {
-  background: #f6f7f8;
+  background: #f5f5f5;
 }
 .dark .admin-canvas {
-  background: #0c0d0f;
+  background: #0f0f0f;
 }
 
 .admin-shell :focus-visible {

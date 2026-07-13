@@ -86,6 +86,10 @@
   it's a hamburger drawer (always icon+label). (`ADMIN_NAV` is the older horizontal variant.)
   Public header's 40px icon buttons → `ICON_BTN` (`ui/iconButton.ts`). Adding an item = reuse the
   constant, never copy a class list.
+- **Editor toolbar stays one row.** Text is reserved for B/I/U/S, P, H1–H5, and compact table
+  abbreviations; semantic actions use line icons with localized `title`/`aria-label`. The row is
+  `flex-nowrap` inside `overflow-x-auto` on desktop and mobile. Never put `overflow-hidden` on the
+  editor frame: it creates a scroll container and prevents the toolbar from sticking to the viewport.
 - **Header/menu alignment must be pixel-exact — the owner is very sensitive and it has drifted
   repeatedly.** Every header-row item (incl. the bigger brand wordmark) is an
   `inline-flex h-9 items-center` box; the row is `items-center`. NEVER align a bigger wordmark

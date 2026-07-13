@@ -300,7 +300,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
 
   return (
     <div>
-      <div ref={actionHeaderRef} className="z-20 mb-7 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-xl lg:sticky lg:top-4 dark:border-neutral-800 dark:bg-neutral-900/95">
+      <div ref={actionHeaderRef} className="z-20 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-xl lg:sticky lg:top-4 dark:border-neutral-800 dark:bg-neutral-900/95">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/admin/content" className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">← {t.navDashboard}</Link>
           <span className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
@@ -336,13 +336,13 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
 
       <div className={`grid items-start gap-6 ${settingsOpen ? 'xl:grid-cols-[minmax(0,1fr)_340px]' : ''}`}>
         <div className="min-w-0">
-          <div className="mx-auto mb-6 w-full" style={{ maxWidth: contentWidth }}>
+          <div className="mx-auto mb-3 w-full" style={{ maxWidth: contentWidth }}>
             <textarea
               value={draft.title}
               onChange={(e) => update({ title: e.target.value })}
               placeholder={t.titlePlaceholder}
-              rows={2}
-              className="w-full resize-none overflow-hidden bg-transparent text-3xl font-bold leading-tight tracking-tight outline-none placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
+              rows={1}
+              className="min-h-12 w-full resize-none overflow-hidden bg-transparent text-3xl font-bold leading-tight tracking-tight outline-none [field-sizing:content] placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
             />
           </div>
           <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarTop={toolbarTop} />
