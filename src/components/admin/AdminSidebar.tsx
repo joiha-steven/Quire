@@ -42,7 +42,7 @@ export function AdminSidebar({
   // Publish the current desktop rail width as a CSS var so fixed-position chrome
   // (e.g. the settings save bar) can offset past the sidebar at any collapse state.
   const applyWidthVar = (c: boolean) =>
-    document.documentElement.style.setProperty('--admin-nav-w', c ? '3.5rem' : '11rem')
+    document.documentElement.style.setProperty('--admin-nav-w', c ? '4.5rem' : '13rem')
 
   // Restore the desktop collapsed state after mount (client-only; server renders
   // expanded so hydration matches, then we sync). Deferred a microtask so the
@@ -129,7 +129,7 @@ export function AdminSidebar({
   // Wordmark, plus the compact collapse/expand button (desktop top row only). The
   // chevron points the direction it will move the rail; rotates when collapsed.
   const wordmark = (c: boolean): ReactNode => (
-    <Link href="/admin" onClick={close} className="flex h-9 items-center px-3 text-xl leading-none tracking-tight">
+    <Link href="/admin" onClick={close} className="flex h-10 items-center px-3 text-xl leading-none tracking-tight">
       {c ? <span className="font-bold">qb</span> : <><span className="font-bold">quire</span>blog</>}
     </Link>
   )
@@ -140,7 +140,7 @@ export function AdminSidebar({
       onClick={toggleCollapsed}
       title={collapsed ? t.navExpand : t.navCollapse}
       aria-label={collapsed ? t.navExpand : t.navCollapse}
-      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-transparent text-neutral-400 transition-colors hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-700 dark:text-neutral-500 dark:hover:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
     >
       <span className={`grid place-items-center transition-transform ${collapsed ? 'rotate-180' : ''}`}>
         <IconChevronLeft />
@@ -152,8 +152,8 @@ export function AdminSidebar({
     <>
       {/* Desktop: sticky full-height left column; width animates on collapse */}
       <aside
-        className={`sticky top-0 h-screen shrink-0 flex-col border-r border-neutral-200 bg-white px-3 py-4 transition-[width] duration-200 dark:border-neutral-800 dark:bg-neutral-900 ${editorMode ? 'hidden' : 'hidden md:flex'} ${
-          collapsed ? 'md:w-14' : 'md:w-44'
+        className={`sticky top-0 h-screen shrink-0 flex-col border-r border-neutral-200/80 bg-white px-3 py-5 transition-[width] duration-200 dark:border-neutral-800 dark:bg-neutral-900 ${editorMode ? 'hidden' : 'hidden md:flex'} ${
+          collapsed ? 'md:w-[4.5rem]' : 'md:w-52'
         }`}
       >
         {/* Top: wordmark + collapse control. Stacked when collapsed (no room for a row). */}
@@ -161,16 +161,16 @@ export function AdminSidebar({
           {wordmark(collapsed)}
           {collapseBtn}
         </div>
-        <nav className="mt-4 flex flex-col gap-1">{navItems(collapsed)}</nav>
-        <div className="mt-auto flex flex-col gap-1 border-t border-neutral-200 pt-3 dark:border-neutral-800">{controls(collapsed)}</div>
+        <nav className="mt-6 flex flex-col gap-1">{navItems(collapsed)}</nav>
+        <div className="mt-auto flex flex-col gap-1 border-t border-neutral-200 pt-4 dark:border-neutral-800">{controls(collapsed)}</div>
       </aside>
 
       {/* Mobile: top bar + drawer (always icon+label) */}
-      <header className={`sticky top-0 z-20 items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900 ${editorMode ? 'hidden' : 'flex md:hidden'}`}>
+      <header className={`sticky top-0 z-20 items-center justify-between border-b border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/95 ${editorMode ? 'hidden' : 'flex md:hidden'}`}>
         {wordmark(false)}
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 text-neutral-600 shadow-sm hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
           aria-label={t.navHome}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -183,7 +183,7 @@ export function AdminSidebar({
       {open && (
         <>
           <button type="button" aria-label={t.navHome} onClick={close} className="fixed inset-0 top-[65px] z-20 bg-black/20 md:hidden" />
-          <nav className="fixed inset-x-0 top-[65px] z-30 max-h-[calc(100dvh-65px)] overflow-y-auto border-b border-neutral-200 bg-white px-3 py-3 md:hidden dark:border-neutral-800 dark:bg-neutral-900">
+          <nav className="fixed inset-x-3 top-[72px] z-30 max-h-[calc(100dvh-84px)] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-3 shadow-xl md:hidden dark:border-neutral-800 dark:bg-neutral-900">
             {navItems(false)}
             <span className="my-1 block h-px w-full bg-neutral-200 dark:bg-neutral-700" aria-hidden />
             {controls(false)}

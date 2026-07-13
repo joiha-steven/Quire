@@ -67,22 +67,22 @@ export function PostsTable({
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-5 flex flex-wrap items-center gap-3">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t.filterPlaceholder}
           aria-label={t.filterPlaceholder}
-          className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:placeholder:text-neutral-500"
+          className="min-h-10 min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3.5 py-2 text-sm shadow-sm outline-none placeholder:text-neutral-400 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200 dark:border-neutral-700 dark:bg-neutral-900 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-800"
         />
-        <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+        <div className="flex gap-1 rounded-xl bg-neutral-200/70 p-1 dark:bg-neutral-800">
           {statusTabs.map((s) => (
             <button
               key={s.key}
               type="button"
               onClick={() => setStatus(s.key)}
-              className={`rounded-md px-3 py-1 text-sm font-medium ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 status === s.key
                   ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white'
                   : 'text-neutral-500'
@@ -97,7 +97,7 @@ export function PostsTable({
       {filtered.length === 0 ? (
         <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.filterEmpty}</p>
       ) : (
-    <div className="overflow-hidden border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500 whitespace-nowrap">
           <tr>
@@ -113,7 +113,7 @@ export function PostsTable({
         </thead>
         <tbody>
           {filtered.map((p) => (
-            <tr key={p.slug} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
+            <tr key={p.slug} className="border-b border-neutral-100 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40 last:border-0">
               <td className="px-4 py-3 font-medium">
                 <Link href={`/admin/editor/${p.slug}`} className="hover:underline">
                   {p.title || t.untitled}

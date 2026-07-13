@@ -173,13 +173,11 @@ body { font-optical-sizing: auto; }
   }
 }
 
-/* House style: SHARP CORNERS everywhere (border-radius: 0). One reset so no stray
-   radius slips in — beats Tailwind's `rounded-*` utilities and any component value,
-   so new UI can't reintroduce rounding. Change here (not per component) if that ever
-   needs revisiting. Native round controls (radios/checkboxes) keep their shape. */
-*,
-*::before,
-*::after {
+/* Public reading chrome stays square. Admin is deliberately excluded: its app-like
+   controls use the radii declared by the shared UI kit and Tailwind utilities. */
+*:not(.admin-shell *),
+*:not(.admin-shell *)::before,
+*:not(.admin-shell *)::after {
   border-radius: 0 !important;
 }
 input[type='radio'],
@@ -782,14 +780,20 @@ hr {
   pointer-events: none;
 }
 
-/* Admin canvas: dotted-grid background behind the floating panels (sidebar +
-   cards sit on solid surfaces above it). Admin chrome is monochrome by design, so
-   the dot colour is a fixed faint neutral per mode (NOT a public theme token). */
+/* Admin canvas is a cool neutral workspace, isolated from public palette tokens. */
 .admin-canvas {
-  background: #f5f5f5;
+  background: #f6f7f8;
 }
 .dark .admin-canvas {
-  background: #0d0d0d;
+  background: #0c0d0f;
+}
+
+.admin-shell :focus-visible {
+  outline: 2px solid #737373;
+  outline-offset: 2px;
+}
+.dark .admin-shell :focus-visible {
+  outline-color: #a3a3a3;
 }
 
 /* Native colour picker (admin theme): strip the default inner padding/border so

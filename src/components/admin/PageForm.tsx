@@ -210,7 +210,7 @@ export function PageForm({ initial, contentWidth }: Props) {
       />
 
       {localRecovered && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
           <span className="text-neutral-800 dark:text-neutral-200">
             {t.localDraftFound} · {formatTime(localRecovered.at)}
           </span>
@@ -225,7 +225,7 @@ export function PageForm({ initial, contentWidth }: Props) {
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Editor
           initialContent={draft.content}
           onChange={(md) => { contentRef.current = md }}
@@ -236,11 +236,13 @@ export function PageForm({ initial, contentWidth }: Props) {
           apiRef={editorApi}
           contentWidth={contentWidth}
         />
-        <PageSettings draft={draft} update={update} onPickFeatured={() => setPicker('featured')} />
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm lg:sticky lg:top-6 dark:border-neutral-800 dark:bg-neutral-900">
+          <PageSettings draft={draft} update={update} onPickFeatured={() => setPicker('featured')} />
+        </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/90 backdrop-blur md:left-[var(--admin-nav-w,13rem)] dark:border-neutral-800 dark:bg-neutral-900/90">
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-[100px]">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200/80 bg-white/90 shadow-[0_-8px_24px_rgba(0,0,0,0.04)] backdrop-blur-xl md:left-[var(--admin-nav-w,13rem)] dark:border-neutral-800 dark:bg-neutral-900/90">
+        <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between px-4 py-3 sm:px-7 lg:px-10 xl:px-12">
           <span className="text-sm text-neutral-400 dark:text-neutral-500">
             {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : ''}
           </span>

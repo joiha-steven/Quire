@@ -52,18 +52,18 @@ export function Overview(props: Props) {
   const t = useAdminT()
   const { posts, pages, comments, originals, totalBytes, recent, activityEnabled, version, system, dashboard } = props
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <PageHeader
         title={t.overviewTitle}
         actions={
           <div className="flex items-center gap-3">
             <span className="text-xs text-neutral-400">quireblog v{version}</span>
-            <Link href="/admin/editor" className="bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900">{t.newPost}</Link>
+            <Link href="/admin/editor" className="inline-flex min-h-10 items-center rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-700 dark:bg-white dark:text-neutral-900">{t.newPost}</Link>
           </div>
         }
       />
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden border border-neutral-200 bg-neutral-200 sm:grid-cols-3 lg:grid-cols-5 dark:border-neutral-800 dark:bg-neutral-800">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard label={t.statPosts} value={posts} href="/admin/content" />
         <StatCard label={t.statPages} value={pages} href="/admin/content" />
         <StatCard label={t.statComments} value={comments} href="/admin/comments" />
@@ -73,7 +73,7 @@ export function Overview(props: Props) {
 
       <DashboardWidgets data={dashboard} />
 
-      <section className="border-t border-neutral-200 pt-6 dark:border-neutral-800">
+      <section className="rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.035)] sm:p-6 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold">{t.recentActivity}</h2>
           <Link href="/admin/log" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">{t.recentViewAll}</Link>
@@ -81,7 +81,7 @@ export function Overview(props: Props) {
         {!activityEnabled || recent.length === 0 ? (
           <p className="text-sm text-neutral-400">{t.logEmpty}</p>
         ) : (
-          <ul className="divide-y divide-neutral-100 border-y border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+          <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
             {recent.slice(0, 6).map((entry) => (
               <li key={entry.id} className="grid gap-2 py-3 text-sm sm:grid-cols-[120px_minmax(0,1fr)_auto]">
                 <span className={entry.action === 'error' ? 'font-medium text-neutral-900 dark:text-white' : 'text-neutral-500'}>{entry.action}</span>
@@ -93,7 +93,7 @@ export function Overview(props: Props) {
         )}
       </section>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4 text-xs text-neutral-400 dark:border-neutral-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-xs text-neutral-400">
         <span>{system.dbReachable ? 'PostgreSQL · online' : 'PostgreSQL · offline'} · {system.storage}</span>
         {system.siteHref && <a href={system.siteHref} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-900 dark:hover:text-white">{t.viewSite} ↗</a>}
       </div>

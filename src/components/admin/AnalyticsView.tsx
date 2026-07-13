@@ -88,14 +88,14 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.analyticsPrivacyNote}</p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
           <div className="text-3xl font-bold tracking-tight">
             {data.totalViews.toLocaleString()}
             <Trend cur={data.totalViews} prev={data.prevViews} />
           </div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsViews}</div>
         </div>
-        <div className="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
           <div className="text-3xl font-bold tracking-tight">
             {data.uniqueVisitors.toLocaleString()}
             <Trend cur={data.uniqueVisitors} prev={data.prevVisitors} />
@@ -109,7 +109,7 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
             </div>
           )}
         </div>
-        <div className="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
           <div className="text-3xl font-bold tracking-tight">{data.avgReadDepth}%</div>
           <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{t.analyticsAvgDepth}</div>
         </div>
@@ -121,7 +121,7 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
         <>
           {/* Daily views — thin bars scaled to the busiest day, with the peak +
               first/last date labels for context. */}
-          <div className="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
             <div className="mb-2 text-xs text-neutral-400 dark:text-neutral-500">
               {t.analyticsPeak}: <span className="tabular-nums">{maxDay.toLocaleString()}</span>
             </div>
@@ -145,7 +145,7 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
 
           {/* Top pages — by post/page title where known, the bare path otherwise.
               A real table with labelled columns so the numbers are unambiguous. */}
-          <div className="overflow-x-auto border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
             <h2 className="mb-3 text-sm font-bold">{t.analyticsTopPages}</h2>
             <table className="w-full text-sm">
               <thead>
@@ -178,7 +178,7 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
           {((data.topReferrers?.length ?? 0) > 0 || (data.topCountries?.length ?? 0) > 0) && (
             <div className="grid gap-4 sm:grid-cols-2">
               {(data.topReferrers?.length ?? 0) > 0 && (
-                <div className="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
                   <h2 className="mb-3 text-sm font-bold">{t.analyticsTopReferrers}</h2>
                   <div className="mb-1 flex items-center justify-between text-xs font-medium text-neutral-400 dark:text-neutral-500">
                     <span>{t.analyticsColSource}</span>
@@ -195,7 +195,7 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
                 </div>
               )}
               {(data.topCountries?.length ?? 0) > 0 && (
-                <div className="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
                   <h2 className="mb-3 text-sm font-bold">{t.analyticsTopCountries}</h2>
                   <div className="mb-1 flex items-center justify-between text-xs font-medium text-neutral-400 dark:text-neutral-500">
                     <span>{t.analyticsColCountry}</span>

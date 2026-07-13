@@ -220,7 +220,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
   // Drop any pending debounce when the editor unmounts.
   useEffect(() => () => { if (flushTimer.current) clearTimeout(flushTimer.current) }, [])
 
-  if (!editor) return <div className="min-h-[480px] animate-pulse bg-neutral-50 dark:bg-neutral-900" />
+  if (!editor) return <div className="min-h-[480px] animate-pulse rounded-2xl bg-neutral-100 dark:bg-neutral-900" />
 
   // Review -> Markdown: snapshot the current markdown. Markdown -> Review:
   // re-parse the (possibly edited) markdown back into the formatted editor.
@@ -238,7 +238,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
   }
 
   return (
-    <div className="border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
       <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} stickyTop={toolbarTop} />
       {/* Floating menu on a text selection / link — not in raw source mode. */}
       {!raw && <BubbleBar editor={editor} />}
