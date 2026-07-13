@@ -73,7 +73,7 @@ function videoUrlsToNodes(editor: TiptapEditor): void {
 // follows its selection while compositor-only pulses touch the current DOM block.
 // No character wrappers, document mutations, or selection changes are involved.
 const typingAnimations = new WeakMap<HTMLElement, Animation>()
-const TYPEWRITER_VOLUME = 0.3
+const TYPEWRITER_VOLUME = 0.45
 let typewriterAudio: AudioContext | null = null
 
 function placeTypewriterCaret(view: TiptapEditor['view'], caret: HTMLElement | null): void {
@@ -102,7 +102,7 @@ function playTypewriterSound(deleting: boolean): void {
   if (context.state === 'suspended') void context.resume()
 
   // A very short filtered-noise transient reads as a mechanical click instead
-  // of a musical beep. 0.11 × 20% gives a quiet peak gain of 0.022.
+  // of a musical beep. 0.11 × 45% gives a restrained peak gain of 0.0495.
   const duration = deleting ? 0.032 : 0.024
   const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate)
   const samples = buffer.getChannelData(0)

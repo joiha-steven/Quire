@@ -122,6 +122,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | Backup / restore / cron | `docs/backups.md`, `lib/backup.ts`, `lib/gdrive.ts`, `lib/backup-state.ts` | — |
 | Theme / palette / dark / FOUC | `lib/themes.ts`, `src/components/theme/*` | `docs/conventions.md` |
 | Typography / font / layout drift | `docs/conventions.md` FIRST, then the component | — |
+| Admin chrome / editor toolbar / typewriter feedback | `docs/admin-redesign-2026-07.md`, `docs/worklog-2026-07-13.md`, `components/admin/Editor.tsx`, `components/admin/EditorMenus.tsx` | `components/admin/kit.tsx`, `docs/features.md` |
 | Search / ToC / related / preview | `lib/posts.ts`, `api/search`, `components/blog/PostContent.tsx` | `docs/features.md` |
 | SEO / sitemap / feed / robots / OG | `docs/seo-pwa.md`, `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | `lib/og.ts` |
 | PWA / manifest / favicon | `docs/seo-pwa.md`, `src/app/manifest.ts`, `src/app/layout.tsx` | — |
@@ -210,6 +211,7 @@ mechanism + the *why* (and the old no-DB bug it replaced) → ARCHITECTURE.md "R
 
 Read on demand — the DEBUG ROUTER routes to each: `conventions` (typography, header align, layout,
 i18n, scripts, releases) · `features` (Trash, search/ToC/related, editor, dashboards, settings) ·
+`admin-redesign-2026-07` (admin visual contract) · `worklog-2026-07-13` (complete redesign/deploy record) ·
 `seo-pwa` (SEO, feeds, OG, region, PWA) · `mcp` (server, tokens, OAuth) · `backups` (Drive, cron).
 
 ## Next.js 16

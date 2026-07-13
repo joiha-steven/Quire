@@ -5,6 +5,13 @@ a planning document — nothing here is built yet unless its status says so. Ope
 detail for shipped features lives in [`CLAUDE.md`](./CLAUDE.md); the *why* of the
 current design is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
+> **Done (2026-07-13):** the admin and editor received a complete monochrome UI/UX pass without
+> removing working features: coherent shared surfaces/spacing/radii, compact sidebar, repaired
+> settings layouts and utility actions, sticky one-row editor controls, mobile horizontal toolbar,
+> restored icon/file previews, lowercase tags, and optional typewriter writing feedback. See
+> [`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md) and
+> [`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
+
 ## Goal
 
 Make Quire Blog something other people can actually run and live in - not just the

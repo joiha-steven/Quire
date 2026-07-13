@@ -136,10 +136,14 @@
 
 - **Every transition/animation reads the motion tokens** `--dur-fast/base/slow` + `--ease`
   (globals.css `:root`). NEVER hardcode a `ms`/`s` duration or an easing in CSS or inline styles.
-- **ONE switch gates ALL motion.** `<html data-motion>` is server-rendered from `settings.motion.enabled`
+- **ONE switch gates ALL visual motion.** `<html data-motion>` is server-rendered from `settings.motion.enabled`
   (no flash, no client JS); `:root[data-motion='off']` AND `@media (prefers-reduced-motion: reduce)`
   zero every `--dur-*`, so everything becomes instant with no per-component branching. Toggle in
   Admin → Appearance → Rendering. Don't add a second motion gate.
+- `settings.motion.typewriter` is a scoped editor preference, not another global motion engine. It
+  enables the custom caret/line response and synthesized key sound; its visual parts must still obey
+  the master motion gate and reduced-motion preference. Audio is generated locally at 45% internal
+  volume and must ignore IME composition, modifiers/navigation, paste, and held-key repeats.
 - **Cheap properties only** (`opacity`/`transform`/colour) so motion never causes CLS or jank; entrance
   effects must default to fully-visible (e.g. `.reveal` is gated behind `@supports (animation-timeline)`
   + `data-motion='on'`) so unsupported browsers / motion-off never hide content. Page nav cross-fade =

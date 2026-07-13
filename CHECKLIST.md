@@ -129,6 +129,18 @@
   expanded Theme shows its sun/moon icon and collapsed Theme remains icon-only
 - [ ] Post editor toolbar never wraps; it scrolls horizontally on narrow widths, remains sticky
   while the document scrolls, and long titles auto-grow without clipping or a large blank gap
+- [ ] Editor header and editor frame share the same content gutters/width; the header has a visible
+  surface/border and neither component sits against the viewport edge
+- [ ] Toolbar actions are vertically centred in one row; icon-only actions retain localized
+  `title`/`aria-label` text and remain reachable by horizontal scroll on mobile
+- [ ] Clicking the editor content shows no black focus rectangle around the prose area
+- [ ] Admin canvas is neutral light gray (`#f5f5f5` in light mode), never blue-, green-, or paper-tinted
+- [ ] Settings keeps the intended two-column desktop composition; palette disabled/default states,
+  backup controls, and WordPress file import remain readable and correctly aligned
+- [ ] Settings → Appearance → Rendering → Typewriter feedback ON gives a block caret, distinct
+  insert/delete response, and audible key feedback; OFF restores a quiet, standard editor
+- [ ] Typewriter sound is comfortable at the current 45% internal level; Vietnamese IME composition,
+  modifier/navigation keys, paste, and held-key repeat do not produce a burst of duplicate clicks
 
 ## Typography (per-role system)
 - [ ] No hardcoded font sizes on the PUBLIC site: `grep -rE "text-\[|text-(xs|sm|base|lg|xl|[2-6]xl)\b"
