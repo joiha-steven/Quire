@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-07-13 — modern admin design system
+
+- **Admin-only rounded component system:** the global square-corner rule now excludes `.admin-shell`.
+  Public reading pages remain untouched; admin cards/tables use 16px, grouped controls 12px, and
+  buttons/inputs/navigation 8px. Focus rings, borders, shadows, heights, and hover states are shared.
+- **Layout and navigation:** rebalanced the admin workspace around a 208px desktop sidebar (72px
+  collapsed), 1480px content ceiling, responsive gutters, clearer active rows, and a floating mobile
+  drawer. The cool-gray monochrome palette remains; no public palette color enters admin.
+- **All main surfaces:** modernized Overview, Analytics, Content, Comments, Media, Trash, Settings,
+  Log, Help, the post editor, and the page editor. Stats are separate cards, tabs are segmented,
+  tables have rounded frames and hover rows, settings keep two columns, and editor header/writing/
+  property surfaces now align visually.
+- **Behavior preserved:** no route, API, schema, query, form state, autosave, revision, preview,
+  upload, cache, backup, publishing, or deletion logic changed in this redesign.
+
 ## 2026-07-12 — UI follow-up and owner-approved baselines
 
 - **Public header icons:** restored the established search, three-circle palette, applied-theme

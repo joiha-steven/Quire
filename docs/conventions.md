@@ -118,10 +118,11 @@
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.
-- **Sharp corners everywhere — `border-radius: 0`.** A global reset in `globals.css` forces it
-  (beats Tailwind's `rounded-*` utilities), so you don't need to strip `rounded-*` from markup and
-  new UI can't reintroduce rounding. Do NOT add bespoke `border-radius`; change the house rule in
-  ONE place (that reset) if it ever needs revisiting. (Native radios/checkboxes keep their shape.)
+- **Public reading chrome stays sharp; admin does not.** The global `border-radius: 0` reset in
+  `globals.css` excludes descendants of `.admin-shell`. Public pages therefore keep Quire's square,
+  reading-first character while admin uses the shared app-like radius scale: cards/tables/modals
+  `rounded-2xl` (16px), grouped controls `rounded-xl` (12px), buttons/inputs/nav rows `rounded-lg`
+  (8px), pills/switches fully round. Do not invent one-off radii; change shared primitives first.
 - **Public UI colours come ONLY from theme tokens — never hardcode `neutral-*`/`white`/`black`
   or a hex.** Vars `--c-bg/text/heading/meta/link/rule` are utilities (`bg-bg`, `text-text`,
   `text-heading`, `text-meta`, `text-link`, `border-rule`). Every line/border + faint surface

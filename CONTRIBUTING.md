@@ -28,7 +28,8 @@ commit**. If it changes behaviour, **update the matching docs in the same commit
 - **Invariants are load-bearing** — the 7 invariants in CLAUDE.md are pinned by tests/
   guards. Don't break them; if you must change one, update its enforcement + docs.
 - **Public UI** uses theme tokens + the type-system roles only (no hardcoded colours/
-  sizes/tracking); **sharp corners** everywhere. Details in `docs/conventions.md`.
+  sizes/tracking) and keeps sharp corners. Admin uses the shared 16/12/8px radius hierarchy.
+  Details in `docs/conventions.md`.
 - **i18n**: user-facing strings live in `src/locales/` in all 6 languages (en default).
   Code, comments, identifiers, and commits are English.
 - Max 400 lines per file. No `any` (use `unknown` + narrowing).

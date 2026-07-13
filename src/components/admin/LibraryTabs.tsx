@@ -14,15 +14,15 @@ export function LibraryTabs() {
   const [tab, setTab] = useState<Tab>('images')
 
   const tabClass = (active: boolean) =>
-    `border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
+    `rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
       active
-        ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white'
-        : 'border-transparent text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+        ? 'bg-white text-neutral-950 shadow-sm dark:bg-neutral-700 dark:text-white'
+        : 'text-neutral-500 hover:bg-white/60 hover:text-neutral-800 dark:hover:bg-neutral-700/60 dark:hover:text-neutral-200'
     }`
 
   return (
     <div>
-      <div className="mb-6 flex gap-6 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="mb-6 flex w-fit gap-1 rounded-xl bg-neutral-200/70 p-1 dark:bg-neutral-800">
         <button type="button" onClick={() => setTab('images')} className={tabClass(tab === 'images')}>
           {t.tabImages}
         </button>
