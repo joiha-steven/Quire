@@ -801,6 +801,37 @@ hr {
 .admin-shell .ProseMirror:focus-visible {
   outline: none;
 }
+.typewriter-stage.has-typewriter-caret .ProseMirror {
+  caret-color: transparent;
+}
+.typewriter-caret {
+  position: absolute;
+  z-index: 2;
+  width: 0.5rem;
+  border-left: 2px solid #171717;
+  border-radius: 1px;
+  background: rgb(23 23 23 / 8%);
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: left center;
+}
+.dark .typewriter-caret {
+  border-left-color: #f5f5f5;
+  background: rgb(245 245 245 / 12%);
+}
+.typewriter-stage.has-typewriter-caret .typewriter-caret {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='on'] .typewriter-stage.has-typewriter-caret .typewriter-caret {
+    animation: typewriter-caret-blink 1.05s steps(1, end) infinite;
+  }
+}
+@keyframes typewriter-caret-blink {
+  0%, 52% { opacity: 1; }
+  53%, 78% { opacity: 0.22; }
+  79%, 100% { opacity: 1; }
+}
 
 /* Native colour picker (admin theme): strip the default inner padding/border so
    the swatch is one clean, obviously-clickable colour chip — clicking it opens

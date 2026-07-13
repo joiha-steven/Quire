@@ -69,15 +69,64 @@ function videoUrlsToNodes(editor: TiptapEditor): void {
   editor.view.dispatch(tr)
 }
 
-// A restrained typewriter response on the block currently being edited. This
-// uses a compositor-only animation on the existing DOM node: no character
-// wrappers, document mutations, selection changes, or Vietnamese IME conflicts.
-// Repeated keys replace the prior pulse so fast typing never builds a queue.
+// Typewriter feedback stays outside ProseMirror's document: a positioned overlay
+// follows its selection while compositor-only pulses touch the current DOM block.
+// No character wrappers, document mutations, or selection changes are involved.
 const typingAnimations = new WeakMap<HTMLElement, Animation>()
-function pulseTypewriterInput(view: TiptapEditor['view'], event: InputEvent): void {
+const TYPEWRITER_VOLUME = 0.2
+let typewriterAudio: AudioContext | null = null
+
+function placeTypewriterCaret(view: TiptapEditor['view'], caret: HTMLElement | null): void {
+  if (!caret) return
+  requestAnimationFrame(() => {
+    const stage = caret.parentElement
+    const visible = view.hasFocus() && view.state.selection.empty
+    if (!stage || !visible) {
+      stage?.classList.remove('has-typewriter-caret')
+      return
+    }
+    const cursor = view.coordsAtPos(view.state.selection.head)
+    const stageRect = stage.getBoundingClientRect()
+    caret.style.left = `${cursor.left - stageRect.left}px`
+    caret.style.top = `${cursor.top - stageRect.top}px`
+    caret.style.height = `${Math.max(16, cursor.bottom - cursor.top)}px`
+    stage.classList.add('has-typewriter-caret')
+  })
+}
+
+function playTypewriterSound(deleting: boolean): void {
+  const AudioContextClass = window.AudioContext
+  if (!AudioContextClass) return
+  typewriterAudio ??= new AudioContextClass()
+  const context = typewriterAudio
+  if (context.state === 'suspended') void context.resume()
+
+  // A very short filtered-noise transient reads as a mechanical click instead
+  // of a musical beep. 0.11 × 20% gives a quiet peak gain of 0.022.
+  const duration = deleting ? 0.032 : 0.024
+  const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate)
+  const samples = buffer.getChannelData(0)
+  for (let i = 0; i < samples.length; i += 1) {
+    samples[i] = (Math.random() * 2 - 1) * Math.exp(-i / (samples.length * 0.18))
+  }
+  const source = context.createBufferSource()
+  const filter = context.createBiquadFilter()
+  const gain = context.createGain()
+  source.buffer = buffer
+  filter.type = 'bandpass'
+  filter.frequency.value = deleting ? 620 : 1450
+  filter.Q.value = deleting ? 0.7 : 1.1
+  gain.gain.value = 0.11 * TYPEWRITER_VOLUME
+  source.connect(filter).connect(gain).connect(context.destination)
+  source.start()
+}
+
+function pulseTypewriterInput(view: TiptapEditor['view'], event: InputEvent, caret: HTMLElement | null): void {
   const inputType = event.inputType
   const deleting = inputType.startsWith('delete')
   if (!deleting && !inputType.startsWith('insert')) return
+  if (!event.isComposing) playTypewriterSound(deleting)
+  placeTypewriterCaret(view, caret)
   if (
     document.documentElement.dataset.motion === 'off' ||
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -89,6 +138,20 @@ function pulseTypewriterInput(view: TiptapEditor['view'], event: InputEvent): vo
     const block = origin?.closest<HTMLElement>('p, h1, h2, h3, h4, h5, li, blockquote, pre')
     if (!block || !view.dom.contains(block)) return
 
+    if (caret) {
+      caret.animate(
+        deleting
+          ? [
+              { opacity: 0.35, transform: 'translateX(-3px) scaleX(0.65)' },
+              { opacity: 1, transform: 'translateX(0) scaleX(1)' },
+            ]
+          : [
+              { opacity: 1, transform: 'translateY(1px) scaleX(1.5)' },
+              { opacity: 1, transform: 'translateY(0) scaleX(1)' },
+            ],
+        { duration: 140, easing: 'cubic-bezier(.2,.8,.2,1)' },
+      )
+    }
     typingAnimations.get(block)?.cancel()
     const animation = block.animate(
       deleting
@@ -100,7 +163,7 @@ function pulseTypewriterInput(view: TiptapEditor['view'], event: InputEvent): vo
             { opacity: 0.9, transform: 'translateY(0.6px)', textShadow: '0 0 0.3px currentColor' },
             { opacity: 1, transform: 'translateY(0)', textShadow: '0 0 0 transparent' },
           ],
-      { duration: 110, easing: 'cubic-bezier(.2,.8,.2,1)' },
+      { duration: 140, easing: 'cubic-bezier(.2,.8,.2,1)' },
     )
     typingAnimations.set(block, animation)
     animation.onfinish = () => {
@@ -136,6 +199,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
   const rawRef = useRef(raw)
   const rawTextRef = useRef(rawText)
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const caretRef = useRef<HTMLSpanElement>(null)
   // The editorProps closures below are created once (on the first useEditor call,
   // when `editor` is still null). Reading the live instance through a ref instead
   // of the captured `editor` const is what makes drag-drop insert reliably —
@@ -178,7 +242,23 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
       attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4' },
       handleDOMEvents: {
         beforeinput(view, event) {
-          if (event instanceof InputEvent) pulseTypewriterInput(view, event)
+          if (event instanceof InputEvent) pulseTypewriterInput(view, event, caretRef.current)
+          return false
+        },
+        focus(view) {
+          placeTypewriterCaret(view, caretRef.current)
+          return false
+        },
+        blur() {
+          caretRef.current?.parentElement?.classList.remove('has-typewriter-caret')
+          return false
+        },
+        keyup(view) {
+          placeTypewriterCaret(view, caretRef.current)
+          return false
+        },
+        mouseup(view) {
+          placeTypewriterCaret(view, caretRef.current)
           return false
         },
       },
@@ -217,6 +297,9 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
     },
     onCreate({ editor }) {
       videoUrlsToNodes(editor)
+    },
+    onSelectionUpdate({ editor }) {
+      placeTypewriterCaret(editor.view, caretRef.current)
     },
     onUpdate({ editor }) {
       // Per-keystroke work is kept tiny: flag dirty now, serialize the whole
@@ -304,7 +387,10 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
             className="min-h-[60vh] w-full resize-none overflow-hidden bg-transparent px-4 py-4 text-sm leading-relaxed text-neutral-800 outline-none dark:text-neutral-200"
           />
         ) : (
-          <EditorContent editor={editor} />
+          <div className="typewriter-stage relative">
+            <EditorContent editor={editor} />
+            <span ref={caretRef} className="typewriter-caret" aria-hidden="true" />
+          </div>
         )}
       </div>
     </div>
