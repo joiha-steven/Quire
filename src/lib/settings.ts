@@ -111,7 +111,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   features: DEFAULT_FEATURES,
   comments: DEFAULT_COMMENTS,
   mcp: { enabled: false },
-  motion: { enabled: true },
+  motion: { enabled: true, typewriter: true },
   backups: DEFAULT_BACKUPS,
 }
 
@@ -160,6 +160,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
       comments: sanitizeComments(stored.comments, DEFAULT_COMMENTS),
       mcp: sanitizeMcp(stored.mcp, DEFAULT_SETTINGS.mcp),
+      motion: sanitizeMotion(stored.motion, DEFAULT_SETTINGS.motion),
       backups: sanitizeBackups(stored.backups, DEFAULT_BACKUPS),
     }
   } catch (error) {

@@ -250,6 +250,7 @@ export type McpSettings = {
 // off (or under prefers-reduced-motion) every motion duration collapses to 0s.
 export type MotionSettings = {
   enabled: boolean
+  typewriter: boolean // admin editor: custom caret, insert/delete response + key sound
 }
 
 // Google Drive backup config (non-secret, lives in settings.data). The Drive

@@ -73,7 +73,7 @@ function videoUrlsToNodes(editor: TiptapEditor): void {
 // follows its selection while compositor-only pulses touch the current DOM block.
 // No character wrappers, document mutations, or selection changes are involved.
 const typingAnimations = new WeakMap<HTMLElement, Animation>()
-const TYPEWRITER_VOLUME = 0.2
+const TYPEWRITER_VOLUME = 0.3
 let typewriterAudio: AudioContext | null = null
 
 function placeTypewriterCaret(view: TiptapEditor['view'], caret: HTMLElement | null): void {
@@ -186,9 +186,10 @@ type Props = {
   // Width of the public single-post column, so typing mirrors the live layout.
   contentWidth: number
   toolbarTop?: number
+  typewriterEffects: boolean
 }
 
-export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickGallery, onUploadFile, apiRef, contentWidth, toolbarTop = 0 }: Props) {
+export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickGallery, onUploadFile, apiRef, contentWidth, toolbarTop = 0, typewriterEffects }: Props) {
   const t = useAdminT()
   // Markdown source view: edit the raw markdown directly (still saves live).
   const [raw, setRaw] = useState(false)
@@ -242,11 +243,11 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
       attributes: { class: 'prose max-w-none min-h-[420px] px-4 py-4' },
       handleDOMEvents: {
         beforeinput(view, event) {
-          if (event instanceof InputEvent) pulseTypewriterInput(view, event, caretRef.current)
+          if (typewriterEffects && event instanceof InputEvent) pulseTypewriterInput(view, event, caretRef.current)
           return false
         },
         focus(view) {
-          placeTypewriterCaret(view, caretRef.current)
+          if (typewriterEffects) placeTypewriterCaret(view, caretRef.current)
           return false
         },
         blur() {
@@ -254,11 +255,11 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
           return false
         },
         keyup(view) {
-          placeTypewriterCaret(view, caretRef.current)
+          if (typewriterEffects) placeTypewriterCaret(view, caretRef.current)
           return false
         },
         mouseup(view) {
-          placeTypewriterCaret(view, caretRef.current)
+          if (typewriterEffects) placeTypewriterCaret(view, caretRef.current)
           return false
         },
       },
@@ -299,7 +300,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
       videoUrlsToNodes(editor)
     },
     onSelectionUpdate({ editor }) {
-      placeTypewriterCaret(editor.view, caretRef.current)
+      if (typewriterEffects) placeTypewriterCaret(editor.view, caretRef.current)
     },
     onUpdate({ editor }) {
       // Per-keystroke work is kept tiny: flag dirty now, serialize the whole
@@ -389,7 +390,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
         ) : (
           <div className="typewriter-stage relative">
             <EditorContent editor={editor} />
-            <span ref={caretRef} className="typewriter-caret" aria-hidden="true" />
+            {typewriterEffects && <span ref={caretRef} className="typewriter-caret" aria-hidden="true" />}
           </div>
         )}
       </div>

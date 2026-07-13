@@ -14,5 +14,5 @@ export default async function EditPostPage({ params }: PageProps<'/admin/editor/
     getSettings(),
   ])
   if (!post) notFound()
-  return <PostForm initial={post} allCategories={allCategories} allTags={allTags} contentWidth={settings.contentWidth} />
+  return <PostForm initial={post} allCategories={allCategories} allTags={allTags} contentWidth={settings.contentWidth} typewriterEffects={settings.motion.typewriter} />
 }

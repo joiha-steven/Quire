@@ -222,6 +222,8 @@ const zh = {
   fontSmoothingDesc: '平滑文字边缘。在 Mac 上可能显得更细/更淡 — 关闭则使用浏览器默认。',
   motionLabel: '动效',
   motionDesc: '全站与后台的细微动画（页面淡入、悬停/按压、滚动显现）。关闭即即时。始终遵循 reduced-motion。',
+  typewriterLabel: '打字机反馈',
+  typewriterDesc: '编辑器中的块状光标、输入/删除反馈和轻微按键声。关闭后恢复普通光标和静音编辑。',
   overviewTitle: '概览',
   licenseTitle: 'Quire Blog 是开源软件（MIT）。你的博客内容归你所有（保留所有权利）。',
   statPosts: '文章',

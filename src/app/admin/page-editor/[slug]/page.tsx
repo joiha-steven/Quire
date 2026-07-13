@@ -9,5 +9,5 @@ export default async function EditStaticPage({ params }: PageProps<'/admin/page-
   const { slug } = await params
   const [page, settings] = await Promise.all([getPage(slug), getSettings()])
   if (!page) notFound()
-  return <PageForm initial={page} contentWidth={settings.contentWidth} />
+  return <PageForm initial={page} contentWidth={settings.contentWidth} typewriterEffects={settings.motion.typewriter} />
 }

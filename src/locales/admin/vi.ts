@@ -222,6 +222,8 @@ const vi = {
   fontSmoothingDesc: 'Làm mượt viền chữ. Trên Mac có thể trông mảnh/nhạt hơn - tắt thì dùng mặc định trình duyệt.',
   motionLabel: 'Chuyển động',
   motionDesc: 'Hiệu ứng tinh tế toàn site + admin (mờ dần khi chuyển trang, hover/bấm, hiện dần khi cuộn). Tắt = tức thì. Luôn tôn trọng prefers-reduced-motion.',
+  typewriterLabel: 'Hiệu ứng máy đánh chữ',
+  typewriterDesc: 'Con trỏ dạng khối, phản hồi khi gõ/xóa và tiếng phím nhỏ trong trình soạn thảo. Tắt để dùng con trỏ thường và soạn thảo im lặng.',
   overviewTitle: 'Tổng quan',
   licenseTitle: 'Quire Blog là mã nguồn mở (MIT). Nội dung blog của bạn vẫn là của bạn (giữ toàn quyền).',
   statPosts: 'Bài viết',

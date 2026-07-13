@@ -315,6 +315,8 @@ export type AdminStrings = {
   fontSmoothingDesc: string
   motionLabel: string
   motionDesc: string
+  typewriterLabel: string
+  typewriterDesc: string
   // overview
   overviewTitle: string
   licenseTitle: string

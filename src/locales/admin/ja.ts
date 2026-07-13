@@ -222,6 +222,8 @@ const ja = {
   fontSmoothingDesc: '文字の輪郭を滑らかにします。Macでは細く/薄く見えることがあります。オフはブラウザ既定。',
   motionLabel: 'モーション',
   motionDesc: 'サイト全体と管理画面の控えめなアニメーション（ページのフェード、ホバー/押下、スクロール表示）。オフで即時。reduced-motion は常に尊重します。',
+  typewriterLabel: 'タイプライター効果',
+  typewriterDesc: 'ブロックカーソル、入力・削除の反応、エディター内の小さなキー音。オフにすると通常のカーソルと無音入力になります。',
   overviewTitle: '概要',
   licenseTitle: 'Quire Blog はオープンソース（MIT）。ブログの内容はあなたのものです（無断転載禁止）。',
   statPosts: '投稿',
