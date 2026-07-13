@@ -115,12 +115,12 @@ export function TrashView({
       <PageHeader title={t.trashTitle} description={t.trashHint} />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+        <div className="flex flex-wrap gap-1 rounded-xl bg-neutral-200/70 p-1 dark:bg-neutral-800">
           {tabs.map((item) => (
             <button
               key={item.key}
               onClick={() => setTab(item.key)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+              className={`rounded-lg px-3 py-2 text-sm font-medium ${
                 tab === item.key
                   ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white'
                   : 'text-neutral-500'
@@ -153,7 +153,7 @@ export function TrashView({
 
   function Shell({ head, children }: { head: React.ReactNode; children: React.ReactNode }) {
     return (
-      <div className="overflow-hidden border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
         <table className="w-full text-sm">
           <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 whitespace-nowrap">
             <tr>
@@ -188,7 +188,7 @@ export function TrashView({
     return (
       <Shell head="">
         {rows.map((r) => (
-          <tr key={r.slug} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+          <tr key={r.slug} className="border-b border-neutral-100 transition-colors last:border-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40">
             <td className="px-4 py-3 font-medium">{r.title || t.untitled}</td>
             <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-500 sm:table-cell dark:text-neutral-400">
               {r.deletedAt ? formatDateTimeShort(r.deletedAt) : ''}
@@ -205,7 +205,7 @@ export function TrashView({
     return (
       <Shell head="">
         {rows.map((m) => (
-          <tr key={m.url} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+          <tr key={m.url} className="border-b border-neutral-100 transition-colors last:border-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40">
             <td className="px-4 py-3">
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -228,7 +228,7 @@ export function TrashView({
     return (
       <Shell head="">
         {rows.map((f) => (
-          <tr key={f.url} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+          <tr key={f.url} className="border-b border-neutral-100 transition-colors last:border-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40">
             <td className="px-4 py-3 font-medium">{f.filename}</td>
             <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-500 sm:table-cell dark:text-neutral-400">
               {f.deletedAt ? formatDateTimeShort(f.deletedAt) : ''}
@@ -245,7 +245,7 @@ export function TrashView({
     return (
       <Shell head="">
         {rows.map((c) => (
-          <tr key={c.id} className="border-b border-neutral-100 last:border-0 dark:border-neutral-800">
+          <tr key={c.id} className="border-b border-neutral-100 transition-colors last:border-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40">
             <td className="max-w-xs px-4 py-3">
               <p className="line-clamp-1 font-medium">{c.content}</p>
               <p className="text-xs text-neutral-400 dark:text-neutral-500">{c.name} · {c.postTitle}</p>

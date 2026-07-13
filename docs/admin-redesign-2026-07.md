@@ -18,7 +18,7 @@ Bring the admin closer to Quire's reading-first identity without changing the pu
 ### Admin shell
 
 - Replaced the dotted canvas with a quiet light-gray neutral surface (no warm/yellow cast).
-- Standardized flat panels without shadows or large radii.
+- Standardized panels with a restrained 16px radius, neutral border, and one-pixel ambient shadow.
 - Reduced page gutters and capped the working width for more consistent density.
 - Changed active navigation from a filled block to a slim position marker.
 - Kept cache clearing in the persistent sidebar footer so it remains reachable from every admin screen.
@@ -96,3 +96,14 @@ The second visual pass tightened the system after reviewing every admin surface 
 - Keep H1–H5 visible in the editor toolbar; these are frequent actions and must not be hidden inside a selector.
 - Preserve the established four public-header icons unless a replacement is reviewed visually first. Shared button sizing still comes from `ICON_BTN`; preserving glyphs does not permit per-button chrome drift.
 - Keep the editor action header framed and aligned to the editor surface, with the formatting toolbar sticky beneath its measured height.
+- The square-corner rule applies only to the public reading interface. Admin is an application workspace: use the shared 16/12/8px radius hierarchy, never a global square reset and never arbitrary per-component rounding.
+
+## Modern admin system — 2026-07-13
+
+- Scoped the sharp-corner reset away from `.admin-shell`; frontend styling and typography remain unchanged.
+- Rebuilt shared cards, tables, tabs, buttons, inputs, switches, focus rings, and empty states around a consistent neutral component system.
+- Expanded the desktop sidebar to 208px (72px collapsed), added rounded active/hover surfaces, and converted the mobile menu into a floating rounded drawer.
+- Rebalanced the workspace to a 1480px maximum with responsive 16/28/40/48px gutters and consistent 20–28px section rhythm.
+- Dashboard stats are independent cards instead of a fused spreadsheet strip; traffic, attention, top posts, and activity use the same surface hierarchy.
+- Content, Settings, Analytics, Media, Trash, Comments, Log, and Help share segmented tabs, rounded tables/panels, standard controls, and row hover feedback.
+- Editor focus mode is preserved. The action header, writing frame, and property inspector are separate related surfaces; sticky toolbar, autosave, preview, revisions, media, taxonomy, and publish flows are unchanged.

@@ -105,6 +105,12 @@
       state; the post editor's save/preview/publish live in its own sticky header (no bottom bar)
 
 ## Layout / visual (owner is very sensitive here)
+- [ ] Public pages still render square corners; `.admin-shell` restores the admin radius system
+  (16px panels, 12px groups, 8px controls) without leaking either rule across the route boundary
+- [ ] Admin cards, tables, inputs, buttons, tabs, navigation rows, modals, and empty states use the
+  shared primitives/radius hierarchy rather than hand-rolled per-page chrome
+- [ ] Admin desktop has balanced 208px/72px sidebar widths and the main content keeps its responsive
+  gutters; mobile navigation opens as an overlay and never pushes content downward
 - [ ] Header rows align on one line: every item (incl. the wordmark) is an `h-9`/`h-10`
   `items-center` box; the row is `items-center` (never `items-baseline`)
 - [ ] Sibling controls share ONE class constant — admin bar `ADMIN_NAV`
