@@ -131,7 +131,10 @@ export function sanitizeMcp(input: unknown, fallback: McpSettings): McpSettings 
 
 export function sanitizeMotion(input: unknown, fallback: MotionSettings): MotionSettings {
   const o = (input ?? {}) as Partial<MotionSettings>
-  return { enabled: bool(o.enabled, fallback.enabled) }
+  return {
+    enabled: bool(o.enabled, fallback.enabled),
+    typewriter: bool(o.typewriter, fallback.typewriter),
+  }
 }
 
 export function sanitizeBackups(input: unknown, fallback: BackupSettings): BackupSettings {

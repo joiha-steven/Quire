@@ -5,5 +5,5 @@ import { PageForm } from '@/components/admin/PageForm'
 
 export default async function NewStaticPage() {
   const settings = await getSettings()
-  return <PageForm contentWidth={settings.contentWidth} />
+  return <PageForm contentWidth={settings.contentWidth} typewriterEffects={settings.motion.typewriter} />
 }

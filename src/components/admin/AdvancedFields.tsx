@@ -28,7 +28,13 @@ export function AdvancedFields({ typography, onTypography, motion, onMotion }: P
         label={t.motionLabel}
         desc={t.motionDesc}
         checked={motion.enabled}
-        onChange={(enabled) => onMotion({ enabled })}
+        onChange={(enabled) => onMotion({ ...motion, enabled })}
+      />
+      <ToggleRow
+        label={t.typewriterLabel}
+        desc={t.typewriterDesc}
+        checked={motion.typewriter}
+        onChange={(typewriter) => onMotion({ ...motion, typewriter })}
       />
     </div>
   )

@@ -222,6 +222,8 @@ const de = {
   fontSmoothingDesc: 'Glättet die Textkanten. Kann auf dem Mac dünner/heller wirken — aus nutzt die Browser-Vorgabe.',
   motionLabel: 'Bewegung',
   motionDesc: 'Dezente Animationen auf Website + Admin (Seiten-Fades, Hover/Klick, Scroll-Einblendung). Aus = sofort. Reduced-Motion wird stets beachtet.',
+  typewriterLabel: 'Schreibmaschinen-Feedback',
+  typewriterDesc: 'Blockcursor, Reaktion beim Schreiben/Löschen und leise Tastenklicks im Editor. Ausschalten für normalen Cursor und lautloses Schreiben.',
   overviewTitle: 'Übersicht',
   licenseTitle: 'Quire Blog ist Open Source (MIT). Deine Blog-Inhalte bleiben dein (alle Rechte vorbehalten).',
   statPosts: 'Beiträge',

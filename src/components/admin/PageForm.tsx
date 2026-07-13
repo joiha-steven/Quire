@@ -16,7 +16,7 @@ import { MediaLibrary } from './MediaLibrary'
 import { useLocalDraft } from './useLocalDraft'
 import { useAdminT } from './I18nProvider'
 
-type Props = { initial?: PageWithContent; contentWidth: number }
+type Props = { initial?: PageWithContent; contentWidth: number; typewriterEffects: boolean }
 type PickTarget = 'editor' | 'gallery' | 'featured'
 
 function toDraft(initial?: PageWithContent): PageDraft {
@@ -29,7 +29,7 @@ function toDraft(initial?: PageWithContent): PageDraft {
   }
 }
 
-export function PageForm({ initial, contentWidth }: Props) {
+export function PageForm({ initial, contentWidth, typewriterEffects }: Props) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -235,6 +235,7 @@ export function PageForm({ initial, contentWidth }: Props) {
           onUploadFile={uploadInline}
           apiRef={editorApi}
           contentWidth={contentWidth}
+          typewriterEffects={typewriterEffects}
         />
         <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm lg:sticky lg:top-6 dark:border-neutral-800 dark:bg-neutral-900">
           <PageSettings draft={draft} update={update} onPickFeatured={() => setPicker('featured')} />

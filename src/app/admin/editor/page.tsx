@@ -6,5 +6,5 @@ import { PostForm } from '@/components/admin/PostForm'
 
 export default async function NewPostPage() {
   const [allCategories, allTags, settings] = await Promise.all([getCategories(), getTags(), getSettings()])
-  return <PostForm allCategories={allCategories} allTags={allTags} contentWidth={settings.contentWidth} />
+  return <PostForm allCategories={allCategories} allTags={allTags} contentWidth={settings.contentWidth} typewriterEffects={settings.motion.typewriter} />
 }

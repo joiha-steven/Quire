@@ -22,6 +22,7 @@ type Props = {
   allCategories: string[]
   allTags: string[]
   contentWidth: number
+  typewriterEffects: boolean
 }
 
 type PickTarget = 'editor' | 'gallery' | 'featured'
@@ -48,7 +49,7 @@ function toDraft(initial?: PostWithContent): Draft {
   }
 }
 
-export function PostForm({ initial, allCategories, allTags, contentWidth }: Props) {
+export function PostForm({ initial, allCategories, allTags, contentWidth, typewriterEffects }: Props) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -345,7 +346,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth }: Prop
               className="min-h-12 w-full resize-none overflow-hidden bg-transparent text-3xl font-bold leading-tight tracking-tight outline-none [field-sizing:content] placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
             />
           </div>
-          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarTop={toolbarTop} />
+          <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarTop={toolbarTop} typewriterEffects={typewriterEffects} />
         </div>
         {settingsOpen && (
           <aside className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto dark:border-neutral-800 dark:bg-neutral-900">
