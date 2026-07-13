@@ -14,7 +14,30 @@ import { BubbleMenu } from '@tiptap/react/menus'
 import { NodeSelection, type EditorState } from '@tiptap/pm/state'
 import { useAdminT } from './I18nProvider'
 
-const BTN = 'rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
+const BTN = 'grid h-8 w-8 shrink-0 place-items-center rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800'
+
+function Glyph({ children }: { children: React.ReactNode }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {children}
+    </svg>
+  )
+}
+
+function ToolButton({ label, active = false, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={active || undefined}
+      onClick={onClick}
+      className={`${BTN} ${active ? 'bg-neutral-200 text-neutral-950 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
+    >
+      {children}
+    </button>
+  )
+}
 
 export function Toolbar({
   editor,
@@ -32,73 +55,60 @@ export function Toolbar({
   stickyTop: number
 }) {
   const t = useAdminT()
-  const cls = (active: boolean) => `${BTN} ${active ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' : 'text-neutral-600'}`
-  const sep = <span className="mx-1 h-5 w-px bg-neutral-200" />
-  // Markdown/Review toggle. Kept INLINE (no ml-auto) so it trails the other
-  // buttons instead of being pushed to the right edge — where it wrapped onto a
-  // lonely second row and looked broken.
+  const sep = <span className="mx-1 h-5 w-px shrink-0 bg-neutral-200 dark:bg-neutral-700" />
   const toggle = (
-    <button type="button" onClick={onToggleRaw} className={`${BTN} font-medium text-neutral-600`}>
-      {raw ? t.tbReview : t.tbMarkdown}
-    </button>
+    <ToolButton label={raw ? t.tbReview : t.tbMarkdown} onClick={onToggleRaw}>
+      {raw ? (
+        <Glyph><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.5" /></Glyph>
+      ) : <span className="text-[10px] font-bold tracking-tight">MD</span>}
+    </ToolButton>
   )
-  // In Markdown source mode the formatting buttons don't apply to plain text.
   if (raw) {
     return (
-      <div className="sticky z-10 flex items-center border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900" style={{ top: stickyTop }}>
+      <div className="sticky z-10 flex items-center rounded-t-2xl border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900" style={{ top: stickyTop }}>
         {toggle}
       </div>
     )
   }
-  // Wrap to a second row when the buttons don't fit — a horizontal scrollbar here
-  // fights the browser's own scrollbar, so wrapping is the lesser evil.
   return (
-    <div className="sticky z-10 border-b border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-900" style={{ top: stickyTop }}>
-      <div className="flex flex-wrap items-center gap-0.5">
-      <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={cls(editor.isActive('bold'))}>
-        <strong>B</strong>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={cls(editor.isActive('italic'))}>
-        <em>I</em>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={cls(editor.isActive('underline'))}>
-        <u>U</u>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={cls(editor.isActive('strike'))}>
-        <s>S</s>
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} className={cls(editor.isActive('code'))}>
-        <code className="">{'`'}</code>
-      </button>
+    <div className="sticky z-10 rounded-t-2xl border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900" style={{ top: stickyTop }}>
+      <div className="overflow-x-auto overscroll-x-contain p-2 [scrollbar-width:thin]">
+        <div className="flex w-max min-w-full flex-nowrap items-center gap-0.5">
+      <ToolButton label={t.tbBold} active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><strong>B</strong></ToolButton>
+      <ToolButton label={t.tbItalic} active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></ToolButton>
+      <ToolButton label={t.tbUnderline} active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></ToolButton>
+      <ToolButton label="S" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></ToolButton>
+      <ToolButton label="`" active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()}><code>{'`'}</code></ToolButton>
       {sep}
-      <button type="button" onClick={() => editor.chain().focus().setParagraph().run()} className={cls(editor.isActive('paragraph'))}>P</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={cls(editor.isActive('heading', { level: 1 }))}>H1</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={cls(editor.isActive('heading', { level: 2 }))}>H2</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={cls(editor.isActive('heading', { level: 3 }))}>H3</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} className={cls(editor.isActive('heading', { level: 4 }))}>H4</button>
-      <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()} className={cls(editor.isActive('heading', { level: 5 }))}>H5</button>
+      <ToolButton label="P" active={editor.isActive('paragraph')} onClick={() => editor.chain().focus().setParagraph().run()}>P</ToolButton>
+      {([1, 2, 3, 4, 5] as const).map((level) => (
+        <ToolButton key={level} label={`H${level}`} active={editor.isActive('heading', { level })} onClick={() => editor.chain().focus().toggleHeading({ level }).run()}>
+          <span className="text-xs font-medium">H{level}</span>
+        </ToolButton>
+      ))}
       {sep}
-      <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={cls(editor.isActive('bulletList'))}>
-        • {t.tbList}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={cls(editor.isActive('orderedList'))}>
-        1. {t.tbListNumbered}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleTaskList().run()} className={cls(editor.isActive('taskList'))}>
-        ☑ {t.tbTask}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={cls(editor.isActive('blockquote'))}>
-        ❝ {t.tbQuote}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={cls(editor.isActive('codeBlock'))}>
-        {'</>'} {t.tbCodeBlock}
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className={cls(false)}>
-        ― {t.tbDivider}
-      </button>
+      <ToolButton label={t.tbList} active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+        <Glyph><circle cx="5" cy="7" r="1" fill="currentColor" stroke="none" /><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="5" cy="17" r="1" fill="currentColor" stroke="none" /><path d="M9 7h10M9 12h10M9 17h10" /></Glyph>
+      </ToolButton>
+      <ToolButton label={t.tbListNumbered} active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+        <Glyph><path d="M4 6h2v4M4 14h2l-2 4h2M10 7h10M10 12h10M10 17h10" /></Glyph>
+      </ToolButton>
+      <ToolButton label={t.tbTask} active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()}>
+        <Glyph><rect x="3.5" y="4.5" width="6" height="6" rx="1" /><path d="m5 7 1.5 1.5L9 5.5M13 7h7M4 16h5M13 16h7" /></Glyph>
+      </ToolButton>
+      <ToolButton label={t.tbQuote} active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+        <Glyph><path d="M7 8H4v4h4v4H4M17 8h-3v4h4v4h-4" /></Glyph>
+      </ToolButton>
+      <ToolButton label={t.tbCodeBlock} active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
+        <Glyph><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" /></Glyph>
+      </ToolButton>
+      <ToolButton label={t.tbDivider} onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+        <Glyph><path d="M4 12h16" /></Glyph>
+      </ToolButton>
       {sep}
-      <button
-        type="button"
+      <ToolButton
+        label={t.tbLink}
+        active={editor.isActive('link')}
         onClick={() => {
           // Prefill the existing href so an old link can be edited (not just
           // created). extendMarkRange covers the whole link when the cursor is
@@ -110,40 +120,25 @@ export function Toolbar({
           if (url === '') range.unsetLink().run() // cleared the URL -> remove the link
           else range.setLink({ href: url }).run()
         }}
-        className={cls(editor.isActive('link'))}
       >
-        {t.tbLink}
-      </button>
-      <button type="button" onClick={onPickImage} className={cls(false)}>
-        {t.tbImage}
-      </button>
-      <button type="button" onClick={onPickGallery} className={cls(false)}>
-        {t.tbGallery}
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-        className={cls(false)}
-      >
-        {t.tbTable}
-      </button>
-      {sep}
-      {toggle}
-      </div>
-      {/* Table controls appear only with the cursor inside a table — that's the
-          only place add-column / add-row apply (insertTable alone gave a fixed
-          3×3 with no way to grow it). */}
+        <Glyph><path d="M10 13a4.5 4.5 0 0 0 6.4.1l2-2a4.5 4.5 0 0 0-6.4-6.4l-1.1 1.1M14 11a4.5 4.5 0 0 0-6.4-.1l-2 2a4.5 4.5 0 0 0 6.4 6.4l1.1-1.1" /></Glyph>
+      </ToolButton>
+      <ToolButton label={t.tbImage} onClick={onPickImage}><Glyph><rect x="3.5" y="4.5" width="17" height="15" rx="1.5" /><circle cx="8" cy="9" r="1.5" /><path d="m4 17 5-5 4 4 3-3 4 4" /></Glyph></ToolButton>
+      <ToolButton label={t.tbGallery} onClick={onPickGallery}><Glyph><rect x="5" y="5" width="14" height="14" rx="1.5" /><path d="M8 5V3h13v13h-2M6 16l4-4 3 3 2-2 4 4" /></Glyph></ToolButton>
+      <ToolButton label={t.tbTable} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Glyph><rect x="3.5" y="4.5" width="17" height="15" rx="1.5" /><path d="M3.5 10h17M9 4.5v15M15 4.5v15" /></Glyph></ToolButton>
+      {sep}{toggle}
       {editor.isActive('table') && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 border-t border-neutral-100 pt-1.5 dark:border-neutral-800">
-          <span className="px-1 text-xs font-medium text-neutral-400">{t.tbTableTools}</span>
-          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className={cls(false)}>{t.tbColAdd}</button>
-          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()} className={cls(false)}>{t.tbColDel}</button>
-          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className={cls(false)}>{t.tbRowAdd}</button>
-          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()} className={cls(false)}>{t.tbRowDel}</button>
+        <>
           {sep}
-          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()} className={cls(false)}>{t.tbTableDelete}</button>
-        </div>
+          <ToolButton label={t.tbColAdd} onClick={() => editor.chain().focus().addColumnAfter().run()}><span className="text-[10px] font-bold">C+</span></ToolButton>
+          <ToolButton label={t.tbColDel} onClick={() => editor.chain().focus().deleteColumn().run()}><span className="text-[10px] font-bold">C−</span></ToolButton>
+          <ToolButton label={t.tbRowAdd} onClick={() => editor.chain().focus().addRowAfter().run()}><span className="text-[10px] font-bold">R+</span></ToolButton>
+          <ToolButton label={t.tbRowDel} onClick={() => editor.chain().focus().deleteRow().run()}><span className="text-[10px] font-bold">R−</span></ToolButton>
+          <ToolButton label={t.tbTableDelete} onClick={() => editor.chain().focus().deleteTable().run()}><Glyph><path d="M5 7h14M9 7V5h6v2M7 7l1 12h8l1-12" /></Glyph></ToolButton>
+        </>
       )}
+        </div>
+      </div>
     </div>
   )
 }

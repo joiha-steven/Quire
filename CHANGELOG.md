@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-07-13 — editor toolbar and admin footer correction
+
+- **Editor toolbar:** converted descriptive actions to compact line icons while preserving B/I/U/S,
+  P, and H1–H5 as familiar text marks. The toolbar is permanently one row, horizontally scrollable
+  at every breakpoint, and table actions join the same row contextually. Removing `overflow-hidden`
+  from the editor frame restores reliable sticky behavior while scrolling.
+- **Editor spacing/title:** reduced the gap below the action header and above the writing frame;
+  post titles now auto-grow to their complete wrapped height instead of being clipped to two rows.
+- **Sidebar footer:** light/dark now carries its sun/moon icon and shares the exact row geometry of
+  Clear cache and Sign out. Admin canvas changed from cool gray to a true neutral `#f5f5f5`.
+
 ## 2026-07-13 — modern admin design system
 
 - **Admin-only rounded component system:** the global square-corner rule now excludes `.admin-shell`.

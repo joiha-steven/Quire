@@ -76,7 +76,12 @@ export function ThemeToggle({
         aria-label={s.theme}
         className={variant === 'text' ? triggerClassName : ICON_BTN}
       >
-        {variant === 'text' ? (isDark ? s.themeDark : s.themeLight) : isDark ? <MoonIcon /> : <SunIcon />}
+        {variant === 'text' ? (
+          <>
+            {isDark ? <MoonIcon /> : <SunIcon />}
+            <span>{isDark ? s.themeDark : s.themeLight}</span>
+          </>
+        ) : isDark ? <MoonIcon /> : <SunIcon />}
       </button>
       {open && (
         <>

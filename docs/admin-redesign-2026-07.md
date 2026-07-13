@@ -107,3 +107,5 @@ The second visual pass tightened the system after reviewing every admin surface 
 - Dashboard stats are independent cards instead of a fused spreadsheet strip; traffic, attention, top posts, and activity use the same surface hierarchy.
 - Content, Settings, Analytics, Media, Trash, Comments, Log, and Help share segmented tabs, rounded tables/panels, standard controls, and row hover feedback.
 - Editor focus mode is preserved. The action header, writing frame, and property inspector are separate related surfaces; sticky toolbar, autosave, preview, revisions, media, taxonomy, and publish flows are unchanged.
+- Editor formatting is a single non-wrapping icon row with horizontal overflow on narrow screens. The editor frame must not use `overflow-hidden`, because that breaks the nested sticky toolbar. Titles use content-driven height so long titles are never clipped.
+- Sidebar footer controls always use the same icon + label row structure; the theme control must show its sun/moon glyph before the applied mode label.
