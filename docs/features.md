@@ -182,7 +182,7 @@
   class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
   **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontFields`
-  (built-in `fontPreset` picker + `fontChromeInter` toggle)/`FontUpload`/`TypographyFields`/`AdvancedFields`
+  (built-in `fontPreset` picker + `chromeFont` selector)/`FontUpload`/`TypographyFields`/`AdvancedFields`
   (Rendering card: font smoothing + the **Motion** engine toggle → `settings.motion.enabled` + the
   editor **Typewriter feedback** option → `settings.motion.typewriter`) + custom-CSS; **SEO**
   `SeoFields`; **Integrations** `BackupFields` + `McpFields` + `CloudflareFields` + `ImportFields`

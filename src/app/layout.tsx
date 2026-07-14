@@ -3,7 +3,7 @@ import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
-import { fontPresetCss, fontPreloadHref } from '@/lib/themes'
+import { fontPresetCss, fontPreloadHref, chromeFontCss, chromeFontPreloadHref } from '@/lib/themes'
 
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
@@ -49,7 +49,8 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset, fontPreset, fontChromeInter, enabledPalettes, typography, customFont, motion } = await getSettings()
+  const { language, themes, themePreset, fontPreset, chromeFont, enabledPalettes, typography, customFont, motion } = await getSettings()
+  const chromePreload = chromeFontPreloadHref(chromeFont)
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   // data-motion is server-rendered from settings (site-wide), so the motion engine
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
@@ -57,17 +58,20 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang={language} data-motion={motion.enabled ? 'on' : 'off'} className="h-full">
       <body className="min-h-full">
-        {/* Preload the Latin subset of the CHOSEN font (not always Inter) — no swap flash. */}
+        {/* Preload the Latin subset of the CHOSEN reading font (not always Inter) — no swap flash. */}
         <link rel="preload" href={fontPreloadHref(fontPreset)} as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* A self-hosted chrome font (IBM Plex Mono) preloads its Latin subset too — the
+            chrome paints on first load, so a swap flash there is the most visible. */}
+        {chromePreload && <link rel="preload" href={chromePreload} as="font" type="font/woff2" crossOrigin="anonymous" />}
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
         {/* Owner type scale → fs/lh/ls vars, then the reading font (--font-reading:
-            chosen built-in, then any uploaded custom font which wins). When the owner
-            turns OFF "keep chrome in Inter", the last rule points --font-sans at the
-            reading font too, so the whole interface follows the chosen font. */}
+            chosen built-in, then any uploaded custom font which wins). The chrome font
+            comes LAST so it can point --font-sans at the resolved reading font ('reading')
+            or at IBM Plex Mono ('plex-mono'); 'inter' emits nothing (globals baseline). */}
         <style dangerouslySetInnerHTML={{ __html:
           typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) +
-          (fontChromeInter ? '' : ':root{--font-sans:var(--font-reading)}') }} />
+          chromeFontCss(chromeFont) }} />
         <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes) }} />
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
