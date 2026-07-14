@@ -31,15 +31,16 @@
   categoryLabel, deck, bookText }` (all default on EXCEPT `bookText`, which is off; Admin → Settings →
   Tính năng); gated in header / `/search` / post page. `bookText` = book-page typesetting on the post
   body (first-line indent + justify ≥600px).
-- **Sidebar** (`sidebar`): four blocks in the left gutter of every listing page, in order —
-  **categories** (with published-post counts, `getPublicTaxonomy()`), **most viewed** (auto: top 5
-  public posts by all-time views, `getViewTotals()` joined to `getPublicPosts()`), **featured**
-  (owner-curated `settings.featured` slugs, in that order, first 5, dropped when a slug stops being
-  public), and **tags**. Assembled in `ListingSidebar` → `SideIndex` (the post blocks reuse
-  `IndexBlock`); each block self-hides when empty. `toc` puts a post's headings in that same gutter.
-  All are `<Rail>`; below the rail breakpoint the markup becomes a slide-out drawer opened by a small
-  edge handle. Featured is curated in **Admin → Settings → Content** (`FeaturedField`, an ordered
-  picker); `getViewTotals` uses a GET rpc so the pages stay ISR (see `docs/features.md` note in code).
+- **Sidebar** (`sidebar`): the site menu plus content blocks in the left gutter, in order — **menu**
+  (`SidebarMenu`, the site nav — moved out of the header), **categories** (with published-post counts,
+  `getPublicTaxonomy()`), **most viewed** (auto: top 5 public posts by all-time views, `getViewTotals()`
+  joined to `getPublicPosts()`), **featured** (owner-curated `settings.featured` slugs, in that order,
+  first 5, dropped when a slug stops being public), and **tags**. Listing pages assemble it in
+  `ListingSidebar` → `SidebarMenu` + `SideIndex` (post blocks reuse `IndexBlock`); post/page rails
+  pair `SidebarMenu` with the `toc`. Each block self-hides when empty. All are `<Rail>`; below the rail
+  breakpoint the markup becomes a slide-out drawer opened by the **header menu button** (`RailToggle`,
+  mobile only) — there is no separate header menu dropdown. Featured is curated in **Admin → Settings →
+  Content** (`FeaturedField`, an ordered picker); `getViewTotals` uses a GET rpc so the pages stay ISR.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).
@@ -61,9 +62,9 @@
   ARE headings, else a plain non-clickable **"Mục lục"** (`tocIndex`). One line under it joins the
   present tags/categories/comments labels (comments prefixed with their server-rendered count) and
   jumps to the first existing section via `TOC_ANCHORS` + `scroll-mt-24` targets. Collapsible on
-  every viewport from a text-free left-edge handle — default open + pinned on desktop (xl+), default
-  closed + outside-tap/Escape-dismissable on mobile. Solid `bg-bg`; `PostContent` assigns slug ids.
-  Phones get wider side gutters (`px-8 sm:px-5`) so the handle clears the text.
+  every viewport — pinned in the desktop gutter, and on mobile it shares the sidebar drawer (opened
+  from the header menu button `RailToggle`), outside-tap/Escape-dismissable. Solid `bg-bg`;
+  `PostContent` assigns slug ids. Phones get wider side gutters (`px-8 sm:px-5`) for the reading text.
 - **GOTCHA:** the global unlayered `hr { margin:0 }` beats Tailwind margin utilities — put
   divider spacing on a wrapper div, not on the `<hr>`.
 - **Heading ids are de-duped** (2nd `foo` → `foo-2`): `dedupeHeadingIds` (PostContent) and

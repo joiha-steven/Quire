@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-07-14 — site menu moves into the sidebar; wider rail
+
+- The **site menu** now lives at the top of the sidebar (above Categories) instead of a header
+  dropdown. On desktop it sits in the always-visible left rail; the header menu button is gone.
+- On mobile the header keeps a menu button, but it now opens the **sidebar drawer** (menu + the rest)
+  rather than a separate dropdown — one drawer for everything. The old edge-handle tab is retired.
+- The desktop rail is **wider** (210 → 250px) so longer titles wrap less; the gap tightens slightly so
+  laptops keep the gutter rail. The mobile drawer is unchanged.
+
 ## 2026-07-14 — sidebar: most-viewed & featured posts
 
 - The listing sidebar now shows two new blocks between **Categories** and **Tags**: **Most viewed**

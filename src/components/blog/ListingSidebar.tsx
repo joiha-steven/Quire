@@ -12,11 +12,12 @@ import { t } from '@/lib/i18n'
 import type { SiteLang } from '@/types'
 import { Rail } from './Rail'
 import { SideIndex } from './SideIndex'
+import { SidebarMenu } from './SidebarMenu'
 
 const LIST_MAX = 5 // rows shown per post block (most viewed / featured)
 
 export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; activeHref?: string }) {
-  const [{ categories, tags }, { featured: featuredSlugs }, posts, viewTotals] = await Promise.all([
+  const [{ categories, tags }, { featured: featuredSlugs, menu }, posts, viewTotals] = await Promise.all([
     getPublicTaxonomy(),
     getSettings(),
     getPublicPosts(),
@@ -39,21 +40,25 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
     .slice(0, LIST_MAX)
     .map((slug) => ({ href: `/${slug}`, label: titleBySlug.get(slug) ?? '' }))
 
-  if (categories.length === 0 && mostViewed.length === 0 && featured.length === 0 && tags.length === 0) return null
+  const empty = menu.length === 0 && categories.length === 0 && mostViewed.length === 0 && featured.length === 0 && tags.length === 0
+  if (empty) return null
   const labels = t(lang)
   return (
-    <Rail label={labels.categoriesTitle}>
-      <SideIndex
-        categoriesTitle={labels.categoriesTitle}
-        mostViewedTitle={labels.mostViewedTitle}
-        featuredTitle={labels.featuredTitle}
-        tagsTitle={labels.tagsTitle}
-        categories={categories.map((c) => ({ href: `/category/${termSlug(c.name)}`, label: c.name, count: c.count }))}
-        mostViewed={mostViewed}
-        featured={featured}
-        tags={tags.map((tag) => ({ href: `/tag/${termSlug(tag.name)}`, label: tag.name }))}
-        activeHref={activeHref}
-      />
+    <Rail>
+      <div className="space-y-7">
+        <SidebarMenu items={menu} />
+        <SideIndex
+          categoriesTitle={labels.categoriesTitle}
+          mostViewedTitle={labels.mostViewedTitle}
+          featuredTitle={labels.featuredTitle}
+          tagsTitle={labels.tagsTitle}
+          categories={categories.map((c) => ({ href: `/category/${termSlug(c.name)}`, label: c.name, count: c.count }))}
+          mostViewed={mostViewed}
+          featured={featured}
+          tags={tags.map((tag) => ({ href: `/tag/${termSlug(tag.name)}`, label: tag.name }))}
+          activeHref={activeHref}
+        />
+      </div>
     </Rail>
   )
 }

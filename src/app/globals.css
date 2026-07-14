@@ -322,8 +322,8 @@ hr {
    wider column simply keeps the rail hidden for longer.
 --------------------------------------------------------------------------- */
 :root {
-  --rail-w: 210px;
-  --rail-gap: 48px;
+  --rail-w: 250px;
+  --rail-gap: 40px;
   /* Gap between a rail row's text and the accent marker beside it. */
   --rail-pad: 14px;
   /* Space between the header rule and the first line of content. The rail's top
@@ -358,45 +358,10 @@ hr {
   transform: none;
 }
 
-/* The handle: a slim tab on the screen edge that travels with the drawer.
-   Centred with `translate`, NOT `transform` — the global press feedback
-   (`button:active{transform:scale(.97)}`) would otherwise drop the -50% offset
-   and make the tab jump down the screen on every tap. */
-.rail-handle {
-  position: fixed;
-  top: 50%;
-  left: 0;
-  z-index: 41;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 64px;
-  translate: 0 -50%;
-  color: color-mix(in srgb, var(--c-meta) 82%, var(--c-heading));
-  background: color-mix(in srgb, var(--c-bg) 94%, var(--c-rule));
-  border: 1px solid var(--c-rule);
-  border-left: 0;
-  cursor: pointer;
-  opacity: .82;
-  transition: left var(--dur-base) var(--ease), color var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
-}
-.rail-handle:hover {
-  color: var(--c-heading);
-  background: color-mix(in srgb, var(--c-bg) 88%, var(--c-rule));
-  opacity: 1;
-}
-.rail-handle svg {
-  transition: transform var(--dur-base) var(--ease);
-}
-:root[data-rail='open'] .rail-handle {
-  left: min(300px, 84vw);
-}
-:root[data-rail='open'] .rail-handle svg {
-  transform: rotate(180deg);
-}
-
-/* Tap-anywhere-else to close. No dim: the drawer already owns a solid surface. */
+/* The drawer is opened by the header menu button (RailToggle, mobile only) — it flips
+   <html data-rail>. Above the rail breakpoint the layout hides that button and promotes
+   the drawer into the gutter. Tap-anywhere-else to close. No dim: the drawer already owns
+   a solid surface. */
 .rail-scrim {
   position: fixed;
   inset: 0;

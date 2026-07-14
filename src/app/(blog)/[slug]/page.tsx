@@ -15,6 +15,7 @@ import { PostContent } from '@/components/blog/PostContent'
 import { JsonLd, articleSchema, breadcrumbSchema } from '@/components/blog/JsonLd'
 import { Toc } from '@/components/blog/Toc'
 import { Rail } from '@/components/blog/Rail'
+import { SidebarMenu } from '@/components/blog/SidebarMenu'
 import { TOC_ANCHORS } from '@/lib/toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
@@ -182,12 +183,16 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           {features.deck && post.excerpt && <p className="mt-4 fs-h4 text-meta">{post.excerpt}</p>}
         </header>
 
-        {/* The ToC lives in the left-gutter rail on wide screens; below the rail
-            breakpoint the same markup is a slide-out drawer. Placed after the
-            title (it is absolutely positioned) so the h1 opens the outline. */}
-        {showToc && (
-          <Rail label={tx.tocIndex}>
-            <Toc headings={headings} title={tx.tocIndex} postTitle={post.title} meta={tocMeta} />
+        {/* The sidebar (site menu + this post's ToC) lives in the left-gutter rail on wide
+            screens; below the rail breakpoint the same markup is a slide-out drawer opened
+            from the header. Placed after the title (absolutely positioned) so the h1 opens
+            the outline. Rendered whenever there's a menu or a ToC. */}
+        {(settings.menu.length > 0 || showToc) && (
+          <Rail>
+            <div className="space-y-7">
+              <SidebarMenu items={settings.menu} />
+              {showToc && <Toc headings={headings} title={tx.tocIndex} postTitle={post.title} meta={tocMeta} />}
+            </div>
           </Rail>
         )}
 
