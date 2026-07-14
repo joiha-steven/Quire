@@ -144,6 +144,46 @@ export function fontPresetCss(id: string): string {
   return `:root{--font-reading:${p.stack}${bold}}`
 }
 
+// System-chrome font (Admin → Appearance). Independent of the reading font: it drives
+// --font-sans (header/footer/rail/dates/meta/admin) and leaves --font-reading (the
+// article body) alone. `sans` is the CSS font-family it points --font-sans at, or null
+// for the Inter default (no override — globals' baseline stands):
+//   inter     -> Inter (default)
+//   reading   -> follow the chosen reading font (the old `fontChromeInter: false`)
+//   plex-mono -> IBM Plex Mono, the self-hosted "code" face declared in globals.css
+// Add one = append here (+ its @font-face in globals.css if it's self-hosted).
+export type ChromeFont = { id: string; name: string; sans: string | null }
+export const CHROME_FONTS: ChromeFont[] = [
+  { id: 'inter', name: 'Inter', sans: null },
+  { id: 'reading', name: 'Reading font', sans: 'var(--font-reading)' },
+  { id: 'plex-mono', name: 'IBM Plex Mono', sans: `'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
+]
+
+export const DEFAULT_CHROME_FONT = 'inter'
+
+export function getChromeFont(id: string): ChromeFont {
+  return CHROME_FONTS.find((f) => f.id === id) ?? CHROME_FONTS[0]
+}
+
+export function isChromeFontId(id: unknown): id is string {
+  return typeof id === 'string' && CHROME_FONTS.some((f) => f.id === id)
+}
+
+// Repoint --font-sans at the chosen chrome font. Emitted in layout AFTER fontPresetCss +
+// fontToCss so 'reading' resolves the reading font already set; '' for the Inter default
+// (globals baseline stands).
+export function chromeFontCss(id: string): string {
+  const f = getChromeFont(id)
+  return f.sans ? `:root{--font-sans:${f.sans}}` : ''
+}
+
+// Latin subset to <link rel=preload> when a chrome font ships its own files (only
+// IBM Plex Mono). null = nothing extra (Inter is already the baseline; 'reading'
+// preloads via the reading font's fontPreloadHref).
+export function chromeFontPreloadHref(id: string): string | null {
+  return id === 'plex-mono' ? '/fonts/plexmono-400-latin.woff2' : null
+}
+
 // TRUE neutral grayscale — zero hue, the Quire Blog house style. (Earlier values had a
 // faint warm/blue cast: bg/rule read as cream, meta/text leaned blue. All pure gray
 // now; `rule` is a touch lighter so the menu hover reads as a soft, colourless gray.)

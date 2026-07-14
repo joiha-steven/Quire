@@ -116,9 +116,14 @@
 - **Two font handles — chosen font ≠ site font.** `--font-reading` is the reader's own words (post
   body + title, list cards, comment body, the editor `.prose`) and is what `fontPresetCss` /
   `fontToCss` point (custom upload wins). `--font-sans` is the system-chrome face (dates/reading-time,
-  related/taxonomy, header, footer, rail, admin). The `fontChromeInter` toggle (default on) keeps
-  `--font-sans` = Inter; off, the layout points `--font-sans` at `--font-reading` so the whole
-  interface follows the chosen font. Apply reading text with the `reading-font` class (`.prose` sets it).
+  related/taxonomy, header, footer, rail, admin), driven INDEPENDENTLY by the `chromeFont` selector
+  (`CHROME_FONTS` in lib/themes.ts, Admin → Appearance): `inter` (default, no override) · `reading`
+  (points `--font-sans` at `--font-reading` so the chrome follows the reading font) · `plex-mono`
+  (self-hosted IBM Plex Mono — a "code" chrome while the body stays readable; declared per
+  unicode-range in globals.css, two static weights range-mapped 400/600, preloaded when active).
+  `chromeFontCss` emits the override LAST in the layout (after the reading font resolves); the legacy
+  boolean `fontChromeInter` migrates on read (`false` → `reading`). Apply reading text with the
+  `reading-font` class (`.prose` sets it).
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.

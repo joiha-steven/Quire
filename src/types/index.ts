@@ -174,7 +174,7 @@ export type SiteSettings = {
   showLogo: boolean
   showDescription: boolean
   fontPreset: string // built-in font choice id (lib/themes FONT_PRESETS); '' -> Inter
-  fontChromeInter: boolean // true = keep system chrome (header/footer/rail/meta/admin) in Inter; false = chrome follows the chosen font
+  chromeFont: string // system-chrome font (lib/themes CHROME_FONTS): 'inter' | 'reading' (follow the reading font) | 'plex-mono' (IBM Plex Mono). Drives --font-sans (header/footer/rail/meta/admin); leaves the article body alone
   faviconUrl: string // browser-tab icon; '' = the bundled default favicon
   appIconUrl: string // PWA / home-screen app icon (square); '' = favicon, else bundled default
   contentWidth: number // px, max width of the content column (desktop)

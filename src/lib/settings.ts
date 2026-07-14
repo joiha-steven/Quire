@@ -8,7 +8,7 @@ import { collapseBlob, expandBlob, deleteByPathname } from '@/lib/blob'
 import { renderLogo } from '@/lib/files'
 import { db } from '@/lib/db'
 import { isSiteLang } from '@/locales/langs'
-import { DEFAULT_PRESET_ID, isPresetId, isFontPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, DEFAULT_FONT_PRESET, TYPE_ROLES } from '@/lib/themes'
+import { DEFAULT_PRESET_ID, isPresetId, isFontPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, DEFAULT_FONT_PRESET, isChromeFontId, DEFAULT_CHROME_FONT, TYPE_ROLES } from '@/lib/themes'
 import {
   sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp, sanitizeMotion,
   sanitizeBackups, sanitizeComments, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
@@ -92,7 +92,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showLogo: false,
   showDescription: true,
   fontPreset: DEFAULT_FONT_PRESET,
-  fontChromeInter: true,
+  chromeFont: DEFAULT_CHROME_FONT,
   faviconUrl: '',
   appIconUrl: '',
   contentWidth: 672,
@@ -127,6 +127,15 @@ export function resolveAppIcon(s: SiteSettings): string {
   return s.appIconUrl || s.faviconUrl || '/app-icon.png'
 }
 
+// Back-compat: the old boolean `fontChromeInter` (true = Inter chrome, false = chrome
+// follows the reading font) migrates to the `chromeFont` selector. A stored `chromeFont`
+// id wins; a legacy `false` maps to 'reading'; anything else to the Inter default.
+function resolveChromeFont(stored: Partial<SiteSettings> & { fontChromeInter?: unknown }): string {
+  if (isChromeFontId(stored.chromeFont)) return stored.chromeFont
+  if (stored.fontChromeInter === false) return 'reading'
+  return DEFAULT_CHROME_FONT
+}
+
 // Settings merged over defaults; defaults on any error. `React.cache` dedupes per
 // render only, so a saved setting is live next request.
 export const getSettings = cache(async (): Promise<SiteSettings> => {
@@ -148,7 +157,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       customCss: sanitizeCss(stored.customCss),
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
       fontPreset: isFontPresetId(stored.fontPreset) ? stored.fontPreset : DEFAULT_FONT_PRESET,
-      fontChromeInter: typeof stored.fontChromeInter === 'boolean' ? stored.fontChromeInter : true,
+      chromeFont: resolveChromeFont(stored),
       enabledPalettes: sanitizeEnabledPalettes(stored.enabledPalettes, isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID),
       themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
       typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
@@ -220,7 +229,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     menu: sanitizeMenu(input.menu, current.menu),
     themePreset,
     fontPreset: isFontPresetId(input.fontPreset) ? input.fontPreset : current.fontPreset,
-    fontChromeInter: typeof input.fontChromeInter === 'boolean' ? input.fontChromeInter : current.fontChromeInter,
+    chromeFont: isChromeFontId(input.chromeFont) ? input.chromeFont : current.chromeFont,
     enabledPalettes: sanitizeEnabledPalettes(input.enabledPalettes ?? current.enabledPalettes, themePreset),
     themes: sanitizeThemes(input.themes, current.themes),
     typography: sanitizeTypography(input.typography, current.typography),

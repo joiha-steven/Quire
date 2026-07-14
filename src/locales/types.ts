@@ -297,8 +297,9 @@ export type AdminStrings = {
   // custom font (per weight)
   cardFont: string
   fontPresetHint: string
-  fontChromeInter: string
-  fontChromeInterDesc: string
+  chromeFontLabel: string
+  chromeFontReading: string
+  chromeFontHint: string
   fontHint: string
   fontFamilyLabel: string
   fontDefault: string
