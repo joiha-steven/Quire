@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-07-14 — fix intermittent image-upload / save-draft failures
+
+- Fixed a native-only bug where generating an image's responsive variants/thumbnails read the
+  original back over HTTP from its store URL. On the local-filesystem store that URL is a
+  relative `/uploads/...` path with no origin, so the server-side fetch threw "Failed to parse
+  URL" — surfacing as an occasional upload error, a failed **Save draft** (the save also
+  finalizes the images it embeds), and hourly cron errors. Variants/thumbs now read the bytes
+  straight from the store; a missing original is skipped instead of throwing.
+
 ## 2026-07-14 — IBM Plex Mono chrome tracking
 
 - Tightened the interface tracking by `-0.04em` **only** when the system font is IBM Plex Mono, so the
