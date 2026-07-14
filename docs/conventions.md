@@ -122,8 +122,11 @@
   (self-hosted IBM Plex Mono — a "code" chrome while the body stays readable; declared per
   unicode-range in globals.css, two static weights range-mapped 400/600, preloaded when active).
   `chromeFontCss` emits the override LAST in the layout (after the reading font resolves); the legacy
-  boolean `fontChromeInter` migrates on read (`false` → `reading`). Apply reading text with the
-  `reading-font` class (`.prose` sets it).
+  boolean `fontChromeInter` migrates on read (`false` → `reading`). Layout also stamps
+  `<html data-chrome-font>`; a globals rule uses `[data-chrome-font="plex-mono"]` to pull the wide
+  mono chrome in by `-0.04em` (on `body`/`.t-small`/`.t-body` — the reader's `.prose`/`.fs-*` keep
+  their own tracking, other chrome fonts keep default). Apply reading text with the `reading-font`
+  class (`.prose` sets it).
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.
