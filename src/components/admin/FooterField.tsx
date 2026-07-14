@@ -53,7 +53,7 @@ export function FooterField({ value, onChange }: { value: string; onChange: (v: 
         <p className="mb-1 text-xs text-neutral-400 dark:text-neutral-500">{t.tbReview}</p>
         <div
           className="text-sm text-neutral-600 dark:text-neutral-300 [&_a]:underline"
-          dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(value) }}
+          dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(value, { newTab: true }) }}
         />
       </div>
     </div>

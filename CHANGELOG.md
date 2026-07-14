@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-07-14 — sidebar refinements
+
+- Sidebar order is now **menu → most viewed → featured → categories → tags** (categories sit directly
+  above tags).
+- **Most viewed** defaults to **3** posts and is configurable in **Settings → Site → Layout & menu**
+  (0 hides the block).
+- The **Featured** picker moved to **Settings → Site → Layout & menu**, right under the site menu.
+- Post/page **reading views no longer show the menu/blocks** in the rail — only the table of contents.
+  The main (listing) sidebar keeps the full menu + blocks.
+- **Footer links open in a new tab** by default (external links only).
+
 ## 2026-07-14 — site menu moves into the sidebar; wider rail
 
 - The **site menu** now lives at the top of the sidebar (above Categories) instead of a header

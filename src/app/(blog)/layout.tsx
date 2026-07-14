@@ -62,7 +62,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
   const showLogo = settings.showLogo && settings.logoUrl
   // Owner-authored footer: expand {year}/{title}, then render the limited inline
   // markdown (escape-first, so it can never inject unsafe markup).
-  const footerHtml = renderInlineMarkdown(expandFooterTokens(settings.footer, settings.title))
+  const footerHtml = renderInlineMarkdown(expandFooterTokens(settings.footer, settings.title), { newTab: true })
   return (
     <div
       className={`mx-auto flex min-h-screen w-full flex-col px-8 sm:px-5${settings.features.bookText ? ' book-text' : ''}`}
@@ -104,9 +104,9 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
               {settings.features.search && <SearchTrigger lang={settings.language} />}
               <PaletteToggle lang={settings.language} palettes={enabledPaletteOptions(settings.themes, settings.enabledPalettes)} defaultId={settings.themePreset} />
               <ThemeToggle lang={settings.language} />
-              {/* Mobile-only: opens the sidebar drawer (which now carries the menu). Above
-                  the rail breakpoint the sidebar is the gutter rail, so the button hides. */}
-              {settings.menu.length > 0 && <RailToggle lang={settings.language} />}
+              {/* Mobile-only: opens the sidebar drawer. Hidden above the rail breakpoint
+                  (gutter rail) and self-hides on pages with no rail (see RailToggle). */}
+              <RailToggle lang={settings.language} />
             </div>
           </div>
           {settings.showDescription && settings.description && (

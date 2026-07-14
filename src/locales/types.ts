@@ -373,6 +373,8 @@ export type AdminStrings = {
   featuredAdd: string
   moveUp: string
   moveDown: string
+  mostViewedCount: string
+  mostViewedCountHint: string
   commentsEnable: string
   commentsEnableDesc: string
   commentsTurnstile: string

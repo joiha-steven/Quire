@@ -1,17 +1,18 @@
 'use client'
 
-// Controlled layout + header-menu fields. Parent owns state + save.
+// Controlled layout + menu + sidebar fields. Parent owns state + save.
 import type { SiteSettings } from '@/types'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { FeaturedField } from './FeaturedField'
 import { useAdminT } from './I18nProvider'
 
 const MENU_FIELD =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-400'
 
-type Props = { s: SiteSettings; update: (p: Partial<SiteSettings>) => void }
+type Props = { s: SiteSettings; update: (p: Partial<SiteSettings>) => void; posts: { slug: string; title: string }[] }
 
-export function LayoutMenuFields({ s, update }: Props) {
+export function LayoutMenuFields({ s, update, posts }: Props) {
   const t = useAdminT()
 
   return (
@@ -70,6 +71,24 @@ export function LayoutMenuFields({ s, update }: Props) {
           {t.menuAdd}
         </Button>
         <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.menuHint}</p>
+      </div>
+
+      {/* Sidebar blocks: featured picker + how many "most viewed" to show. */}
+      <div className="space-y-3 border-t border-neutral-200 pt-5 dark:border-neutral-800">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.cardFeatured}</span>
+        <FeaturedField posts={posts} value={s.featured} onChange={(featured) => update({ featured })} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Input
+          label={t.mostViewedCount}
+          type="number"
+          min={0}
+          max={10}
+          value={s.mostViewedCount}
+          onChange={(e) => update({ mostViewedCount: Number(e.target.value) })}
+        />
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.mostViewedCountHint}</p>
       </div>
     </div>
   )
