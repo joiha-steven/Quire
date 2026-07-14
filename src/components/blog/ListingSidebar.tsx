@@ -14,10 +14,10 @@ import { Rail } from './Rail'
 import { SideIndex } from './SideIndex'
 import { SidebarMenu } from './SidebarMenu'
 
-const LIST_MAX = 5 // rows shown per post block (most viewed / featured)
+const FEATURED_MAX = 5 // curated posts shown in the "Featured" block
 
 export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; activeHref?: string }) {
-  const [{ categories, tags }, { featured: featuredSlugs, menu }, posts, viewTotals] = await Promise.all([
+  const [{ categories, tags }, { featured: featuredSlugs, menu, mostViewedCount }, posts, viewTotals] = await Promise.all([
     getPublicTaxonomy(),
     getSettings(),
     getPublicPosts(),
@@ -26,18 +26,19 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
   // Title lookup for the public posts; a featured/most-viewed slug not here is dropped.
   const titleBySlug = new Map(posts.map((p) => [p.slug, p.title]))
 
-  // Most viewed: public posts ranked by all-time views (viewTotals keyed by path "/slug").
+  // Most viewed: public posts ranked by all-time views (viewTotals keyed by path "/slug");
+  // how many show is owner-set (`mostViewedCount`, 0 hides the block).
   const mostViewed = posts
     .map((p) => ({ slug: p.slug, title: p.title, views: viewTotals[`/${p.slug}`] ?? 0 }))
     .filter((p) => p.views > 0)
     .sort((a, b) => b.views - a.views)
-    .slice(0, LIST_MAX)
+    .slice(0, mostViewedCount)
     .map((p) => ({ href: `/${p.slug}`, label: p.title }))
 
   // Featured: owner order, keeping only slugs that are currently public.
   const featured = featuredSlugs
     .filter((slug) => titleBySlug.has(slug))
-    .slice(0, LIST_MAX)
+    .slice(0, FEATURED_MAX)
     .map((slug) => ({ href: `/${slug}`, label: titleBySlug.get(slug) ?? '' }))
 
   const empty = menu.length === 0 && categories.length === 0 && mostViewed.length === 0 && featured.length === 0 && tags.length === 0

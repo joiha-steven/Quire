@@ -27,7 +27,6 @@ import { BackupFields } from './BackupFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FooterField } from './FooterField'
 import { FeatureFields } from './FeatureFields'
-import { FeaturedField } from './FeaturedField'
 import { CommentFields } from './CommentFields'
 import { CommentKeys } from './CommentKeys'
 import { CloudflareFields } from './CloudflareFields'
@@ -94,7 +93,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
             <SiteFields s={s} update={update} />
           </Card>
           <Card title={t.cardLayout}>
-            <LayoutMenuFields s={s} update={update} />
+            <LayoutMenuFields s={s} update={update} posts={posts} />
             <div className="mt-6 border-t border-neutral-200 pt-5 dark:border-neutral-800">
               <span className="mb-2 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.footerContent}</span>
               <FooterField value={s.footer} onChange={(footer) => update({ footer })} />
@@ -117,9 +116,6 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           <Card title={t.cardComments}>
             <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
             <CommentKeys comments={s.comments} env={commentEnv} />
-          </Card>
-          <Card title={t.cardFeatured}>
-            <FeaturedField posts={posts} value={s.featured} onChange={(featured) => update({ featured })} />
           </Card>
         </div>
       )}

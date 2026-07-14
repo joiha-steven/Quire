@@ -20,13 +20,16 @@ function safeHref(url: string): string | null {
   return null
 }
 
-// Render the limited footer source to SAFE html.
-export function renderInlineMarkdown(input: string): string {
+// Render the limited footer source to SAFE html. `newTab` opens EXTERNAL (http/https)
+// links in a new tab (default for footer links); internal/anchor/mailto stay in-tab.
+export function renderInlineMarkdown(input: string, opts?: { newTab?: boolean }): string {
   let s = escapeHtml(input.slice(0, MAX_LEN))
   // Links first so emphasis inside a label still resolves afterwards.
   s = s.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (whole, label: string, url: string) => {
     const href = safeHref(url)
-    return href ? `<a href="${href}" rel="noopener">${label}</a>` : whole
+    if (!href) return whole
+    const blank = opts?.newTab && /^https?:/i.test(href) ? ' target="_blank"' : ''
+    return `<a href="${href}"${blank} rel="noopener">${label}</a>`
   })
   return s
     .replace(/\*\*([^\n]+?)\*\*/g, '<strong>$1</strong>')

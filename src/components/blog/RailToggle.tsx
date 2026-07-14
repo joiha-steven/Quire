@@ -4,8 +4,17 @@
 // its top). Lives in the header; above the rail breakpoint the layout hides it (`.rail-
 // toggle`) because the sidebar is then the always-visible gutter rail. Open state lives on
 // <html data-rail>, so the drawer + scrim react in pure CSS — nothing else re-renders.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
+
+// Whether the current page rendered a rail. Read from the DOM via useSyncExternalStore
+// (server snapshot = true, so SSR/first paint shows the button; the client snapshot re-
+// reads on every render — usePathname re-renders on navigation — so it self-corrects per
+// route). A no-op subscribe: rail presence only changes on navigation, which re-renders.
+const noopSubscribe = () => () => {}
+function useHasRail(): boolean {
+  return useSyncExternalStore(noopSubscribe, () => !!document.querySelector('.rail'), () => true)
+}
 import { t } from '@/lib/i18n'
 import type { SiteLang } from '@/types'
 import { ICON_BTN } from '@/components/ui/iconButton'
@@ -26,6 +35,10 @@ export function RailToggle({ lang }: { lang: SiteLang }) {
   const open = openFor === pathname
   const setOpen = (v: boolean) => setOpenFor(v ? pathname : null)
 
+  // Self-hide when this page has no rail (a post with no ToC, /search, 404): the button
+  // would otherwise open nothing.
+  const hasRail = useHasRail()
+
   useEffect(() => {
     document.documentElement.dataset.rail = open ? 'open' : 'closed'
   }, [open])
@@ -37,6 +50,7 @@ export function RailToggle({ lang }: { lang: SiteLang }) {
     return () => removeEventListener('keydown', onKey)
   }, [open])
 
+  if (!hasRail) return null
   return (
     <>
       {open && <div className="rail-scrim" onClick={() => setOpen(false)} />}

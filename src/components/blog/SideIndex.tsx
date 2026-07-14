@@ -86,12 +86,13 @@ export function SideIndex({
   activeHref?: string // the category/tag being viewed — its row gets the accent mark
 }) {
   if (categories.length === 0 && mostViewed.length === 0 && featured.length === 0 && tags.length === 0) return null
-  // Order: categories → most viewed → featured → tags. Each block self-hides when empty.
+  // Order: most viewed → featured → categories → tags (categories grouped just above tags).
+  // Each block self-hides when empty.
   return (
     <div className="space-y-7">
-      <IndexBlock title={categoriesTitle} links={categories} activeHref={activeHref} />
       <IndexBlock title={mostViewedTitle} links={mostViewed} activeHref={activeHref} />
       <IndexBlock title={featuredTitle} links={featured} activeHref={activeHref} />
+      <IndexBlock title={categoriesTitle} links={categories} activeHref={activeHref} />
       <TagCloud title={tagsTitle} links={tags} activeHref={activeHref} />
     </div>
   )
