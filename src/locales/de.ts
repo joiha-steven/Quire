@@ -24,6 +24,8 @@ const de = {
   tocTitle: 'Überschriften',
   tocIndex: 'Inhalt',
   categoriesTitle: 'Kategorien',
+  mostViewedTitle: 'Meistgelesen',
+  featuredTitle: 'Empfohlen',
   tagsTitle: 'Schlagwörter',
   relatedTitle: 'Ähnliche Beiträge',
   notFoundTitle: 'Seite nicht gefunden',

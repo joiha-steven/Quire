@@ -24,6 +24,8 @@ const ko = {
   tocTitle: '제목',
   tocIndex: '목차',
   categoriesTitle: '카테고리',
+  mostViewedTitle: '많이 본 글',
+  featuredTitle: '추천 글',
   tagsTitle: '태그',
   relatedTitle: '관련 게시물',
   notFoundTitle: '페이지를 찾을 수 없습니다',

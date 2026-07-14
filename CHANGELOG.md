@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-07-14 — sidebar: most-viewed & featured posts
+
+- The listing sidebar now shows two new blocks between **Categories** and **Tags**: **Most viewed**
+  (automatic — top 5 posts by all-time views) and **Featured** (owner-curated). Each hides itself
+  when empty.
+- **Featured** is picked in **Admin → Settings → Content**: an ordered list of published posts
+  (add / reorder / remove); the first 5 render, in that order, and any post that stops being public
+  drops out automatically.
+- The view-totals read now uses a cache-eligible GET rpc, so listing pages stay statically ISR-rendered.
+
 ## 2026-07-14 — fix intermittent image-upload / save-draft failures
 
 - Fixed a native-only bug where generating an image's responsive variants/thumbnails read the

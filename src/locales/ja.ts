@@ -24,6 +24,8 @@ const ja = {
   tocTitle: '見出し',
   tocIndex: '目次',
   categoriesTitle: 'カテゴリー',
+  mostViewedTitle: 'よく読まれている',
+  featuredTitle: 'おすすめ',
   tagsTitle: 'タグ',
   relatedTitle: '関連記事',
   notFoundTitle: 'ページが見つかりません',

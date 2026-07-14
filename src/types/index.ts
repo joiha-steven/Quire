@@ -184,6 +184,7 @@ export type SiteSettings = {
   customCss: string // owner CSS injected into PUBLIC pages only ('' = none)
   footer: string // footer content: limited inline markdown (bold/italic/underline/link) + {year}/{title} tokens
   menu: MenuItem[] // header navigation links
+  featured: string[] // owner-curated post slugs shown in the sidebar "Featured" block, in this order (first 5 render); auto-drops any that stop being public
   themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
   enabledPalettes: string[] // palettes a visitor may switch between (subset of THEME_PRESETS ids); ALWAYS includes themePreset. <2 enabled => the switcher is hidden
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id

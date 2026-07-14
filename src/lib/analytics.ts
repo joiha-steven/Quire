@@ -132,7 +132,11 @@ export async function getAnalytics(days: number, bucket: 'hour' | 'day' = 'day')
 // All-time total views per path (`{ "/slug": 12, … }`) for the content tables.
 export async function getViewTotals(): Promise<Record<string, number>> {
   try {
-    const { data, error } = await db().rpc('analytics_totals')
+    // GET (not the default POST) so `db()` treats it as a cache-eligible read tagged `db`
+    // — a public listing page reading this (the sidebar's "Most viewed") stays ISR/static
+    // instead of bailing to dynamic. Allowed because `analytics_totals()` is STABLE. Admin
+    // surfaces (force-no-store) still read it live.
+    const { data, error } = await db().rpc('analytics_totals', {}, { get: true })
     if (error || !data) {
       if (error) console.error(`[ERROR] analytics.getViewTotals: ${error.message}`)
       return {}

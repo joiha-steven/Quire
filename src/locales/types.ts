@@ -25,6 +25,8 @@ export type Dict = {
   tocTitle: string
   tocIndex: string
   categoriesTitle: string
+  mostViewedTitle: string
+  featuredTitle: string
   tagsTitle: string
   relatedTitle: string
   notFoundTitle: string
@@ -365,6 +367,12 @@ export type AdminStrings = {
   cardFeatures: string
   // comments
   cardComments: string
+  cardFeatured: string
+  featuredHint: string
+  featuredEmpty: string
+  featuredAdd: string
+  moveUp: string
+  moveDown: string
   commentsEnable: string
   commentsEnableDesc: string
   commentsTurnstile: string
