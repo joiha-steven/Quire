@@ -27,6 +27,7 @@ import { BackupFields } from './BackupFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FooterField } from './FooterField'
 import { FeatureFields } from './FeatureFields'
+import { FeaturedField } from './FeaturedField'
 import { CommentFields } from './CommentFields'
 import { CommentKeys } from './CommentKeys'
 import { CloudflareFields } from './CloudflareFields'
@@ -36,7 +37,7 @@ import { SeoFields } from './SeoFields'
 type Tab = 'site' | 'content' | 'appearance' | 'seo' | 'integrations'
 const TAB_IDS: Tab[] = ['site', 'content', 'appearance', 'seo', 'integrations']
 
-export function SettingsView({ settings, presets, commentEnv, integrations }: { settings: SiteSettings; presets: ThemePreset[]; commentEnv: CommentEnv; integrations: IntegrationStatus }) {
+export function SettingsView({ settings, presets, commentEnv, integrations, posts }: { settings: SiteSettings; presets: ThemePreset[]; commentEnv: CommentEnv; integrations: IntegrationStatus; posts: { slug: string; title: string }[] }) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -116,6 +117,9 @@ export function SettingsView({ settings, presets, commentEnv, integrations }: { 
           <Card title={t.cardComments}>
             <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
             <CommentKeys comments={s.comments} env={commentEnv} />
+          </Card>
+          <Card title={t.cardFeatured}>
+            <FeaturedField posts={posts} value={s.featured} onChange={(featured) => update({ featured })} />
           </Card>
         </div>
       )}

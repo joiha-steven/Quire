@@ -24,6 +24,8 @@ const en = {
   tocTitle: 'Headings',
   tocIndex: 'Contents',
   categoriesTitle: 'Categories',
+  mostViewedTitle: 'Most viewed',
+  featuredTitle: 'Featured',
   tagsTitle: 'Tags',
   relatedTitle: 'Related posts',
   notFoundTitle: 'Page not found',

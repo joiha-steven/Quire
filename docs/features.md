@@ -31,10 +31,15 @@
   categoryLabel, deck, bookText }` (all default on EXCEPT `bookText`, which is off; Admin → Settings →
   Tính năng); gated in header / `/search` / post page. `bookText` = book-page typesetting on the post
   body (first-line indent + justify ≥600px).
-- **Sidebar** (`sidebar`): categories (with published-post counts) + tags in the left gutter of the
-  home list, from `getPublicTaxonomy()`. `toc` puts a post's headings in that same gutter. Both are
-  `<Rail>`; below the rail breakpoint the same markup becomes a slide-out drawer opened by a small
-  edge handle.
+- **Sidebar** (`sidebar`): four blocks in the left gutter of every listing page, in order —
+  **categories** (with published-post counts, `getPublicTaxonomy()`), **most viewed** (auto: top 5
+  public posts by all-time views, `getViewTotals()` joined to `getPublicPosts()`), **featured**
+  (owner-curated `settings.featured` slugs, in that order, first 5, dropped when a slug stops being
+  public), and **tags**. Assembled in `ListingSidebar` → `SideIndex` (the post blocks reuse
+  `IndexBlock`); each block self-hides when empty. `toc` puts a post's headings in that same gutter.
+  All are `<Rail>`; below the rail breakpoint the markup becomes a slide-out drawer opened by a small
+  edge handle. Featured is curated in **Admin → Settings → Content** (`FeaturedField`, an ordered
+  picker); `getViewTotals` uses a GET rpc so the pages stay ISR (see `docs/features.md` note in code).
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).

@@ -24,6 +24,8 @@ const zh = {
   tocTitle: '标题',
   tocIndex: '目录',
   categoriesTitle: '分类',
+  mostViewedTitle: '最多阅读',
+  featuredTitle: '精选',
   tagsTitle: '标签',
   relatedTitle: '相关文章',
   notFoundTitle: '页面未找到',

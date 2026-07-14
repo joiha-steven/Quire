@@ -24,6 +24,8 @@ const vi = {
   tocTitle: 'Tiêu đề',
   tocIndex: 'Mục lục',
   categoriesTitle: 'Danh mục',
+  mostViewedTitle: 'Xem nhiều nhất',
+  featuredTitle: 'Nổi bật',
   tagsTitle: 'Thẻ',
   relatedTitle: 'Bài viết liên quan',
   notFoundTitle: 'Không tìm thấy trang',

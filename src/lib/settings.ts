@@ -102,6 +102,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   customCss: '',
   footer: '© {year} {title} · [powered by Quire Blog](https://github.com/joiha-steven/Quire)',
   menu: [],
+  featured: [],
   themePreset: DEFAULT_PRESET_ID,
   enabledPalettes: ALL_PALETTE_IDS,
   themes: defaultThemes(),
@@ -136,6 +137,19 @@ function resolveChromeFont(stored: Partial<SiteSettings> & { fontChromeInter?: u
   return DEFAULT_CHROME_FONT
 }
 
+// Featured-post slugs: trimmed, de-duped, capped. Non-array (or absent) → the fallback.
+// Existence/visibility is enforced at render time, not here (a slug can be featured before
+// or after its post is public).
+function sanitizeFeatured(v: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(v)) return fallback
+  const out: string[] = []
+  for (const s of v) {
+    const slug = typeof s === 'string' ? s.trim() : ''
+    if (slug && !out.includes(slug)) out.push(slug)
+  }
+  return out.slice(0, 12)
+}
+
 // Settings merged over defaults; defaults on any error. `React.cache` dedupes per
 // render only, so a saved setting is live next request.
 export const getSettings = cache(async (): Promise<SiteSettings> => {
@@ -158,6 +172,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
       fontPreset: isFontPresetId(stored.fontPreset) ? stored.fontPreset : DEFAULT_FONT_PRESET,
       chromeFont: resolveChromeFont(stored),
+      featured: sanitizeFeatured(stored.featured, []),
       enabledPalettes: sanitizeEnabledPalettes(stored.enabledPalettes, isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID),
       themes: sanitizeThemes(stored.themes, migrateThemes(stored as Record<string, unknown>)),
       typography: sanitizeTypography(stored.typography, DEFAULT_TYPOGRAPHY),
@@ -227,6 +242,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     // trim + cap length; markup safety is the renderer's job.
     footer: typeof input.footer === 'string' ? input.footer.slice(0, 600) : current.footer,
     menu: sanitizeMenu(input.menu, current.menu),
+    featured: sanitizeFeatured(input.featured, current.featured),
     themePreset,
     fontPreset: isFontPresetId(input.fontPreset) ? input.fontPreset : current.fontPreset,
     chromeFont: isChromeFontId(input.chromeFont) ? input.chromeFont : current.chromeFont,
