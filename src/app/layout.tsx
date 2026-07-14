@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
   // prefers-reduced-motion. All durations collapse to 0s when off (globals.css).
   return (
-    <html lang={language} data-motion={motion.enabled ? 'on' : 'off'} className="h-full">
+    <html lang={language} data-motion={motion.enabled ? 'on' : 'off'} data-chrome-font={chromeFont} className="h-full">
       <body className="min-h-full">
         {/* Preload the Latin subset of the CHOSEN reading font (not always Inter) — no swap flash. */}
         <link rel="preload" href={fontPreloadHref(fontPreset)} as="font" type="font/woff2" crossOrigin="anonymous" />

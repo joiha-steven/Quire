@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-07-14 — IBM Plex Mono chrome tracking
+
+- Tightened the interface tracking by `-0.04em` **only** when the system font is IBM Plex Mono, so the
+  wide monospace no longer reads as spaced-out in the rail, menu, footer, and dates. Scoped to the
+  chrome via `<html data-chrome-font>`; article text and the other system-font choices are unchanged.
+
 ## 2026-07-14 — system-chrome font selector
 
 - Added a **System font** selector (Admin → Appearance) that sets the interface face — header,

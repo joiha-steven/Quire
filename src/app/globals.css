@@ -295,6 +295,17 @@ h1, h2, h3, h4, h5 {
 /* Body-role text OUTSIDE .prose (excerpts, footer) — same size/rhythm as running text. */
 .t-body { font-size: var(--fs-body); line-height: var(--lh-body); letter-spacing: var(--ls-body); }
 
+/* IBM Plex Mono is a wide monospace, so bare system-chrome text (rail, header menu,
+   footer, dates/meta, admin) reads too airy at 0 tracking. Pull it in a touch — but ONLY
+   when the mono chrome is active (`data-chrome-font="plex-mono"`, set on <html>), and only
+   the chrome. The reader's words are safe: `.prose`, `.fs-*` and reading titles all set
+   their OWN letter-spacing, so this body/.t-* nudge never reaches them. Other chrome fonts
+   (Inter, the reading font) keep default tracking. Measured value; -0.04em holds the mono
+   character while making each word cohere. */
+html[data-chrome-font="plex-mono"] body,
+html[data-chrome-font="plex-mono"] .t-small,
+html[data-chrome-font="plex-mono"] .t-body { letter-spacing: -0.04em; }
+
 /* One divider style for the whole site: faint, full width. */
 hr {
   border: none;
