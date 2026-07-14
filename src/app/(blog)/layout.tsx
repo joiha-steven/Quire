@@ -4,7 +4,7 @@ import { getSettings } from '@/lib/settings'
 import { enabledPaletteOptions } from '@/lib/themes'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { PaletteToggle } from '@/components/theme/PaletteToggle'
-import { HeaderMenu } from '@/components/blog/HeaderMenu'
+import { RailToggle } from '@/components/blog/RailToggle'
 import { SearchTrigger } from '@/components/blog/SearchTrigger'
 import { Track } from '@/components/blog/Track'
 import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
@@ -13,8 +13,8 @@ import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 // cannot read a CSS variable, so the breakpoint is computed here from the owner's
 // contentWidth: the rail only appears once BOTH gutters can hold it, which keeps
 // the reading column exactly centred at every width.
-const RAIL_W = 210
-const RAIL_GAP = 48 // mirrors --rail-gap
+const RAIL_W = 250
+const RAIL_GAP = 40 // mirrors --rail-gap
 const RAIL_PAD = 14 // mirrors --rail-pad
 const RAIL_BREATHING = 10 // clear space between the rail and the viewport edge
 // Breakpoint = contentWidth + 2*(RAIL_W+RAIL_GAP+RAIL_BREATHING). The sum (268) is
@@ -46,7 +46,7 @@ function railCss(contentWidth: number): string {
     `.rail li a{justify-content:flex-end}` +
     `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail-row[aria-current]::before{left:auto;right:0}` +
-    `.rail-handle,.rail-scrim{display:none}` +
+    `.rail-toggle,.rail-scrim{display:none}` +
     // "Large" images: the breakpoint that gives the rail a left gutter also gives
     // the column a free RIGHT gutter of the same size, so a large image noses right
     // by exactly one rail width (gap + rail). Left edge stays on the column; below
@@ -104,7 +104,9 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
               {settings.features.search && <SearchTrigger lang={settings.language} />}
               <PaletteToggle lang={settings.language} palettes={enabledPaletteOptions(settings.themes, settings.enabledPalettes)} defaultId={settings.themePreset} />
               <ThemeToggle lang={settings.language} />
-              <HeaderMenu items={settings.menu} lang={settings.language} />
+              {/* Mobile-only: opens the sidebar drawer (which now carries the menu). Above
+                  the rail breakpoint the sidebar is the gutter rail, so the button hides. */}
+              {settings.menu.length > 0 && <RailToggle lang={settings.language} />}
             </div>
           </div>
           {settings.showDescription && settings.description && (
