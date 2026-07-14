@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-07-14 — system-chrome font selector
+
+- Added a **System font** selector (Admin → Appearance) that sets the interface face — header,
+  footer, menu, dates, admin — independently of the reading font, so the chrome can use a code
+  font while article text stays readable. Options: Inter (default), the reading font, or the new
+  self-hosted **IBM Plex Mono** (latin / latin-ext / Vietnamese, preloaded only when active).
+- Replaced the old "keep the interface in Inter" toggle; existing sites that had it off now follow
+  the reading font automatically, with no visible change.
+
 ## 2026-07-13 — editor focus and typewriter feedback
 
 - Removed the global admin focus rectangle from the TipTap writing surface; keyboard focus remains
