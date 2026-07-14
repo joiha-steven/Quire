@@ -6,9 +6,10 @@
 import { cache } from 'react'
 import type { MediaItem } from '@/types'
 import {
-  uploadFile, blobUrl, deleteByPathname, collapseBlob, expandBlob, listBlobs,
+  uploadFile, readBlob, deleteByPathname, collapseBlob, expandBlob, listBlobs,
 } from '@/lib/blob'
 import { db, liveOnly } from '@/lib/db'
+import { mimeOf } from '@/lib/mime'
 import { slugify } from '@/lib/utils'
 import {
   imageSize, safeSize, makeThumb, makeDisplay, RASTER, PASSTHROUGH, SIZES,
@@ -184,10 +185,8 @@ export async function registerMediaBatch(items: { url: string; filename: string 
   for (const it of items) {
     const path = collapseBlob(it.url)
     if (!/^media\//.test(path)) continue
-    const res = await fetch(`${expandBlob(path)}?ts=${Date.now()}`, { cache: 'no-store' })
-    if (!res.ok) throw new Error(`registerMediaBatch: fetch ${path} → ${res.status}`)
-    const contentType = res.headers.get('content-type') ?? ''
-    const buf = Buffer.from(await res.arrayBuffer())
+    const buf = await readBlob(path) // direct store read — see readOriginal
+    const contentType = mimeOf(path)
     const stem = path.replace(/\.[^.]+$/, '')
     const isRaster = RASTER.test(contentType) || /\.(jpe?g|png)$/i.test(path)
     let width: number | null = null
@@ -343,9 +342,12 @@ export async function finalizeVariants(pathnames: string[]): Promise<number> {
   for (const path of targets) {
     const { data: row } = await db().from('media').select('variants').eq('path', path).maybeSingle()
     if (!row || (row as { variants: boolean }).variants) continue
-    const res = await fetch(`${blobUrl(path)}?ts=${Date.now()}`, { cache: 'no-store' })
-    if (!res.ok) continue
-    const original = Buffer.from(await res.arrayBuffer())
+    // Read the original from the store DIRECTLY. `fetch`ing the blob URL breaks on the local
+    // driver: blobUrl/expandBlob is a store-relative `/uploads/...` path (no origin) and
+    // server-side fetch throws "Failed to parse URL" — this failed the upload after() sweep,
+    // save-post finalize, and cron sweep on native. null = not on the store; a sweep retries.
+    const original = await readBlob(path).catch(() => null)
+    if (!original) continue
     const stem = path.replace(/\.[^.]+$/, '')
     const files = await makeDisplay(original)
     await Promise.all(files.map((f) => uploadFile(`${stem}${f.suffix}`, f.data, f.contentType)))
@@ -363,9 +365,8 @@ export async function finalizePendingThumbs(): Promise<number> {
   let done = 0
   for (const { path } of targets) {
     if (/\.(jpe?g|png)$/i.test(path)) {
-      const res = await fetch(`${blobUrl(path)}?ts=${Date.now()}`, { cache: 'no-store' })
-      if (!res.ok) continue
-      const original = Buffer.from(await res.arrayBuffer())
+      const original = await readBlob(path).catch(() => null) // direct store read (see finalizeVariants)
+      if (!original) continue
       const stem = path.replace(/\.[^.]+$/, '')
       const thumbPath = `${stem}-thumb.webp`
       await uploadFile(thumbPath, await makeThumb(original), 'image/webp')
