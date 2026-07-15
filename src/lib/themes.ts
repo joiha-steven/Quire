@@ -65,10 +65,17 @@ export type FontPreset = {
   readingBold?: number
 }
 
-// The Latin subset of the active font, to <link rel="preload"> (no swap flash on
-// the file almost every glyph needs).
-export function fontPreloadHref(id: string): string {
-  return `/fonts/${getFontPreset(id).slug}-latin.woff2`
+// The subsets of the active reading font to <link rel="preload"> — the files the
+// LCP text (post title, set in the reading font) needs, so it paints in the real
+// face with no swap. A Vietnamese title needs BOTH the latin base letters AND the
+// `vietnamese` diacritic subset (they are separate unicode-range files); a
+// latin-script language needs only latin. Preloading exactly the LCP subsets keeps
+// them off the CSS-discovered request chain without over-fetching every locale.
+export function fontPreloadHrefs(id: string, lang: string): string[] {
+  const slug = getFontPreset(id).slug
+  const hrefs = [`/fonts/${slug}-latin.woff2`]
+  if (lang === 'vi') hrefs.push(`/fonts/${slug}-vietnamese.woff2`)
+  return hrefs
 }
 
 // A preset's typography = the tuned defaults with a few roles overridden.
@@ -175,13 +182,6 @@ export function isChromeFontId(id: unknown): id is string {
 export function chromeFontCss(id: string): string {
   const f = getChromeFont(id)
   return f.sans ? `:root{--font-sans:${f.sans}}` : ''
-}
-
-// Latin subset to <link rel=preload> when a chrome font ships its own files (only
-// IBM Plex Mono). null = nothing extra (Inter is already the baseline; 'reading'
-// preloads via the reading font's fontPreloadHref).
-export function chromeFontPreloadHref(id: string): string | null {
-  return id === 'plex-mono' ? '/fonts/plexmono-400-latin.woff2' : null
 }
 
 // TRUE neutral grayscale — zero hue, the Quire Blog house style. (Earlier values had a

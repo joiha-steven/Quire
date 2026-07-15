@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
-import { fontPresetCss, fontPreloadHref, chromeFontCss, chromeFontPreloadHref } from '@/lib/themes'
+import { fontPresetCss, fontPreloadHrefs, chromeFontCss } from '@/lib/themes'
 
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
@@ -49,7 +49,6 @@ export async function generateViewport(): Promise<Viewport> {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { language, themes, themePreset, fontPreset, chromeFont, enabledPalettes, typography, customFont, motion } = await getSettings()
-  const chromePreload = chromeFontPreloadHref(chromeFont)
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   // data-motion is server-rendered from settings (site-wide), so the motion engine
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
@@ -57,11 +56,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang={language} data-motion={motion.enabled ? 'on' : 'off'} data-chrome-font={chromeFont} className="h-full">
       <body className="min-h-full">
-        {/* Preload the Latin subset of the CHOSEN reading font (not always Inter) — no swap flash. */}
-        <link rel="preload" href={fontPreloadHref(fontPreset)} as="font" type="font/woff2" crossOrigin="anonymous" />
-        {/* A self-hosted chrome font (IBM Plex Mono) preloads its Latin subset too — the
-            chrome paints on first load, so a swap flash there is the most visible. */}
-        {chromePreload && <link rel="preload" href={chromePreload} as="font" type="font/woff2" crossOrigin="anonymous" />}
+        {/* Preload ONLY the CHOSEN reading font's subsets that the LCP text (the post
+            title) needs — latin, plus vietnamese on a vi site. The chrome font (header/
+            meta/rail) is deliberately NOT preloaded: it is not the LCP element, so it
+            loads at normal priority via its @font-face and swaps in, leaving the critical
+            path (CSS + the LCP font) uncontended. */}
+        {fontPreloadHrefs(fontPreset, language).map((href) => (
+          <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="anonymous" />
+        ))}
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}
         <style dangerouslySetInnerHTML={{ __html: themesToCss(themes, themePreset) }} />
         {/* Owner type scale → fs/lh/ls vars, then the reading font (--font-reading:
