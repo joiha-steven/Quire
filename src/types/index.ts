@@ -186,6 +186,7 @@ export type SiteSettings = {
   menu: MenuItem[] // header navigation links
   featured: string[] // owner-curated post slugs shown in the sidebar "Featured" block, in this order (first 5 render); auto-drops any that stop being public
   mostViewedCount: number // how many posts the sidebar "Most viewed" block shows (0 = hide the block)
+  sidebarLayout: 'single' | 'two' // listing sidebar: 'single' = one left rail (all blocks stacked); 'two' = discovery-left + nav-right rails with a narrower column (desktop). Mobile is one drawer either way
   themePreset: string // default palette for visitors (one of THEME_PRESETS ids)
   enabledPalettes: string[] // palettes a visitor may switch between (subset of THEME_PRESETS ids); ALWAYS includes themePreset. <2 enabled => the switcher is hidden
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
