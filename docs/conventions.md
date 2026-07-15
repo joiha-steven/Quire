@@ -73,6 +73,15 @@
   scale (a fixed design scale); only the admin editor `.prose` mirrors the reader. Don't wire
   admin chrome to `--fs-*`.
 - Editor exposes H1–H5; `marked` renders `####`/`#####` → `h4`/`h5`.
+- **Two stylesheet entries so a reader never downloads admin CSS.** `globals.css` (root
+  layout, every page) is Tailwind-scoped to the PUBLIC tree only — `@import "tailwindcss"
+  source(none)` + explicit `@source` for `(blog)`, `components/{blog,theme,ui}`, the shared
+  error views, and the root layout. `admin/admin.css` (admin layout only) scopes Tailwind to
+  `admin/**` + `components/admin` and holds admin-only chrome (editor `.ProseMirror` rules,
+  `.admin-canvas`/`.admin-shell`, typewriter caret, colour picker). The compile-time tokens
+  BOTH entries need (`@custom-variant dark`, `@theme inline`) live in `theme.css`, imported by
+  each. **Adding a public route/component that uses a NEW utility → extend `globals.css`'s
+  `@source` list** or it won't emit. Never put admin-only utilities/chrome in `globals.css`.
 
 ## Chrome reuse, divider, colour (HARD RULES)
 

@@ -1,7 +1,19 @@
-@import "tailwindcss";
-
-/* Enable class-based dark mode (toggled on <html class="dark">). */
-@custom-variant dark (&:where(.dark, .dark *));
+/* PUBLIC stylesheet — loads on EVERY page (imported by the root layout). Tailwind
+   content detection is pinned to the public source tree only (`source(none)` +
+   explicit `@source`), so utilities used ONLY by the admin never reach a reader.
+   Admin-specific chrome lives in `admin/admin.css`, loaded solely on /admin. Keep
+   this list in sync when adding a public route/component that uses new utilities. */
+@import "tailwindcss" source(none);
+@import "./theme.css";
+@source "./layout.tsx";
+@source "./(blog)";
+@source "./error.tsx";
+@source "./global-error.tsx";
+@source "../components/blog";
+@source "../components/theme";
+@source "../components/ui";
+@source "../components/ErrorView.tsx";
+@source "../components/ErrorScreen.tsx";
 
 /* Self-hosted Inter (variable, weights 100–900), subsetted by unicode-range so a
    visitor only downloads the script they read. Files live in public/fonts/ — NO
@@ -130,21 +142,9 @@
 :root { --font-inter: 'Inter'; }
 body { font-optical-sizing: auto; }
 
-@theme inline {
-  --font-sans: var(--font-inter);
-  /* Expose the reading-colour vars as Tailwind tokens so components use clean,
-     theme-driven utilities (text-heading, text-meta, text-link, bg-bg,
-     border-rule, hover:bg-rule, ...) instead of hardcoded neutrals. One source
-     of truth: change a colour in Admin → Giao diện and every surface follows.
-     --c-rule doubles as the faint-surface colour (code blocks, hovers, banners). */
-  --color-bg: var(--c-bg);
-  --color-text: var(--c-text);
-  --color-heading: var(--c-heading);
-  --color-meta: var(--c-meta);
-  --color-link: var(--c-link);
-  --color-accent: var(--c-accent);
-  --color-rule: var(--c-rule);
-}
+/* The site colour + font TOKENS (@theme inline) live in `theme.css` so both this
+   file and `admin/admin.css` compile the same token utilities. The `--c-*` runtime
+   values they point at are defined below (loaded on every page, admin included). */
 
 /* Two font handles. `--font-sans` is the SYSTEM CHROME face — header, footer, rail,
    dates/reading-time, everything under a post except its body, and the whole admin —
@@ -710,27 +710,6 @@ hr {
   aspect-ratio: 1 / 1;
   object-fit: cover;
 }
-/* Editor preview: the TipTap editor has no .gallery wrapper (grouping happens on
-   publish), so make #grid figures flow side-by-side as thumbnails — a gallery
-   reads as columns in the editor too, not a vertical stack. Each node view is
-   wrapped in a block `.react-renderer` div, so the layout MUST target THAT
-   wrapper (styling the inner figure alone leaves the block wrapper stacking).
-   `:has()` scopes it to gallery items only — single images + videos stay full
-   width, so a gallery image is visibly treated differently from a lone one.
-   Scoped to .ProseMirror so the published page is unaffected. */
-.ProseMirror .react-renderer:has(> figure.img-grid) {
-  display: inline-block;
-  width: 31.5%;
-  margin: 0 1.5% 0.5rem 0;
-  vertical-align: top;
-}
-.ProseMirror figure.img-grid {
-  margin: 0;
-}
-.ProseMirror figure.img-grid img {
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-}
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {
   margin-top: 0.6em;
@@ -789,91 +768,8 @@ hr {
 /* No dark-mode code-chip override needed: code/pre backgrounds use var(--c-rule),
    which is itself themed per mode. Everything tracks the reading-colour vars. */
 
-/* TipTap empty-state placeholder. */
-.ProseMirror:focus {
-  outline: none;
-}
-.ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  color: var(--c-meta);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-/* Admin canvas is a true neutral gray, isolated from public palette tokens. */
-.admin-canvas {
-  background: #f5f5f5;
-}
-.dark .admin-canvas {
-  background: #0f0f0f;
-}
-
-.admin-shell :focus-visible {
-  outline: 2px solid #737373;
-  outline-offset: 2px;
-}
-.dark .admin-shell :focus-visible {
-  outline-color: #a3a3a3;
-}
-/* The editor is a large writing surface, not a discrete button/input. Its card
-   already communicates the active workspace; the global admin focus ring would
-   draw a harsh rectangle around the public-width prose column. */
-.admin-shell .ProseMirror:focus-visible {
-  outline: none;
-}
-.typewriter-stage.has-typewriter-caret .ProseMirror {
-  caret-color: transparent;
-}
-.typewriter-caret {
-  position: absolute;
-  z-index: 2;
-  width: 0.5rem;
-  border-left: 2px solid #171717;
-  border-radius: 1px;
-  background: rgb(23 23 23 / 8%);
-  opacity: 0;
-  pointer-events: none;
-  transform-origin: left center;
-}
-.dark .typewriter-caret {
-  border-left-color: #f5f5f5;
-  background: rgb(245 245 245 / 12%);
-}
-.typewriter-stage.has-typewriter-caret .typewriter-caret {
-  opacity: 1;
-}
-@media (prefers-reduced-motion: no-preference) {
-  :root[data-motion='on'] .typewriter-stage.has-typewriter-caret .typewriter-caret {
-    animation: typewriter-caret-blink 1.05s steps(1, end) infinite;
-  }
-}
-@keyframes typewriter-caret-blink {
-  0%, 52% { opacity: 1; }
-  53%, 78% { opacity: 0.22; }
-  79%, 100% { opacity: 1; }
-}
-
-/* Native colour picker (admin theme): strip the default inner padding/border so
-   the swatch is one clean, obviously-clickable colour chip — clicking it opens
-   the browser's full colour picker (2D area + hue + HEX). */
-input[type='color'] {
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 0;
-  cursor: pointer;
-}
-input[type='color']::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-input[type='color']::-webkit-color-swatch {
-  border: none;
-  border-radius: 0;
-}
-input[type='color']::-moz-color-swatch {
-  border: none;
-  border-radius: 0;
-}
+/* Admin-only chrome (editor placeholder, admin canvas/focus, typewriter caret,
+   colour-picker) has moved to `admin/admin.css` so it never ships to a reader. */
 
 /* ===========================================================================
    Motion engine — behaviour. All timings come from the --dur and --ease tokens,
