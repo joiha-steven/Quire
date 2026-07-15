@@ -1,6 +1,9 @@
 // Admin shell + auth guard. Only the owner reaches the children.
 // - Not signed in        -> sign-in.
 // - Signed in, not owner  -> silently sent home (no error shown).
+// Admin-only stylesheet: Tailwind utilities scanned from the admin tree + admin
+// chrome, kept out of the public bundle (public loads globals.css alone).
+import './admin.css'
 import { redirect } from 'next/navigation'
 import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
@@ -46,7 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminSidebar lang={language} signOut={signOutAction} />
           {/* Main column right of the sidebar. Full browser width (admin is column-based
               now); ~100px gutters on desktop, tight padding on mobile. The dotted-grid
-              canvas sits behind the floating cards (admin-canvas in globals.css). */}
+              canvas sits behind the floating cards (admin-canvas in admin.css). */}
           <main className="admin-canvas min-w-0 flex-1">
             <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-7 lg:px-10 lg:py-9 xl:px-12">{children}</div>
           </main>
