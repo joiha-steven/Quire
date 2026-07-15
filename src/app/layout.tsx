@@ -61,7 +61,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             meta/rail) is deliberately NOT preloaded: it is not the LCP element, so it
             loads at normal priority via its @font-face and swaps in, leaving the critical
             path (CSS + the LCP font) uncontended. */}
-        {fontPreloadHrefs(fontPreset, language).map((href) => (
+        {fontPreloadHrefs(fontPreset, language, Boolean(customFont.family && customFont.faces.length)).map((href) => (
           <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="anonymous" />
         ))}
         {/* All palettes' colors as CSS vars; client swaps via <html data-palette>. */}

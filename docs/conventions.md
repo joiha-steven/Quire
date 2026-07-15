@@ -61,7 +61,9 @@
   variable, declared via `@font-face` + `unicode-range` in `globals.css`; `--font-inter:'Inter'`
   there). **No `next/font/google`** — it fetched at build, which broke offline/CI builds. The OG
   route self-hosts the same Inter separately as `.woff` (Satori can't decode woff2). To update
-  Inter, re-drop the woff2 files. The latin subset is `<link rel=preload>`-ed in the root layout.
+  Inter, re-drop the woff2 files. **Which font files are `<link rel=preload>`-ed is one
+system-wide rule** (`fontPreloadHrefs` → `docs/performance.md`): only the LCP title's reading
+font, only the site language's subset(s), never the chrome font or an uploaded custom face.
 - **ONE typeface for EVERYTHING — hard rule, no exceptions (incl. admin + OG).** No
   `font-family`, no `font-mono`, no second family; `.prose code` is `inherit`;
   **`grep -rE "font-mono" src` must be empty.** A custom font (`settings.customFont` =

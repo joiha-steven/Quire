@@ -65,13 +65,23 @@ export type FontPreset = {
   readingBold?: number
 }
 
-// The subsets of the active reading font to <link rel="preload"> — the files the
-// LCP text (post title, set in the reading font) needs, so it paints in the real
-// face with no swap. A Vietnamese title needs BOTH the latin base letters AND the
-// `vietnamese` diacritic subset (they are separate unicode-range files); a
-// latin-script language needs only latin. Preloading exactly the LCP subsets keeps
-// them off the CSS-discovered request chain without over-fetching every locale.
-export function fontPreloadHrefs(id: string, lang: string): string[] {
+// The font files to <link rel="preload"> — the SYSTEM-WIDE rule, one place. Preload
+// ONLY what the LCP text (the post title, set in the reading font) needs to paint in
+// its final face, and only when that file is small + known. Everything else is left
+// to `font-display: swap` (the title still paints instantly in a fallback):
+//   • built-in reading font → its language subset(s): `latin`, plus `vietnamese` on a
+//     vi site (a VN title needs BOTH files — separate unicode-ranges). latin-ext and
+//     unused weights are never preloaded (variable file carries every weight).
+//   • CJK locale (ja/zh/ko) → NOTHING: the built-ins ship no CJK glyphs, so the title
+//     renders in a system font; preloading a latin file it won't use only steals bandwidth.
+//   • custom uploaded font → NOTHING: the face is unsubsetted (whole charset, often
+//     large), so a high-priority preload would contend with the render-blocking CSS and
+//     hurt LCP; swap covers it. (It wins --font-reading via fontToCss regardless.)
+//   • chrome font → NEVER preloaded here (it is not the LCP element; it swaps in).
+// `hasCustomFont` = an owner typeface is set (see FontSettings); when true the reading
+// font is that upload, so the built-in preset is not the one painting the title.
+export function fontPreloadHrefs(id: string, lang: string, hasCustomFont: boolean): string[] {
+  if (hasCustomFont || lang === 'ja' || lang === 'zh' || lang === 'ko') return []
   const slug = getFontPreset(id).slug
   const hrefs = [`/fonts/${slug}-latin.woff2`]
   if (lang === 'vi') hrefs.push(`/fonts/${slug}-vietnamese.woff2`)
