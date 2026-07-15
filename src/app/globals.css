@@ -336,9 +336,9 @@ hr {
   position: relative;
 }
 
-/* Mobile-first: the rail is a slide-out drawer behind a small edge handle. The
-   layout injects the @media that promotes it into the gutter, because a media
-   query cannot read a CSS variable. ONE piece of DOM serves both. */
+/* Mobile-first: the rail is a slide-out drawer opened from the header menu button. The
+   layout injects the @media that promotes it into the gutter, because a media query
+   cannot read a CSS variable. ONE piece of DOM serves both. */
 .rail {
   position: fixed;
   top: 0;
@@ -356,6 +356,13 @@ hr {
 }
 :root[data-rail='open'] .rail {
   transform: none;
+}
+
+/* Listing pages use TWO gutter rails on desktop (lib/rail-css `listingRailCss`). On mobile
+   there's no gutter: the LEFT rail (discovery) is hidden and its blocks are duplicated into
+   the right rail's drawer via `.drawer-only` (shown only here, hidden above the breakpoint). */
+.rail-left {
+  display: none;
 }
 
 /* The drawer is opened by the header menu button (RailToggle, mobile only) — it flips
