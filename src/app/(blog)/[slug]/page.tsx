@@ -132,12 +132,15 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     // Every post gets an index: the title row alone is already useful.
     const showToc = features.toc && (headings.length > 0 || Boolean(tocMeta))
     const category = features.categoryLabel ? post.categories[0] : undefined
+    // Body images: reused for the article schema AND to gate the Lightbox island — a
+    // text-only post shouldn't load/hydrate the lightbox JS.
+    const imageUrls = extractImageUrls(post.content)
     return (
       <article>
         {features.progressBar && <ReadingProgress />}
         <BackToTop label={t(language).backToTop} />
         <ScrollDepth />
-        <Lightbox lang={language} />
+        {imageUrls.length > 0 && <Lightbox lang={language} />}
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({
@@ -147,7 +150,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               description: post.excerpt || undefined,
               // Featured image if set, else the first image in the body — so the
               // article's structured data always points at an image on this page.
-              image: post.featuredImage || extractImageUrls(post.content)[0],
+              image: post.featuredImage || imageUrls[0],
               authorName: settings.title,
             })}
           />
@@ -253,7 +256,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     return (
       <article>
         <h1 className="reading-font fs-h1 font-semibold">{page.title}</h1>
-        <Lightbox lang={language} />
+        {extractImageUrls(page.content).length > 0 && <Lightbox lang={language} />}
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>

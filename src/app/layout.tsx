@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { getSettings, themesToCss, typographyToCss, fontToCss, getDefaultTheme, resolveSiteUrl, resolveAppIcon } from '@/lib/settings'
 import { fontPresetCss, fontPreloadHref, chromeFontCss, chromeFontPreloadHref } from '@/lib/themes'
@@ -73,9 +72,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) +
           chromeFontCss(chromeFont) }} />
         <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes) }} />
-        <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

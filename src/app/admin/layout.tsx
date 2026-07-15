@@ -6,6 +6,7 @@ import { getAuthState, signOut } from '@/lib/auth'
 import { getSettings } from '@/lib/settings'
 import { AdminI18nProvider } from '@/components/admin/I18nProvider'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { ToastProvider } from '@/components/ui/Toast'
 
 // The entire admin is uncached — every view reads the CURRENT DB, so it never shows
 // a stale snapshot (your own edits, or out-of-band changes like MCP/OAuth tokens,
@@ -38,15 +39,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AdminI18nProvider lang={language}>
-      <div className="admin-shell min-h-screen bg-neutral-100 md:flex dark:bg-neutral-950">
-        <AdminSidebar lang={language} signOut={signOutAction} />
-        {/* Main column right of the sidebar. Full browser width (admin is column-based
-            now); ~100px gutters on desktop, tight padding on mobile. The dotted-grid
-            canvas sits behind the floating cards (admin-canvas in globals.css). */}
-        <main className="admin-canvas min-w-0 flex-1">
-          <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-7 lg:px-10 lg:py-9 xl:px-12">{children}</div>
-        </main>
-      </div>
+      {/* Toasts are ADMIN-only (save/upload feedback) — the provider lives here, not in the
+          root layout, so public pages never load its JS. */}
+      <ToastProvider>
+        <div className="admin-shell min-h-screen bg-neutral-100 md:flex dark:bg-neutral-950">
+          <AdminSidebar lang={language} signOut={signOutAction} />
+          {/* Main column right of the sidebar. Full browser width (admin is column-based
+              now); ~100px gutters on desktop, tight padding on mobile. The dotted-grid
+              canvas sits behind the floating cards (admin-canvas in globals.css). */}
+          <main className="admin-canvas min-w-0 flex-1">
+            <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-7 lg:px-10 lg:py-9 xl:px-12">{children}</div>
+          </main>
+        </div>
+      </ToastProvider>
     </AdminI18nProvider>
   )
 }
