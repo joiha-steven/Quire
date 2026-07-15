@@ -59,6 +59,39 @@ const nextConfig: NextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
         ],
       },
+      {
+        // Agent discovery (RFC 8288) on the homepage: point crawlers/agents at the
+        // machine surfaces (API catalog + MCP card) and the content feeds without
+        // parsing HTML. Relations are IANA-registered (api-catalog RFC 9727,
+        // service-desc/service-doc RFC 8631) so a generic agent understands them.
+        source: '/',
+        headers: [
+          {
+            key: 'Link',
+            value: [
+              '</.well-known/api-catalog>; rel="api-catalog"',
+              '</.well-known/mcp/server-card.json>; rel="service-desc"',
+              '</llms.txt>; rel="service-doc"',
+              '</sitemap.xml>; rel="sitemap"',
+              '</feed.xml>; rel="alternate"; type="application/rss+xml"',
+            ].join(', '),
+          },
+        ],
+      },
+    ]
+  },
+  // Markdown for Agents: when a client sends `Accept: text/markdown`, serve a
+  // single-segment content URL (`/:slug` = a post or page) as its raw Markdown
+  // instead of HTML — the content is authored in Markdown, so this is the source,
+  // not a lossy conversion. A browser (Accept: text/html) is unaffected; the URL
+  // stays the same (internal rewrite, not a redirect).
+  async rewrites() {
+    return [
+      {
+        source: '/:slug',
+        has: [{ type: 'header', key: 'accept', value: '.*text/markdown.*' }],
+        destination: '/api/md/:slug',
+      },
     ]
   },
 }
