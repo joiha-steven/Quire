@@ -21,7 +21,7 @@ import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { Lightbox } from '@/components/blog/Lightbox'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
-import { Comments } from '@/components/blog/Comments'
+import { CommentsLazy } from '@/components/blog/CommentsLazy'
 import { getCommentEnv } from '@/lib/comment-env'
 import { ogImageUrl } from '@/lib/og'
 import { isPublicallyVisible, readingMinutes, wordCount, extractHeadings, extractImageUrls, toPlainText, clampExcerpt } from '@/lib/utils'
@@ -239,7 +239,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             <div id={TOC_ANCHORS.comments} className="mt-12 scroll-mt-24">
               <hr />
             </div>
-            <Comments
+            <CommentsLazy
               postSlug={post.slug}
               lang={language}
               turnstile={settings.comments.turnstile && commentEnv.turnstileConfigured}
