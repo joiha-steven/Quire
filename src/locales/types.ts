@@ -375,6 +375,10 @@ export type AdminStrings = {
   moveDown: string
   mostViewedCount: string
   mostViewedCountHint: string
+  sidebarLayoutLabel: string
+  sidebarLayoutSingle: string
+  sidebarLayoutTwo: string
+  sidebarLayoutHint: string
   commentsEnable: string
   commentsEnableDesc: string
   commentsTurnstile: string

@@ -31,9 +31,11 @@
   categoryLabel, deck, bookText }` (all default on EXCEPT `bookText`, which is off; Admin → Settings →
   Tính năng); gated in header / `/search` / post page. `bookText` = book-page typesetting on the post
   body (first-line indent + justify ≥600px).
-- **Sidebar** (`sidebar`): the MAIN (listing) sidebar is **TWO gutter rails on desktop** flanking a
-  narrower reading column (listing column = 80% of the post width, via `--shell-w`; the extra
-  compactness pulls both rails in). **Left rail** = discovery: **most viewed** (auto: top
+- **Sidebar** (`sidebar`): the MAIN (listing) sidebar has two layouts, chosen by `settings.sidebarLayout`
+  (**Settings → Site → Layout & menu**): `single` (default) = one left rail with every block stacked
+  (full-width column); `two` = **TWO gutter rails on desktop** flanking a narrower reading column
+  (listing column = 80% of the post width, via `--shell-w`; the extra compactness pulls both rails in) —
+  the two-rail geometry/CSS is emitted ONLY in this mode. **Left rail** = discovery: **most viewed** (auto: top
   `settings.mostViewedCount` public posts by all-time views — default 3, `0` hides it —
   `getViewTotals()` joined to `getPublicPosts()`) + **featured** (owner-curated `settings.featured`
   slugs, in order, first 5, dropped when a slug stops being public). **Right rail** = navigation:

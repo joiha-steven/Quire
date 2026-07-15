@@ -20,7 +20,7 @@ const FEATURED_MAX = 5 // curated posts shown in the "Featured" block
 const LISTING_WIDTH_RATIO = 0.8 // listing column = 80% of the post/reading width
 
 export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; activeHref?: string }) {
-  const [{ categories, tags }, { featured: featuredSlugs, menu, mostViewedCount, contentWidth }, posts, viewTotals] = await Promise.all([
+  const [{ categories, tags }, { featured: featuredSlugs, menu, mostViewedCount, contentWidth, sidebarLayout }, posts, viewTotals] = await Promise.all([
     getPublicTaxonomy(),
     getSettings(),
     getPublicPosts(),
@@ -55,7 +55,27 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
       <IndexBlock title={labels.featuredTitle} links={featured} activeHref={activeHref} />
     </>
   )
+  const nav = (
+    <>
+      <IndexBlock title={labels.categoriesTitle} links={categoryLinks} activeHref={activeHref} />
+      <TagCloud title={labels.tagsTitle} links={tagLinks} activeHref={activeHref} />
+    </>
+  )
 
+  // Single-column (default): one left rail, everything stacked, full-width column.
+  if (sidebarLayout !== 'two') {
+    return (
+      <Rail>
+        <div className="space-y-7">
+          <SidebarMenu items={menu} />
+          {discovery}
+          {nav}
+        </div>
+      </Rail>
+    )
+  }
+
+  // Two-column: discovery-left + nav-right rails; narrower column via listingRailCss.
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: listingRailCss(Math.round(contentWidth * LISTING_WIDTH_RATIO)) }} />
@@ -69,8 +89,7 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
           <SidebarMenu items={menu} />
           {/* Discovery again, shown ONLY in the mobile drawer (desktop-hidden). */}
           <div className="drawer-only space-y-7">{discovery}</div>
-          <IndexBlock title={labels.categoriesTitle} links={categoryLinks} activeHref={activeHref} />
-          <TagCloud title={labels.tagsTitle} links={tagLinks} activeHref={activeHref} />
+          {nav}
         </div>
       </Rail>
     </>
