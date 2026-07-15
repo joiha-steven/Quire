@@ -16,6 +16,9 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
   // Owner-authored footer: expand {year}/{title}, then render the limited inline
   // markdown (escape-first, so it can never inject unsafe markup).
   const footerHtml = renderInlineMarkdown(expandFooterTokens(settings.footer, settings.title), { newTab: true })
+  // Only load the palette switcher (a client island) when there's more than one palette to
+  // switch between — otherwise its JS is dead weight.
+  const palettes = enabledPaletteOptions(settings.themes, settings.enabledPalettes)
   return (
     <div
       className={`mx-auto flex min-h-screen w-full flex-col px-8 sm:px-5${settings.features.bookText ? ' book-text' : ''}`}
@@ -57,7 +60,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
             </Link>
             <div className="flex shrink-0 items-center gap-0.5">
               {settings.features.search && <SearchTrigger lang={settings.language} />}
-              <PaletteToggle lang={settings.language} palettes={enabledPaletteOptions(settings.themes, settings.enabledPalettes)} defaultId={settings.themePreset} />
+              {palettes.length > 1 && <PaletteToggle lang={settings.language} palettes={palettes} defaultId={settings.themePreset} />}
               <ThemeToggle lang={settings.language} />
               {/* Mobile-only: opens the sidebar drawer. Hidden above the rail breakpoint
                   (gutter rail) and self-hides on pages with no rail (see RailToggle). */}
