@@ -31,17 +31,24 @@
   categoryLabel, deck, bookText }` (all default on EXCEPT `bookText`, which is off; Admin → Settings →
   Tính năng); gated in header / `/search` / post page. `bookText` = book-page typesetting on the post
   body (first-line indent + justify ≥600px).
-- **Sidebar** (`sidebar`): the MAIN (listing) sidebar carries, in order — **menu** (`SidebarMenu`, the
-  site nav, moved out of the header), **most viewed** (auto: top `settings.mostViewedCount` public posts
-  by all-time views — default 3, `0` hides it — `getViewTotals()` joined to `getPublicPosts()`),
-  **featured** (owner-curated `settings.featured` slugs, in that order, first 5, dropped when a slug
-  stops being public), **categories** (with published-post counts, `getPublicTaxonomy()`), and **tags**.
-  Assembled in `ListingSidebar` → `SidebarMenu` + `SideIndex` (post blocks reuse `IndexBlock`); each block
-  self-hides when empty. **Post/page reading views show ONLY the `toc`** in the rail — no menu/blocks.
-  All are `<Rail>`; below the rail breakpoint the markup is a slide-out drawer opened by the **header menu
-  button** (`RailToggle`, mobile only; self-hides on pages with no rail) — no separate header dropdown.
-  Menu + most-viewed count + featured are all edited in **Admin → Settings → Site → Layout & menu**
-  (`LayoutMenuFields` + `FeaturedField`); `getViewTotals` uses a GET rpc so the pages stay ISR.
+- **Sidebar** (`sidebar`): the MAIN (listing) sidebar is **TWO gutter rails on desktop** flanking a
+  narrower reading column (listing column = 80% of the post width, via `--shell-w`; the extra
+  compactness pulls both rails in). **Left rail** = discovery: **most viewed** (auto: top
+  `settings.mostViewedCount` public posts by all-time views — default 3, `0` hides it —
+  `getViewTotals()` joined to `getPublicPosts()`) + **featured** (owner-curated `settings.featured`
+  slugs, in order, first 5, dropped when a slug stops being public). **Right rail** = navigation:
+  **menu** (`SidebarMenu`, moved out of the header) + **categories** (with counts, `getPublicTaxonomy()`)
+  + **tags**. On **mobile** there is ONE gutter-less drawer: the left rail is hidden and its two blocks
+  are duplicated into the right rail's drawer (`.drawer-only`), giving the order menu → most viewed →
+  featured → categories → tags. Assembled in `ListingSidebar` (two `<Rail className="rail-left|rail-right">`
+  reusing `IndexBlock`/`TagCloud`); the geometry (per-page breakpoint + column width + right-rail mirror)
+  is injected from `lib/rail-css.ts` (`singleRailCss` for the layout's default/post ToC rail,
+  `listingRailCss` for the two rails — the latter uses higher-specificity `.rail.rail-left|right` so it
+  wins without ordering games). Each block self-hides when empty. **Post/page reading views show ONLY the
+  `toc`** in a single left rail (full width; the free right gutter stays for wide images). Below the rail
+  breakpoint the drawer opens from the **header menu button** (`RailToggle`, mobile only; self-hides on
+  pages with no rail) — no separate header dropdown. Menu + most-viewed count + featured are edited in
+  **Admin → Settings → Site → Layout & menu**; `getViewTotals` uses a GET rpc so the pages stay ISR.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).
