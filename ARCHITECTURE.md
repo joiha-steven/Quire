@@ -178,6 +178,12 @@ The admin UI contract, editor layout decisions, and the 13 July 2026 production 
   stays unchanged and the app can only touch files it created; the refresh token is the one true
   secret, so it lives server-side in `backup_state`, never in the client-bound `settings` blob.
   Uploaded binaries are immutable, so even "full every run" stays cheap to produce.
+- **A reader downloads only what the visible page needs** → the LCP element is the post
+  title in the reading font, so `<link rel=preload>` targets exactly its language subset(s)
+  and nothing else (never the chrome font or an unsubsetted custom upload — they swap in);
+  Tailwind is split into a public + an admin entry so admin utilities never reach a reader;
+  client islands are feature-gated and lazy-loaded below the fold. One rule set for every
+  language/font/upload — the full law is `docs/performance.md`.
 
 ## Conventions
 
