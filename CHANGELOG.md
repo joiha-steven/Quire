@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 2026-07-15 — leaner reader payload, one font law, agent-ready
+
+Performance:
+- **Split the stylesheet** into a public and an admin entry (Tailwind scoped per surface),
+  so a reader never downloads admin CSS — public CSS dropped ~13 KB → ~9 KB gzip.
+- **Lazy-load the comment island** (with its `next-auth` dependency) below the fold via
+  `IntersectionObserver` — it's out of the initial reader payload until scrolled near.
+- **Font loading is now one system-wide law** (`docs/performance.md`): preload only the
+  reading font (the LCP title) subsets the site language needs — latin, plus vietnamese
+  on a vi site, nothing for CJK or an uploaded custom font — and never the chrome font.
+  Cuts the font contention on the LCP critical path for every language/preset/upload.
+
+Agent-ready (AI agents can find, read, and drive the site):
+- **Markdown for Agents**: request any post/page with `Accept: text/markdown` to get its
+  authored Markdown instead of HTML.
+- **Discovery**: MCP Server Card (`/.well-known/mcp/server-card.json`), API Catalog
+  (`/.well-known/api-catalog`, RFC 9727), `/auth.md`, and homepage `Link:` headers.
+- **`Content-Signal`** in `robots.txt` declaring content-usage preferences.
+- Fixed a reverse-proxy rule that was returning 404 for the OAuth/MCP discovery routes.
+
 ## 2026-07-14 — sidebar refinements
 
 - Sidebar order is now **menu → most viewed → featured → categories → tags** (categories sit directly

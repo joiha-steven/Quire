@@ -128,6 +128,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | SEO / sitemap / feed / robots / OG | `docs/seo-pwa.md`, `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | `lib/og.ts` |
 | PWA / manifest / favicon | `docs/seo-pwa.md`, `src/app/manifest.ts`, `src/app/layout.tsx` | — |
 | MCP server | `docs/mcp.md`, `src/lib/mcp/*`, `src/app/api/mcp/*` | — |
+| Agent discovery / markdown negotiation / .well-known / Content-Signal / Link headers | `docs/agent-ready.md`, `lib/well-known.ts`, `src/app/.well-known/*`, `src/app/{auth.md,robots.txt,api/md/[slug]}`, `next.config.ts` | `docs/mcp.md` |
 | WordPress import | `lib/wordpress-import.ts` (pure WXR→posts/pages), `api/import/wordpress`, `components/admin/ImportFields.tsx` | `docs/features.md` |
 | Health / env / migrations / rate-limit | `api/health`, `src/env.ts` + `src/instrumentation.ts`, `scripts/migrate.sh` + `scripts/schema.sql` (`schema_migrations`), `lib/rate-limit.ts` | `docs/self-host-native.md` |
 
@@ -214,7 +215,8 @@ Read on demand — the DEBUG ROUTER routes to each: `conventions` (typography, h
 i18n, scripts, releases) · `features` (Trash, search/ToC/related, editor, dashboards, settings) ·
 `admin-redesign-2026-07` (admin visual contract) · `worklog-2026-07-13` (complete redesign/deploy record) ·
 `seo-pwa` (SEO, feeds, OG, region, PWA) · `mcp` (server, tokens, OAuth) · `backups` (Drive, cron) ·
-`performance` (resource-loading law: font preload, CSS split, island JS).
+`performance` (resource-loading law: font preload, CSS split, island JS) ·
+`agent-ready` (markdown negotiation, .well-known discovery, Content-Signal, the /.well-known proxy rule).
 
 ## Next.js 16
 
