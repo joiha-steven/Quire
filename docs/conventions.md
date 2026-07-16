@@ -175,18 +175,14 @@ font, only the site language's subset(s), never the chrome font or an uploaded c
 - **`schema.sql`** — full Postgres schema (15 tables + the `schema_migrations` ledger + indexes + `posts.search` tsvector +
   RLS + the analytics RPCs). Run ONCE on a fresh Postgres database. NOT run by the app;
   transcribed from the live schema — **keep it in sync when you change tables/RPCs.**
-- **`migrate-to-supabase.mjs`** — one-off P1.5 migration (old-store `_index.json`+`.md` →
-  Postgres). Already run; kept for recovery.
 - **WordPress import is now an in-app feature** (Admin → Settings → Integrations →
   `lib/wordpress-import.ts`), NOT a script. The old `import-wordpress`/`fix-import-captions` CLIs
   were removed. `turndown`/`turndown-plugin-gfm`/`fast-xml-parser` are now runtime **dependencies**
   (the importer uses them).
-- **`scripts/legacy/` — pre-Postgres one-offs, do NOT run against the live site** (they operate
-  on the retired `_index.json`/`.md`-on-storage model): `convert-html-to-markdown`,
-  `backfill-excerpts`, `rehost-images`, `rebuild-index`, `wipe-media`,
-  `backfill-reading-time`, `list-posts-with-images`, `check-image-links`,
-  `backfill-media-dimensions`, `remap-original-images`. Kept for recovery only; `gray-matter` (their
-  frontmatter dep) is a devDependency.
+- **Vercel/Supabase-cloud era scripts are GONE** (2026-07): `scripts/legacy/*`,
+  `migrate-to-supabase.mjs`, `copy-blob-store.mjs`, `collapse-stored-urls.mjs` all operated on the
+  retired Vercel-Blob `_index.json`/`.md` model and imported `@vercel/blob`, which is no longer a
+  dependency (they could not even run). History lives in git/CHANGELOG if ever needed.
 
 ## Docs & releases — keep current
 
