@@ -122,6 +122,32 @@
 - Time machine: each overwrite snapshots the prior version (`revisions.ts`, keeps 3); restore
   loads it into the editor (non-destructive — current version is snapshotted on next save).
 
+## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
+
+- The Library page has THREE tabs (`LibraryTabs.tsx`): **Images** (media library),
+  **Videos**, **Files**. Videos are ordinary attachments in the shared `files` store
+  (same upload route `/api/files/attach`, same soft-delete) — `isVideoAttachment`
+  (MIME `video/*`, extension fallback) splits them between the Videos tab (grid of
+  native `<video controls preload="metadata">` players + copy URL) and the Files tab.
+  No schema change; `FileUploader` takes `accept`/`label` for the video dropzone.
+- **Publishing:** copy the video URL and paste it on its own line in the editor —
+  content stays 100% Markdown, exactly like YouTube/Vimeo/TikTok. The renderer
+  (`PostContent buildVideos`) turns a platform URL into an iframe embed and a DIRECT
+  file URL (`videoFileUrl`: http(s)/root-relative + `.mp4/.m4v/.webm/.mov`) into a
+  native `<video>` (`.video-file`, column width, natural aspect). The scheme gate
+  means `javascript:`/`data:` can never reach `src`. The editor's Video node previews
+  both forms.
+- **Serving (`app/uploads/[...path]`): STREAMS from disk and honours byte ranges.**
+  Video seeking — and iOS Safari playback at all — needs 206 responses; the route
+  parses `Range` via `lib/http-range.ts` (pinned by `http-range.test.ts`) and pipes
+  `createReadStream` into the Response, so a large video never sits in server memory
+  (this also de-buffered image serving). `lib/mime.ts` maps video/audio extensions —
+  without them the fallback octet-stream makes browsers download instead of play.
+- **Host limits:** the reverse proxy caps upload size (nginx `client_max_body_size`),
+  and proxies/CDNs (e.g. Cloudflare free: 100 MB) cap request bodies — a huge video
+  fails at the edge, not in the app. For long/heavy video, a platform embed
+  (unlisted YouTube/Vimeo) is still the better tool: transcoding + adaptive bitrate.
+
 ## Admin UI kit — `components/admin/kit.tsx`
 
 - ONE source of truth for shared admin chrome so no page hand-rolls its own (radius /

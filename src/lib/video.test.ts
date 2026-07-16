@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { videoEmbed, isVideoUrl } from '@/lib/video'
+import { videoEmbed, isVideoUrl, videoFileUrl, isVideoAttachment } from '@/lib/video'
 
 describe('videoEmbed', () => {
   it('maps a YouTube watch URL to a nocookie embed', () => {
@@ -31,5 +31,28 @@ describe('videoEmbed', () => {
   it('returns null for a non-video URL', () => {
     expect(videoEmbed('https://example.com/article')).toBeNull()
     expect(isVideoUrl('https://example.com/article')).toBe(false)
+  })
+})
+
+describe('videoFileUrl (direct/self-hosted files)', () => {
+  it('accepts absolute and root-relative video files, with query/hash', () => {
+    expect(videoFileUrl('/uploads/files/a.mp4')).toBe('/uploads/files/a.mp4')
+    expect(videoFileUrl('https://cdn.example.com/v.webm?x=1')).toBe('https://cdn.example.com/v.webm?x=1')
+    expect(videoFileUrl('/uploads/files/a.MOV#t=3')).toBe('/uploads/files/a.MOV#t=3')
+  })
+
+  it('rejects non-video extensions and unsafe/relative schemes', () => {
+    expect(videoFileUrl('/uploads/files/a.pdf')).toBeNull()
+    expect(videoFileUrl('javascript:alert(1)//x.mp4')).toBeNull() // scheme gate
+    expect(videoFileUrl('files/a.mp4')).toBeNull() // must be http(s) or root-relative
+  })
+})
+
+describe('isVideoAttachment (Library tab split)', () => {
+  it('classifies by MIME first, extension as fallback', () => {
+    expect(isVideoAttachment('clip.mp4', 'video/mp4')).toBe(true)
+    expect(isVideoAttachment('clip.bin', 'video/webm')).toBe(true) // MIME wins
+    expect(isVideoAttachment('clip.mov', 'application/octet-stream')).toBe(true) // ext fallback
+    expect(isVideoAttachment('doc.pdf', 'application/pdf')).toBe(false)
   })
 })

@@ -764,6 +764,15 @@ hr {
   border: 0;
   border-radius: 0;
 }
+/* Self-hosted video file (Library upload): native player at column width, natural
+   aspect ratio (no 16:9 box — the file knows its own shape). */
+.prose .video-file {
+  margin: 1.9em 0;
+}
+.prose .video-file video {
+  display: block;
+  width: 100%;
+}
 
 /* No dark-mode code-chip override needed: code/pre backgrounds use var(--c-rule),
    which is itself themed per mode. Everything tracks the reading-colour vars. */

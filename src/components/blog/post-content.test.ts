@@ -58,6 +58,19 @@ describe('markdown render — structure', () => {
     expect(html).toContain('youtube-nocookie.com/embed/dQw4w9WgXcQ')
   })
 
+  it('turns a standalone video-file URL (Library upload) into a native <video> player', async () => {
+    const html = await render('/uploads/files/clip-123.mp4')
+    expect(html).toContain('<div class="video-file">')
+    expect(html).toContain('<video controls preload="metadata" playsinline src="/uploads/files/clip-123.mp4">')
+  })
+
+  it('does NOT build a player from a non-http(s) video-looking URL', async () => {
+    // videoFileUrl requires http(s)/root-relative, so a javascript: scheme can
+    // never reach a src attribute; the line stays an escaped paragraph.
+    const html = await render('javascript:alert(1)//x.mp4')
+    expect(html).not.toContain('<video')
+  })
+
   it('wraps a markdown image in a <figure> with the alt as <figcaption>', async () => {
     const html = await render('![A small cat](media/cat.jpg)')
     expect(html).toContain('<figure')

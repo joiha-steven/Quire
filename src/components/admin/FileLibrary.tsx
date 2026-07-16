@@ -8,6 +8,7 @@ import type { FileItem, ApiResponse } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { formatBytes } from '@/lib/utils'
 import { formatDate } from '@/lib/i18n'
+import { isVideoAttachment } from '@/lib/video'
 import { FileUploader } from './FileUploader'
 import { useAdminT, useAdminLang } from './I18nProvider'
 
@@ -34,7 +35,8 @@ export function FileLibrary() {
       fetch('/api/files/icons').then((r) => r.json() as Promise<ApiResponse<FileItem[]>>),
     ])
       .then(([f, i]) => {
-        setItems(f.data ?? [])
+        // Videos share the store but live in their own tab (VideoLibrary).
+        setItems((f.data ?? []).filter((x) => !isVideoAttachment(x.filename, x.contentType)))
         setIcons(i.data ?? [])
       })
       .catch(() => notify(t.loadFilesFailed, 'error'))
@@ -61,7 +63,7 @@ export function FileLibrary() {
       })
       const json = (await res.json()) as ApiResponse<FileItem[]>
       if (!json.success || !json.data) throw new Error(json.error)
-      setItems(json.data)
+      setItems(json.data.filter((x) => !isVideoAttachment(x.filename, x.contentType)))
       setSelected(new Set())
       notify(t.movedToTrash)
     } catch {

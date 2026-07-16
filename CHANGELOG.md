@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-07-16 — video upload: Library Videos tab + native player
+
+- **Library → Videos tab** (between Images and Files): upload videos (drag-drop,
+  `video/*`), preview in a grid of native players, copy URL, multi-select delete.
+  Videos are attachments in the shared files store — no schema change.
+- **Self-hosted video in posts**: paste the video URL on its own line (like a
+  YouTube link) → the published page renders a native `<video>` player. Content
+  stays 100% Markdown.
+- **`/uploads` now streams with byte-range support** (206) — video seeking and iOS
+  Safari playback work; large files no longer buffer whole in server memory (images
+  benefit too). Video/audio MIME types added so browsers play instead of download.
+
 ## 2026-07-15 — leaner reader payload, one font law, agent-ready
 
 Performance:

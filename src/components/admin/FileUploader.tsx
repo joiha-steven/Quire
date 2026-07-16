@@ -1,14 +1,23 @@
 'use client'
 
-// Drag-drop + click upload zone for the Files tab. Accepts ANY file type
-// (it is the catch-all attachment store), multi-file, with a progress bar.
+// Drag-drop + click upload zone for the Files/Videos tabs. By default accepts ANY
+// file type (the catch-all attachment store); `accept`/`label` narrow it for the
+// Videos tab. Multi-file, with a progress bar.
 import { useRef, useState } from 'react'
 import type { FileItem } from '@/types'
 import { useToast } from '@/components/ui/Toast'
 import { uploadAttachments } from '@/lib/upload-client'
 import { useAdminT } from './I18nProvider'
 
-export function FileUploader({ onUploaded }: { onUploaded: (items: FileItem[]) => void }) {
+export function FileUploader({
+  onUploaded,
+  accept,
+  label,
+}: {
+  onUploaded: (items: FileItem[]) => void
+  accept?: string // e.g. 'video/*' for the Videos tab; unset = any file
+  label?: string // dropzone copy override (defaults to the Files copy)
+}) {
   const t = useAdminT()
   const { notify } = useToast()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -47,11 +56,12 @@ export function FileUploader({ onUploaded }: { onUploaded: (items: FileItem[]) =
           dragging ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-300 text-neutral-500'
         }`}
       >
-        {t.filesDropzone}
+        {label ?? t.filesDropzone}
         <input
           ref={inputRef}
           type="file"
           multiple
+          accept={accept}
           className="hidden"
           onChange={(e) => {
             handle(Array.from(e.target.files ?? []))

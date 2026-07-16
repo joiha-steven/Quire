@@ -17,3 +17,21 @@ export function videoEmbed(url: string): { kind: VideoKind; embed: string } | nu
 }
 
 export const isVideoUrl = (s: string): boolean => videoEmbed(s) !== null
+
+// A DIRECT video file (self-hosted upload from the Library's Videos tab, or any
+// absolute .mp4/.webm URL) — rendered as a native <video> player instead of an
+// iframe embed. Only http(s)/root-relative URLs qualify, so a javascript:/data:
+// scheme can never reach a src attribute through this path.
+const VIDEO_FILE = /\.(mp4|m4v|webm|mov)(?:[?#]|$)/i
+
+export function videoFileUrl(url: string): string | null {
+  const u = url.trim()
+  if (!/^(https?:\/\/|\/)/i.test(u)) return null
+  return VIDEO_FILE.test(u) ? u : null
+}
+
+// Classify a Library attachment as a video — splits the shared `files` store into
+// the Videos tab (players) vs the Files tab (everything else).
+export function isVideoAttachment(filename: string, contentType: string): boolean {
+  return contentType.startsWith('video/') || VIDEO_FILE.test(filename)
+}

@@ -1,7 +1,7 @@
 // Markdown -> HTML. 100% Markdown: raw HTML/CSS is escaped and shown verbatim,
 // never rendered. Only Markdown-generated elements (incl. GFM tables) are produced.
 import { marked, type Tokens } from 'marked'
-import { videoEmbed } from '@/lib/video'
+import { videoEmbed, videoFileUrl } from '@/lib/video'
 import { collapseBlob } from '@/lib/blob'
 import { highlightCode } from '@/lib/highlight'
 import { slugify } from '@/lib/utils'
@@ -145,13 +145,23 @@ function buildFigures(html: string, ready: Set<string>, dims: ImageDims): string
     })
 }
 
-// Turn a standalone video URL (bare or autolinked by marked) into a responsive
-// embed. The iframe HTML is ours (trusted), added after marked has run.
+// Turn a standalone video URL (bare or autolinked by marked) into a player: a
+// known platform (YouTube/Vimeo/TikTok) becomes a responsive iframe embed; a
+// direct video FILE (a Library upload under /uploads, or any absolute .mp4/.webm)
+// becomes a native <video>. The player HTML is ours (trusted), added after marked
+// has run; videoFileUrl only passes http(s)/root-relative URLs, and the quote
+// strip keeps the (already-escaped) URL from breaking out of the src attribute.
 function buildVideos(html: string): string {
   return html.replace(
     /<p>\s*(?:<a\b[^>]*href="([^"]+)"[^>]*>[^<]*<\/a>|([^<\s]+))\s*<\/p>/g,
     (whole, hrefUrl?: string, textUrl?: string) => {
-      const v = videoEmbed((hrefUrl || textUrl || '').trim())
+      const url = (hrefUrl || textUrl || '').trim()
+      const f = videoFileUrl(url)
+      if (f) {
+        const src = f.replace(/"/g, '%22')
+        return `<div class="video-file"><video controls preload="metadata" playsinline src="${src}"></video></div>`
+      }
+      const v = videoEmbed(url)
       if (!v) return whole
       return `<div class="video-embed"><iframe src="${v.embed}" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
     },

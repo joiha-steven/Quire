@@ -7,7 +7,8 @@
 // Files are served back over HTTP by app/uploads/[...path]/route.ts under the
 // `/uploads` prefix, which is the same prefix blob.ts uses to build public URLs.
 
-import { promises as fs } from 'node:fs'
+import { promises as fs, createReadStream } from 'node:fs'
+import { Readable } from 'node:stream'
 import path from 'node:path'
 
 // Resolved once; in the Docker standalone image cwd is /app, so the default maps
@@ -39,9 +40,25 @@ export async function put(
   return `/uploads/${pathname}`
 }
 
-// Read a binary back (used by backup + the serving route).
+// Read a binary back (used by backup + small whole-file reads).
 export function read(pathname: string): Promise<Buffer> {
   return fs.readFile(resolveSafe(pathname))
+}
+
+// Size of a stored binary (throws when missing) — the serving route needs it for
+// Content-Length and byte-range bounds.
+export async function statSize(pathname: string): Promise<number> {
+  const s = await fs.stat(resolveSafe(pathname))
+  if (!s.isFile()) throw new Error(`Not a file: ${pathname}`)
+  return s.size
+}
+
+// Stream a stored binary (optionally a byte range, inclusive bounds) as a web
+// ReadableStream — the serving route pipes this straight into the Response so a
+// large video never sits fully in memory the way read() would put it there.
+export function stream(pathname: string, range?: { start: number; end: number }): ReadableStream {
+  const rs = createReadStream(resolveSafe(pathname), range)
+  return Readable.toWeb(rs) as ReadableStream
 }
 
 // Delete a binary. No-op when missing.
