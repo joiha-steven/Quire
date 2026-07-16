@@ -5,7 +5,7 @@
 // public renderer turns the same URL into an iframe.
 import { Node } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
-import { videoEmbed } from '@/lib/video'
+import { videoEmbed, videoFileUrl } from '@/lib/video'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -16,12 +16,17 @@ declare module '@tiptap/core' {
 function VideoView({ node }: NodeViewProps) {
   const src = (node.attrs.src as string) || ''
   const v = videoEmbed(src)
+  const file = v ? null : videoFileUrl(src)
   return (
     <NodeViewWrapper as="div" className="my-4" data-drag-handle>
       {v ? (
         <div className="relative w-full overflow-hidden rounded-lg" style={{ aspectRatio: '16 / 9' }}>
           <iframe src={v.embed} className="absolute inset-0 h-full w-full" allowFullScreen loading="lazy" />
         </div>
+      ) : file ? (
+        // Self-hosted video file (Library upload): native player, natural aspect —
+        // mirrors the published .video-file rendering.
+        <video src={file} controls preload="metadata" playsInline className="block w-full rounded-lg" />
       ) : (
         <p className="break-all text-sm text-neutral-500">{src}</p>
       )}

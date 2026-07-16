@@ -1,13 +1,15 @@
 'use client'
 
-// Two-tab shell for the Library page: "Images" (the media library) and "Files"
-// (non-image attachments). Each tab mounts lazily on first open.
+// Three-tab shell for the Library page: "Images" (the media library), "Videos"
+// (video attachments with players), and "Files" (the other attachments). The
+// non-default tabs mount lazily on first open.
 import { useState } from 'react'
 import { MediaLibrary } from './MediaLibrary'
+import { VideoLibrary } from './VideoLibrary'
 import { FileLibrary } from './FileLibrary'
 import { useAdminT } from './I18nProvider'
 
-type Tab = 'images' | 'files'
+type Tab = 'images' | 'videos' | 'files'
 
 export function LibraryTabs() {
   const t = useAdminT()
@@ -26,15 +28,19 @@ export function LibraryTabs() {
         <button type="button" onClick={() => setTab('images')} className={tabClass(tab === 'images')}>
           {t.tabImages}
         </button>
+        <button type="button" onClick={() => setTab('videos')} className={tabClass(tab === 'videos')}>
+          {t.tabVideos}
+        </button>
         <button type="button" onClick={() => setTab('files')} className={tabClass(tab === 'files')}>
           {t.tabFiles}
         </button>
       </div>
-      {/* Keep the images tab mounted (it holds upload/scroll state); only the
-          files tab is created on first visit. */}
+      {/* Keep the images tab mounted (it holds upload/scroll state); the videos and
+          files tabs are created on first visit. */}
       <div className={tab === 'images' ? '' : 'hidden'}>
         <MediaLibrary mode="page" />
       </div>
+      {tab === 'videos' && <VideoLibrary />}
       {tab === 'files' && <FileLibrary />}
     </div>
   )

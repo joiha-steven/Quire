@@ -177,7 +177,10 @@ export type AdminStrings = {
   // media
   libraryTitle: string
   tabImages: string
+  tabVideos: string
   tabFiles: string
+  videosDropzone: string
+  noVideos: string
   mediaTitle: string
   galleryPickTitle: string
   galleryPickHint: string
