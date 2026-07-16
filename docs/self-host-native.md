@@ -151,9 +151,9 @@ pg_dump "postgresql://USER:PASS@OLD_HOST:5432/DB" \
 sudo -u postgres psql -d quire -f quire-data.sql   # generated columns (search) are skipped + recomputed
 ```
 
-Binaries — copy the old store into `STORAGE_LOCAL_DIR`, preserving the `media/…` and `files/…`
-pathnames (image refs are stored **store-relative**, so nothing in the content needs rewriting).
-Moving off a legacy Vercel Blob store? See [`scripts/legacy/blob-to-local.mjs`](../scripts/legacy/blob-to-local.mjs).
+Binaries — copy the old store into `STORAGE_LOCAL_DIR` (rsync/cp), preserving the `media/…` and
+`files/…` pathnames (image refs are stored **store-relative**, so nothing in the content needs
+rewriting).
 
 After loading data: `rm -rf .next/cache && npm run build && systemctl restart quire`.
 
