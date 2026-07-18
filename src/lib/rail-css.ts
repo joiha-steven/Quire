@@ -40,8 +40,25 @@ export function singleRailCss(colWidth: number): string {
     `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail-row[aria-current]::before{left:auto;right:0}` +
     `.rail-toggle,.rail-scrim{display:none}` +
-    `.prose figure.img-wide{width:calc(100% + var(--rail-w) + var(--rail-gap));max-width:none;margin-left:0;` +
+    // A "wide" image or video noses right into the freed gutter by one rail width.
+    `.prose figure.img-wide,.prose .video-wide{width:calc(100% + var(--rail-w) + var(--rail-gap));max-width:none;margin-left:0;` +
     `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)))}}`
+  )
+}
+
+// Grid mode for a listing page (header toggle → <html data-list=grid>). Above the rail
+// breakpoint it reclaims the FREE right gutter: widen the shell by one rail width, drop the
+// right rail (two-col layout only), and lay the post list out in 3 columns. Below the
+// breakpoint the base 1/2-column grid (globals.css) applies and nothing is widened (no room).
+// Injected by ListingSidebar, so it only exists on listing pages — never a reading view.
+export function listingGridCss(colWidth: number): string {
+  const at = breakpoint(colWidth)
+  const wide = colWidth + RAIL_W + RAIL_GAP + RAIL_BREATHING
+  return (
+    `@media (min-width:${at}px){` +
+    `html[data-list="grid"]{--shell-w:${wide}px}` +
+    `html[data-list="grid"] .rail.rail-right{display:none}` +
+    `html[data-list="grid"] .post-list{grid-template-columns:repeat(3,minmax(0,1fr))}}`
   )
 }
 

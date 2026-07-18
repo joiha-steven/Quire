@@ -773,6 +773,50 @@ hr {
   display: block;
   width: 100%;
 }
+/* Phone full-bleed for video, mirroring images: every embedded/native player goes
+   edge to edge of the viewport (see the figure full-bleed rule above). The desktop
+   "#wide" nose-into-the-gutter rule is injected by singleRailCss (rail-css.ts). */
+@media (max-width: 767px) {
+  .prose .video-embed,
+  .prose .video-file {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+}
+
+/* Listing grid mode — header toggle sets <html data-list=grid>. The post list becomes a
+   responsive card grid: 1 column on phones, 2 from 640px; the 3-column desktop layout and
+   the widen-into-the-free-gutter live in rail-css.ts (they need the reading-column width).
+   A lead card spans every column. Featured-image thumbs (hidden in the default list) show;
+   posts without one stay text-only. */
+html[data-list='grid'] .post-list {
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  html[data-list='grid'] .post-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+html[data-list='grid'] .post-list article[data-lead] {
+  grid-column: 1 / -1;
+}
+.card-thumb {
+  display: none;
+}
+html[data-list='grid'] .card-thumb {
+  display: block;
+  margin-bottom: 0.9rem;
+}
+html[data-list='grid'] .card-thumb img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
 
 /* No dark-mode code-chip override needed: code/pre backgrounds use var(--c-rule),
    which is itself themed per mode. Everything tracks the reading-colour vars. */

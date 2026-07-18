@@ -8,6 +8,8 @@ const ja = {
   tagLabel: 'タグ',
   pageLabel: 'ページ',
   menu: 'メニュー',
+  gridView: 'グリッド表示',
+  listView: 'リスト表示',
   palette: 'パレット',
   paletteNames: { mono: 'モノ', sepia: 'セピア', forest: 'フォレスト', ocean: 'オーシャン', scifi: 'サイファイ', amber: 'アンバー' },
   theme: 'テーマ',

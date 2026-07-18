@@ -23,8 +23,17 @@ export function PostCard({
   const Title = lead ? 'h1' : 'h2'
   return (
     // `reveal` eases the card in as it scrolls into view (motion engine; fully
-    // visible when motion is off / unsupported — see globals.css).
-    <article className="reveal">
+    // visible when motion is off / unsupported — see globals.css). `data-lead` lets a
+    // grid layout span the lead card across all columns.
+    <article className="reveal" data-lead={lead ? '' : undefined}>
+      {/* Thumbnail — only posts WITH a featured image; hidden in list mode, shown in
+          grid mode (globals.css `.card-thumb`). Posts without one stay text-only. */}
+      {post.featuredImage && (
+        <Link href={`/${post.slug}`} className="card-thumb" aria-hidden tabIndex={-1}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={post.featuredImage} alt="" loading="lazy" />
+        </Link>
+      )}
       <p className="t-small text-meta">
         {category && (
           <>

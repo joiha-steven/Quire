@@ -8,6 +8,8 @@ const vi = {
   tagLabel: 'Thẻ',
   pageLabel: 'Trang',
   menu: 'Menu',
+  gridView: 'Dạng lưới',
+  listView: 'Dạng danh sách',
   palette: 'Bảng màu',
   paletteNames: { mono: 'Đơn sắc', sepia: 'Nâu giấy', forest: 'Rừng xanh', ocean: 'Đại dương', scifi: 'Viễn tưởng', amber: 'Hổ phách' },
   theme: 'Giao diện',

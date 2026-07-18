@@ -6,6 +6,7 @@
 import { Node } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { videoEmbed, videoFileUrl } from '@/lib/video'
+import { useAdminT } from './I18nProvider'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -13,12 +14,34 @@ declare module '@tiptap/core' {
   }
 }
 
-function VideoView({ node }: NodeViewProps) {
-  const src = (node.attrs.src as string) || ''
+function VideoView({ node, updateAttributes, selected }: NodeViewProps) {
+  const t = useAdminT()
+  const raw = (node.attrs.src as string) || ''
+  // A trailing `#wide` fragment sizes the player like a wide image; keep it out of URL
+  // detection and re-attach it via the toggle, so the node still serializes to a bare URL.
+  const [src, frag = ''] = raw.split('#')
+  const wide = /wide/.test(frag)
   const v = videoEmbed(src)
   const file = v ? null : videoFileUrl(src)
+  const setWide = (w: boolean) => updateAttributes({ src: w ? `${src}#wide` : src })
+  const btn = (active: boolean) =>
+    `rounded-md px-2.5 py-1 text-xs font-medium ${
+      active ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500'
+    }`
   return (
     <NodeViewWrapper as="div" className="my-4" data-drag-handle>
+      {selected && (v || file) && (
+        <div className="mb-2 flex flex-wrap gap-2" contentEditable={false} onMouseDown={(e) => e.preventDefault()}>
+          <div className="inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+            <button type="button" onClick={() => setWide(false)} className={btn(!wide)}>
+              {t.imgSizeColumn}
+            </button>
+            <button type="button" onClick={() => setWide(true)} className={btn(wide)}>
+              {t.imgSizeWide}
+            </button>
+          </div>
+        </div>
+      )}
       {v ? (
         <div className="relative w-full overflow-hidden rounded-lg" style={{ aspectRatio: '16 / 9' }}>
           <iframe src={v.embed} className="absolute inset-0 h-full w-full" allowFullScreen loading="lazy" />

@@ -10,7 +10,7 @@ import { getViewTotals } from '@/lib/analytics'
 import { getSettings } from '@/lib/settings'
 import { termSlug } from '@/lib/taxonomy'
 import { t } from '@/lib/i18n'
-import { listingRailCss } from '@/lib/rail-css'
+import { listingRailCss, listingGridCss } from '@/lib/rail-css'
 import type { SiteLang } from '@/types'
 import { Rail } from './Rail'
 import { IndexBlock, TagCloud } from './SideIndex'
@@ -62,23 +62,28 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
     </>
   )
 
-  // Single-column (default): one left rail, everything stacked, full-width column.
+  // Single-column (default): one left rail, everything stacked, full-width column. The
+  // grid toggle widens into the free right gutter (listingGridCss, keyed to this width).
   if (sidebarLayout !== 'two') {
     return (
-      <Rail>
-        <div className="space-y-7">
-          <SidebarMenu items={menu} />
-          {discovery}
-          {nav}
-        </div>
-      </Rail>
+      <>
+        <style dangerouslySetInnerHTML={{ __html: listingGridCss(contentWidth) }} />
+        <Rail>
+          <div className="space-y-7">
+            <SidebarMenu items={menu} />
+            {discovery}
+            {nav}
+          </div>
+        </Rail>
+      </>
     )
   }
 
   // Two-column: discovery-left + nav-right rails; narrower column via listingRailCss.
+  const listingWidth = Math.round(contentWidth * LISTING_WIDTH_RATIO)
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: listingRailCss(Math.round(contentWidth * LISTING_WIDTH_RATIO)) }} />
+      <style dangerouslySetInnerHTML={{ __html: listingRailCss(listingWidth) + listingGridCss(listingWidth) }} />
       {/* LEFT rail — discovery (desktop gutter only; hidden on mobile). */}
       <Rail className="rail-left">
         <div className="space-y-7">{discovery}</div>

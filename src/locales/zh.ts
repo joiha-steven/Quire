@@ -8,6 +8,8 @@ const zh = {
   tagLabel: '标签',
   pageLabel: '页',
   menu: '菜单',
+  gridView: '网格视图',
+  listView: '列表视图',
   palette: '配色',
   paletteNames: { mono: '单色', sepia: '棕褐', forest: '森林', ocean: '海洋', scifi: '科幻', amber: '琥珀' },
   theme: '主题',

@@ -8,6 +8,8 @@ const ko = {
   tagLabel: '태그',
   pageLabel: '페이지',
   menu: '메뉴',
+  gridView: '그리드 보기',
+  listView: '목록 보기',
   palette: '색상',
   paletteNames: { mono: '모노', sepia: '세피아', forest: '포레스트', ocean: '오션', scifi: '사이파이', amber: '앰버' },
   theme: '테마',

@@ -8,7 +8,7 @@ import { fontPresetCss, fontPreloadHrefs, chromeFontCss } from '@/lib/themes'
 // palette is baked into :root, so only set data-palette when a stored palette is
 // still ENABLED — a palette the owner has since hidden falls back to the default.
 function noFouc(enabled: string[]): string {
-  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p)}catch(e){}})();`
+  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p);if(localStorage.getItem('list')==='grid')d.setAttribute('data-list','grid')}catch(e){}})();`
 }
 
 
