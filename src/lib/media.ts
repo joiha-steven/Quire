@@ -1,7 +1,7 @@
-// Media: metadata in Postgres `media`, binaries on the local filesystem. Raster (jpg/png) keeps
-// the untouched ORIGINAL + responsive variants (-1024/-1600 AVIF+WebP) + a
-// -thumb.webp. Vector/anim (svg/gif/webp) stored as-is. Variant URLs derived by
-// convention from the original's name.
+// Media: metadata in Postgres `media`, binaries on the local filesystem. Every raster
+// original (jpg/png/webp/avif) is capped to 2048px on upload (capOriginal) — no full-size
+// bytes stored/served. Raster (jpg/png) also keeps responsive variants (-1024/-1600
+// AVIF+WebP) + a -thumb.webp. Vector/anim (svg/gif) stored as-is; variant names by convention.
 
 import { cache } from 'react'
 import type { MediaItem } from '@/types'
@@ -12,7 +12,7 @@ import { db, liveOnly } from '@/lib/db'
 import { mimeOf } from '@/lib/mime'
 import { slugify } from '@/lib/utils'
 import {
-  imageSize, safeSize, makeThumb, makeDisplay, RASTER, PASSTHROUGH, SIZES,
+  imageSize, safeSize, makeThumb, makeDisplay, capOriginal, RASTER, PASSTHROUGH, SIZES,
 } from '@/lib/image'
 
 // A row as stored in Postgres (store-relative paths).
@@ -128,7 +128,7 @@ async function processFile(
   const uploaded_at = new Date().toISOString()
 
   if (RASTER.test(contentType)) {
-    const original = Buffer.from(body)
+    const original = await capOriginal(body, contentType) // never store a >2048px original
     const path = await writeUniqueOriginal(base, contentType === 'image/png' ? 'png' : 'jpg', original, contentType, taken)
     const stem = path.replace(/\.[^.]+$/, '')
     const { width, height } = await safeSize(original) // never throws
@@ -143,10 +143,10 @@ async function processFile(
   }
 
   if (PASSTHROUGH.test(contentType)) {
-    const buf = Buffer.from(body)
+    const buf = await capOriginal(body, contentType) // webp/avif capped to 2048; svg/gif untouched
     const path = await writeUniqueOriginal(base, PASS_EXT[contentType] ?? 'webp', buf, contentType, taken)
     const { width, height } = await safeSize(buf)
-    return { path, filename: path.replace(/^media\//, ''), size: body.byteLength, uploaded_at, width: width ?? null, height: height ?? null, thumb: path, variants: false }
+    return { path, filename: path.replace(/^media\//, ''), size: buf.byteLength, uploaded_at, width: width ?? null, height: height ?? null, thumb: path, variants: false }
   }
 
   throw new Error(`Unsupported file type: ${contentType}`)
