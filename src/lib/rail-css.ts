@@ -47,18 +47,18 @@ export function singleRailCss(colWidth: number): string {
 }
 
 // Grid mode for a listing page (header toggle → <html data-list=grid>). Above the rail
-// breakpoint it reclaims the FREE right gutter: widen the shell by one rail width, drop the
-// right rail (two-col layout only), and lay the post list out in 3 columns. Below the
-// breakpoint the base 1/2-column grid (globals.css) applies and nothing is widened (no room).
+// breakpoint it reaches into the FREE right gutter (no right rail there): the column —
+// and so the header/logo/footer — keeps its width; only the post grid noses RIGHT by one
+// rail width (same mechanism as an img-wide figure) and lays out in 3 columns. Below the
+// breakpoint the base 1/2-column grid (globals.css) applies, in-column (no free gutter).
 // Injected by ListingSidebar, so it only exists on listing pages — never a reading view.
 export function listingGridCss(colWidth: number): string {
   const at = breakpoint(colWidth)
-  const wide = colWidth + RAIL_W + RAIL_GAP + RAIL_BREATHING
   return (
     `@media (min-width:${at}px){` +
-    `html[data-list="grid"]{--shell-w:${wide}px}` +
     `html[data-list="grid"] .rail.rail-right{display:none}` +
-    `html[data-list="grid"] .post-list{grid-template-columns:repeat(3,minmax(0,1fr))}}`
+    `html[data-list="grid"] .post-list{width:calc(100% + var(--rail-w) + var(--rail-gap));` +
+    `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)));grid-template-columns:repeat(3,minmax(0,1fr))}}`
   )
 }
 
