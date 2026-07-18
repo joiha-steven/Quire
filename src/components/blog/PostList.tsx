@@ -21,9 +21,10 @@ export function PostList({
     return <p className="py-16 text-center text-meta">{emptyText}</p>
   }
   // No rules between cards: whitespace does the separating, so the gap has to be
-  // wide enough to read as a break rather than a paragraph space.
+  // wide enough to read as a break rather than a paragraph space. `post-list` is the
+  // hook the header Grid toggle switches to a CSS grid (globals.css + rail-css).
   return (
-    <div className="flex flex-col gap-16">
+    <div className="post-list flex flex-col gap-16">
       {posts.map((post, i) => (
         <PostCard
           key={post.slug}

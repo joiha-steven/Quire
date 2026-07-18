@@ -9,6 +9,8 @@ export type Dict = {
   tagLabel: string
   pageLabel: string
   menu: string
+  gridView: string
+  listView: string
   palette: string
   paletteNames: Record<string, string>
   theme: string

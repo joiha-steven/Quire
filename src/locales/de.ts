@@ -8,6 +8,8 @@ const de = {
   tagLabel: 'Schlagwort',
   pageLabel: 'Seite',
   menu: 'Menü',
+  gridView: 'Rasteransicht',
+  listView: 'Listenansicht',
   palette: 'Farbschema',
   paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Wald', ocean: 'Ozean', scifi: 'Sci-Fi', amber: 'Bernstein' },
   theme: 'Design',

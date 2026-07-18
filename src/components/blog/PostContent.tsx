@@ -155,15 +155,19 @@ function buildVideos(html: string): string {
   return html.replace(
     /<p>\s*(?:<a\b[^>]*href="([^"]+)"[^>]*>[^<]*<\/a>|([^<\s]+))\s*<\/p>/g,
     (whole, hrefUrl?: string, textUrl?: string) => {
-      const url = (hrefUrl || textUrl || '').trim()
+      const raw = (hrefUrl || textUrl || '').trim()
+      // A trailing `#wide` fragment sizes the player like an img-wide figure (nose into
+      // the gutter on wide screens); strip it before URL detection. Mirrors image sizing.
+      const [url, frag = ''] = raw.split('#')
+      const wide = /wide/.test(frag) ? ' video-wide' : ''
       const f = videoFileUrl(url)
       if (f) {
         const src = f.replace(/"/g, '%22')
-        return `<div class="video-file"><video controls preload="metadata" playsinline src="${src}"></video></div>`
+        return `<div class="video-file${wide}"><video controls preload="metadata" playsinline src="${src}"></video></div>`
       }
       const v = videoEmbed(url)
       if (!v) return whole
-      return `<div class="video-embed"><iframe src="${v.embed}" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
+      return `<div class="video-embed${wide}"><iframe src="${v.embed}" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
     },
   )
 }

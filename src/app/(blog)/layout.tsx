@@ -5,6 +5,7 @@ import { enabledPaletteOptions } from '@/lib/themes'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { PaletteToggle } from '@/components/theme/PaletteToggle'
 import { RailToggle } from '@/components/blog/RailToggle'
+import { GridToggle } from '@/components/blog/GridToggle'
 import { SearchTrigger } from '@/components/blog/SearchTrigger'
 import { Track } from '@/components/blog/Track'
 import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
@@ -62,6 +63,8 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
               {settings.features.search && <SearchTrigger lang={settings.language} />}
               {palettes.length > 1 && <PaletteToggle lang={settings.language} palettes={palettes} defaultId={settings.themePreset} />}
               <ThemeToggle lang={settings.language} />
+              {/* Grid/List switch for listing pages; self-hides on reading views. */}
+              <GridToggle lang={settings.language} />
               {/* Mobile-only: opens the sidebar drawer. Hidden above the rail breakpoint
                   (gutter rail) and self-hides on pages with no rail (see RailToggle). */}
               <RailToggle lang={settings.language} />

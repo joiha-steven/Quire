@@ -8,6 +8,8 @@ const en = {
   tagLabel: 'Tag',
   pageLabel: 'Page',
   menu: 'Menu',
+  gridView: 'Grid view',
+  listView: 'List view',
   palette: 'Palette',
   paletteNames: { mono: 'Mono', sepia: 'Sepia', forest: 'Forest', ocean: 'Ocean', scifi: 'Sci-Fi', amber: 'Amber' },
   theme: 'Theme',
