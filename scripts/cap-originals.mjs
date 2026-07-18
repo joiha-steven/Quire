@@ -5,9 +5,9 @@
 //
 //   node --env-file=.env.local scripts/cap-originals.mjs [--dry]
 //
-// Reads binaries straight off STORAGE_LOCAL_DIR (same as blob-local.ts). --dry: preview.
+// Talks to PostgREST directly (respecting POSTGREST_DIRECT, like lib/db.ts) and reads
+// binaries straight off STORAGE_LOCAL_DIR (like blob-local.ts). --dry: preview only.
 
-import { createClient } from '@supabase/supabase-js'
 import sharp from 'sharp'
 import path from 'node:path'
 import fs from 'node:fs/promises'
@@ -15,14 +15,19 @@ import fs from 'node:fs/promises'
 const DRY = process.argv.includes('--dry')
 const CAP = 2048
 
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY')
+const URL_BASE = process.env.SUPABASE_URL
+const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!URL_BASE || !KEY) throw new Error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY')
 const DIR = path.resolve(process.env.STORAGE_LOCAL_DIR || './uploads')
+// Same rule as lib/db.ts: a bare PostgREST (native) has no /rest/v1 prefix.
+const REST = process.env.POSTGREST_DIRECT ? URL_BASE : `${URL_BASE}/rest/v1`
+const HEADERS = { apikey: KEY, Authorization: `Bearer ${KEY}` }
 
-const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-})
+async function pg(pathAndQuery, init = {}) {
+  const res = await fetch(`${REST}${pathAndQuery}`, { ...init, headers: { ...HEADERS, ...(init.headers || {}) } })
+  if (!res.ok) throw new Error(`PostgREST ${res.status}: ${await res.text()}`)
+  return res
+}
 
 // Same format map as capOriginal: only these are safely downscalable.
 function encoder(pipe, ext) {
@@ -33,12 +38,11 @@ function encoder(pipe, ext) {
   return null // svg/gif/other → not cappable
 }
 
-const { data, error } = await db.from('media').select('path, width, height, size').is('deleted_at', null).gt('width', CAP)
-if (error) throw new Error(error.message)
-console.log(`originals over ${CAP}px: ${data.length}${DRY ? ' (dry run)' : ''}`)
+const rows = await (await pg('/media?select=path,width,height,size&deleted_at=is.null&width=gt.2048')).json()
+console.log(`originals over ${CAP}px: ${rows.length}${DRY ? ' (dry run)' : ''}`)
 
 let changed = 0
-for (const row of data) {
+for (const row of rows) {
   const ext = row.path.split('.').pop()?.toLowerCase() ?? ''
   const abs = path.resolve(DIR, row.path)
   let buf
@@ -58,11 +62,11 @@ for (const row of data) {
   console.log(`  ${row.path}: ${row.width}px/${Math.round(row.size / 1024)}KB -> ${meta.width}px/${Math.round(out.byteLength / 1024)}KB`)
   if (!DRY) {
     await fs.writeFile(abs, out)
-    const { error: e } = await db
-      .from('media')
-      .update({ width: meta.width ?? null, height: meta.height ?? null, size: out.byteLength })
-      .eq('path', row.path)
-    if (e) throw new Error(`${row.path}: ${e.message}`)
+    await pg(`/media?path=eq.${encodeURIComponent(row.path)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ width: meta.width ?? null, height: meta.height ?? null, size: out.byteLength }),
+    })
   }
   changed++
 }

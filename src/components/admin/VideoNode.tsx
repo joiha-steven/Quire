@@ -3,6 +3,7 @@
 // Editor node for an embedded video. Stored in Markdown as a bare URL on its own
 // line (so content stays 100% Markdown); shown here as a responsive embed. The
 // public renderer turns the same URL into an iframe.
+import type { MouseEvent } from 'react'
 import { Node } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { videoEmbed, videoFileUrl } from '@/lib/video'
@@ -14,7 +15,7 @@ declare module '@tiptap/core' {
   }
 }
 
-function VideoView({ node, updateAttributes, selected }: NodeViewProps) {
+function VideoView({ node, updateAttributes, selected, editor, getPos }: NodeViewProps) {
   const t = useAdminT()
   const raw = (node.attrs.src as string) || ''
   // A trailing `#wide` fragment sizes the player like a wide image; keep it out of URL
@@ -24,6 +25,15 @@ function VideoView({ node, updateAttributes, selected }: NodeViewProps) {
   const v = videoEmbed(src)
   const file = v ? null : videoFileUrl(src)
   const setWide = (w: boolean) => updateAttributes({ src: w ? `${src}#wide` : src })
+  // The iframe/native player swallows clicks, so clicking the video never selects the
+  // node — and the size toolbar (shown when `selected`) could never appear. A transparent
+  // overlay catches the click and selects the node instead (playback isn't needed here).
+  const selectNode = (e: MouseEvent) => {
+    e.preventDefault()
+    const pos = getPos?.()
+    if (pos != null) editor.commands.setNodeSelection(pos)
+  }
+  const overlay = <div className="absolute inset-0 cursor-pointer" onMouseDown={selectNode} />
   const btn = (active: boolean) =>
     `rounded-md px-2.5 py-1 text-xs font-medium ${
       active ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500'
@@ -45,11 +55,15 @@ function VideoView({ node, updateAttributes, selected }: NodeViewProps) {
       {v ? (
         <div className="relative w-full overflow-hidden rounded-lg" style={{ aspectRatio: '16 / 9' }}>
           <iframe src={v.embed} className="absolute inset-0 h-full w-full" allowFullScreen loading="lazy" />
+          {overlay}
         </div>
       ) : file ? (
         // Self-hosted video file (Library upload): native player, natural aspect —
         // mirrors the published .video-file rendering.
-        <video src={file} controls preload="metadata" playsInline className="block w-full rounded-lg" />
+        <div className="relative">
+          <video src={file} controls preload="metadata" playsInline className="block w-full rounded-lg" />
+          {overlay}
+        </div>
       ) : (
         <p className="break-all text-sm text-neutral-500">{src}</p>
       )}
