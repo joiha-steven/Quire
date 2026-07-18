@@ -48,6 +48,7 @@ vi.mock('@/lib/image', () => ({
   makeThumb: vi.fn(async () => Buffer.from('t')),
   imageSize: vi.fn(async () => ({ width: 10, height: 10 })),
   safeSize: vi.fn(async () => ({ width: 10, height: 10 })),
+  capOriginal: vi.fn(async (b: ArrayBuffer | Buffer) => (Buffer.isBuffer(b) ? b : Buffer.from(b))),
   RASTER: /image\/(jpeg|png)/,
   PASSTHROUGH: /never/,
   SIZES: [],

@@ -7,6 +7,29 @@ export const RASTER = /^image\/(jpeg|png)$/ // full responsive pipeline
 export const PASSTHROUGH = /^image\/(svg\+xml|gif|webp|avif)$/ // stored as-is, no variants (avif is already efficient)
 export const SIZES = [1024, 1600] as const // display widths (in-column / wider)
 const THUMB_WIDTH = 400
+export const ORIGINAL_CAP = 2048 // hard ceiling for a stored original's width — no full-size bytes are ever kept/served
+const CAPPABLE = /^image\/(jpeg|png|webp|avif)$/ // formats we can safely downscale in place (svg/gif excluded)
+
+// Cap an uploaded original to ORIGINAL_CAP px wide, KEEPING its format, so a
+// multi-thousand-pixel upload never gets stored or served at full size (in-content,
+// as a <picture> fallback, or in the lightbox). Vector/animation and images already
+// within the cap pass through untouched (no needless recompression). Best-effort: a
+// decode/encode hiccup returns the original bytes so an upload never fails on this.
+export async function capOriginal(body: ArrayBuffer | Buffer, contentType: string): Promise<Buffer> {
+  const buf = Buffer.isBuffer(body) ? body : Buffer.from(body)
+  if (!CAPPABLE.test(contentType)) return buf
+  try {
+    const { width = 0 } = await sharp(buf, { failOn: 'none' }).rotate().metadata()
+    if (!width || width <= ORIGINAL_CAP) return buf
+    const pipe = sharp(buf, { failOn: 'none' }).rotate().resize({ width: ORIGINAL_CAP })
+    if (contentType === 'image/png') return pipe.png().toBuffer()
+    if (contentType === 'image/webp') return pipe.webp({ quality: 82 }).toBuffer()
+    if (contentType === 'image/avif') return pipe.avif({ quality: 55 }).toBuffer()
+    return pipe.jpeg({ quality: 85 }).toBuffer()
+  } catch {
+    return buf
+  }
+}
 
 export type Variant = { suffix: string; data: Buffer; contentType: string }
 
