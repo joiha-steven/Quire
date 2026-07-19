@@ -787,10 +787,10 @@ hr {
 }
 
 /* Listing grid mode — header toggle sets <html data-list=grid>. The post list becomes a
-   responsive card grid: 1 column on phones, 2 from 640px; the 3-column desktop layout and
-   the widen-into-the-free-gutter live in rail-css.ts (they need the reading-column width).
-   A lead card spans every column. Featured-image thumbs (hidden in the default list) show;
-   posts without one stay text-only. */
+   responsive card grid: 1 column on phones, 2 from 640px — at the same reading-column width
+   as the list (no gutter widening, no 3-column desktop layout). A lead card spans every
+   column. Featured-image thumbs (hidden in the default list) show; posts without one stay
+   text-only. */
 html[data-list='grid'] .post-list {
   display: grid;
   gap: 2.5rem;
