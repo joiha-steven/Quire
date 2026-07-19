@@ -46,21 +46,10 @@ export function singleRailCss(colWidth: number): string {
   )
 }
 
-// Grid mode for a listing page (header toggle → <html data-list=grid>). Above the rail
-// breakpoint it reaches into the FREE right gutter (no right rail there): the column —
-// and so the header/logo/footer — keeps its width; only the post grid noses RIGHT by one
-// rail width (same mechanism as an img-wide figure) and lays out in 3 columns. Below the
-// breakpoint the base 1/2-column grid (globals.css) applies, in-column (no free gutter).
-// Injected by ListingSidebar, so it only exists on listing pages — never a reading view.
-export function listingGridCss(colWidth: number): string {
-  const at = breakpoint(colWidth)
-  return (
-    `@media (min-width:${at}px){` +
-    `html[data-list="grid"] .rail.rail-right{display:none}` +
-    `html[data-list="grid"] .post-list{width:calc(100% + var(--rail-w) + var(--rail-gap));` +
-    `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)));grid-template-columns:repeat(3,minmax(0,1fr))}}`
-  )
-}
+// Grid mode for a listing page (header toggle → <html data-list=grid>) needs no extra CSS:
+// the base 1/2-column grid (globals.css) applies at every width, in-column, so the grid keeps
+// the same reading-column width as the list and caps at 2 columns. No gutter widening, no
+// 3-column desktop layout, no rail hiding.
 
 // Two rails for listing pages: LEFT (discovery, ranged right toward the column) + RIGHT
 // (nav, mirrored: ranged left toward the column, divider + marker on the left). Also sets

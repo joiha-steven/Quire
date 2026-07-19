@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-07-19 — listing grid: 2 columns at reading-column width
+
+- **Grid mode (home / category / tag listings) now stays 2 columns and keeps the
+  reading-column width**, matching the list view. Dropped the desktop-only override
+  that widened the grid into the free right gutter and laid it out in 3 columns
+  (`listingGridCss` removed; the base `globals.css` 1/2-column grid is all that's needed).
+
 ## 2026-07-16 — video upload: Library Videos tab + native player
 
 - **Library → Videos tab** (between Images and Files): upload videos (drag-drop,
