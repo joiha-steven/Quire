@@ -59,7 +59,10 @@ export function timelineRailCss(colWidth: number): string {
     `@media (min-width:${at}px){` +
     `.rail.rail-timeline{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left}` +
     `.rail.rail-timeline::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;right:auto;width:1px;background:var(--c-rule)}` +
-    `.rail.rail-timeline h2{padding-right:0;padding-left:var(--rail-pad)}}`
+    `.rail.rail-timeline h2{padding-right:0;padding-left:var(--rail-pad)}` +
+    // Scroll WITH the page, not pinned: undo the base rail's sticky + capped-scroll panel
+    // (the other rails stay sticky; the timeline is just a column that flows with the feed).
+    `.rail.rail-timeline .rail-inner{position:static;top:auto;max-height:none;overflow:visible}}`
   )
 }
 

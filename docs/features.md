@@ -58,11 +58,13 @@
   revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders for
   SEO, and `/page/[n]` URLs 404 (would be duplicate content). The left rail is forced to its single-rail
   branch (all blocks stacked), because the right gutter is now the timeline — a SECOND rail
-  (`<Rail className="rail-timeline">`, geometry from `timelineRailCss`) that mirrors the left, groups posts
-  by **year → month** with a per-month post count, scroll-spies the visible month, and on click reveals up
-  to and smooth-scrolls to that month. **Desktop only**: below the rail breakpoint there is no right column
-  so the timeline is `display:none` (the feed still scrolls). Feed + timeline share one island so reveal
-  count + active month stay in sync; the `reveal` card easing is pure CSS so appended cards animate for free.
+  (`<Rail className="rail-timeline">`, geometry from `timelineRailCss`) that mirrors the left and groups
+  posts by **year → month** with a per-month post count. It is **read-only and simple**: it scrolls WITH
+  the page (the base rail's sticky + capped-scroll is undone for this rail) and just highlights the month
+  of the posts currently in view (`.is-active`, one IntersectionObserver on the first card of each month) —
+  no click navigation, no pinning. **Desktop only**: below the rail breakpoint there is no right column so
+  the timeline is `display:none` (the feed still scrolls). The `reveal` card easing is pure CSS so appended
+  cards animate for free; timeline grouping is the pure, unit-tested `lib/timeline.ts`.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).
