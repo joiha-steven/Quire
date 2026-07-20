@@ -8,9 +8,10 @@
   revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders
   for SEO, and `/page/[n]` URLs 404 (duplicate content).
 - **Date timeline** in the right gutter when infinite scroll is on: a second rail (`timelineRailCss`)
-  mirroring the left, grouping posts by **year → month** with per-month counts. It scroll-spies the
-  visible month and, on click, reveals up to and smooth-scrolls to that month. Desktop only — hidden
-  where there is no right column. The left rail is forced to its single-rail (all-blocks-stacked) branch.
+  mirroring the left, grouping posts by **year → month** with per-month counts. Read-only and simple — it
+  scrolls WITH the page (not pinned) and just highlights the month of the posts currently in view; no click
+  navigation. Desktop only — hidden where there is no right column. The left rail is forced to its
+  single-rail (all-blocks-stacked) branch.
 - **Categories in the sidebar** now render as a condensed wrapped cloud (`CategoryCloud`) with the post
   count in parentheses, instead of a tall one-per-line list — much less vertical space.
 

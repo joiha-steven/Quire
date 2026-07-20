@@ -464,17 +464,10 @@ hr {
   gap: 0.6rem;
   width: 100%;
   padding: 0.2rem var(--rail-pad);
-  background: none;
-  border: 0;
-  cursor: pointer;
   color: var(--c-meta);
-  text-align: left;
   transition: color var(--dur-fast, 0s) var(--ease, ease);
 }
-.tl-month:hover {
-  color: var(--c-heading);
-}
-.tl-month[aria-current='true'] {
+.tl-month.is-active {
   color: var(--c-heading);
   font-weight: 500;
 }
@@ -487,8 +480,7 @@ hr {
   border-radius: 50%;
   background: var(--c-rule);
 }
-.tl-month:hover .tl-dot,
-.tl-month[aria-current='true'] .tl-dot {
+.tl-month.is-active .tl-dot {
   background: var(--c-accent);
 }
 .tl-label {

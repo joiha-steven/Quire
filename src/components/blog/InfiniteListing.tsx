@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Post, SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
 import { timelineRailCss } from '@/lib/rail-css'
-import { buildTimeline, monthKey, type TimelineMonth } from '@/lib/timeline'
+import { buildTimeline, monthKey } from '@/lib/timeline'
 import { PostCard } from './PostCard'
 
 export function InfiniteListing({
@@ -40,7 +40,6 @@ export function InfiniteListing({
   const [count, setCount] = useState(() => Math.min(posts.length, step))
   const [activeKey, setActiveKey] = useState('')
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const pendingRef = useRef<string | null>(null)
 
   // Timeline: posts grouped year → month (contiguous, since posts are newest-first).
   const years = useMemo(() => buildTimeline(posts, lang), [posts, lang])
@@ -60,7 +59,8 @@ export function InfiniteListing({
     return () => io.disconnect()
   }, [count, posts.length, step])
 
-  // Scroll-spy: the month whose anchor sits in the top band of the viewport is active.
+  // The one bit of logic: highlight the month of the posts currently in view. The month
+  // marker whose first card sits in the top band of the viewport is the active one.
   useEffect(() => {
     const els = Array.from(document.querySelectorAll<HTMLElement>('.post-list [data-month]'))
     if (!els.length) return
@@ -73,24 +73,6 @@ export function InfiniteListing({
     els.forEach((el) => io.observe(el))
     return () => io.disconnect()
   }, [count])
-
-  // After a jump revealed more posts, the target anchor now exists — scroll to it.
-  useEffect(() => {
-    const id = pendingRef.current
-    if (!id) return
-    pendingRef.current = null
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [count])
-
-  const jump = (m: TimelineMonth) => {
-    setActiveKey(m.key)
-    if (m.firstIndex >= count) {
-      pendingRef.current = m.anchorId
-      setCount(Math.min(posts.length, m.firstIndex + step))
-    } else {
-      document.getElementById(m.anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
 
   if (posts.length === 0) return <p className="py-16 text-center text-meta">{emptyText}</p>
 
@@ -111,7 +93,6 @@ export function InfiniteListing({
               showReadingTime={showReadingTime}
               showCategory={showCategory}
               lead={lead && i === 0}
-              anchorId={first ? `tl-${key}` : undefined}
               month={first ? key : undefined}
             />
           )
@@ -119,24 +100,25 @@ export function InfiniteListing({
       </div>
       <div ref={sentinelRef} aria-hidden />
 
-      {/* Right-gutter timeline (desktop only via timelineRailCss). */}
+      {/* Right-gutter timeline (desktop only via timelineRailCss). Read-only: it scrolls
+          with the feed and marks the month currently in view — no click nav, no pinning. */}
       <aside className="rail rail-timeline">
         <div className="rail-inner">
           <h2 className="mb-3 t-small font-semibold text-heading">{labels.timelineTitle}</h2>
-          <nav className="tl-track" aria-label={labels.timelineTitle}>
+          <div className="tl-track">
             {years.map((y) => (
               <div key={y.year}>
                 <div className="tl-year t-small font-semibold text-heading">{y.year}</div>
                 {y.months.map((m) => (
-                  <button key={m.key} type="button" onClick={() => jump(m)} className="tl-month t-small" aria-current={activeKey === m.key ? 'true' : undefined}>
+                  <div key={m.key} className={`tl-month t-small${activeKey === m.key ? ' is-active' : ''}`}>
                     <span className="tl-dot" aria-hidden />
                     <span className="tl-label">{m.label}</span>
                     <span className="tl-count tabular-nums">{m.count}</span>
-                  </button>
+                  </div>
                 ))}
               </div>
             ))}
-          </nav>
+          </div>
         </div>
       </aside>
     </>

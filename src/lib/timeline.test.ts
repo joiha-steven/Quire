@@ -32,9 +32,9 @@ describe('buildTimeline', () => {
 
     const [y2026, y2025] = years
     expect(y2026.months.map((m) => m.key)).toEqual(['2026-06', '2026-05'])
-    expect(y2026.months[0]).toMatchObject({ key: '2026-06', anchorId: 'tl-2026-06', firstIndex: 0, count: 2 })
-    expect(y2026.months[1]).toMatchObject({ key: '2026-05', firstIndex: 2, count: 1 })
-    expect(y2025.months[0]).toMatchObject({ key: '2025-12', anchorId: 'tl-2025-12', firstIndex: 3, count: 1 })
+    expect(y2026.months[0]).toMatchObject({ key: '2026-06', count: 2 })
+    expect(y2026.months[1]).toMatchObject({ key: '2026-05', count: 1 })
+    expect(y2025.months[0]).toMatchObject({ key: '2025-12', count: 1 })
   })
 
   it('localizes the month label (English long name, Vietnamese "Tháng N")', () => {
