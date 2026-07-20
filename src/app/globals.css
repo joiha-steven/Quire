@@ -457,7 +457,9 @@ hr {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
-  border-radius: 50%; /* round, never square */
+  /* Deliberate exception to the site-wide square-corners rule above: a timeline dot
+     must be a circle. `!important` to beat that rule's own `!important`. */
+  border-radius: 50% !important;
   background: var(--c-meta);
 }
 .tl-mark.is-year .tl-dot {
