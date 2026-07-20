@@ -7,11 +7,10 @@
   list is handed to the new `InfiniteListing` client island as light metadata (no post bodies), so
   revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders
   for SEO, and `/page/[n]` URLs 404 (duplicate content).
-- **Date timeline** in the right gutter when infinite scroll is on: a second rail (`timelineRailCss`)
-  mirroring the left, grouping posts by **year → month** with per-month counts. Read-only and simple — it
-  scrolls WITH the page (not pinned) and just highlights the month of the posts currently in view; no click
-  navigation. Desktop only — hidden where there is no right column. The left rail is forced to its
-  single-rail (all-blocks-stacked) branch.
+- **Date timeline** in the right gutter when infinite scroll is on: a spine down the feed with a **year
+  marker** placed level with the first post of each year, so the years line up with the posts on the left
+  and scroll with the page (pure CSS — no measurement, no counts, no click nav). Desktop list view only —
+  hidden on mobile and in grid view. The left rail is forced to its single-rail (all-blocks-stacked) branch.
 - **Categories in the sidebar** now render as a condensed wrapped cloud (`CategoryCloud`) with the post
   count in parentheses, instead of a tall one-per-line list — much less vertical space.
 
