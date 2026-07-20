@@ -12,14 +12,14 @@ export function PostCard({
   showReadingTime = false,
   showCategory = false,
   lead = false,
-  month,
+  year,
 }: {
   post: Post
   lang: SiteLang
   showReadingTime?: boolean
   showCategory?: boolean
   lead?: boolean
-  month?: string // set on a month's FIRST card ('YYYY-MM'); the timeline highlights the visible one
+  year?: string // set on the FIRST card of a year → shows the infinite-scroll timeline marker in the gutter
 }) {
   const category = showCategory ? post.categories[0] : undefined
   const Title = lead ? 'h1' : 'h2'
@@ -27,7 +27,15 @@ export function PostCard({
     // `reveal` eases the card in as it scrolls into view (motion engine; fully
     // visible when motion is off / unsupported — see globals.css). `data-lead` lets a
     // grid layout span the lead card across all columns.
-    <article className="reveal" data-lead={lead ? '' : undefined} data-month={month}>
+    <article className="reveal" data-lead={lead ? '' : undefined}>
+      {/* Infinite-scroll timeline: this year's marker, placed in the right gutter level
+          with the card (CSS-gated to desktop list view; see timelineCss + globals). */}
+      {year && (
+        <span className="tl-year t-small" aria-hidden>
+          <span className="tl-dot" />
+          {year}
+        </span>
+      )}
       {/* Thumbnail — only posts WITH a featured image; hidden in list mode, shown in
           grid mode (globals.css `.card-thumb`). Posts without one stay text-only. */}
       {post.featuredImage && (

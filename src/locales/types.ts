@@ -30,7 +30,6 @@ export type Dict = {
   mostViewedTitle: string
   featuredTitle: string
   tagsTitle: string
-  timelineTitle: string
   relatedTitle: string
   notFoundTitle: string
   notFoundText: string

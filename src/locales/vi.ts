@@ -29,7 +29,6 @@ const vi = {
   mostViewedTitle: 'Xem nhiều nhất',
   featuredTitle: 'Nổi bật',
   tagsTitle: 'Thẻ',
-  timelineTitle: 'Dòng thời gian',
   relatedTitle: 'Bài viết liên quan',
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',

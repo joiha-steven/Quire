@@ -29,7 +29,6 @@ const en = {
   mostViewedTitle: 'Most viewed',
   featuredTitle: 'Featured',
   tagsTitle: 'Tags',
-  timelineTitle: 'Timeline',
   relatedTitle: 'Related posts',
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',

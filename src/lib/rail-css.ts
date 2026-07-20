@@ -46,23 +46,24 @@ export function singleRailCss(colWidth: number): string {
   )
 }
 
-// Infinite-scroll timeline: a SECOND rail in the RIGHT gutter (the left rail keeps its
-// normal single-rail content). Mirrors the left geometry — ranged left toward the column,
-// divider on the left. Desktop only: below the breakpoint there is no right column, so the
-// rail stays `display:none` (never a mobile drawer). Injected by the InfiniteListing island;
-// the base `.rail` rules (always present) are overridden here via the higher-specificity
-// `.rail.rail-timeline`, so it wins over the left-gutter positioning with no ordering games.
-export function timelineRailCss(colWidth: number): string {
+// Infinite-scroll timeline. NOT a boxed rail: a spine runs the full height of the feed in
+// the RIGHT gutter, and each year's marker is absolutely positioned beside the FIRST post
+// of that year — so the years line up with the posts on the left and the whole thing scrolls
+// with the page, with no JS and no measurement (the marker flows with its card). Desktop
+// only: below the breakpoint there is no gutter, so markers + spine are hidden.
+export function timelineCss(colWidth: number): string {
   const at = breakpoint(colWidth)
   return (
-    `.rail.rail-timeline{display:none}` +
+    `.tl-year{display:none}` +
     `@media (min-width:${at}px){` +
-    `.rail.rail-timeline{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left}` +
-    `.rail.rail-timeline::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;right:auto;width:1px;background:var(--c-rule)}` +
-    `.rail.rail-timeline h2{padding-right:0;padding-left:var(--rail-pad)}` +
-    // Scroll WITH the page, not pinned: undo the base rail's sticky + capped-scroll panel
-    // (the other rails stay sticky; the timeline is just a column that flows with the feed).
-    `.rail.rail-timeline .rail-inner{position:static;top:auto;max-height:none;overflow:visible}}`
+    // Spine: a hairline down the right gutter, exactly as tall as the post list.
+    `.post-list{position:relative}` +
+    `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 3.5px);width:1px;background:var(--c-rule)}` +
+    // Year marker: a child of its year's first card, anchored to the card top out in the gutter.
+    `.post-list article{position:relative}` +
+    `.post-list article .tl-year{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:var(--rail-w)}` +
+    // Grid view is an alternate layout (cards in 2 columns) — the gutter timeline can't align, so drop it.
+    `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-year{display:none}}`
   )
 }
 

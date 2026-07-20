@@ -57,14 +57,14 @@
   whole published list is handed to the `InfiniteListing` client island as light metadata (no bodies), so
   revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders for
   SEO, and `/page/[n]` URLs 404 (would be duplicate content). The left rail is forced to its single-rail
-  branch (all blocks stacked), because the right gutter is now the timeline — a SECOND rail
-  (`<Rail className="rail-timeline">`, geometry from `timelineRailCss`) that mirrors the left and groups
-  posts by **year → month** with a per-month post count. It is **read-only and simple**: it scrolls WITH
-  the page (the base rail's sticky + capped-scroll is undone for this rail) and just highlights the month
-  of the posts currently in view (`.is-active`, one IntersectionObserver on the first card of each month) —
-  no click navigation, no pinning. **Desktop only**: below the rail breakpoint there is no right column so
-  the timeline is `display:none` (the feed still scrolls). The `reveal` card easing is pure CSS so appended
-  cards animate for free; timeline grouping is the pure, unit-tested `lib/timeline.ts`.
+  branch (all blocks stacked); the right gutter holds a **date timeline** — but NOT a boxed widget: a spine
+  runs the full height of the feed (`.post-list::after`) and each year's FIRST card carries a **year marker**
+  (`.tl-year` = a dot on the spine + the year) absolutely positioned out in the gutter, so the years line
+  up with the posts on the left and scroll with the page — **no JS, no measurement** (the marker is a child
+  of its card, `PostCard`'s `year` prop; geometry from `timelineCss`). No post counts, no click nav.
+  **Desktop only**: below the rail breakpoint there is no gutter, so markers + spine are `display:none`;
+  the **grid view** also hides them (2-column cards can't align to a single spine). The `reveal` card easing
+  is pure CSS so appended cards animate for free.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).
