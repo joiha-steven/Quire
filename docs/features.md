@@ -58,13 +58,14 @@
   revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders for
   SEO, and `/page/[n]` URLs 404 (would be duplicate content). The left rail is forced to its single-rail
   branch (all blocks stacked); the right gutter holds a **date timeline** — but NOT a boxed widget: a spine
-  runs the full height of the feed (`.post-list::after`) and each year's FIRST card carries a **year marker**
-  (`.tl-year` = a dot on the spine + the year) absolutely positioned out in the gutter, so the years line
-  up with the posts on the left and scroll with the page — **no JS, no measurement** (the marker is a child
-  of its card, `PostCard`'s `year` prop; geometry from `timelineCss`). No post counts, no click nav.
-  **Desktop only**: below the rail breakpoint there is no gutter, so markers + spine are `display:none`;
-  the **grid view** also hides them (2-column cards can't align to a single spine). The `reveal` card easing
-  is pure CSS so appended cards animate for free.
+  runs the full height of the feed (`.post-list::after`) and the FIRST card of each month/year carries a
+  **marker** (`.tl-mark` = a dot on the spine + the label — bold year with an accent dot at a year boundary,
+  a quiet month name otherwise) absolutely positioned out in the gutter, so the dates line up with the posts
+  on the left and scroll with the page — **no JS, no measurement** (the marker is a child of its card,
+  `PostCard`'s `mark` prop; geometry from `timelineCss`). No post counts, no click nav. **Desktop only**:
+  below the rail breakpoint there is no gutter, so markers + spine are `display:none`; the **grid view** also
+  hides them (2-column cards can't align to a single spine). The `reveal` card easing is pure CSS so appended
+  cards animate for free.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).
