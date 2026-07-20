@@ -43,3 +43,11 @@ export function formatDate(iso: string, lang: SiteLang): string {
     day: 'numeric',
   })
 }
+
+// Month name only, for the infinite-scroll timeline markers (year shown separately).
+export function formatMonth(iso: string, lang: SiteLang): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  if (lang === 'vi') return `Tháng ${d.getMonth() + 1}`
+  return d.toLocaleDateString(DATE_LOCALE[lang] ?? 'en-US', { month: 'long' })
+}

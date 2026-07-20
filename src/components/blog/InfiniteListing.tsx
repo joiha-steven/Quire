@@ -11,10 +11,12 @@
 // measurement. `reveal` card easing is pure CSS (globals.css), so appended cards animate.
 import { useEffect, useRef, useState } from 'react'
 import type { Post, SiteLang } from '@/types'
+import { formatMonth } from '@/lib/i18n'
 import { timelineCss } from '@/lib/rail-css'
 import { PostCard } from './PostCard'
 
 const yearOf = (iso: string) => iso.slice(0, 4)
+const monthOf = (iso: string) => iso.slice(0, 7)
 
 export function InfiniteListing({
   posts,
@@ -62,8 +64,14 @@ export function InfiniteListing({
       {/* `.post-list` is the hook the header Grid toggle switches to a CSS grid. */}
       <div className="post-list flex flex-col gap-16">
         {posts.slice(0, count).map((p, i) => {
-          const year = yearOf(p.date)
-          const firstOfYear = i === 0 || yearOf(posts[i - 1].date) !== year
+          const prev = i > 0 ? posts[i - 1] : null
+          // Mark the first post of each year (bold year) and each month (light month name),
+          // so the timeline is populated down its length and aligned to the posts.
+          const mark = !prev || yearOf(prev.date) !== yearOf(p.date)
+            ? { text: yearOf(p.date), year: true }
+            : monthOf(prev.date) !== monthOf(p.date)
+              ? { text: formatMonth(p.date, lang), year: false }
+              : undefined
           return (
             <PostCard
               key={p.slug}
@@ -72,7 +80,7 @@ export function InfiniteListing({
               showReadingTime={showReadingTime}
               showCategory={showCategory}
               lead={lead && i === 0}
-              year={firstOfYear ? year : undefined}
+              mark={mark}
             />
           )
         })}
