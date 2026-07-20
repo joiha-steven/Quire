@@ -320,6 +320,8 @@ const zh = {
   featSidebarDesc: '在文章列表旁显示分类和标签。窄屏时移入菜单。',
   featInfiniteScroll: '无限滚动',
   featInfiniteScrollDesc: '滚动时加载文章而非分页，并在右侧栏显示日期时间线（仅桌面端）。',
+  featGridView: '网格视图',
+  featGridViewDesc: '允许读者将文章列表切换为卡片网格（页眉的网格/列表按钮）。关闭则始终为列表——此时时间线始终显示。',
   featLeadPost: '头条文章',
   featLeadPostDesc: '第 1 页最新的文章使用 H1 字号。',
   featCategoryLabel: '分类标签',

@@ -436,31 +436,31 @@ hr {
   color: var(--c-meta);
 }
 
-/* Infinite-scroll timeline: month/year markers (a dot on the gutter spine + the label)
-   sit level with the first post of that month/year. A year is bold with a bigger accent
-   dot; a month is quiet. Geometry (gutter offset + breakpoint + spine) is injected per
-   page by `timelineCss`; only colour + the dot live here. */
+/* Infinite-scroll timeline: month/year markers (a round dot on the gutter spine + the
+   label) sit level with the first post of that month/year. A year is a big title-sized
+   number with an accent dot; a month is a quiet label. Geometry (gutter offset + breakpoint
+   + spine) is injected per page by `timelineCss`; colour + the dots live here. */
 .tl-mark {
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.5rem;
   color: var(--c-meta);
   white-space: nowrap;
 }
 .tl-mark.is-year {
   color: var(--c-heading);
   font-weight: 600;
+  font-size: var(--fs-h2); /* big, like a post title on the list */
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
 }
 .tl-dot {
   flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%; /* round, never square */
   background: var(--c-meta);
-  outline: 3px solid var(--c-bg);
 }
 .tl-mark.is-year .tl-dot {
-  width: 10px;
-  height: 10px;
   background: var(--c-accent);
 }
 

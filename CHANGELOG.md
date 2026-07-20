@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-07-20 — grid-view toggle (admin); timeline polish
+
+- **Grid view is now an owner feature toggle** (`features.gridView`, Admin → Settings → Tính năng, default
+  on). Off hides the header grid/list button and the no-FOUC script ignores a stored `list=grid`, so every
+  listing stays a list — handy because the infinite-scroll timeline is hidden in grid view.
+- **Timeline polish**: the year is now a big title-sized number (`fs-h2`), dots are round (not square — dropped
+  the square outline), and the spine is the same faint `--c-rule` hairline as the sidebar dividers. It also
+  now appears at a much lower viewport width (a short date label needs only a thin gutter), so it shows on
+  normal laptops instead of only very wide screens.
+
 ## 2026-07-20 — infinite scroll + date timeline; condensed category cloud
 
 - **Infinite scroll** (`features.infiniteScroll`, off by default; Admin → Settings → Tính năng):

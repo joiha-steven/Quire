@@ -320,6 +320,8 @@ const ko = {
   featSidebarDesc: '글 목록 옆에 카테고리와 태그를 표시합니다. 좁은 화면에서는 메뉴로 이동합니다.',
   featInfiniteScroll: '무한 스크롤',
   featInfiniteScrollDesc: '페이지 나누기 대신 스크롤에 따라 글을 불러오고, 오른쪽에 날짜 타임라인을 표시합니다(데스크톱 전용).',
+  featGridView: '그리드 보기',
+  featGridViewDesc: '독자가 글 목록을 카드 그리드로 전환할 수 있게 합니다(헤더의 그리드/목록 버튼). 끄면 항상 목록이며 타임라인이 항상 표시됩니다.',
   featLeadPost: '대표 글',
   featLeadPostDesc: '1페이지의 최신 글을 H1 크기로 표시합니다.',
   featCategoryLabel: '카테고리 표시',

@@ -320,6 +320,8 @@ const vi = {
   featSidebarDesc: 'Danh mục và thẻ bên cạnh danh sách bài. Màn hình hẹp thì dồn vào menu.',
   featInfiniteScroll: 'Cuộn vô tận',
   featInfiniteScrollDesc: 'Tải bài khi cuộn thay cho phân trang, và hiện dòng thời gian theo ngày ở cột phải (chỉ desktop).',
+  featGridView: 'Chế độ lưới',
+  featGridViewDesc: 'Cho người đọc chuyển danh sách bài sang dạng lưới thẻ (nút lưới/danh sách ở header). Tắt thì luôn là danh sách - khi đó timeline luôn hiện.',
   featLeadPost: 'Bài mở đầu',
   featLeadPostDesc: 'Bài mới nhất ở trang 1 dùng cỡ chữ H1.',
   featCategoryLabel: 'Nhãn danh mục',

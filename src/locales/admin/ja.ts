@@ -320,6 +320,8 @@ const ja = {
   featSidebarDesc: '記事一覧の横にカテゴリーとタグを表示。狭い画面ではメニューに移動します。',
   featInfiniteScroll: '無限スクロール',
   featInfiniteScrollDesc: 'ページ送りの代わりにスクロールで記事を読み込み、右側に日付タイムラインを表示します（デスクトップのみ）。',
+  featGridView: 'グリッド表示',
+  featGridViewDesc: '記事一覧をカードのグリッドに切り替えられるようにします（ヘッダーのグリッド/リスト切替）。オフでは常にリストになり、タイムラインが常に表示されます。',
   featLeadPost: 'リード記事',
   featLeadPostDesc: '1ページ目の最新記事を H1 のサイズで表示します。',
   featCategoryLabel: 'カテゴリー表示',

@@ -320,6 +320,8 @@ const de = {
   featSidebarDesc: 'Kategorien und Schlagwörter neben der Beitragsliste. Wandert auf schmalen Bildschirmen ins Menü.',
   featInfiniteScroll: 'Endloses Scrollen',
   featInfiniteScrollDesc: 'Beiträge beim Scrollen laden statt Seitennummerierung und einen Datums-Zeitstrahl in der rechten Spalte zeigen (nur Desktop).',
+  featGridView: 'Rasteransicht',
+  featGridViewDesc: 'Lesern erlauben, die Beitragsliste als Kartenraster anzuzeigen (Raster/Listen-Schalter im Header). Aus bleibt es eine Liste - dann wird der Zeitstrahl immer gezeigt.',
   featLeadPost: 'Aufmacher',
   featLeadPostDesc: 'Der neueste Beitrag auf Seite 1 erscheint in H1-Größe.',
   featCategoryLabel: 'Kategorie-Label',
