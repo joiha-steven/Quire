@@ -5,9 +5,11 @@
 - **Grid view is now an owner feature toggle** (`features.gridView`, Admin → Settings → Tính năng, default
   on). Off hides the header grid/list button and the no-FOUC script ignores a stored `list=grid`, so every
   listing stays a list — handy because the infinite-scroll timeline is hidden in grid view.
-- **Timeline polish**: the year is now a big title-sized number (`fs-h2`), dots are round (not square — dropped
-  the square outline), and the spine is the same faint `--c-rule` hairline as the sidebar dividers. It also
-  now appears at a much lower viewport width (a short date label needs only a thin gutter), so it shows on
+- **Timeline redesign**: the feed is grouped by year and the **year is now a sticky header** (`fs-h3`) that
+  pins to the top of the gutter while its months scroll, then gets pushed out when the next year arrives (its
+  `--c-bg` tag masks months sliding under it). Months keep their round `--c-meta` dots; the spine is the faint
+  `--c-rule` hairline of the sidebar dividers; dots are round (explicit exception to the square-corners rule).
+  It also appears at a much lower viewport width (a short date label needs only a thin gutter), so it shows on
   normal laptops instead of only very wide screens.
 
 ## 2026-07-20 — infinite scroll + date timeline; condensed category cloud

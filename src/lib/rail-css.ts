@@ -57,18 +57,22 @@ export function timelineCss(colWidth: number): string {
   // for the gap + a "September"/"Tháng 12" label (~130px), so it shows on normal laptops.
   const at = colWidth + 2 * (RAIL_GAP + 130)
   return (
-    `.tl-mark{display:none}` +
+    `.tl-mark,.tl-year{display:none}` +
     `@media (min-width:${at}px){` +
     // Spine: a hairline down the right gutter, exactly as tall as the post list — the same
-    // faint `--c-rule` as the sidebar dividers. The dots + big year give it presence.
+    // faint `--c-rule` as the sidebar dividers. The dots + year give it presence.
     `.post-list{position:relative}` +
     `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 4px);width:1px;background:var(--c-rule)}` +
-    // Marker: a child of a month/year's first card, anchored to the card top out in the gutter.
-    // Width shrinks to the label so it fits the smaller gutter.
+    // Month marker: a child of a month's first card, anchored to the card top out in the gutter.
     `.post-list article{position:relative}` +
     `.post-list article .tl-mark{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:max-content;max-width:var(--rail-w)}` +
+    // Year header: STICKY. A 0-size positioning anchor in the gutter (reserves no space); the
+    // visible `.tl-year-tag` hangs from it, pinned to the top while its year's posts scroll, then
+    // the next year's group pushes it out. z-index above the month markers so its bg masks them.
+    `.tl-year{display:block;position:sticky;top:1.25rem;height:0;width:0;margin-left:calc(100% + var(--rail-gap));z-index:2}` +
+    `.tl-year-tag{display:flex;position:absolute;top:-0.7em;left:0}` +
     // Grid view is an alternate layout (cards in 2 columns) — the gutter timeline can't align, so drop it.
-    `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-mark{display:none}}`
+    `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-mark,html[data-list=grid] .tl-year{display:none}}`
   )
 }
 

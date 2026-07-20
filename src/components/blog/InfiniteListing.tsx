@@ -58,32 +58,51 @@ export function InfiniteListing({
 
   if (posts.length === 0) return <p className="py-16 text-center text-meta">{emptyText}</p>
 
+  // Group the revealed posts by year (contiguous, newest-first). Each group gets a
+  // sticky year header (pins to the top of the gutter until the next year pushes it out);
+  // the months inside scroll normally.
+  const shown = posts.slice(0, count)
+  const groups: { year: string; items: { post: Post; i: number }[] }[] = []
+  shown.forEach((post, i) => {
+    const year = yearOf(post.date)
+    const g = groups[groups.length - 1]
+    if (g && g.year === year) g.items.push({ post, i })
+    else groups.push({ year, items: [{ post, i }] })
+  })
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: timelineCss(colWidth) }} />
       {/* `.post-list` is the hook the header Grid toggle switches to a CSS grid. */}
-      <div className="post-list flex flex-col gap-16">
-        {posts.slice(0, count).map((p, i) => {
-          const prev = i > 0 ? posts[i - 1] : null
-          // Mark the first post of each year (bold year) and each month (light month name),
-          // so the timeline is populated down its length and aligned to the posts.
-          const mark = !prev || yearOf(prev.date) !== yearOf(p.date)
-            ? { text: yearOf(p.date), year: true }
-            : monthOf(prev.date) !== monthOf(p.date)
-              ? { text: formatMonth(p.date, lang), year: false }
-              : undefined
-          return (
-            <PostCard
-              key={p.slug}
-              post={p}
-              lang={lang}
-              showReadingTime={showReadingTime}
-              showCategory={showCategory}
-              lead={lead && i === 0}
-              mark={mark}
-            />
-          )
-        })}
+      <div className="post-list tl-feed">
+        {groups.map((g) => (
+          <div key={g.year} className="tl-yr">
+            <div className="tl-year" aria-hidden>
+              <span className="tl-year-tag">
+                <span className="tl-dot" />
+                {g.year}
+              </span>
+            </div>
+            {g.items.map(({ post, i }) => {
+              // Month marker on the first card of each month — except a year's first month,
+              // which the sticky year header already covers.
+              const firstOfYear = i === 0 || yearOf(posts[i - 1].date) !== g.year
+              const firstOfMonth = i === 0 || monthOf(posts[i - 1].date) !== monthOf(post.date)
+              const month = firstOfMonth && !firstOfYear ? formatMonth(post.date, lang) : undefined
+              return (
+                <PostCard
+                  key={post.slug}
+                  post={post}
+                  lang={lang}
+                  showReadingTime={showReadingTime}
+                  showCategory={showCategory}
+                  lead={lead && i === 0}
+                  month={month}
+                />
+              )
+            })}
+          </div>
+        ))}
       </div>
       <div ref={sentinelRef} aria-hidden />
     </>
