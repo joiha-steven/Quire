@@ -424,6 +424,8 @@ export type AdminStrings = {
   featSidebarDesc: string
   featInfiniteScroll: string
   featInfiniteScrollDesc: string
+  featGridView: string
+  featGridViewDesc: string
   featLeadPost: string
   featLeadPostDesc: string
   featCategoryLabel: string

@@ -7,8 +7,8 @@ import { fontPresetCss, fontPreloadHrefs, chromeFontCss } from '@/lib/themes'
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
 // still ENABLED — a palette the owner has since hidden falls back to the default.
-function noFouc(enabled: string[]): string {
-  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p);if(localStorage.getItem('list')==='grid')d.setAttribute('data-list','grid')}catch(e){}})();`
+function noFouc(enabled: string[], gridView: boolean): string {
+  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p);if(${gridView}&&localStorage.getItem('list')==='grid')d.setAttribute('data-list','grid')}catch(e){}})();`
 }
 
 
@@ -48,7 +48,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { language, themes, themePreset, fontPreset, chromeFont, enabledPalettes, typography, customFont, motion } = await getSettings()
+  const { language, themes, themePreset, fontPreset, chromeFont, enabledPalettes, typography, customFont, motion, features } = await getSettings()
   // No `antialiased` on <html>: it forces grayscale smoothing on Mac, thinning body text.
   // data-motion is server-rendered from settings (site-wide), so the motion engine
   // is on/off at first paint — no flash, no client JS. CSS also forces it off under
@@ -73,7 +73,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style dangerouslySetInnerHTML={{ __html:
           typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) +
           chromeFontCss(chromeFont) }} />
-        <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes) }} />
+        <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes, features.gridView) }} />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

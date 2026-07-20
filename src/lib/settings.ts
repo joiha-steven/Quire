@@ -46,6 +46,7 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   deck: true,
   bookText: false,
   infiniteScroll: false,
+  gridView: true,
 }
 
 export const DEFAULT_COMMENTS: CommentSettings = {

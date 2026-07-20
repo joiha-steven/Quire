@@ -28,9 +28,11 @@
 ## Reading & discovery
 
 - Features `{ search, toc, related, readingTime, progressBar, activityLog, sidebar, leadPost,
-  categoryLabel, deck, bookText, infiniteScroll }` (all default on EXCEPT `bookText` and `infiniteScroll`,
-  which are off; Admin → Settings → Tính năng); gated in header / `/search` / post page. `bookText` =
-  book-page typesetting on the post body (first-line indent + justify ≥600px).
+  categoryLabel, deck, bookText, infiniteScroll, gridView }` (all default on EXCEPT `bookText` and
+  `infiniteScroll`, which are off; Admin → Settings → Tính năng); gated in header / `/search` / post page.
+  `bookText` = book-page typesetting on the post body (first-line indent + justify ≥600px). `gridView` =
+  the reader's grid/list header toggle (`GridToggle`); off hides the button AND the no-FOUC script ignores a
+  stored `list=grid`, so every listing stays a list (and the infinite-scroll timeline, hidden in grid, always shows).
 - **Sidebar** (`sidebar`): the MAIN (listing) sidebar has two layouts, chosen by `settings.sidebarLayout`
   (**Settings → Site → Layout & menu**): `single` (default) = one left rail with every block stacked
   (full-width column); `two` = **TWO gutter rails on desktop** flanking a narrower reading column
@@ -59,13 +61,15 @@
   SEO, and `/page/[n]` URLs 404 (would be duplicate content). The left rail is forced to its single-rail
   branch (all blocks stacked); the right gutter holds a **date timeline** — but NOT a boxed widget: a spine
   runs the full height of the feed (`.post-list::after`) and the FIRST card of each month/year carries a
-  **marker** (`.tl-mark` = a dot on the spine + the label — bold year with an accent dot at a year boundary,
-  a quiet month name otherwise) absolutely positioned out in the gutter, so the dates line up with the posts
-  on the left and scroll with the page — **no JS, no measurement** (the marker is a child of its card,
-  `PostCard`'s `mark` prop; geometry from `timelineCss`). No post counts, no click nav. **Desktop only**:
-  below the rail breakpoint there is no gutter, so markers + spine are `display:none`; the **grid view** also
-  hides them (2-column cards can't align to a single spine). The `reveal` card easing is pure CSS so appended
-  cards animate for free.
+  **marker** (`.tl-mark` = a round dot on the spine + the label — a big title-sized year `fs-h2` with an
+  accent dot at a year boundary, a quiet month name with a `--c-meta` dot otherwise) absolutely positioned
+  out in the gutter, so the dates line up with the posts on the left and scroll with the page — **no JS, no
+  measurement** (the marker is a child of its card, `PostCard`'s `mark` prop; geometry from `timelineCss`).
+  The spine is the same faint `--c-rule` hairline as the sidebar dividers. No post counts, no click nav.
+  Its breakpoint is much LOWER than the sidebar's (a short date label needs only a thin gutter — `colWidth +
+  2*(gap+130)`), so it shows on normal laptops. **Desktop list view only**: below the breakpoint there is no
+  gutter (markers + spine `display:none`), and the **grid view** hides them too (2-column cards can't align to
+  a single spine). The `reveal` card easing is pure CSS so appended cards animate for free.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).

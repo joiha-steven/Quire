@@ -113,6 +113,7 @@ export function sanitizeFeatures(input: unknown, fallback: FeatureSettings): Fea
     deck: bool(o.deck, fallback.deck),
     bookText: bool(o.bookText, fallback.bookText),
     infiniteScroll: bool(o.infiniteScroll, fallback.infiniteScroll),
+    gridView: bool(o.gridView, fallback.gridView),
   }
 }
 
