@@ -54,16 +54,16 @@ export function singleRailCss(colWidth: number): string {
 export function timelineCss(colWidth: number): string {
   const at = breakpoint(colWidth)
   return (
-    `.tl-year{display:none}` +
+    `.tl-mark{display:none}` +
     `@media (min-width:${at}px){` +
-    // Spine: a hairline down the right gutter, exactly as tall as the post list.
+    // Spine: a line down the right gutter, exactly as tall as the post list.
     `.post-list{position:relative}` +
     `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 3.5px);width:1px;background:var(--c-rule)}` +
-    // Year marker: a child of its year's first card, anchored to the card top out in the gutter.
+    // Marker: a child of a month/year's first card, anchored to the card top out in the gutter.
     `.post-list article{position:relative}` +
-    `.post-list article .tl-year{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:var(--rail-w)}` +
+    `.post-list article .tl-mark{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:var(--rail-w)}` +
     // Grid view is an alternate layout (cards in 2 columns) — the gutter timeline can't align, so drop it.
-    `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-year{display:none}}`
+    `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-mark{display:none}}`
   )
 }
 
