@@ -52,7 +52,10 @@ export function singleRailCss(colWidth: number): string {
 // with the page, with no JS and no measurement (the marker flows with its card). Desktop
 // only: below the breakpoint there is no gutter, so markers + spine are hidden.
 export function timelineCss(colWidth: number): string {
-  const at = breakpoint(colWidth)
+  // A short date label needs far less gutter than a full 250px rail, so the timeline
+  // appears at a MUCH lower width than the sidebar breakpoint — a right gutter wide enough
+  // for the gap + a "September"/"Tháng 12" label (~130px), so it shows on normal laptops.
+  const at = colWidth + 2 * (RAIL_GAP + 130)
   return (
     `.tl-mark{display:none}` +
     `@media (min-width:${at}px){` +
@@ -60,8 +63,9 @@ export function timelineCss(colWidth: number): string {
     `.post-list{position:relative}` +
     `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 3.5px);width:1px;background:var(--c-rule)}` +
     // Marker: a child of a month/year's first card, anchored to the card top out in the gutter.
+    // Width shrinks to the label so it fits the smaller gutter.
     `.post-list article{position:relative}` +
-    `.post-list article .tl-mark{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:var(--rail-w)}` +
+    `.post-list article .tl-mark{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:max-content;max-width:var(--rail-w)}` +
     // Grid view is an alternate layout (cards in 2 columns) — the gutter timeline can't align, so drop it.
     `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-mark{display:none}}`
   )
