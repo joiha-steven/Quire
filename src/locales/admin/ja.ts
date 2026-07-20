@@ -318,6 +318,8 @@ const ja = {
   featProgressDesc: 'スクロールに合わせて伸びる上部の細いバー。',
   featSidebar: 'サイドバー',
   featSidebarDesc: '記事一覧の横にカテゴリーとタグを表示。狭い画面ではメニューに移動します。',
+  featInfiniteScroll: '無限スクロール',
+  featInfiniteScrollDesc: 'ページ送りの代わりにスクロールで記事を読み込み、右側に日付タイムラインを表示します（デスクトップのみ）。',
   featLeadPost: 'リード記事',
   featLeadPostDesc: '1ページ目の最新記事を H1 のサイズで表示します。',
   featCategoryLabel: 'カテゴリー表示',

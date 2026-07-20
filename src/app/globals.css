@@ -436,6 +436,69 @@ hr {
   color: var(--c-meta);
 }
 
+/* Infinite-scroll timeline (right-gutter rail). A continuous spine with one dot per
+   month; the active month (scroll-spy) and hover fill the dot and darken the label.
+   Colours are theme tokens; sizes come from `.t-small` in the markup, never here. */
+.tl-track {
+  position: relative;
+}
+.tl-track::before {
+  content: '';
+  position: absolute;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  left: calc(var(--rail-pad) + 3.5px);
+  width: 1px;
+  background: var(--c-rule);
+}
+.tl-year {
+  margin: 1.1rem 0 0.35rem;
+  padding-left: calc(var(--rail-pad) + 7px + 0.6rem);
+}
+.tl-year:first-child {
+  margin-top: 0;
+}
+.tl-month {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.2rem var(--rail-pad);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--c-meta);
+  text-align: left;
+  transition: color var(--dur-fast, 0s) var(--ease, ease);
+}
+.tl-month:hover {
+  color: var(--c-heading);
+}
+.tl-month[aria-current='true'] {
+  color: var(--c-heading);
+  font-weight: 500;
+}
+.tl-dot {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-rule);
+}
+.tl-month:hover .tl-dot,
+.tl-month[aria-current='true'] .tl-dot {
+  background: var(--c-accent);
+}
+.tl-label {
+  flex: 1 1 auto;
+}
+.tl-count {
+  flex: 0 0 auto;
+  opacity: 0.6;
+}
+
 /* Owner-authored footer (limited inline markdown). Links underline + warm to the
    body colour on hover; bold/italic/underline inherit the meta styling. */
 .site-footer a {

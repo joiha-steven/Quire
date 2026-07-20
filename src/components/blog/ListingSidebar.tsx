@@ -20,7 +20,7 @@ const FEATURED_MAX = 5 // curated posts shown in the "Featured" block
 const LISTING_WIDTH_RATIO = 0.8 // listing column = 80% of the post/reading width
 
 export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; activeHref?: string }) {
-  const [{ categories, tags }, { featured: featuredSlugs, menu, mostViewedCount, contentWidth, sidebarLayout }, posts, viewTotals] = await Promise.all([
+  const [{ categories, tags }, { featured: featuredSlugs, menu, mostViewedCount, contentWidth, sidebarLayout, features }, posts, viewTotals] = await Promise.all([
     getPublicTaxonomy(),
     getSettings(),
     getPublicPosts(),
@@ -62,9 +62,13 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
     </>
   )
 
+  // Infinite scroll forces the single left rail (all blocks stacked): the right gutter is
+  // taken by the timeline (InfiniteListing's own rail), so a two-rail split can't apply.
+  const layout = features.infiniteScroll ? 'single' : sidebarLayout
+
   // Single-column (default): one left rail, everything stacked, full-width column. The
   // grid toggle keeps the same column width (base globals.css grid — 1/2 columns, in-column).
-  if (sidebarLayout !== 'two') {
+  if (layout !== 'two') {
     return (
       <Rail>
         <div className="space-y-7">

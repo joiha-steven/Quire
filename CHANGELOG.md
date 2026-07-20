@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-07-20 — infinite scroll + date timeline; condensed category cloud
+
+- **Infinite scroll** (`features.infiniteScroll`, off by default; Admin → Settings → Tính năng):
+  home / category / tag listings reveal posts on scroll instead of paginating. The full published
+  list is handed to the new `InfiniteListing` client island as light metadata (no post bodies), so
+  revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders
+  for SEO, and `/page/[n]` URLs 404 (duplicate content).
+- **Date timeline** in the right gutter when infinite scroll is on: a second rail (`timelineRailCss`)
+  mirroring the left, grouping posts by **year → month** with per-month counts. It scroll-spies the
+  visible month and, on click, reveals up to and smooth-scrolls to that month. Desktop only — hidden
+  where there is no right column. The left rail is forced to its single-rail (all-blocks-stacked) branch.
+- **Categories in the sidebar** now render as a condensed wrapped cloud (`CategoryCloud`) with the post
+  count in parentheses, instead of a tall one-per-line list — much less vertical space.
+
 ## 2026-07-19 — listing grid: 2 columns at reading-column width
 
 - **Grid mode (home / category / tag listings) now stays 2 columns and keeps the

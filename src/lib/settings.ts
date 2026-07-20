@@ -45,6 +45,7 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   categoryLabel: true,
   deck: true,
   bookText: false,
+  infiniteScroll: false,
 }
 
 export const DEFAULT_COMMENTS: CommentSettings = {

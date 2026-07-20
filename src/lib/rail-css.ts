@@ -46,6 +46,23 @@ export function singleRailCss(colWidth: number): string {
   )
 }
 
+// Infinite-scroll timeline: a SECOND rail in the RIGHT gutter (the left rail keeps its
+// normal single-rail content). Mirrors the left geometry — ranged left toward the column,
+// divider on the left. Desktop only: below the breakpoint there is no right column, so the
+// rail stays `display:none` (never a mobile drawer). Injected by the InfiniteListing island;
+// the base `.rail` rules (always present) are overridden here via the higher-specificity
+// `.rail.rail-timeline`, so it wins over the left-gutter positioning with no ordering games.
+export function timelineRailCss(colWidth: number): string {
+  const at = breakpoint(colWidth)
+  return (
+    `.rail.rail-timeline{display:none}` +
+    `@media (min-width:${at}px){` +
+    `.rail.rail-timeline{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left}` +
+    `.rail.rail-timeline::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;right:auto;width:1px;background:var(--c-rule)}` +
+    `.rail.rail-timeline h2{padding-right:0;padding-left:var(--rail-pad)}}`
+  )
+}
+
 // Grid mode for a listing page (header toggle → <html data-list=grid>) needs no extra CSS:
 // the base 1/2-column grid (globals.css) applies at every width, in-column, so the grid keeps
 // the same reading-column width as the list and caps at 2 columns. No gutter widening, no

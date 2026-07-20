@@ -56,7 +56,7 @@ export function CategoryCloud({ title, links, activeHref }: { title: string; lin
             }`}
           >
             {l.label}
-            {l.count != null && <span className="ml-1 text-[0.85em] opacity-60 tabular-nums">({l.count})</span>}
+            {l.count != null && <span className="ml-1 opacity-60 tabular-nums">({l.count})</span>}
           </Link>
         ))}
       </div>

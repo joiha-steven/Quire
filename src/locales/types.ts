@@ -30,6 +30,7 @@ export type Dict = {
   mostViewedTitle: string
   featuredTitle: string
   tagsTitle: string
+  timelineTitle: string
   relatedTitle: string
   notFoundTitle: string
   notFoundText: string
@@ -422,6 +423,8 @@ export type AdminStrings = {
   featProgressDesc: string
   featSidebar: string
   featSidebarDesc: string
+  featInfiniteScroll: string
+  featInfiniteScrollDesc: string
   featLeadPost: string
   featLeadPostDesc: string
   featCategoryLabel: string

@@ -318,6 +318,8 @@ const de = {
   featProgressDesc: 'Ein dünner Balken oben, der sich beim Scrollen füllt.',
   featSidebar: 'Seitenleiste',
   featSidebarDesc: 'Kategorien und Schlagwörter neben der Beitragsliste. Wandert auf schmalen Bildschirmen ins Menü.',
+  featInfiniteScroll: 'Endloses Scrollen',
+  featInfiniteScrollDesc: 'Beiträge beim Scrollen laden statt Seitennummerierung und einen Datums-Zeitstrahl in der rechten Spalte zeigen (nur Desktop).',
   featLeadPost: 'Aufmacher',
   featLeadPostDesc: 'Der neueste Beitrag auf Seite 1 erscheint in H1-Größe.',
   featCategoryLabel: 'Kategorie-Label',

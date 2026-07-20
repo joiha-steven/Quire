@@ -29,6 +29,7 @@ const zh = {
   mostViewedTitle: '最多阅读',
   featuredTitle: '精选',
   tagsTitle: '标签',
+  timelineTitle: '时间线',
   relatedTitle: '相关文章',
   notFoundTitle: '页面未找到',
   notFoundText: '您查找的页面不存在或已被移动。',
