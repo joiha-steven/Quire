@@ -436,22 +436,45 @@ hr {
   color: var(--c-meta);
 }
 
-/* Infinite-scroll timeline: month/year markers (a round dot on the gutter spine + the
-   label) sit level with the first post of that month/year. A year is a big title-sized
-   number with an accent dot; a month is a quiet label. Geometry (gutter offset + breakpoint
-   + spine) is injected per page by `timelineCss`; colour + the dots live here. */
+/* Infinite-scroll timeline (see timelineCss for the gutter geometry). The feed is grouped
+   by year: each `.tl-yr` holds a year's posts, month markers scroll with the cards, and the
+   `.tl-year` header is sticky — it pins to the top of the gutter until the next year's group
+   pushes it out. Uniform 4rem between cards via margins (so the 0-height sticky header adds no
+   gap); grid view dissolves the groups back into a plain card grid. */
+.tl-feed .tl-yr article {
+  margin-top: 4rem;
+}
+.tl-feed > .tl-yr:first-child > article:first-of-type {
+  margin-top: 0;
+}
+html[data-list='grid'] .tl-yr {
+  display: contents;
+}
+html[data-list='grid'] .tl-feed article {
+  margin-top: 0; /* grid supplies its own gap */
+}
 .tl-mark {
   align-items: center;
   gap: 0.5rem;
-  color: var(--c-meta);
   white-space: nowrap;
+  color: var(--c-meta);
 }
-.tl-mark.is-year {
+/* The sticky year is a `--c-bg` tag so months sliding up to the top pass UNDER it and
+   disappear (no overlap); the right padding widens the mask to cover longer month labels. */
+.tl-year-tag {
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
   color: var(--c-heading);
   font-weight: 600;
-  font-size: var(--fs-h2); /* big, like a post title on the list */
-  line-height: var(--lh-h2);
-  letter-spacing: var(--ls-h2);
+  font-size: var(--fs-h3); /* compact heading, like a section title */
+  line-height: var(--lh-h3);
+  letter-spacing: var(--ls-h3);
+  background: var(--c-bg);
+  padding: 0.1rem 3rem 0.1rem 0;
+}
+.tl-year-tag .tl-dot {
+  background: var(--c-accent);
 }
 .tl-dot {
   flex: 0 0 auto;
@@ -461,9 +484,6 @@ hr {
      must be a circle. `!important` to beat that rule's own `!important`. */
   border-radius: 50% !important;
   background: var(--c-meta);
-}
-.tl-mark.is-year .tl-dot {
-  background: var(--c-accent);
 }
 
 /* Owner-authored footer (limited inline markdown). Links underline + warm to the
