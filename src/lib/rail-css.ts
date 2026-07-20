@@ -59,9 +59,9 @@ export function timelineCss(colWidth: number): string {
   return (
     `.tl-mark{display:none}` +
     `@media (min-width:${at}px){` +
-    // Spine: a line down the right gutter, exactly as tall as the post list.
+    // Spine: a visible line down the right gutter, exactly as tall as the post list.
     `.post-list{position:relative}` +
-    `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 3.5px);width:1px;background:var(--c-rule)}` +
+    `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 3.5px);width:1px;background:color-mix(in srgb,var(--c-meta) 55%,transparent)}` +
     // Marker: a child of a month/year's first card, anchored to the card top out in the gutter.
     // Width shrinks to the label so it fits the smaller gutter.
     `.post-list article{position:relative}` +
