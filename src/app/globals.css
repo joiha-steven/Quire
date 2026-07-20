@@ -452,15 +452,15 @@ hr {
 }
 .tl-dot {
   flex: 0 0 auto;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--c-rule);
+  background: var(--c-meta);
   outline: 3px solid var(--c-bg);
 }
 .tl-mark.is-year .tl-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   background: var(--c-accent);
 }
 
