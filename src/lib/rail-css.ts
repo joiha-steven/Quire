@@ -69,8 +69,10 @@ export function timelineCss(colWidth: number): string {
     // Year header: STICKY. A 0-size positioning anchor in the gutter (reserves no space); the
     // visible `.tl-year-tag` hangs from it, pinned to the top while its year's posts scroll, then
     // the next year's group pushes it out. z-index above the month markers so its bg masks them.
-    `.tl-year{display:block;position:sticky;top:1.25rem;height:0;width:0;margin-left:calc(100% + var(--rail-gap));z-index:2}` +
-    `.tl-year-tag{display:flex;position:absolute;top:-0.7em;left:0}` +
+    // top:2.5rem matches the left sidebar's sticky offset (`.rail-inner`), so the pinned year
+    // lines up with the left rail's first line.
+    `.tl-year{display:block;position:sticky;top:2.5rem;height:0;width:0;margin-left:calc(100% + var(--rail-gap));z-index:2}` +
+    `.tl-year-tag{display:flex;position:absolute;top:-0.1em;left:0}` +
     // Grid view is an alternate layout (cards in 2 columns) — the gutter timeline can't align, so drop it.
     `html[data-list=grid] .post-list::after,html[data-list=grid] .tl-mark,html[data-list=grid] .tl-year{display:none}}`
   )
