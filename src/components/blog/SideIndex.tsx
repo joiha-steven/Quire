@@ -38,6 +38,32 @@ export function IndexBlock({ title, links, activeHref }: { title: string; links:
   )
 }
 
+// Categories, condensed like tags: a wrapped run of words (no vertical list) so a long
+// list stays compact, but each keeps its post count as a small trailing number.
+export function CategoryCloud({ title, links, activeHref }: { title: string; links: IndexLink[]; activeHref?: string }) {
+  if (links.length === 0) return null
+  return (
+    <div>
+      <h2 className="mb-3 pl-3.5 t-small font-semibold text-heading">{title}</h2>
+      <div className="rail-tags flex flex-wrap gap-x-3 gap-y-1 pl-3.5">
+        {links.map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            aria-current={l.href === activeHref ? 'page' : undefined}
+            className={`link-accent t-small hover:text-heading ${
+              l.href === activeHref ? 'font-medium text-heading underline decoration-accent underline-offset-4' : 'text-meta'
+            }`}
+          >
+            {l.label}
+            {l.count != null && <span className="ml-1 text-[0.75em] opacity-60 tabular-nums">{l.count}</span>}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // Tags are many and short: a wrapped run of plain words, no chips, no boxes.
 export function TagCloud({ title, links, activeHref }: { title: string; links: IndexLink[]; activeHref?: string }) {
   if (links.length === 0) return null
