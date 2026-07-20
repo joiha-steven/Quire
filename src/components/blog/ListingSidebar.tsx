@@ -13,7 +13,7 @@ import { t } from '@/lib/i18n'
 import { listingRailCss } from '@/lib/rail-css'
 import type { SiteLang } from '@/types'
 import { Rail } from './Rail'
-import { IndexBlock, TagCloud } from './SideIndex'
+import { IndexBlock, CategoryCloud, TagCloud } from './SideIndex'
 import { SidebarMenu } from './SidebarMenu'
 
 const FEATURED_MAX = 5 // curated posts shown in the "Featured" block
@@ -57,7 +57,7 @@ export async function ListingSidebar({ lang, activeHref }: { lang: SiteLang; act
   )
   const nav = (
     <>
-      <IndexBlock title={labels.categoriesTitle} links={categoryLinks} activeHref={activeHref} />
+      <CategoryCloud title={labels.categoriesTitle} links={categoryLinks} activeHref={activeHref} />
       <TagCloud title={labels.tagsTitle} links={tagLinks} activeHref={activeHref} />
     </>
   )
