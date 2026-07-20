@@ -28,9 +28,9 @@
 ## Reading & discovery
 
 - Features `{ search, toc, related, readingTime, progressBar, activityLog, sidebar, leadPost,
-  categoryLabel, deck, bookText }` (all default on EXCEPT `bookText`, which is off; Admin → Settings →
-  Tính năng); gated in header / `/search` / post page. `bookText` = book-page typesetting on the post
-  body (first-line indent + justify ≥600px).
+  categoryLabel, deck, bookText, infiniteScroll }` (all default on EXCEPT `bookText` and `infiniteScroll`,
+  which are off; Admin → Settings → Tính năng); gated in header / `/search` / post page. `bookText` =
+  book-page typesetting on the post body (first-line indent + justify ≥600px).
 - **Sidebar** (`sidebar`): the MAIN (listing) sidebar has two layouts, chosen by `settings.sidebarLayout`
   (**Settings → Site → Layout & menu**): `single` (default) = one left rail with every block stacked
   (full-width column); `two` = **TWO gutter rails on desktop** flanking a narrower reading column
@@ -39,11 +39,12 @@
   `settings.mostViewedCount` public posts by all-time views — default 3, `0` hides it —
   `getViewTotals()` joined to `getPublicPosts()`) + **featured** (owner-curated `settings.featured`
   slugs, in order, first 5, dropped when a slug stops being public). **Right rail** = navigation:
-  **menu** (`SidebarMenu`, moved out of the header) + **categories** (with counts, `getPublicTaxonomy()`)
-  + **tags**. On **mobile** there is ONE gutter-less drawer: the left rail is hidden and its two blocks
+  **menu** (`SidebarMenu`, moved out of the header) + **categories** (a condensed wrapped cloud with
+  post counts in parentheses — `CategoryCloud`, `getPublicTaxonomy()`) + **tags** (`TagCloud`). On
+  **mobile** there is ONE gutter-less drawer: the left rail is hidden and its two blocks
   are duplicated into the right rail's drawer (`.drawer-only`), giving the order menu → most viewed →
   featured → categories → tags. Assembled in `ListingSidebar` (two `<Rail className="rail-left|rail-right">`
-  reusing `IndexBlock`/`TagCloud`); the geometry (per-page breakpoint + column width + right-rail mirror)
+  reusing `IndexBlock`/`CategoryCloud`/`TagCloud`); the geometry (per-page breakpoint + column width + right-rail mirror)
   is injected from `lib/rail-css.ts` (`singleRailCss` for the layout's default/post ToC rail,
   `listingRailCss` for the two rails — the latter uses higher-specificity `.rail.rail-left|right` so it
   wins without ordering games). Each block self-hides when empty. **Post/page reading views show ONLY the
@@ -51,6 +52,17 @@
   breakpoint the drawer opens from the **header menu button** (`RailToggle`, mobile only; self-hides on
   pages with no rail) — no separate header dropdown. Menu + most-viewed count + featured are edited in
   **Admin → Settings → Site → Layout & menu**; `getViewTotals` uses a GET rpc so the pages stay ISR.
+- **Infinite scroll** (`infiniteScroll`, off by default): on every listing (home / category / tag) the
+  feed reveals posts on scroll instead of paginating, and a **date timeline** fills the right gutter. The
+  whole published list is handed to the `InfiniteListing` client island as light metadata (no bodies), so
+  revealing more is pure client work — no network; the first `postsPerPage` chunk still server-renders for
+  SEO, and `/page/[n]` URLs 404 (would be duplicate content). The left rail is forced to its single-rail
+  branch (all blocks stacked), because the right gutter is now the timeline — a SECOND rail
+  (`<Rail className="rail-timeline">`, geometry from `timelineRailCss`) that mirrors the left, groups posts
+  by **year → month** with a per-month post count, scroll-spies the visible month, and on click reveals up
+  to and smooth-scrolls to that month. **Desktop only**: below the rail breakpoint there is no right column
+  so the timeline is `display:none` (the feed still scrolls). Feed + timeline share one island so reveal
+  count + active month stay in sync; the `reveal` card easing is pure CSS so appended cards animate for free.
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).

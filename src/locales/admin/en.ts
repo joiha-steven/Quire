@@ -318,6 +318,8 @@ const en = {
   featProgressDesc: 'A thin bar at the top that fills as you scroll.',
   featSidebar: 'Sidebar',
   featSidebarDesc: 'Categories and tags beside the post list. Moves into the menu on narrow screens.',
+  featInfiniteScroll: 'Infinite scroll',
+  featInfiniteScrollDesc: 'Load posts as the reader scrolls instead of pagination, and show a date timeline in the right gutter (desktop only).',
   featLeadPost: 'Lead post',
   featLeadPostDesc: 'The newest post on page 1 is set at the H1 size.',
   featCategoryLabel: 'Category label',

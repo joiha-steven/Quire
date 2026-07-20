@@ -12,20 +12,30 @@ export function PostCard({
   showReadingTime = false,
   showCategory = false,
   lead = false,
+  anchorId,
+  month,
 }: {
   post: Post
   lang: SiteLang
   showReadingTime?: boolean
   showCategory?: boolean
   lead?: boolean
+  anchorId?: string // set on the first card of a month so the timeline can scroll to it
+  month?: string // the card's 'YYYY-MM' bucket, watched by the timeline's scroll-spy
 }) {
   const category = showCategory ? post.categories[0] : undefined
   const Title = lead ? 'h1' : 'h2'
   return (
     // `reveal` eases the card in as it scrolls into view (motion engine; fully
     // visible when motion is off / unsupported — see globals.css). `data-lead` lets a
-    // grid layout span the lead card across all columns.
-    <article className="reveal" data-lead={lead ? '' : undefined}>
+    // grid layout span the lead card across all columns. `scroll-mt` clears the
+    // sticky header when the timeline scrolls a month anchor to the top.
+    <article
+      className={anchorId ? 'reveal scroll-mt-24' : 'reveal'}
+      data-lead={lead ? '' : undefined}
+      id={anchorId}
+      data-month={month}
+    >
       {/* Thumbnail — only posts WITH a featured image; hidden in list mode, shown in
           grid mode (globals.css `.card-thumb`). Posts without one stay text-only. */}
       {post.featuredImage && (

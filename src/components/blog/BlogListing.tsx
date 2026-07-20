@@ -8,6 +8,7 @@ import { paginate } from '@/lib/paginate'
 import { PostList } from './PostList'
 import { Pagination } from './Pagination'
 import { ListingSidebar } from './ListingSidebar'
+import { InfiniteListing } from './InfiniteListing'
 
 export async function BlogListing({
   posts,
@@ -24,14 +25,38 @@ export async function BlogListing({
   heading?: React.ReactNode
   lead?: boolean // home page 1 only — a category/tag archive has no lead post
 }) {
-  const { language, postsPerPage, features } = await getSettings()
+  const { language, postsPerPage, contentWidth, features } = await getSettings()
+  // On a category/tag archive the basePath IS that term's URL — mark it in the rail.
+  const activeHref = /^\/(category|tag)\//.test(basePath) ? basePath : undefined
+
+  // Infinite scroll: no pagination — reveal the whole list on scroll, with a date
+  // timeline in the right gutter. Deep `/page/[n]` URLs would be duplicate content,
+  // so they 404. The left rail stays as-is (ListingSidebar forces its single-rail
+  // branch when infinite is on); the timeline is the InfiniteListing island's own rail.
+  if (features.infiniteScroll) {
+    if (page > 1) notFound()
+    return (
+      <>
+        {heading}
+        <InfiniteListing
+          posts={posts}
+          lang={language}
+          chunk={postsPerPage}
+          colWidth={contentWidth}
+          emptyText={emptyText}
+          showReadingTime={features.readingTime}
+          showCategory={features.categoryLabel}
+          lead={lead && features.leadPost}
+        />
+        {features.sidebar && <ListingSidebar lang={language} activeHref={activeHref} />}
+      </>
+    )
+  }
+
   const { items, page: current, totalPages } = paginate(posts, page, postsPerPage)
   // A deep page number that doesn't exist is a 404 (don't silently clamp — that
   // would serve duplicate content under a bogus URL).
   if (page > 1 && page > totalPages) notFound()
-
-  // On a category/tag archive the basePath IS that term's URL — mark it in the rail.
-  const activeHref = /^\/(category|tag)\//.test(basePath) ? basePath : undefined
 
   return (
     <>

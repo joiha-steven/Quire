@@ -318,6 +318,8 @@ const zh = {
   featProgressDesc: '页面顶部随滚动填充的细条。',
   featSidebar: '侧边栏',
   featSidebarDesc: '在文章列表旁显示分类和标签。窄屏时移入菜单。',
+  featInfiniteScroll: '无限滚动',
+  featInfiniteScrollDesc: '滚动时加载文章而非分页，并在右侧栏显示日期时间线（仅桌面端）。',
   featLeadPost: '头条文章',
   featLeadPostDesc: '第 1 页最新的文章使用 H1 字号。',
   featCategoryLabel: '分类标签',

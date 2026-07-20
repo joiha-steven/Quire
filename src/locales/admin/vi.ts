@@ -318,6 +318,8 @@ const vi = {
   featProgressDesc: 'Thanh mảnh trên đầu trang chạy theo khi cuộn.',
   featSidebar: 'Cột bên',
   featSidebarDesc: 'Danh mục và thẻ bên cạnh danh sách bài. Màn hình hẹp thì dồn vào menu.',
+  featInfiniteScroll: 'Cuộn vô tận',
+  featInfiniteScrollDesc: 'Tải bài khi cuộn thay cho phân trang, và hiện dòng thời gian theo ngày ở cột phải (chỉ desktop).',
   featLeadPost: 'Bài mở đầu',
   featLeadPostDesc: 'Bài mới nhất ở trang 1 dùng cỡ chữ H1.',
   featCategoryLabel: 'Nhãn danh mục',

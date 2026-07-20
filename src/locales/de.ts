@@ -29,6 +29,7 @@ const de = {
   mostViewedTitle: 'Meistgelesen',
   featuredTitle: 'Empfohlen',
   tagsTitle: 'Schlagwörter',
+  timelineTitle: 'Zeitstrahl',
   relatedTitle: 'Ähnliche Beiträge',
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',

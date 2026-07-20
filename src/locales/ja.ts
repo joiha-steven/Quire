@@ -29,6 +29,7 @@ const ja = {
   mostViewedTitle: 'よく読まれている',
   featuredTitle: 'おすすめ',
   tagsTitle: 'タグ',
+  timelineTitle: 'タイムライン',
   relatedTitle: '関連記事',
   notFoundTitle: 'ページが見つかりません',
   notFoundText: 'お探しのページは存在しないか、移動されました。',

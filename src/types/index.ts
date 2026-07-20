@@ -160,6 +160,7 @@ export type FeatureSettings = {
   categoryLabel: boolean // category name in the meta line of cards and post headers
   deck: boolean // the excerpt shown as a standfirst under a post title
   bookText: boolean // running text set like a book: first-line indent, justified >=600px
+  infiniteScroll: boolean // reveal posts on scroll instead of pagination; adds a date timeline in the right gutter (desktop)
 }
 
 export type SiteSettings = {
