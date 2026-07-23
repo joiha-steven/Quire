@@ -10,6 +10,7 @@ import { slugify, deriveExcerpt, clampExcerpt, isPublicallyVisible, readingMinut
 import { ensureSlugFree } from '@/lib/slugs'
 import { pushRevision, renameRevisions, deleteRevisions } from '@/lib/revisions'
 import { renameComments, deleteCommentsForPost } from '@/lib/comments'
+import { saveRedirect, clearRedirectForPath } from '@/lib/redirects'
 import { getSettings } from '@/lib/settings'
 
 // Metadata columns (everything except the heavy `content` body) for list reads.
@@ -202,12 +203,17 @@ export async function savePost(
     .upsert({ ...toRow(post), updated_at: new Date().toISOString() })
   if (error) throw new Error(`savePost: ${error.message}`)
 
-  // Slug changed → drop the old row and move its revisions + comments.
+  // Slug changed → drop the old row, move its revisions + comments, and leave a 301
+  // from the old path so existing links + search results keep working.
   if (previousSlug && previousSlug !== post.slug) {
     await db().from('posts').delete().eq('slug', previousSlug)
     await renameRevisions(previousSlug, post.slug)
     await renameComments(previousSlug, post.slug)
+    await saveRedirect({ source: `/${previousSlug}`, destination: `/${post.slug}`, permanent: true })
   }
+  // This slug is now live content, so any redirect that used it as a SOURCE is stale
+  // (live content must win over a redirect; also breaks a rename-back self-loop).
+  await clearRedirectForPath(`/${post.slug}`)
 
   return toMeta(post)
 }

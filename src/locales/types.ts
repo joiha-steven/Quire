@@ -612,6 +612,17 @@ export type AdminStrings = {
   backupDeleteConfirm: string
   backupToastOk: string
   backupToastFail: string
+  // redirects (Settings → SEO)
+  redirectsTitle: string
+  redirectsHint: string
+  redirectSource: string
+  redirectDestination: string
+  redirectPermanent: string
+  redirectAdd: string
+  redirectEmpty: string
+  redirectDelete: string
+  redirectSaved: string
+  redirectSaveFailed: string
   // sidebar collapse
   navCollapse: string
   navExpand: string

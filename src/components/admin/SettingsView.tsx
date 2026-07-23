@@ -32,6 +32,7 @@ import { CommentKeys } from './CommentKeys'
 import { CloudflareFields } from './CloudflareFields'
 import { ImportFields } from './ImportFields'
 import { SeoFields } from './SeoFields'
+import { RedirectsManager } from './RedirectsManager'
 
 type Tab = 'site' | 'content' | 'appearance' | 'seo' | 'integrations'
 const TAB_IDS: Tab[] = ['site', 'content', 'appearance', 'seo', 'integrations']
@@ -187,12 +188,16 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
         </div>
       )}
 
-      {/* SEO: search + social metadata. Full-width — a single card in a 2-col grid
-          left half the row empty. */}
+      {/* SEO: search + social metadata on the left, URL redirects on the right. */}
       {tab === 'seo' && (
-        <Card title="SEO">
-          <SeoFields s={s} update={update} />
-        </Card>
+        <div className="grid items-start gap-5 xl:grid-cols-2">
+          <Card title="SEO">
+            <SeoFields s={s} update={update} />
+          </Card>
+          <Card title={t.redirectsTitle}>
+            <RedirectsManager />
+          </Card>
+        </div>
       )}
 
       {/* Integrations: external services only — Google Drive backups + MCP server +

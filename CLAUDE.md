@@ -53,7 +53,7 @@ BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). R
   Postgres+PostgREST on Docker, or your own on native, see Env); binaries on the LOCAL FILESYSTEM via
   the `blob.ts` facade** (served at `/uploads`; `STORAGE_LOCAL_DIR`). Tables (schema `public`):
   `posts` `pages` `post_revisions` `media` `files` `comments` `settings` `mcp_tokens` `mcp_clients`
-  `mcp_used_codes` `backup_state` `integration_keys` `activity_log` `analytics_events` `analytics_scroll` — full DDL in
+  `mcp_used_codes` `backup_state` `integration_keys` `activity_log` `analytics_events` `analytics_scroll` `redirects` — full DDL in
   `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
   `backup_state` (single row) holds the **secret** Drive refresh token + run state and
   is NEVER read into the client-bound settings payload (see `docs/backups.md`).
@@ -115,7 +115,8 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 |---|---|---|
 | Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts` (+ `lib/blob-local.ts`, `app/uploads/[...path]`), `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
 | Cache / stale / content not updating / ISR | `lib/revalidate.ts`, `lib/db.ts`, `lib/posts.ts` | ARCHITECTURE "Request flow" |
-| Auth / route 401 / route exposed | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO db), `api/<route>/route.ts` | `docs/mcp.md` if MCP |
+| Auth / route 401 / route exposed | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO supabase-js), `api/<route>/route.ts` | `docs/mcp.md` if MCP |
+| Redirect not firing / 301 wrong / old URL 404s | `lib/redirects.ts`, `src/middleware.ts` (redirect map, edge-safe fetch), `lib/redirect-path.ts` (`normalizePath`), `api/redirects` | `docs/features.md` "URL redirects" |
 | Slug / 404 / duplicate URL | `lib/slugs.ts`, `src/app/(blog)/[slug]` | `lib/posts.ts`, `lib/pages.ts` |
 | Trash / soft delete / restore | `lib/posts.ts` (`deleted_at`), `api/trash`, `src/app/admin/trash` | `docs/features.md` |
 | Comments (reader) / not showing / cache | `lib/comments.ts`, `components/blog/Comments.tsx`, `api/comments`, `lib/comment-md.ts` | `docs/features.md` "Comments" |
@@ -161,6 +162,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Every route calls `requireOwner()` first |
 | `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
 | `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
+| `redirects.ts` / `redirect-path.ts` | `getRedirects`, `saveRedirect`, `deleteRedirect`, `clearRedirectForPath` / `normalizePath`, `isValidDestination` | User-managed 301/302 rows (`redirects` table). Resolved in `middleware.ts` (real HTTP redirect, edge-safe fetch — NOT `db()`). `redirect-path.ts` is pure + import-safe from the edge middleware. savePost/savePage auto-add a 301 on rename + clear a live slug's stale redirect |
 | `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
 | others | `scheduled.ts` (`sweepScheduled`/`newlyLive` — future-dated published posts go live on time via cron), `ua.ts` (coarse device/browser/os buckets — no raw UA), `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
 

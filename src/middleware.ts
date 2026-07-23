@@ -7,6 +7,40 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { isAuthorized } from '@/lib/auth-shared'
+import { normalizePath } from '@/lib/redirect-path'
+
+// User-managed redirects (301/302). Resolved HERE, not in a page: a page-level
+// redirect() under a route with a loading.tsx is downgraded by Next to a 200 meta-
+// refresh (see the page/1 note below), so a real HTTP redirect must come from the
+// edge, before any render. Self-hosted Next runs middleware in ONE long-lived Node
+// process, so this module-level map persists across requests — a Map.get on the hot
+// path, refreshed from PostgREST at most once per TTL. Edge-safe: a plain fetch (NOT
+// the node-only supabase-js `db()` client). Fail-open — a lookup error never blocks.
+type Target = { destination: string; permanent: boolean }
+const REDIRECT_TTL_MS = 60_000
+let redirectCache: { at: number; map: Map<string, Target> } | null = null
+
+async function redirectMap(): Promise<Map<string, Target>> {
+  if (redirectCache && Date.now() - redirectCache.at < REDIRECT_TTL_MS) return redirectCache.map
+  const base = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!base || !key) return redirectCache?.map ?? new Map()
+  const prefix = process.env.POSTGREST_DIRECT === '1' ? '' : '/rest/v1'
+  try {
+    const res = await fetch(`${base}${prefix}/redirects?select=source,destination,permanent`, {
+      headers: { apikey: key, authorization: `Bearer ${key}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) return redirectCache?.map ?? new Map()
+    const rows = (await res.json()) as Array<{ source: string; destination: string; permanent: boolean }>
+    const map = new Map<string, Target>()
+    for (const r of rows) map.set(r.source, { destination: r.destination, permanent: r.permanent })
+    redirectCache = { at: Date.now(), map }
+    return map
+  } catch {
+    return redirectCache?.map ?? new Map()
+  }
+}
 
 // Paths that handle their own auth (bearer token, CRON_SECRET, PKCE) or are public
 // reads, so they must NOT require an owner session. Note: /api/mcp covers the MCP
@@ -38,8 +72,13 @@ export default async function middleware(req: NextRequest) {
   const pageOne = pathname.match(/^(\/(?:category|tag)\/[^/]+)?\/page\/1$/)
   if (pageOne) return NextResponse.redirect(new URL(pageOne[1] ?? '/', req.url), 308)
 
-  // The owner guard only concerns /admin + /api; skip the JWT read for public pages.
-  if (!pathname.startsWith('/admin') && !pathname.startsWith('/api')) return
+  // The owner guard + redirects only concern PUBLIC vs /admin+/api. Public paths get a
+  // redirect-table lookup (real 301/302), then pass through — no JWT read.
+  if (!pathname.startsWith('/admin') && !pathname.startsWith('/api')) {
+    const hit = (await redirectMap()).get(normalizePath(pathname))
+    if (hit) return NextResponse.redirect(new URL(hit.destination, req.url), hit.permanent ? 301 : 302)
+    return
+  }
 
   // Read + verify the NextAuth JWT directly (no provider config, no DB) so this
   // stays edge-safe even though the full auth config reads keys from Postgres.
@@ -59,6 +98,8 @@ export default async function middleware(req: NextRequest) {
   }
 }
 
+// Run on every path so redirects resolve anywhere, EXCEPT Next internals + uploaded
+// binaries (the heavy asset traffic that never needs a guard or a redirect).
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*', '/page/:n', '/category/:slug/page/:n', '/tag/:slug/page/:n'],
+  matcher: ['/((?!_next/|uploads/).*)'],
 }
