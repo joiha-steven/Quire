@@ -1175,7 +1175,7 @@ body.book-open { overflow: hidden; }
 .book-chrome { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 clamp(16px, 4vw, 48px); }
 .book-top { border-bottom: 1px solid var(--color-rule); }
 .book-title {
-  font-size: 1.15rem; font-weight: 600; color: var(--color-heading); text-align: center;
+  font-size: 1.15rem; font-weight: 400; color: var(--color-meta); text-align: center;
   max-width: min(70%, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .book-topright {
