@@ -296,8 +296,11 @@
   shows it.
 - **How it paginates:** the reader **clones** the already-rendered `#post-body` markup (Shiki
   highlight, images, footnotes intact — no re-render, cloned images forced `loading=eager`
-  since later columns sit off-screen), flows it into a CSS `column-width` element of a fixed
-  page height, and reads `scrollWidth` to count columns → spreads = `ceil(cols / 2)`. Advancing
+  since later columns sit off-screen), flows it into a CSS `column-width` element sized so the
+  spread is exactly as wide as the site's content column (`#post-body` width) at a fixed page
+  height, and reads `scrollWidth` to count columns → spreads = `ceil(cols / 2)`. The overlay
+  carries `book-text`, so the reading view's first-line indent + justified margins apply.
+  Advancing
   translates the flow by two columns and crossfades. Recomputes on resize + once webfonts
   settle (`document.fonts.ready`). Base page keeps normal scroll, so **SEO / a11y / find-in-page
   are untouched** (book mode is pure client enhancement).
