@@ -57,19 +57,23 @@ export async function generateMetadata({ params }: PageProps<'/[slug]'>): Promis
   const [post, page, settings] = await Promise.all([getPost(slug), getPage(slug), getSettings()])
   const base = resolveSiteUrl(settings)
   if (post && isPublicallyVisible(post.status, post.date)) {
+    // Per-post SEO overrides win; else the post title + excerpt.
+    const seoTitle = post.metaTitle?.trim() || post.title
+    const seoDesc = post.metaDescription?.trim() || post.excerpt || undefined
     const og = ogImageUrl(settings, base, {
-      title: post.title,
-      featuredImage: post.featuredImage,
+      title: seoTitle,
+      // A cover/featured image is the social card; cover wins as the visible hero.
+      featuredImage: post.coverImage || post.featuredImage,
       // A fuller preview than the ~200-char list excerpt: up to 320 chars from the body.
-      desc: clampExcerpt(toPlainText(post.content), 320) || post.excerpt || undefined,
+      desc: post.metaDescription?.trim() || clampExcerpt(toPlainText(post.content), 320) || post.excerpt || undefined,
       date: formatDate(post.date, settings.language),
     })
     const images = og ? [og] : undefined
     return {
-      title: post.title,
-      description: post.excerpt || undefined,
+      title: seoTitle,
+      description: seoDesc,
       alternates: { canonical: `/${slug}` },
-      openGraph: { title: post.title, description: post.excerpt || undefined, images, type: 'article' },
+      openGraph: { title: seoTitle, description: seoDesc, images, type: 'article' },
       twitter: { card: images ? 'summary_large_image' : 'summary', images },
     }
   }
@@ -135,6 +139,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     // Every post gets an index: the title row alone is already useful.
     const showToc = features.toc && (headings.length > 0 || Boolean(tocMeta))
     const category = features.categoryLabel ? post.categories[0] : undefined
+    // "Updated" only when a real edit happened well after publishing (>24h), so a
+    // save right after publishing doesn't add noise.
+    const updated =
+      post.updatedAt && new Date(post.updatedAt).getTime() - new Date(post.date).getTime() > 86_400_000
+        ? post.updatedAt
+        : null
     // Body images: reused for the article schema AND to gate the Lightbox island — a
     // text-only post shouldn't load/hydrate the lightbox JS.
     const imageUrls = extractImageUrls(post.content)
@@ -150,10 +160,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               title: post.title,
               url: `${base}/${post.slug}`,
               datePublished: post.date,
+              // Real last-modified time (falls back to datePublished inside articleSchema).
+              dateModified: post.updatedAt,
               description: post.excerpt || undefined,
-              // Featured image if set, else the first image in the body — so the
+              // Cover/featured image if set, else the first image in the body — so the
               // article's structured data always points at an image on this page.
-              image: post.featuredImage || imageUrls[0],
+              image: post.coverImage || post.featuredImage || imageUrls[0],
               authorName: settings.title,
             })}
           />
@@ -179,6 +191,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               </>
             )}
             {formatDate(post.date, language)}
+            {updated && ` · ${tx.updatedPrefix} ${formatDate(updated, language)}`}
             {features.readingTime &&
               ` · ${formatCount(words, language)} ${t(language).wordsSuffix} · ${minutes} ${t(language).readingSuffix}`}
           </p>
@@ -196,6 +209,18 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           <Rail>
             <Toc headings={headings} title={tx.tocIndex} postTitle={post.title} meta={tocMeta} />
           </Rail>
+        )}
+
+        {post.coverImage && (
+          // Visible hero. eslint-disable: intrinsic dims are unknown here; the CSS box
+          // (aspect-video) reserves space, so there is no layout shift.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.coverImage}
+            alt=""
+            className="mt-8 aspect-video w-full rounded-lg object-cover"
+            fetchPriority="high"
+          />
         )}
 
         {series && series.posts.length > 1 && (

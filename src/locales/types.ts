@@ -37,6 +37,7 @@ export type Dict = {
   seriesPrev: string
   seriesNext: string
   emptySeries: string
+  updatedPrefix: string
   notFoundTitle: string
   notFoundText: string
   errorTitle: string
@@ -175,6 +176,11 @@ export type AdminStrings = {
   seriesField: string
   seriesOrder: string
   seriesPlaceholder: string
+  coverImageLabel: string
+  coverImageHint: string
+  metaTitleLabel: string
+  metaDescriptionLabel: string
+  seoSectionHint: string
   categories: string
   tags: string
   featuredImage: string

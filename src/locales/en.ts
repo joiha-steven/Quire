@@ -36,6 +36,7 @@ const en = {
   seriesPrev: 'Previous',
   seriesNext: 'Next',
   emptySeries: 'No posts in this series yet.',
+  updatedPrefix: 'Updated',
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',
   errorTitle: 'Something went wrong',

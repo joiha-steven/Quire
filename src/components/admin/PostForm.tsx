@@ -26,7 +26,7 @@ type Props = {
   typewriterEffects: boolean
 }
 
-type PickTarget = 'editor' | 'gallery' | 'featured'
+type PickTarget = 'editor' | 'gallery' | 'featured' | 'cover'
 
 // ISO -> value for <input type="datetime-local"> in local time.
 function isoToLocal(iso: string): string {
@@ -47,6 +47,9 @@ function toDraft(initial?: PostWithContent): Draft {
     series: initial?.series ?? '',
     seriesOrder: initial?.seriesOrder ?? 0,
     featuredImage: initial?.featuredImage ?? '',
+    coverImage: initial?.coverImage ?? '',
+    metaTitle: initial?.metaTitle ?? '',
+    metaDescription: initial?.metaDescription ?? '',
     excerpt: initial?.excerpt ?? '',
     content: initial?.content ?? '',
   }
@@ -139,6 +142,9 @@ export function PostForm({ initial, allCategories, allTags, allSeries, contentWi
         series: d.series.trim() || undefined,
         seriesOrder: d.series.trim() ? d.seriesOrder : undefined,
         featuredImage: d.featuredImage || undefined,
+        coverImage: d.coverImage || undefined,
+        metaTitle: d.metaTitle.trim() || undefined,
+        metaDescription: d.metaDescription.trim() || undefined,
         excerpt: d.excerpt,
         content,
       }
@@ -223,6 +229,7 @@ export function PostForm({ initial, allCategories, allTags, allSeries, contentWi
   // Single pick (image / featured). Gallery uses multi-select -> onPickedMany.
   function onPicked(url: string) {
     if (picker === 'featured') update({ featuredImage: url })
+    else if (picker === 'cover') update({ coverImage: url })
     else editorApi.current?.insertImage(url)
     setPicker(null)
   }
@@ -365,7 +372,7 @@ export function PostForm({ initial, allCategories, allTags, allSeries, contentWi
                 {draft.status === 'published' && savedSlug && !scheduled && <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="text-neutral-500 hover:text-neutral-900">{t.viewPost}</a>}
               </div>
             </div>
-            <PostSettings draft={draft} update={update} allCategories={allCategories} allTags={allTags} allSeries={allSeries} onPickFeatured={() => setPicker('featured')} />
+            <PostSettings draft={draft} update={update} allCategories={allCategories} allTags={allTags} allSeries={allSeries} onPickFeatured={() => setPicker('featured')} onPickCover={() => setPicker('cover')} />
           </aside>
         )}
       </div>
