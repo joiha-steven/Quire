@@ -195,7 +195,9 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
   const totalSize = items.reduce((n, m) => n + (m.size || 0), 0)
   const grid = (
     <>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+      {/* Roomier than a 6-col wall so the dims · size · date caption fits without
+          truncating (5 cols at desktop). */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {view.slice(0, visible).map((m) => (
           <figure
             key={m.url}
@@ -205,30 +207,51 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
                 : 'border-neutral-200 dark:border-neutral-800'
             }`}
           >
-            {(mode === 'page' || multi) && (
-              <input
-                type="checkbox"
-                checked={selected.has(m.url)}
-                onChange={() => toggleSelect(m.url)}
+            {/* Image region. The click target fills it; the checkbox + action bar
+                sit ON the image (absolute) so they cost zero layout height. */}
+            <div className="relative aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800">
+              <button
+                type="button"
+                // Page mode: click to zoom. Picker: click to select (toggle in multi).
+                onClick={() => (mode === 'picker' ? (multi ? toggleSelect(m.url) : onSelect?.(m.url)) : setZoom(m))}
                 aria-label={m.filename}
-                className="absolute left-1.5 top-1.5 z-10 h-4 w-4 accent-neutral-900 dark:accent-white"
-              />
-            )}
-            <button
-              type="button"
-              // Page mode: click to zoom. Picker: click to select (toggle in multi).
-              onClick={() => (mode === 'picker' ? (multi ? toggleSelect(m.url) : onSelect?.(m.url)) : setZoom(m))}
-              className="relative block aspect-[3/2] w-full bg-neutral-100 dark:bg-neutral-800"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={m.thumb ?? m.url} alt={m.filename} className="h-full w-full object-cover" />
+                className="absolute inset-0 block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={m.thumb ?? m.url} alt={m.filename} className="h-full w-full object-cover" />
+              </button>
+              {(mode === 'page' || multi) && (
+                <input
+                  type="checkbox"
+                  checked={selected.has(m.url)}
+                  onChange={() => toggleSelect(m.url)}
+                  aria-label={m.filename}
+                  className={`absolute left-1.5 top-1.5 z-20 h-4 w-4 accent-neutral-900 transition-opacity dark:accent-white ${
+                    selected.has(m.url) ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
+                  }`}
+                />
+              )}
               {unused?.has(m.url) && (
-                <span className="absolute right-1.5 top-1.5 bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
+                <span className="absolute right-1.5 top-1.5 z-10 bg-neutral-900 px-1.5 py-0.5 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
                   {t.unusedBadge}
                 </span>
               )}
-            </button>
-            <figcaption className="space-y-1 p-2 text-xs">
+              {/* Actions overlay the image bottom (always on touch, hover on desktop). */}
+              {mode === 'page' && (
+                <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-end gap-2.5 bg-gradient-to-t from-black/70 via-black/35 to-transparent px-2 py-1.5 text-xs opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                  <button type="button" onClick={() => copyUrl(m.url)} className="text-white/90 hover:text-white">
+                    {t.copyUrl}
+                  </button>
+                  <a href={m.url} download={m.filename} className="text-white/90 hover:text-white">
+                    {t.download}
+                  </a>
+                  <button type="button" onClick={() => handleDelete(m.url)} className="font-medium text-white">
+                    {t.delete}
+                  </button>
+                </div>
+              )}
+            </div>
+            <figcaption className="space-y-0.5 p-2 text-xs">
               <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
                 {m.filename}
               </p>
@@ -236,21 +259,6 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
                 {m.width && m.height ? `${m.width}×${m.height} · ` : ''}
                 {formatBytes(m.size)} · {compactDate(m.uploadedAt, lang)}
               </p>
-              {/* Actions stay out of the way: always visible on touch, revealed on
-                  hover/focus at ≥sm so the default grid reads clean. */}
-              {mode === 'page' && (
-                <div className="flex flex-wrap gap-3 pt-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-                  <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                    {t.copyUrl}
-                  </button>
-                  <a href={m.url} download={m.filename} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                    {t.downloadOriginal}
-                  </a>
-                  <button onClick={() => handleDelete(m.url)} className="font-medium text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white">
-                    {t.delete}
-                  </button>
-                </div>
-              )}
             </figcaption>
           </figure>
         ))}

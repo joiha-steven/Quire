@@ -150,8 +150,9 @@
 - The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**
   (media library), **Videos**, **Files**. The Images grid has a **toolbar** (`MediaToolbar.tsx`):
   total count + size, a name **search**, and a **sort** (newest / name / size); each tile keeps a
-  compact `dims · size · shortdate` line and reveals its copy / download / delete actions on hover
-  (always shown on touch). Videos are ordinary attachments in the shared `files` store
+  compact `dims · size · shortdate` caption and its copy / download / delete actions **overlay the
+  thumbnail** (revealed on hover, always on touch) so they add no layout height. The grid is 5-across
+  at desktop so the caption never truncates. Videos are ordinary attachments in the shared `files` store
   (same upload route `/api/files/attach`, same soft-delete) — `isVideoAttachment`
   (MIME `video/*`, extension fallback) splits them between the Videos tab (grid of
   native `<video controls preload="metadata">` players + copy URL) and the Files tab.
