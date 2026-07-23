@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/Button'
 import { PostsTable } from './PostsTable'
 import { PagesTable } from './PagesTable'
 import { TaxonomyManager } from './TaxonomyManager'
+import { SeriesManager } from './SeriesManager'
 import { PageHeader, Tabs } from './kit'
 import { useAdminT } from './I18nProvider'
 
-type Tab = 'posts' | 'pages' | 'taxonomy'
+type Tab = 'posts' | 'pages' | 'taxonomy' | 'series'
 
 export function ContentDashboard({
   posts,
@@ -34,13 +35,14 @@ export function ContentDashboard({
     { key: 'posts', label: t.tabPosts },
     { key: 'pages', label: t.tabPages },
     { key: 'taxonomy', label: t.tabTaxonomy },
+    { key: 'series', label: t.tabSeries },
   ]
 
   return (
     <div>
       <PageHeader
         title={t.navDashboard}
-        actions={tab !== 'taxonomy' ? (
+        actions={tab === 'posts' || tab === 'pages' ? (
           <Link href={tab === 'posts' ? '/admin/editor' : '/admin/page-editor'}>
             <Button>{tab === 'posts' ? t.newPost : t.newPage}</Button>
           </Link>
@@ -54,6 +56,7 @@ export function ContentDashboard({
       )}
       {tab === 'pages' && <PagesTable initialPages={pages} views={views} />}
       {tab === 'taxonomy' && <TaxonomyManager posts={posts} />}
+      {tab === 'series' && <SeriesManager posts={posts} />}
     </div>
   )
 }

@@ -264,13 +264,20 @@
   `series_order` (int) columns on `posts`. A post belongs to at most one series. Assign it in
   the editor (Settings panel: a Series field with a datalist of existing names + an Order
   number shown once a series is set). `getAllSeriesNames` feeds the autocomplete (incl. drafts).
-- **Ordering** (`orderSeries`, pure): `series_order` ascending, then date ascending — so a
-  series reads oldest-to-newest / lowest-order-first. `getSeriesForPost(slug)` returns the
-  ordered PUBLIC siblings + the current index + prev/next (a draft/scheduled part never shows).
+- **Ordering** (`orderSeries`, pure — in `lib/series-order.ts`, the client/edge-safe module so
+  the db-free logic can be imported by client components): `series_order` ascending, then date
+  ascending — so a series reads oldest-to-newest / lowest-order-first. `getSeriesForPost(slug)`
+  returns the ordered PUBLIC siblings + the current index (a draft/scheduled part never shows).
 - **Series box** (`SeriesBox.tsx`) renders at the top of a post when its series has >1 public
-  part: a `Part n/total` line linking to `/series/[slug]`, the ordered list (current part
-  highlighted, not linked), and prev/next links. Colours are theme tokens only (`border-rule`,
-  `text-meta`, `text-heading`, `link-accent`).
+  part: a `Part n/total` line linking to `/series/[slug]` and the ordered list of parts (current
+  part highlighted, not linked). Colours are theme tokens only (`border-rule`, `text-meta`,
+  `text-heading`, `link-accent`).
+- **Admin management** (Content → **Series** tab, `SeriesManager.tsx`): every series (incl.
+  drafts) built from the dashboard's post index via `seriesEntries` (pure) — no extra fetch.
+  Per series: **rename** (across all its posts, merges on collision) / **remove** (clears
+  `series`+`series_order`, posts untouched) / **reorder** parts with up-down arrows. Each action
+  POSTs `/api/series` (`updateSeries` / `reorderSeries`, owner-gated) then `router.refresh()`.
+  `series_order` is otherwise set per-post in the editor's Settings panel.
 - **`/series/[slug]`** lists a series in order via `BlogListing` (which preserves the given
   order — it only paginates). Slug derived with `slugify` and reverse-resolved by
   `resolveSeries` (like categories/tags). ISR-cached; an admin save purges via

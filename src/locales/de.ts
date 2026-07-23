@@ -33,8 +33,6 @@ const de = {
   relatedTitle: 'Ähnliche Beiträge',
   seriesLabel: 'Serie',
   seriesPartPrefix: 'Teil',
-  seriesPrev: 'Zurück',
-  seriesNext: 'Weiter',
   emptySeries: 'Noch keine Beiträge in dieser Serie.',
   copyCode: 'Kopieren',
   copiedCode: 'Kopiert',

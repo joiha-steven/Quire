@@ -13,7 +13,7 @@ export type ActivityAction =
   | 'page.create' | 'page.update' | 'page.delete'
   | 'media.upload' | 'media.delete'
   | 'file.add' | 'file.delete' | 'icon.upload' | 'font.upload'
-  | 'settings.save' | 'taxonomy.update' | 'cache.clear'
+  | 'settings.save' | 'taxonomy.update' | 'series.update' | 'cache.clear'
   // Trash (soft delete): restore / permanent purge per kind, plus empty-trash.
   | 'post.restore' | 'post.purge' | 'page.restore' | 'page.purge'
   | 'media.restore' | 'media.purge' | 'file.restore' | 'file.purge'

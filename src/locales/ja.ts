@@ -33,8 +33,6 @@ const ja = {
   relatedTitle: '関連記事',
   seriesLabel: 'シリーズ',
   seriesPartPrefix: 'パート',
-  seriesPrev: '前へ',
-  seriesNext: '次へ',
   emptySeries: 'このシリーズにはまだ記事がありません。',
   copyCode: 'コピー',
   copiedCode: 'コピーしました',
