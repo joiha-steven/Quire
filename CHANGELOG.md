@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-07-23 — JetBrains Mono chrome font
+
+- Added **JetBrains Mono** as a second self-hosted monospace option for the system/chrome
+  font (Admin → Appearance → System font), alongside IBM Plex Mono. One VARIABLE woff2 per
+  subset (wght 100–800; latin + latin-ext + **vietnamese**), so a single face covers every
+  weight. Vietnamese coverage verified (U+1EA0–1EF9 + Ă/Đ/Ơ/Ư/₫ present in the subset). Pick
+  it from the appearance settings; nothing changes until selected.
+
 ## 2026-07-23 — newsletter broadcast + reply notifications (batch 7b)
 
 Completes the newsletter (built on 7a's subscribe/opt-in/SMTP foundation).
