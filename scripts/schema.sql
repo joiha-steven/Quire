@@ -42,6 +42,7 @@ create table if not exists public.posts (
   meta_title       text,                                -- SEO <title> override (else the post title)
   meta_description text,                                -- SEO description/OG override (else the excerpt)
   cover_image      text,                                -- visible hero image at the top of the post
+  broadcast_at     timestamptz,                         -- when the post was emailed to subscribers (once)
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
   -- Soft delete: NULL = live, a timestamp = in Trash. Nothing is hard-deleted on a
@@ -66,6 +67,7 @@ alter table public.posts add column if not exists series_order integer not null 
 alter table public.posts add column if not exists meta_title       text;
 alter table public.posts add column if not exists meta_description text;
 alter table public.posts add column if not exists cover_image      text;
+alter table public.posts add column if not exists broadcast_at     timestamptz;
 
 -- ----- pages (share the /{slug} namespace with posts) ------------------------
 create table if not exists public.pages (

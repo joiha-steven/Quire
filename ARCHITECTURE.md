@@ -82,6 +82,14 @@ can move without rewriting anything.
   (it has a `loading.tsx`) is downgraded by Next to a 200 meta-refresh, so a real HTTP
   redirect must come from the edge. Middleware stays free of the node-only `db()` client: it
   reads the redirect map with a plain PostgREST `fetch`, cached in-process for 60s.
+- **Newsletter broadcast**: emailing a new post to subscribers is cron-driven, not tied to
+  the save request — the same shape as scheduled publishing. A post carries a one-shot
+  `broadcast_at` stamp; the cron finds live-but-unstamped posts, sends, and stamps. This makes
+  it idempotent (an edit can't re-send: `savePost`'s upsert omits the column, so PostgREST
+  preserves it), correct for scheduled posts (they broadcast when they actually go live), and
+  safe to enable late (the migration backfills existing live posts, and a due post is stamped
+  even with no SMTP/subscribers — so the back-catalogue is never blasted). Reply notifications
+  are transactional, sent from the comment route via `after()`.
 - **Render**: Markdown → HTML via `marked` (raw HTML is escaped, never executed);
   images become `<figure>`, lone video URLs become embeds, H2/H3 get slug ids.
 
