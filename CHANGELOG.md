@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode polish (v1.4.30)
+
+Feedback pass on the book reader:
+- **Spread width now matches the site's content column** (`#post-body` width) instead of a
+  fixed cap, so book mode is exactly as wide as the page reads normally.
+- **Book typography reused:** the overlay carries `book-text`, so the same first-line indent +
+  justified margins as the normal reading view apply (was plain blocks).
+- **Chrome:** dropped the footer; the page count moved up next to the close button (top-right).
+- **Title** in the top bar is now centred and larger.
+- **First column opens flush** — zeroed the leading top-margin so the first line no longer
+  drops down.
+
 ## 2026-07-23 — book reading mode (v1.4.29)
 
 - **New "Chế độ đọc sách" reader** (`components/blog/BookMode.tsx`): a toggle on the post meta
