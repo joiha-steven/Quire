@@ -44,9 +44,11 @@ const nextConfig: NextConfig = {
   },
   // Baseline security headers on every route. HSTS is best set at the TLS edge
   // (reverse proxy / CDN); these cover clickjacking, MIME sniffing, referrer leakage,
-  // and feature access. No CSP here on purpose: the app loads inline theme/no-FOUC
-  // scripts and the dynamic OG image — a strict CSP needs nonces + a Report-Only
-  // rollout first, so it is left out rather than shipped broken.
+  // and feature access. The CSP here is the SAFE, no-fallback subset that can be
+  // enforced without nonces — it clamps embedding, plugins, `<base>` and form targets
+  // but deliberately sets NO default-src/script-src/style-src (those would break the
+  // inline theme/no-FOUC scripts). A full script-src+nonce CSP needs per-request
+  // middleware injection and a Report-Only rollout — tracked as a follow-up.
   async headers() {
     return [
       {
@@ -54,6 +56,7 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()' },
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
