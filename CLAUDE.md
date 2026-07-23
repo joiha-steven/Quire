@@ -120,6 +120,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | Trash / soft delete / restore | `lib/posts.ts` (`deleted_at`), `api/trash`, `src/app/admin/trash` | `docs/features.md` |
 | Comments (reader) / not showing / cache | `lib/comments.ts`, `components/blog/Comments.tsx`, `api/comments`, `lib/comment-md.ts` | `docs/features.md` "Comments" |
 | Backup / restore / cron | `docs/backups.md`, `lib/backup.ts`, `lib/gdrive.ts`, `lib/backup-state.ts` | — |
+| Scheduled post not going live / on time | `lib/scheduled.ts` (`sweepScheduled`/`newlyLive`), `api/cron` (`?publish=1`), `lib/utils.ts` (`isScheduled`/`isPublicallyVisible`) | `docs/features.md` "Scheduled publishing" |
 | Theme / palette / dark / FOUC | `lib/themes.ts`, `src/components/theme/*` | `docs/conventions.md` |
 | Typography / font / layout drift | `docs/conventions.md` FIRST, then the component | — |
 | Font preload / CSS size / island JS / LCP / what a reader loads | `docs/performance.md` (the resource-loading law), `lib/themes.ts` (`fontPreloadHrefs`), `src/app/{layout.tsx,globals.css,theme.css,admin/admin.css}` | `docs/conventions.md` |
@@ -161,7 +162,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
 | `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
 | `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
-| others | `ua.ts` (coarse device/browser/os buckets — no raw UA), `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
+| others | `scheduled.ts` (`sweepScheduled`/`newlyLive` — future-dated published posts go live on time via cron), `ua.ts` (coarse device/browser/os buckets — no raw UA), `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
 
 ## Caching — ISR pages + tagged DB reads, purge on save
 

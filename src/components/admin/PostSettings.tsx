@@ -4,6 +4,7 @@
 import type { PostStatus } from '@/types'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { isScheduled } from '@/lib/utils'
 import { MultiSelect } from './MultiSelect'
 import { useAdminT } from './I18nProvider'
 
@@ -38,12 +39,19 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
         placeholder="tu-dong-tu-tieu-de"
       />
 
-      <Input
-        label={t.publishDate}
-        type="datetime-local"
-        value={draft.date}
-        onChange={(e) => update({ date: e.target.value })}
-      />
+      <div className="space-y-1.5">
+        <Input
+          label={t.publishDate}
+          type="datetime-local"
+          value={draft.date}
+          onChange={(e) => update({ date: e.target.value })}
+        />
+        {isScheduled(draft.status, draft.date) && (
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {t.scheduledForPrefix} {new Date(draft.date).toLocaleString()}
+          </p>
+        )}
+      </div>
 
       <div className="space-y-1.5">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.status}</span>

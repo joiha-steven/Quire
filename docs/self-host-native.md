@@ -106,11 +106,14 @@ create a **Node.js** site (it wires the nginx vhost → app port and manages SSL
 
 ## 5. Cron
 
-Add an hourly job (host crontab, or the panel's Cron UI) so variant generation, the backup
-sweep, and keep-alive run:
+Add two jobs (host crontab, or the panel's Cron UI). The hourly job runs variant
+generation, the backup sweep, and keep-alive; the 5-minute `?publish=1` job flips due
+**scheduled posts** live on time (skip it if you never schedule posts — they still go
+live within the hour via the hourly job):
 
 ```
-0 * * * * curl -fsS -H "Authorization: Bearer <CRON_SECRET>" http://127.0.0.1:3000/api/cron >/dev/null 2>&1
+0 * * * *   curl -fsS -H "Authorization: Bearer <CRON_SECRET>" "http://127.0.0.1:3000/api/cron" >/dev/null 2>&1
+*/5 * * * * curl -fsS -H "Authorization: Bearer <CRON_SECRET>" "http://127.0.0.1:3000/api/cron?publish=1" >/dev/null 2>&1
 ```
 
 ## 6. Google OAuth

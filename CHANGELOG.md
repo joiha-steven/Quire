@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 2026-07-23 — scheduled publishing (batch 3)
+
+Publish a post with a **future date** and it goes live on time, automatically.
+
+- **No new status.** A `published` post dated in the future is simply hidden by the existing
+  read layer (`isPublicallyVisible` — lists, search, and the `/[slug]` page), so scheduling is a
+  property of the date, not a state machine. New `isScheduled` helper = its exact complement.
+- **Editor cue.** With a future date the Publish button reads **Schedule**, the toast says
+  **Scheduled**, a "Scheduled for <local time>" note appears under the date, and the live
+  "View post" link is hidden (the URL 404s until it goes live); "Preview draft" still works.
+- **On time, not within the hour.** `lib/scheduled.ts` `sweepScheduled` (run by the cron) finds
+  posts that crossed their time within a bounded lookback (`newlyLive`, a pure `(since, now]`
+  window) and runs one `purgeAndWarm` so the edge 404 is flushed and the origin re-warmed. A new
+  **5-min publish tick** (`/api/cron?publish=1`) does only this; the hourly maintenance tick sweeps
+  a ~65-min window as a backstop. No watermark stored (an overlapping purge is an idempotent
+  superset). `docker-compose.yml` + `docs/self-host-native.md` updated with the new cadence.
+
 ## 2026-07-23 — accessibility pass (batch 2)
 
 Audit-driven a11y + polish across the reader and admin (no feature change):

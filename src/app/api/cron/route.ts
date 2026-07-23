@@ -10,6 +10,7 @@ import { timingSafeEqual } from 'node:crypto'
 import { db } from '@/lib/db'
 import { finalizePendingVariants, finalizePendingThumbs } from '@/lib/media'
 import { revalidateEverything, purgeAndWarm } from '@/lib/revalidate'
+import { sweepScheduled, PUBLISH_TICK_LOOKBACK_MS, HOURLY_LOOKBACK_MS } from '@/lib/scheduled'
 import { maybeRunBackup } from '@/lib/backup'
 import { ok, fail, logRequest, logError } from '@/lib/api'
 
@@ -36,6 +37,13 @@ export async function GET(req: NextRequest): Promise<Response> {
   try {
     // Keep-alive: any request keeps the project active; this is the cheapest read.
     await db().from('settings').select('id').limit(1)
+    // Publish tick (`?publish=1`): the frequent (5-min) cron only flips due scheduled
+    // posts live — no variant/backup sweep. Its short lookback matches the tick cadence.
+    if (req.nextUrl.searchParams.get('publish') === '1') {
+      const published = await sweepScheduled(PUBLISH_TICK_LOOKBACK_MS)
+      logRequest(req, 200, start)
+      return ok({ alive: true, published })
+    }
     // Deploy hook: `?purge=1` purges everything (Next paths + the Cloudflare zone) THEN
     // re-warms the origin ISR, so a code deploy — which runs no admin write — flushes the
     // edge and leaves the origin render cache primed. Same auth as the cron (CRON_SECRET).
@@ -55,6 +63,14 @@ export async function GET(req: NextRequest): Promise<Response> {
     // pages that embed it were cached without those sources, so purge once when the
     // sweep actually did work. Coarse (no media→slug map here) but rare + superset-safe.
     if (finalized > 0) revalidateEverything()
+    // Backstop for scheduled posts, in case the frequent publish tick was down; the
+    // wider lookback covers the whole hour. Isolated so a failure can't skip the backup.
+    let published = 0
+    try {
+      published = await sweepScheduled(HOURLY_LOOKBACK_MS)
+    } catch (e) {
+      logError(req, e)
+    }
     // Full-snapshot backup when enabled, connected, and the interval has elapsed.
     // Self-contained errors (never break keep-alive); logged so a silent scheduled
     // backup failure still surfaces in Admin → Log.
@@ -63,7 +79,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       return { ran: false, error: (e as Error).message }
     })
     logRequest(req, 200, start)
-    return ok({ alive: true, purged: doPurge, warmed, finalized, thumbs, backup })
+    return ok({ alive: true, purged: doPurge, warmed, finalized, thumbs, published, backup })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)

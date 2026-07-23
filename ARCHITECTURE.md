@@ -71,6 +71,12 @@ can move without rewriting anything.
   change touches, so the edit is live on the next request without under-purging. Admin is
   `force-dynamic` (uncached); editor saves also `router.refresh()`. A "Clear all cache"
   button purges everything + warms.
+- **Scheduled publishing**: there is no `scheduled` status — a `published` post with a
+  future date is simply hidden by the read layer (`isPublicallyVisible`), so scheduling is a
+  property of the date, not a state machine. It would appear on its own within the 1h ISR
+  window; the cron's `sweepScheduled` only makes it *punctual* by purging+warming once the
+  time is crossed (a frequent publish tick + an hourly backstop). Deriving visibility from the
+  date keeps one source of truth and needs no flip-write, migration, or watermark.
 - **Render**: Markdown → HTML via `marked` (raw HTML is escaped, never executed);
   images become `<figure>`, lone video URLs become embeds, H2/H3 get slug ids.
 
