@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-07-23 — footnotes + music embeds (batch 6c)
+
+- **Footnotes.** Write `a claim[^1]` + `[^1]: the source` — the reference renders as a
+  superscript link and the definitions collect into a list at the foot of the article (with
+  back-links). Numbered by first reference. Because the renderer escapes raw HTML (and marked
+  has no footnote support), this is done by pre-processing the markdown — references become
+  private-use placeholders that survive marked, then become `<sup>` links + the list after
+  render (`lib/footnotes.ts`). A `[^x]` inside a fenced code block is left alone; definition
+  text is rendered through `renderInlineMarkdown` (escaped). +10 tests.
+- **Spotify + Apple Music embeds.** Paste a track/album/playlist (or Apple Music album/
+  playlist/song) URL on its own line → a compact audio player, via the SAME plain-`<iframe>`
+  path as the video embeds (`videoEmbed`) — no third-party widget script, no CSP change. The
+  Apple Music URL is quote-guarded so it can't break out of the iframe `src`.
+- **Not doing X / Instagram / gist embeds:** those require third-party widget scripts + CSP
+  allowances, and the owner doesn't use them — dropped from the plan (not deferred).
+
 ## 2026-07-23 — newsletter: subscribe / opt-in / SMTP (batch 7a)
 
 Own-your-stack newsletter foundation — self-host SMTP, no third-party lock-in.

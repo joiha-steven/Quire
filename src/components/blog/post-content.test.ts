@@ -11,6 +11,23 @@ async function render(markdown: string): Promise<string> {
   return props.dangerouslySetInnerHTML?.__html ?? ''
 }
 
+describe('footnotes', () => {
+  it('renders a reference as a sup link and appends the definition list', async () => {
+    const html = await render('A fact[^1] worth citing.\n\n[^1]: The cited source.')
+    expect(html).toContain('sup class="fnref" id="fnref-1"')
+    expect(html).toContain('href="#fn-1"')
+    expect(html).toContain('<section class="footnotes">')
+    expect(html).toContain('<li id="fn-1">')
+    expect(html).toContain('The cited source.')
+    expect(html).not.toContain('[^1]') // neither the ref nor the def survives as text
+  })
+
+  it('leaves prose without footnotes unchanged (no empty list)', async () => {
+    const html = await render('Just a normal paragraph.')
+    expect(html).not.toContain('footnotes')
+  })
+})
+
 describe('callouts', () => {
   it('turns a [!NOTE] blockquote into a labelled callout', async () => {
     const html = await render('> [!NOTE]\n> Heads up here')

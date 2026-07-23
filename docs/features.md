@@ -203,6 +203,24 @@
   `api/subscribers`.
 - **Deferred (7b):** broadcast-on-publish + comment-reply notifications (need live SMTP to verify).
 
+## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
+
+- **Footnotes:** `text[^id]` + `[^id]: definition`. `prepareFootnotes` (pre-marked) pulls the
+  definitions out and swaps each reference for a private-use placeholder (so marked leaves it
+  alone and the html-escaping renderer can't touch it); `applyFootnotes` (post-marked) turns
+  placeholders into `<sup class="fnref">` links and appends `<section class="footnotes"><ol>`
+  with back-links. Numbered by first reference; a `[^x]` in a fenced code block is masked and
+  ignored; a ref with no def stays literal; an unreferenced def is dropped. Definition text →
+  `renderInlineMarkdown` (escaped). CSS: `.fnref` / `.footnotes` / `.fn-back` in `globals.css`.
+- **Spotify / Apple Music:** `videoEmbed` recognizes `open.spotify.com/{track,album,playlist,
+  episode,show}/…` and `music.apple.com/<cc>/{album,playlist,song,music-video}/…` and returns
+  the official `/embed` URL. `buildVideos` renders these as an `audio-embed` (fixed 175px frame)
+  instead of a 16:9 `video-embed`. Plain `<iframe>` like the video embeds — NO third-party
+  script, so no CSP change (the CSP sets no `frame-src`/`default-src`, so iframes are allowed).
+  The Apple Music URL is quote-guarded against an `src` breakout.
+- **Intentionally NOT supported:** X / Instagram / gist embeds (need third-party widget scripts
+  + CSP allowances).
+
 ## Callouts + copy-code — `PostContent.tsx` (`buildCallouts`), `CodeCopy.tsx`
 
 - **Callouts:** write a blockquote whose first line is `[!NOTE]` / `[!TIP]` / `[!WARNING]` /
