@@ -347,6 +347,8 @@ const vi = {
   featDeck: 'Câu dẫn',
   featBookText: 'Dàn trang kiểu sách',
   featBookTextDesc: 'Thụt đầu dòng mỗi đoạn thay vì chừa dòng trống, và canh đều hai bên trên màn hình rộng.',
+  featBookMode: 'Chế độ đọc sách',
+  featBookModeDesc: 'Cho người đọc mở bài viết dạng sách hai cột toàn màn hình (desktop và iPad).',
   featDeckDesc: 'Hiện phần tóm tắt dưới tiêu đề bài, trên phần thân bài.',
   seoCanonical: 'Địa chỉ trang (canonical)',
   seoCanonicalHint: 'Dùng cho sitemap, RSS, schema, llms.txt, ảnh OG và thẻ canonical. Để trống sẽ tự dùng URL của trang (SITE_URL).',

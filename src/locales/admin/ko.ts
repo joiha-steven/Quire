@@ -347,6 +347,8 @@ const ko = {
   featDeck: '리드문',
   featBookText: '책 조판',
   featBookTextDesc: '문단 사이를 비우는 대신 첫 줄을 들여쓰고, 넓은 화면에서는 양쪽 정렬합니다.',
+  featBookMode: '책 읽기 모드',
+  featBookModeDesc: '독자가 게시물을 전체 화면 2단 책 형태로 열 수 있게 합니다 (데스크톱 및 iPad).',
   featDeckDesc: '글 제목 아래, 본문 위에 요약을 표시합니다.',
   seoCanonical: '사이트 주소(canonical)',
   seoCanonicalHint: '사이트맵, RSS, 스키마, llms.txt, OG 이미지 및 canonical 태그에 사용됩니다. 비워두면 사이트 URL(SITE_URL)을 사용합니다.',

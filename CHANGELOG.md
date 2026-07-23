@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-07-23 — book reading mode (v1.4.29)
+
+- **New "Chế độ đọc sách" reader** (`components/blog/BookMode.tsx`): a toggle on the post meta
+  line (after the reading time) opens the article as a **fullscreen two-column book spread**,
+  paged horizontally with the arrow keys / on-screen arrows and a soft fade between spreads.
+- **Desktop + iPad only** (the toggle is hidden below the iPad width). Uses a fixed overlay, not
+  the Fullscreen API, so desktop and iPad behave identically; mobile never shows it.
+- **Non-destructive to the base page:** the reader clones the already-rendered `#post-body`
+  (Shiki highlight, images, footnotes intact), so normal scroll / SEO / a11y / find-in-page are
+  untouched. Content flows via CSS columns; media stays column-width and is capped to a page
+  height so nothing overflows a spread. Respects `prefers-reduced-motion`.
+- **Admin toggle:** `features.bookMode` (Admin → Settings → Features), **default on**.
+
 ## 2026-07-23 — admin Series manager + series-box polish (v1.4.28)
 
 - **New Content → Series tab** (`SeriesManager.tsx`): lists every series (incl. drafts) with

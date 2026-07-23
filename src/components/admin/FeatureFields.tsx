@@ -28,6 +28,7 @@ export function FeatureFields({ features, onChange, relatedCount, onRelatedCount
     { key: 'categoryLabel', label: t.featCategoryLabel, desc: t.featCategoryLabelDesc },
     { key: 'deck', label: t.featDeck, desc: t.featDeckDesc },
     { key: 'bookText', label: t.featBookText, desc: t.featBookTextDesc },
+    { key: 'bookMode', label: t.featBookMode, desc: t.featBookModeDesc },
     { key: 'activityLog', label: t.featActivityLog, desc: t.featActivityLogDesc },
   ]
   return (

@@ -347,6 +347,8 @@ const de = {
   featDeck: 'Vorspann',
   featBookText: 'Buchsatz',
   featBookTextDesc: 'Erste Zeile jedes Absatzes einrücken statt Leerzeile, und auf breiten Bildschirmen Blocksatz.',
+  featBookMode: 'Buch-Lesemodus',
+  featBookModeDesc: 'Leser können einen Beitrag als zweispaltiges Vollbild-Buch öffnen (Desktop und iPad).',
   featDeckDesc: 'Auszug unter dem Titel über dem Fließtext zeigen.',
   seoCanonical: 'Website-Adresse (kanonisch)',
   seoCanonicalHint: 'Wird für Sitemap, RSS, Schema, llms.txt, OG-Bild und den Canonical-Tag verwendet. Leer lassen, um die Website-URL (SITE_URL) zu nutzen.',

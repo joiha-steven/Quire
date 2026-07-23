@@ -1147,3 +1147,69 @@ button:not(:disabled):active,
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
+
+/* ============================================================================
+   BOOK READING MODE — opt-in fullscreen 2-column overlay (components/blog/BookMode.tsx).
+   Desktop + iPad only: the toggle is hidden below the iPad width. Colours are theme
+   tokens only; body words use --font-reading, the same face as normal reading.
+   ============================================================================ */
+
+/* Inline toggle on the post meta line: reads like the meta text, underlines on hover. */
+.book-mode-toggle {
+  font: inherit; color: inherit; cursor: pointer;
+  background: none; border: 0; padding: 0; text-underline-offset: 3px;
+}
+.book-mode-toggle:hover { color: var(--color-heading); text-decoration: underline; }
+@media (max-width: 767px) { .book-mode-toggle { display: none; } } /* desktop + iPad only */
+
+body.book-open { overflow: hidden; }
+
+.book-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; grid-template-rows: auto 1fr auto;
+  background: var(--color-bg); color: var(--color-text);
+  font-family: var(--font-reading);
+}
+
+.book-chrome { display: flex; align-items: center; height: 52px; padding: 0 clamp(16px, 4vw, 48px); }
+.book-top { justify-content: space-between; border-bottom: 1px solid var(--color-rule); }
+.book-bottom { justify-content: center; border-top: 1px solid var(--color-rule); }
+.book-title {
+  font-size: 0.8rem; letter-spacing: 0.02em; color: var(--color-meta);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.book-x { background: none; border: 0; cursor: pointer; color: var(--color-meta); font-size: 1rem; line-height: 1; padding: 8px; }
+.book-x:hover { color: var(--color-heading); }
+.book-count { font-size: 0.8rem; color: var(--color-meta); }
+
+.book-stage {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  min-height: 0; padding: clamp(16px, 3vh, 40px) 0;
+}
+.book-viewport { height: 100%; overflow: hidden; }
+.book-flow {
+  height: 100%;
+  column-gap: 56px;                         /* == COL_GAP in BookMode.tsx */
+  column-width: var(--book-col-w, 340px);
+  column-fill: auto;
+  transition: opacity 200ms ease;           /* == FADE_MS */
+  will-change: transform, opacity;
+  max-width: none;                          /* override .prose max-width — columns govern width */
+}
+/* Media stays column-width (no full-bleed) and never taller than a page, so nothing
+   overflows the spread. Figures/code/tables don't split across a column break. */
+.book-flow :is(img, video, iframe, pre, table, blockquote, figure) { break-inside: avoid; }
+.book-flow :is(img, video, iframe) { max-width: 100%; max-height: var(--book-page-h, 70vh); object-fit: contain; }
+.book-flow pre { max-height: var(--book-page-h, 70vh); overflow: auto; }
+
+.book-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  background: none; border: 0; cursor: pointer;
+  color: var(--color-meta); font-size: 2rem; line-height: 1; padding: 12px 16px;
+}
+.book-arrow:hover:not(:disabled) { color: var(--color-heading); }
+.book-arrow:disabled { opacity: 0.2; cursor: default; }
+.book-prev { left: clamp(4px, 2vw, 28px); }
+.book-next { right: clamp(4px, 2vw, 28px); }
+
+@media (prefers-reduced-motion: reduce) { .book-flow { transition: none; } }

@@ -21,6 +21,10 @@ export type Dict = {
   themeTime: string
   readingSuffix: string
   wordsSuffix: string
+  bookMode: string
+  bookModeClose: string
+  bookModePrev: string
+  bookModeNext: string
   search: string
   searchPlaceholder: string
   searchHint: string
@@ -483,6 +487,8 @@ export type AdminStrings = {
   featDeckDesc: string
   featBookText: string
   featBookTextDesc: string
+  featBookMode: string
+  featBookModeDesc: string
   // SEO fields
   seoCanonical: string
   seoCanonicalHint: string

@@ -166,6 +166,7 @@ export type FeatureSettings = {
   categoryLabel: boolean // category name in the meta line of cards and post headers
   deck: boolean // the excerpt shown as a standfirst under a post title
   bookText: boolean // running text set like a book: first-line indent, justified >=600px
+  bookMode: boolean // reader can open a post as a fullscreen 2-column "book" (desktop/iPad)
   infiniteScroll: boolean // reveal posts on scroll instead of pagination; adds a date timeline in the right gutter (desktop)
   gridView: boolean // reader can switch the listing to a card grid (header grid/list toggle); off = list only
 }
