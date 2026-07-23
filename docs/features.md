@@ -147,8 +147,11 @@
 
 ## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
 
-- The Library page has THREE tabs (`LibraryTabs.tsx`): **Images** (media library),
-  **Videos**, **Files**. Videos are ordinary attachments in the shared `files` store
+- The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**
+  (media library), **Videos**, **Files**. The Images grid has a **toolbar** (`MediaToolbar.tsx`):
+  total count + size, a name **search**, and a **sort** (newest / name / size); each tile keeps a
+  compact `dims · size · shortdate` line and reveals its copy / download / delete actions on hover
+  (always shown on touch). Videos are ordinary attachments in the shared `files` store
   (same upload route `/api/files/attach`, same soft-delete) — `isVideoAttachment`
   (MIME `video/*`, extension fallback) splits them between the Videos tab (grid of
   native `<video controls preload="metadata">` players + copy URL) and the Files tab.
@@ -258,12 +261,14 @@
   preview). `{year}`/`{title}` tokens expand at render. The public layout renders it in `<footer
   class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
 - Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
-  **Content** `FeatureFields`/`CommentFields`+`CommentKeys`; **Appearance** `ThemeFields`/`FontFields`
-  (built-in `fontPreset` picker + `chromeFont` selector)/`FontUpload`/`TypographyFields`/`AdvancedFields`
-  (Rendering card: font smoothing + the **Motion** engine toggle → `settings.motion.enabled` + the
-  editor **Typewriter feedback** option → `settings.motion.typewriter`) + custom-CSS; **SEO**
-  `SeoFields`; **Integrations** `BackupFields` + `McpFields` + `CloudflareFields` + `ImportFields`
-  (WordPress import — see below). `McpFields` is the EXCEPTION to "no own
+  **Content** `FeatureFields`/`CommentFields`+`CommentKeys` + `ImportFields` (WordPress import — a
+  one-time content tool, full-width below the two-column row); **Appearance** `ThemeFields` (left) +
+  the type stack `FontFields` (built-in `fontPreset` picker + `chromeFont` selector)/`FontUpload`/
+  `TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine toggle
+  → `settings.motion.enabled` + the editor **Typewriter feedback** option → `settings.motion.typewriter`)
+  on the right, with **custom-CSS** full-width below; **SEO** `SeoFields` (full-width — a lone card no
+  longer sits in a half-empty 2-col grid); **Integrations** external services only — `BackupFields` +
+  `McpFields` + `CloudflareFields`. `McpFields` is the EXCEPTION to "no own
   state/save": the MCP enable toggle flows through the settings form, but its token manager has its
   own `/api/mcp/tokens` API (plaintext shown once).
 - **Palette is FRONTEND-ONLY now** — the admin chrome no longer carries a `PaletteToggle` (only the
@@ -338,7 +343,7 @@ Google account.
 - **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
   (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.
 
-## WordPress import — `lib/wordpress-import.ts`, Admin → Settings → Integrations
+## WordPress import — `lib/wordpress-import.ts`, Admin → Settings → Content
 
 - **One-click import** from a WordPress export (`Tools → Export → All content` = a WXR `.xml`).
   `ImportFields` uploads the file (multipart) to owner-gated `POST /api/import/wordpress`.

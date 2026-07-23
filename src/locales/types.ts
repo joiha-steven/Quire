@@ -184,6 +184,13 @@ export type AdminStrings = {
   videosDropzone: string
   noVideos: string
   mediaTitle: string
+  mediaTotalImages: string
+  mediaSearch: string
+  sortLabel: string
+  sortNewest: string
+  sortName: string
+  sortSize: string
+  mediaNoMatch: string
   galleryPickTitle: string
   galleryPickHint: string
   galleryAdd: string
