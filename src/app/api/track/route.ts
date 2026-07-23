@@ -14,7 +14,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Never count the owner's own visits to the public site — the beacon is
     // same-origin so it carries the session cookie; skip when it's the owner.
     if (await requireOwner()) return new Response(null, { status: 204 })
-    const body = (await req.json().catch(() => ({}))) as { path?: unknown; depth?: unknown; referrer?: unknown }
+    const body = (await req.json().catch(() => ({}))) as { path?: unknown; depth?: unknown; referrer?: unknown; dwell?: unknown }
     const path = typeof body.path === 'string' ? body.path : ''
     // Generous per-IP cap so a real reader (page views + scroll beacons) never trips
     // it, but a script can't flood analytics_events. Silently drop over the limit.
@@ -26,7 +26,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       // is a page view (sent on load).
       if (typeof body.depth === 'number') {
         const depth = body.depth
-        after(() => recordScroll(path, depth, ip, ua))
+        const dwell = typeof body.dwell === 'number' ? body.dwell : undefined
+        after(() => recordScroll(path, depth, ip, ua, dwell))
       } else {
         // Source attribution: referrer host (external only, set by the beacon on
         // session entry) + country from the CDN/proxy edge. Both best-effort, privacy-light.

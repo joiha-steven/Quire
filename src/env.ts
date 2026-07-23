@@ -22,6 +22,7 @@ const recommended: [string, string][] = [
   ['SITE_URL', 'canonical/OG/sitemap URLs fall back to the request host'],
   ['CRON_SECRET', '/api/cron (keep-alive + variant sweep + backup) is unauthenticated without it'],
   ['STORAGE_LOCAL_DIR', "binaries default to ./uploads, which most deploys don't persist"],
+  ['ANALYTICS_TZ', 'analytics day/week buckets are truncated in UTC (set an IANA zone, e.g. Asia/Ho_Chi_Minh)'],
 ]
 
 export function validateEnv(): void {

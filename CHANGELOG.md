@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 2026-07-22 — analytics v2: engagement, audience, sources, per-page drill-down
+
+- **Much deeper Analytics.** The overview now shows five headline metrics — views, visitors
+  (trend + new-vs-returning), **avg time on page** (dwell), avg read depth, and a **bounce rate**
+  (single-page-visit share) — a **dual-series time chart** (views + visitors, pure SVG; the year
+  range buckets by month, 24h by hour), a **top pages** table where each row links to its own
+  drill-down, **traffic channels** (Direct/Search/Social/Referral) beside top referrers, an
+  **audience** breakdown (countries + **device / browser / OS**), and the **read-depth
+  distribution**. All source/audience lists count **distinct visitors**, not page views.
+- **Per-page drill-down** (`/admin/analytics?path=/slug`): one URL's trend, referrers, countries and
+  read-depth over the same ranges.
+- **Accuracy.** Time buckets are truncated in `ANALYTICS_TZ` (IANA zone, e.g. `Asia/Ho_Chi_Minh`;
+  defaults to UTC) so "days" match local midnight instead of UTC — fixes the shifted-day drift. The
+  bot filter also drops the common AI crawlers (GPTBot, ClaudeBot, CCBot, PerplexityBot, Bytespider…).
+- **Privacy unchanged.** Audience columns are **coarse UA buckets** (device/browser/os) parsed at
+  insert (`lib/ua.ts`) — the raw user-agent is never stored, so still no fingerprint / no cookies.
+  Dwell time is sampled alongside scroll depth on page leave.
+- **Migration:** run `scripts/migrations/2026-07-22-analytics-v2.sql` on the live DB (adds the
+  audience/dwell columns + the tz-aware `analytics_summary` / new `analytics_page` RPCs). The UI
+  falls back to the base shape and hides the new sections until it is applied.
+
 ## 2026-07-20 — grid-view toggle (admin); timeline polish
 
 - **Grid view is now an owner feature toggle** (`features.gridView`, Admin → Settings → Tính năng, default

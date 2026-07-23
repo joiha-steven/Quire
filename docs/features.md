@@ -227,13 +227,25 @@
   design** (canonical, like the docs); only the nav label + title are localized (`navHelp`). Pure server
   component, no client JS. Add a section here (not a new i18n dump) when a subsystem needs owner guidance.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
-  (`getViewTotals`). Shows total views + unique visitors (with **period-over-period trend** and a
-  **new-vs-returning** split), avg read depth, a daily bar series, **top pages by title** (a
-  labelled Page/Views/Visitors/Depth table), and **top referrers + countries** (counted by
-  **distinct visitor**, one person = 1 — not page views), plus a **CSV export** of the daily series. The trend / new-returning /
-  referrer / country sections need the `analytics-deepening` migration
-  (`scripts/migrations/2026-06-25-analytics-deepening.sql`); until it is applied the data layer falls
-  back to the base shape and those sections stay hidden. Detail in the data-layer map (`analytics.ts`).
+  (`getViewTotals`). The **overview** shows five headline metrics — views, visitors (with
+  **period-over-period trend** + a **new-vs-returning** split), **avg time on page** (dwell), avg
+  read depth, and a **bounce rate** (single-page-visit share) — a **dual-series time chart** (views
+  + visitors, an SVG in `analytics-kit.tsx`; the year range buckets by month, 24h by hour), a **top
+  pages** table (each row links to its drill-down), **sources** (traffic **channels**
+  Direct/Search/Social/Referral + top external referrers), **audience** (countries + **device /
+  browser / OS**), and the **read-depth distribution**. Referrers/countries/channels/facets count
+  **distinct visitors** (one person = 1, not page views). **Per-page drill-down** (`?path=`,
+  `AnalyticsPageDetail`) repeats the trend + sources + depth for a single URL. Plus a **CSV export**
+  of the daily series.
+  - **Timezone:** time buckets are truncated in `ANALYTICS_TZ` (an IANA zone, e.g.
+    `Asia/Ho_Chi_Minh`; defaults to UTC) so "days" line up with local midnight, not UTC.
+  - **Audience** columns (`device`/`browser`/`os`) are **coarse UA buckets** parsed at insert
+    (`lib/ua.ts`) — the raw user-agent is never stored, so no fingerprint (same stance as the salted
+    visitor hash). **Dwell** = ms on the page before leaving, sampled by `ScrollDepth` alongside the
+    scroll depth.
+  - The engagement / channel / audience / drill-down sections need the **`2026-07-22-analytics-v2`**
+    migration (on top of `2026-06-25-analytics-deepening`); until applied the data layer falls back
+    to the base shape and those sections stay hidden. Detail in the data-layer map (`analytics.ts`).
 
 ## Settings (Admin → settings) — `SettingsView.tsx`
 
