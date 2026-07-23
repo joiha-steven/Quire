@@ -12,9 +12,24 @@ import { createPortal } from 'react-dom'
 import type { SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
 
-const FALLBACK_WIDTH = 900 // px, only if #post-body can't be measured
+const OUTER_MARGIN = 48 // px min gap to the viewport edge when there's no rail to anchor to
+const MAX_WIDTH = 1400 // px cap so the spread doesn't sprawl on ultrawide monitors
 const COL_GAP = 56 // px between the two columns
 const FADE_MS = 200 // spread-to-spread crossfade
+
+// The spread spans the SAME footprint the page occupies incl. both side gutters (the ToC rail
+// sits in the left gutter; the layout is centred, so the right gutter mirrors it). Width =
+// viewport − 2×railLeft. Falls back to near-full width when no rail is on screen.
+function spreadWidth(): number {
+  const vw = window.innerWidth
+  let w = vw - OUTER_MARGIN * 2
+  const rail = document.querySelector('.rail')
+  if (rail) {
+    const r = rail.getBoundingClientRect()
+    if (r.width > 0 && r.left >= OUTER_MARGIN) w = vw - Math.round(r.left) * 2
+  }
+  return Math.min(w, MAX_WIDTH)
+}
 
 export function BookMode({ title, lang }: { title: string; lang: SiteLang }) {
   const tx = t(lang)
@@ -49,9 +64,7 @@ function BookReader({
   const measure = useCallback(() => {
     const flow = flowRef.current
     if (!flow) return
-    // Match the site's own content column so the spread is exactly as wide as the page
-    // reads normally (#post-body carries the reading width incl. the shell's padding).
-    const contentW = document.getElementById('post-body')?.clientWidth || FALLBACK_WIDTH
+    const contentW = spreadWidth()
     const colW = Math.floor((contentW - COL_GAP) / 2)
     flow.style.setProperty('--book-col-w', `${colW}px`)
     flow.style.width = `${colW * 2 + COL_GAP}px` // the visible viewport = exactly 2 columns

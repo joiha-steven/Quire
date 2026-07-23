@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode width + title (v1.4.31)
+
+- **Spread now spans the full layout footprint incl. both side gutters** (`viewport − 2×rail
+  left`, the centred layout's mirror), not just the narrow content column — wider, less cramped.
+  Falls back to near-full width (capped 1400px) when no rail is on screen.
+- **Title** in the top bar is no longer bold and uses the faint meta colour, so it recedes and
+  the article stays the focus (size unchanged).
+
 ## 2026-07-23 — book mode polish (v1.4.30)
 
 Feedback pass on the book reader:
