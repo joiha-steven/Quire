@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode: 15% larger text + paler paper (v1.4.37)
+
+- Reading text in book mode is now 15% larger than normal, via a `--type-scale` multiplier on
+  the `--fs-*` role sizes (default 1 elsewhere). It tracks the owner's font-size setting: raise
+  the setting and book mode stays 15% above it. UI chrome (fixed rem) is unchanged.
+- Book-mode paper background is a touch paler.
+
 ## 2026-07-23 — book mode: single paper background (v1.4.36)
 
 - Dropped the floating page-sheet-on-desk look: book mode is now ONE flat warm-paper

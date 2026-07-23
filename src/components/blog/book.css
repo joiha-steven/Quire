@@ -25,8 +25,12 @@ body.book-open { overflow: hidden; }
      printed stock. Overriding the theme tokens here recolours everything inside (prose
      text/headings/links/rules) in one place; the base page keeps its own tokens, so closing
      the reader restores the previous colours automatically. */
-  --book-paper: #f5efe2;     /* the page — warm near-white; near-black ink reads on it */
+  --book-paper: #f9f4ec;     /* the page — warm near-white (a touch paler); black ink reads on it */
   --color-bg: var(--book-paper);
+  /* Reading text is 15% larger than normal in book mode. It multiplies the owner's --fs-*
+     roles (see globals.css), so it tracks the site's font-size setting: bump the setting and
+     book mode stays 15% above it. Chrome (title/count use fixed rem) is unaffected. */
+  --type-scale: 1.15;
   --color-text: #211f1a;     /* near-black ink */
   --color-heading: #16130d;
   --color-meta: #8d8676;

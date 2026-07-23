@@ -262,7 +262,7 @@ input[type='checkbox'] {
   padding: 0.5rem 0.875rem;
   background: var(--c-heading);
   color: var(--c-bg);
-  font-size: var(--fs-small);
+  font-size: calc(var(--fs-small) * var(--type-scale, 1));
   transform: translateY(-150%);
   transition: transform var(--dur-fast) var(--ease);
 }
@@ -351,15 +351,18 @@ h1, h2, h3, h4, h5 {
 /* Role utilities — apply a role to text OUTSIDE .prose so every size/line/spacing
    flows from the owner's settings, never a hardcoded utility. `.fs-h*` for titles
    (callers add weight/colour); `.t-small` for secondary UI text (dates, meta,
-   related, ToC, pagination, search results). */
-.fs-h1 { font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
-.fs-h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
-.fs-h3 { font-size: var(--fs-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
-.fs-h4 { font-size: var(--fs-h4); line-height: var(--lh-h4); letter-spacing: var(--ls-h4); }
-.fs-h5 { font-size: var(--fs-h5); line-height: var(--lh-h5); letter-spacing: var(--ls-h5); }
-.t-small { font-size: var(--fs-small); line-height: var(--lh-small); letter-spacing: var(--ls-small); }
+   related, ToC, pagination, search results).
+   Every role size is multiplied by `--type-scale` (default 1 = no change site-wide); a
+   scope can bump it to enlarge ALL role-driven text proportionally while still honouring the
+   owner's --fs-* setting. Book mode sets --type-scale:1.15 (see components/blog/book.css). */
+.fs-h1 { font-size: calc(var(--fs-h1) * var(--type-scale, 1)); line-height: var(--lh-h1); letter-spacing: var(--ls-h1); }
+.fs-h2 { font-size: calc(var(--fs-h2) * var(--type-scale, 1)); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+.fs-h3 { font-size: calc(var(--fs-h3) * var(--type-scale, 1)); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
+.fs-h4 { font-size: calc(var(--fs-h4) * var(--type-scale, 1)); line-height: var(--lh-h4); letter-spacing: var(--ls-h4); }
+.fs-h5 { font-size: calc(var(--fs-h5) * var(--type-scale, 1)); line-height: var(--lh-h5); letter-spacing: var(--ls-h5); }
+.t-small { font-size: calc(var(--fs-small) * var(--type-scale, 1)); line-height: var(--lh-small); letter-spacing: var(--ls-small); }
 /* Body-role text OUTSIDE .prose (excerpts, footer) — same size/rhythm as running text. */
-.t-body { font-size: var(--fs-body); line-height: var(--lh-body); letter-spacing: var(--ls-body); }
+.t-body { font-size: calc(var(--fs-body) * var(--type-scale, 1)); line-height: var(--lh-body); letter-spacing: var(--ls-body); }
 
 /* Mono chrome faces (IBM Plex Mono, JetBrains Mono) are wide monospaces, so bare
    system-chrome text (rail, header menu, footer, dates/meta, admin) reads too airy at 0
@@ -483,7 +486,7 @@ hr {
   color: var(--c-meta);
 }
 .rail-sub {
-  font-size: var(--fs-caption);
+  font-size: calc(var(--fs-caption) * var(--type-scale, 1));
 }
 /* Post counts sit in their own right-aligned column so the labels beside them stay
    aligned however many digits a count carries. The column is exactly as wide as the
@@ -539,7 +542,7 @@ html[data-list='grid'] .tl-feed article {
   white-space: nowrap;
   color: var(--c-heading);
   font-weight: 600;
-  font-size: var(--fs-h3); /* compact heading, like a section title */
+  font-size: calc(var(--fs-h3) * var(--type-scale, 1)); /* compact heading, like a section title */
   line-height: var(--lh-h3);
   letter-spacing: var(--ls-h3);
   background: var(--c-bg);
@@ -573,7 +576,7 @@ html[data-list='grid'] .tl-feed article {
    Tuned for calm, long-form reading: 18px body, airy but even rhythm. */
 .prose {
   font-family: var(--font-reading); /* the reader's words, in the chosen font (chrome stays --font-sans) */
-  font-size: var(--fs-body); /* normal/body text — owner-tunable (~18px default) */
+  font-size: calc(var(--fs-body) * var(--type-scale, 1)); /* normal/body text — owner-tunable (~18px default) */
   line-height: var(--lh-body);
   letter-spacing: var(--ls-body);
   color: var(--c-text);
@@ -591,14 +594,14 @@ html[data-list='grid'] .tl-feed article {
 /* Body headings follow the role vars (size/line/spacing); only weight + rhythm
    margins + scroll anchors live here. */
 .prose h1 {
-  font-size: var(--fs-h1);
+  font-size: calc(var(--fs-h1) * var(--type-scale, 1));
   font-weight: 600;
   line-height: var(--lh-h1);
   letter-spacing: var(--ls-h1);
   margin-top: 1.9em;
 }
 .prose h2 {
-  font-size: var(--fs-h2);
+  font-size: calc(var(--fs-h2) * var(--type-scale, 1));
   font-weight: 600;
   line-height: var(--lh-h2);
   letter-spacing: var(--ls-h2);
@@ -607,7 +610,7 @@ html[data-list='grid'] .tl-feed article {
   scroll-margin-top: 2rem; /* anchor offset clear of the progress bar */
 }
 .prose h3 {
-  font-size: var(--fs-h3);
+  font-size: calc(var(--fs-h3) * var(--type-scale, 1));
   font-weight: 600;
   line-height: var(--lh-h3);
   letter-spacing: var(--ls-h3);
@@ -615,14 +618,14 @@ html[data-list='grid'] .tl-feed article {
   scroll-margin-top: 2rem;
 }
 .prose h4 {
-  font-size: var(--fs-h4);
+  font-size: calc(var(--fs-h4) * var(--type-scale, 1));
   font-weight: 600;
   line-height: var(--lh-h4);
   letter-spacing: var(--ls-h4);
   margin-top: 1.5em;
 }
 .prose h5 {
-  font-size: var(--fs-h5);
+  font-size: calc(var(--fs-h5) * var(--type-scale, 1));
   font-weight: 600;
   line-height: var(--lh-h5);
   letter-spacing: var(--ls-h5);
@@ -717,7 +720,7 @@ html[data-list='grid'] .tl-feed article {
   padding: 0.9em 1.1em;
   border-radius: 0;
   overflow-x: auto;
-  font-size: var(--fs-code);
+  font-size: calc(var(--fs-code) * var(--type-scale, 1));
   line-height: var(--lh-code);
   letter-spacing: var(--ls-code);
 }
@@ -749,7 +752,7 @@ html[data-list='grid'] .tl-feed article {
 .prose .callout-label {
   font-weight: 600;
   color: var(--c-heading);
-  font-size: var(--fs-small);
+  font-size: calc(var(--fs-small) * var(--type-scale, 1));
   margin-bottom: 0.25em;
 }
 /* Copy button attached to each code block by the CodeCopy island. Revealed on hover
@@ -759,7 +762,7 @@ html[data-list='grid'] .tl-feed article {
   position: absolute;
   top: 0.4em;
   right: 0.4em;
-  font-size: var(--fs-small);
+  font-size: calc(var(--fs-small) * var(--type-scale, 1));
   line-height: 1;
   color: var(--c-meta);
   background: var(--c-bg);
@@ -776,7 +779,7 @@ html[data-list='grid'] .tl-feed article {
   /* One typeface site-wide: code reuses the site font (no separate monospace
      family), only a touch smaller. Owner rule: a single font for everything. */
   font-family: inherit;
-  font-size: var(--fs-code);
+  font-size: calc(var(--fs-code) * var(--type-scale, 1));
 }
 .prose :not(pre) > code {
   background: var(--c-rule);
@@ -871,7 +874,7 @@ html[data-list='grid'] .tl-feed article {
 /* Caption: small and centered, styled like the blog date. */
 .prose figcaption {
   margin-top: 0.6em;
-  font-size: var(--fs-caption);
+  font-size: calc(var(--fs-caption) * var(--type-scale, 1));
   line-height: var(--lh-caption);
   letter-spacing: var(--ls-caption);
   text-align: center;
@@ -881,7 +884,7 @@ html[data-list='grid'] .tl-feed article {
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--fs-small);
+  font-size: calc(var(--fs-small) * var(--type-scale, 1));
   line-height: var(--lh-small);
   margin: 1.6em 0;
   display: block;
@@ -944,7 +947,7 @@ html[data-list='grid'] .tl-feed article {
   margin-top: 2.5em;
 }
 .prose .footnotes {
-  font-size: var(--fs-small);
+  font-size: calc(var(--fs-small) * var(--type-scale, 1));
   color: var(--c-meta);
 }
 .prose .footnotes ol {
