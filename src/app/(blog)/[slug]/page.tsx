@@ -143,12 +143,6 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     // Every post gets an index: the title row alone is already useful.
     const showToc = features.toc && (headings.length > 0 || Boolean(tocMeta))
     const category = features.categoryLabel ? post.categories[0] : undefined
-    // "Updated" only when a real edit happened well after publishing (>24h), so a
-    // save right after publishing doesn't add noise.
-    const updated =
-      post.updatedAt && new Date(post.updatedAt).getTime() - new Date(post.date).getTime() > 86_400_000
-        ? post.updatedAt
-        : null
     // Body images: reused for the article schema AND to gate the Lightbox island — a
     // text-only post shouldn't load/hydrate the lightbox JS.
     const imageUrls = extractImageUrls(post.content)
@@ -196,7 +190,6 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               </>
             )}
             {formatDate(post.date, language)}
-            {updated && ` · ${tx.updatedPrefix} ${formatDate(updated, language)}`}
             {features.readingTime &&
               ` · ${formatCount(words, language)} ${t(language).wordsSuffix} · ${minutes} ${t(language).readingSuffix}`}
           </p>

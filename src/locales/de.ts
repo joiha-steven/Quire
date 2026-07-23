@@ -36,7 +36,6 @@ const de = {
   seriesPrev: 'Zurück',
   seriesNext: 'Weiter',
   emptySeries: 'Noch keine Beiträge in dieser Serie.',
-  updatedPrefix: 'Aktualisiert',
   copyCode: 'Kopieren',
   copiedCode: 'Kopiert',
   nlHeading: 'Newsletter abonnieren',

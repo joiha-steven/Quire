@@ -37,7 +37,6 @@ export type Dict = {
   seriesPrev: string
   seriesNext: string
   emptySeries: string
-  updatedPrefix: string
   copyCode: string
   copiedCode: string
   nlHeading: string

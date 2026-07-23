@@ -36,7 +36,6 @@ const en = {
   seriesPrev: 'Previous',
   seriesNext: 'Next',
   emptySeries: 'No posts in this series yet.',
-  updatedPrefix: 'Updated',
   copyCode: 'Copy',
   copiedCode: 'Copied',
   nlHeading: 'Subscribe to the newsletter',
