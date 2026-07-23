@@ -33,6 +33,7 @@ import { CloudflareFields } from './CloudflareFields'
 import { ImportFields } from './ImportFields'
 import { SeoFields } from './SeoFields'
 import { RedirectsManager } from './RedirectsManager'
+import { NewsletterFields } from './NewsletterFields'
 
 type Tab = 'site' | 'content' | 'appearance' | 'seo' | 'integrations'
 const TAB_IDS: Tab[] = ['site', 'content', 'appearance', 'seo', 'integrations']
@@ -213,6 +214,9 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           </Card>
           <Card title={t.cardCloudflare}>
             <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
+          </Card>
+          <Card title={t.cardNewsletter}>
+            <NewsletterFields />
           </Card>
         </div>
       )}

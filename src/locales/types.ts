@@ -40,6 +40,21 @@ export type Dict = {
   updatedPrefix: string
   copyCode: string
   copiedCode: string
+  nlHeading: string
+  nlPlaceholder: string
+  nlButton: string
+  nlSuccess: string
+  nlAlready: string
+  nlError: string
+  nlConfirmSubject: string
+  nlConfirmIntro: string
+  nlConfirmButton: string
+  nlConfirmIgnore: string
+  nlThanksTitle: string
+  nlThanksBody: string
+  nlLinkInvalid: string
+  nlUnsubTitle: string
+  nlUnsubBody: string
   notFoundTitle: string
   notFoundText: string
   errorTitle: string
@@ -639,6 +654,23 @@ export type AdminStrings = {
   redirectDelete: string
   redirectSaved: string
   redirectSaveFailed: string
+  // newsletter (Settings → Integrations)
+  cardNewsletter: string
+  nlSmtpHint: string
+  nlSmtpHost: string
+  nlSmtpPort: string
+  nlSmtpUser: string
+  nlSmtpPass: string
+  nlSmtpFrom: string
+  nlSmtpSecure: string
+  nlSaveSmtp: string
+  nlSmtpSaved: string
+  nlSubscribers: string
+  nlConfirmed: string
+  nlPending: string
+  nlUnsub: string
+  nlDeleteSub: string
+  nlNoSubs: string
   // sidebar collapse
   navCollapse: string
   navExpand: string

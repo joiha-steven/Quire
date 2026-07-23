@@ -185,6 +185,24 @@
   (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
   a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
 
+## Newsletter — `lib/subscribers.ts`, `lib/mail.ts`, `api/subscribe`, `api/newsletter/*`
+
+- **Double opt-in.** `subscribers` (email unique · status pending/confirmed/unsubscribed · a
+  per-subscriber `token` used for BOTH confirm + unsubscribe links). `POST /api/subscribe`
+  (public, rate-limited) upserts a pending row and emails a confirm link;
+  `GET /api/newsletter/confirm?token=` → confirmed; `GET /api/newsletter/unsubscribe?token=` →
+  unsubscribed. The confirm/unsubscribe routes return a standalone HTML page (`resultPage`) since
+  they open from an email. Re-subscribing reuses the row's token; a confirmed address short-
+  circuits (no re-send, no membership leak).
+- **SMTP (`lib/mail.ts`, Nodemailer).** Config lives on `integration_keys` (server-only secrets,
+  env fallback) — set in Admin → Settings → Integrations (`NewsletterFields`, via `api/mail`).
+  `sendMail` never throws: `{ sent:false, error:'smtp_not_configured' }` when unset, so subscribe
+  still records the pending row. `isMailConfigured` = host + From present.
+- **Sign-up form** (`SubscribeForm`) renders at the foot of a post ONLY when SMTP is configured
+  (`getMailStatus().configured`). Owner manages subscribers (list + counts + delete) via
+  `api/subscribers`.
+- **Deferred (7b):** broadcast-on-publish + comment-reply notifications (need live SMTP to verify).
+
 ## Callouts + copy-code — `PostContent.tsx` (`buildCallouts`), `CodeCopy.tsx`
 
 - **Callouts:** write a blockquote whose first line is `[!NOTE]` / `[!TIP]` / `[!WARNING]` /

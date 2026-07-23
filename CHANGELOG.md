@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 2026-07-23 — newsletter: subscribe / opt-in / SMTP (batch 7a)
+
+Own-your-stack newsletter foundation — self-host SMTP, no third-party lock-in.
+
+- **Subscribers + double opt-in.** `subscribers` table (email unique, status
+  pending/confirmed/unsubscribed, per-subscriber token). `POST /api/subscribe` creates a
+  pending row + emails a confirm link; `GET /api/newsletter/confirm` flips it to confirmed;
+  `GET /api/newsletter/unsubscribe` opts out. Confirm/unsubscribe render a standalone result
+  page (opened from an email, no app shell). All three are public + rate-limited.
+- **SMTP via Nodemailer** (`lib/mail.ts`) — config on `integration_keys` (server-only secrets,
+  never in settings.data; env fallback). `sendMail` degrades gracefully when unconfigured (no
+  500). Admin: an SMTP config card + subscriber list (counts + delete) in Settings →
+  Integrations. New dep: `nodemailer`.
+- **Public sign-up form** (`SubscribeForm`) shown at the foot of a post **only when SMTP is
+  configured**. i18n ×6 (form + opt-in email + result pages + admin).
+- Migration `2026-07-23-newsletter.sql`.
+
+**Deferred to 7b:** broadcasting a post to confirmed subscribers (send-on-publish) and
+comment-reply notifications — the send paths that need live SMTP creds to verify end-to-end.
+
 ## 2026-07-23 — callouts + copy-code button (batch 6b)
 
 Render-layer editor extras.
