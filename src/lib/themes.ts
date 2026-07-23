@@ -168,12 +168,14 @@ export function fontPresetCss(id: string): string {
 //   inter     -> Inter (default)
 //   reading   -> follow the chosen reading font (the old `fontChromeInter: false`)
 //   plex-mono -> IBM Plex Mono, the self-hosted "code" face declared in globals.css
+//   jetbrains-mono -> JetBrains Mono, self-hosted variable mono (globals.css)
 // Add one = append here (+ its @font-face in globals.css if it's self-hosted).
 export type ChromeFont = { id: string; name: string; sans: string | null }
 export const CHROME_FONTS: ChromeFont[] = [
   { id: 'inter', name: 'Inter', sans: null },
   { id: 'reading', name: 'Reading font', sans: 'var(--font-reading)' },
   { id: 'plex-mono', name: 'IBM Plex Mono', sans: `'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
+  { id: 'jetbrains-mono', name: 'JetBrains Mono', sans: `'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
 ]
 
 export const DEFAULT_CHROME_FONT = 'inter'
