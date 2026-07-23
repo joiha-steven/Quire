@@ -108,8 +108,9 @@ services:
       start_period: 20s
     restart: unless-stopped
 
-  # Hourly maintenance ping (variant/backup sweep + keep-alive). Calls /api/cron with
-  # the CRON_SECRET bearer.
+  # Cron pings. A 5-min publish tick (`?publish=1`) flips due scheduled posts live on
+  # time; every 12th tick (hourly) is the full maintenance run (variant/backup sweep +
+  # keep-alive). Both send the CRON_SECRET bearer.
   cron:
     image: alpine:3.20
     depends_on:
@@ -120,8 +121,11 @@ services:
     command:
       - |
         apk add --no-cache curl >/dev/null
+        i=0
         while true; do
-          sleep 3600
-          curl -fsS -H "Authorization: Bearer $${CRON_SECRET}" http://app:3000/api/cron >/dev/null \
+          sleep 300
+          if [ $$((i % 12)) -eq 0 ]; then path=/api/cron; else path='/api/cron?publish=1'; fi
+          curl -fsS -H "Authorization: Bearer $${CRON_SECRET}" "http://app:3000$${path}" >/dev/null \
             || echo "[cron] ping failed"
+          i=$$((i + 1))
         done

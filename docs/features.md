@@ -145,6 +145,24 @@
 - Time machine: each overwrite snapshots the prior version (`revisions.ts`, keeps 3); restore
   loads it into the editor (non-destructive — current version is snapshotted on next save).
 
+## Scheduled publishing — `lib/scheduled.ts`, `api/cron`, `lib/utils.ts` (`isScheduled`)
+
+- **How to schedule:** set a FUTURE publish date and hit Publish. There is no separate
+  `scheduled` status — a post is "scheduled" whenever it is `published` with a date still in
+  the future. The read layer already hides it: `isPublicallyVisible` (lists, search, the
+  `/[slug]` page) returns false until the date is reached, so a scheduled post 404s publicly
+  meanwhile. `isScheduled` is its exact complement for published posts.
+- **Editor cue:** with a future date the Publish button reads **Schedule**, its toast says
+  **Scheduled**, a "Scheduled for <local time>" note shows under the date field, and the live
+  "View post" link is hidden (the URL 404s until it goes live). "Preview draft" still works.
+- **Going live on time:** a future post would surface within the 1h ISR window on its own, but
+  `sweepScheduled` (in `api/cron`) makes it punctual — it finds posts that crossed their time
+  within a bounded lookback (`newlyLive`, a pure `(since, now]` window) and runs one
+  `purgeAndWarm` so the edge 404 is flushed and the origin re-warmed. The **5-min publish tick**
+  (`/api/cron?publish=1`, short lookback) does this and nothing else; the **hourly** tick sweeps
+  a ~65-min window as a backstop. No watermark is stored — an overlapping purge is an idempotent
+  superset. Cron cadence: `docker-compose.yml` (bundled) / `docs/self-host-native.md` (crontab).
+
 ## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
 
 - The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**

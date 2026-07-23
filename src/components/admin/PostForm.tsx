@@ -8,7 +8,7 @@ import Link from 'next/link'
 import type { PostWithContent, PostRevision, ApiResponse } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
-import { slugify, formatTime } from '@/lib/utils'
+import { slugify, formatTime, isScheduled } from '@/lib/utils'
 import { uploadImages } from '@/lib/upload-client'
 import { Editor, type EditorApi } from './Editor'
 import { PostSettings, type Draft } from './PostSettings'
@@ -299,6 +299,9 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
     }
   }
 
+  // Published but the date is still in the future → queued, not live yet.
+  const scheduled = isScheduled(draft.status, draft.date)
+
   return (
     <div>
       <div ref={actionHeaderRef} className="z-20 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-xl lg:sticky lg:top-4 dark:border-neutral-800 dark:bg-neutral-900/95">
@@ -315,7 +318,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
           </button>
           {savedSlug && <button type="button" onClick={openPreview} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">{t.previewDraft}</button>}
           <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving || !dirty}>{t.saveDraft}</Button>
-          <Button onClick={() => handleSave('published', t.published)} disabled={saving || (!dirty && draft.status === 'published')}>{t.publish}</Button>
+          <Button onClick={() => handleSave('published', scheduled ? t.scheduled : t.published)} disabled={saving || (!dirty && draft.status === 'published')}>{scheduled ? t.schedule : t.publish}</Button>
         </div>
       </div>
 
@@ -354,7 +357,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
               <h2 className="text-sm font-semibold">{t.attributes}</h2>
               <div className="flex gap-3 text-xs">
                 {savedSlug && <button type="button" onClick={() => setTimeMachine(true)} className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">{t.history}</button>}
-                {draft.status === 'published' && savedSlug && <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="text-neutral-500 hover:text-neutral-900">{t.viewPost}</a>}
+                {draft.status === 'published' && savedSlug && !scheduled && <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="text-neutral-500 hover:text-neutral-900">{t.viewPost}</a>}
               </div>
             </div>
             <PostSettings draft={draft} update={update} allCategories={allCategories} allTags={allTags} onPickFeatured={() => setPicker('featured')} />

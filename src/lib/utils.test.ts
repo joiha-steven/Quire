@@ -6,6 +6,7 @@ import {
   readingMinutes,
   wordCount,
   isPublicallyVisible,
+  isScheduled,
   extractImageUrls,
 } from '@/lib/utils'
 
@@ -85,6 +86,33 @@ describe('isPublicallyVisible', () => {
 
   it('is true for a published post dated in the past', () => {
     expect(isPublicallyVisible('published', '2000-01-01')).toBe(true)
+  })
+})
+
+describe('isScheduled', () => {
+  it('is true for a published post dated in the future', () => {
+    const future = new Date(Date.now() + 86_400_000).toISOString()
+    expect(isScheduled('published', future)).toBe(true)
+  })
+
+  it('is false for a published post already live (past date)', () => {
+    expect(isScheduled('published', '2000-01-01')).toBe(false)
+  })
+
+  it('is false for a draft even with a future date', () => {
+    const future = new Date(Date.now() + 86_400_000).toISOString()
+    expect(isScheduled('draft', future)).toBe(false)
+  })
+
+  it('is false for a malformed date', () => {
+    expect(isScheduled('published', '')).toBe(false)
+  })
+
+  // A post is either live now or scheduled — never both (the read-layer complement).
+  it('is the exact complement of isPublicallyVisible for published posts', () => {
+    const future = new Date(Date.now() + 86_400_000).toISOString()
+    expect(isScheduled('published', future)).toBe(!isPublicallyVisible('published', future))
+    expect(isScheduled('published', '2000-01-01')).toBe(!isPublicallyVisible('published', '2000-01-01'))
   })
 })
 

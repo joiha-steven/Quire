@@ -163,6 +163,9 @@ export type AdminStrings = {
   // post settings panel
   slug: string
   publishDate: string
+  schedule: string
+  scheduled: string
+  scheduledForPrefix: string
   status: string
   categories: string
   tags: string

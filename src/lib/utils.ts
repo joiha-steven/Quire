@@ -157,3 +157,12 @@ export function isPublicallyVisible(status: string, isoDate: string): boolean {
   if (Number.isNaN(d)) return true
   return d <= Date.now()
 }
+
+// Scheduled = published but its date is still in the future, so the read layer
+// (isPublicallyVisible) hides it until that time. A malformed date is never scheduled.
+export function isScheduled(status: string, isoDate: string): boolean {
+  if (status !== 'published') return false
+  const d = new Date(isoDate).getTime()
+  if (Number.isNaN(d)) return false
+  return d > Date.now()
+}
