@@ -39,6 +39,9 @@ create table if not exists public.posts (
   content         text not null default '',
   series          text,                                 -- optional series/collection name (null = none)
   series_order    integer not null default 0,           -- position within the series
+  meta_title       text,                                -- SEO <title> override (else the post title)
+  meta_description text,                                -- SEO description/OG override (else the excerpt)
+  cover_image      text,                                -- visible hero image at the top of the post
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
   -- Soft delete: NULL = live, a timestamp = in Trash. Nothing is hard-deleted on a
@@ -57,9 +60,12 @@ create index if not exists posts_categories_gin  on public.posts using gin (cate
 create index if not exists posts_tags_gin        on public.posts using gin (tags);
 create index if not exists posts_deleted_at_idx   on public.posts (deleted_at);
 create index if not exists posts_series_idx       on public.posts (series);
--- Back-compat: add the series columns to a pre-existing posts table.
+-- Back-compat: add the series + per-post SEO/cover columns to a pre-existing posts table.
 alter table public.posts add column if not exists series       text;
 alter table public.posts add column if not exists series_order integer not null default 0;
+alter table public.posts add column if not exists meta_title       text;
+alter table public.posts add column if not exists meta_description text;
+alter table public.posts add column if not exists cover_image      text;
 
 -- ----- pages (share the /{slug} namespace with posts) ------------------------
 create table if not exists public.pages (

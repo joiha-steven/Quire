@@ -43,6 +43,7 @@ export function articleSchema(args: {
   title: string
   url: string
   datePublished: string
+  dateModified?: string
   description?: string
   image?: string
   authorName: string
@@ -54,7 +55,7 @@ export function articleSchema(args: {
     url: args.url,
     mainEntityOfPage: args.url,
     datePublished: args.datePublished,
-    dateModified: args.datePublished,
+    dateModified: args.dateModified || args.datePublished,
     ...(args.description ? { description: args.description } : {}),
     ...(args.image ? { image: args.image } : {}),
     author: { '@type': 'Person', name: args.authorName },

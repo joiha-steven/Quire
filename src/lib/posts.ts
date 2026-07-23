@@ -14,7 +14,7 @@ import { saveRedirect, clearRedirectForPath } from '@/lib/redirects'
 import { getSettings } from '@/lib/settings'
 
 // Metadata columns (everything except the heavy `content` body) for list reads.
-const META_COLS = 'slug,title,date,status,categories,tags,featured_image,excerpt,reading_minutes,series,series_order'
+const META_COLS = 'slug,title,date,status,categories,tags,featured_image,excerpt,reading_minutes,series,series_order,meta_title,meta_description,cover_image,updated_at'
 
 // A row as stored in Postgres (snake_case, store-relative image refs).
 type PostRow = {
@@ -29,6 +29,10 @@ type PostRow = {
   reading_minutes: number | null
   series: string | null
   series_order: number | null
+  meta_title: string | null
+  meta_description: string | null
+  cover_image: string | null
+  updated_at?: string | null
   content?: string | null
 }
 
@@ -46,6 +50,10 @@ function rowToMeta(row: PostRow): Post {
     readingMinutes: row.reading_minutes ?? undefined,
     series: row.series ?? undefined,
     seriesOrder: row.series != null ? (row.series_order ?? 0) : undefined,
+    metaTitle: row.meta_title ?? undefined,
+    metaDescription: row.meta_description ?? undefined,
+    coverImage: row.cover_image ? expandBlob(row.cover_image) : undefined,
+    updatedAt: row.updated_at ?? undefined,
   }
 }
 
@@ -64,6 +72,9 @@ function toRow(post: PostWithContent): PostRow {
     reading_minutes: readingMinutes(post.content),
     series: post.series?.trim() || null,
     series_order: post.series?.trim() ? (post.seriesOrder ?? 0) : 0,
+    meta_title: post.metaTitle?.trim() || null,
+    meta_description: post.metaDescription?.trim() || null,
+    cover_image: post.coverImage ? collapseBlob(post.coverImage) : null,
     content: collapseBlob(post.content),
   }
 }
@@ -79,6 +90,9 @@ function projection(p: PostWithContent): string {
     tags: p.tags,
     series: p.series ?? '',
     seriesOrder: p.seriesOrder ?? 0,
+    metaTitle: p.metaTitle ?? '',
+    metaDescription: p.metaDescription ?? '',
+    coverImage: p.coverImage ? collapseBlob(p.coverImage) : '',
     featuredImage: p.featuredImage ? collapseBlob(p.featuredImage) : '',
     excerpt: p.excerpt ?? '',
     content: collapseBlob(p.content),
@@ -174,6 +188,9 @@ function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWith
     tags: input.tags ?? [],
     series: input.series?.trim() || undefined,
     seriesOrder: input.series?.trim() ? (input.seriesOrder ?? 0) : undefined,
+    metaTitle: input.metaTitle?.trim() || undefined,
+    metaDescription: input.metaDescription?.trim() || undefined,
+    coverImage: input.coverImage || undefined,
     featuredImage: input.featuredImage || undefined,
     excerpt,
     content,

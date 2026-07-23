@@ -18,6 +18,9 @@ export type Draft = {
   series: string
   seriesOrder: number
   featuredImage: string
+  coverImage: string
+  metaTitle: string
+  metaDescription: string
   excerpt: string
   content: string
 }
@@ -29,9 +32,10 @@ type Props = {
   allTags: string[]
   allSeries: string[]
   onPickFeatured: () => void
+  onPickCover: () => void
 }
 
-export function PostSettings({ draft, update, allCategories, allTags, allSeries, onPickFeatured }: Props) {
+export function PostSettings({ draft, update, allCategories, allTags, allSeries, onPickFeatured, onPickCover }: Props) {
   const t = useAdminT()
   return (
     <div className="space-y-5">
@@ -143,6 +147,48 @@ export function PostSettings({ draft, update, allCategories, allTags, allSeries,
         onChange={(e) => update({ excerpt: e.target.value })}
         placeholder={t.excerptPlaceholder}
       />
+
+      <div className="space-y-1.5">
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.coverImageLabel}</span>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.coverImageHint}</p>
+        {draft.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={draft.coverImage} alt="" className="aspect-video w-full rounded-lg object-cover" />
+        ) : (
+          <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">
+            {t.noImageSelected}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={onPickCover} type="button">
+            {t.chooseImage}
+          </Button>
+          {draft.coverImage && (
+            <Button variant="ghost" onClick={() => update({ coverImage: '' })} type="button">
+              {t.removeSelection}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.seoSectionHint}</p>
+        <Input
+          label={t.metaTitleLabel}
+          value={draft.metaTitle}
+          onChange={(e) => update({ metaTitle: e.target.value })}
+          placeholder={draft.title || t.titlePlaceholder}
+          maxLength={70}
+        />
+        <Textarea
+          label={t.metaDescriptionLabel}
+          rows={2}
+          maxLength={200}
+          value={draft.metaDescription}
+          onChange={(e) => update({ metaDescription: e.target.value })}
+          placeholder={t.excerptPlaceholder}
+        />
+      </div>
     </div>
   )
 }

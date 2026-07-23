@@ -36,6 +36,7 @@ const vi = {
   seriesPrev: 'Trước',
   seriesNext: 'Tiếp',
   emptySeries: 'Chưa có bài nào trong loạt này.',
+  updatedPrefix: 'Cập nhật',
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được dời đi.',
   errorTitle: 'Đã xảy ra lỗi',

@@ -185,6 +185,16 @@
   (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
   a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
 
+## Per-post SEO + cover + dateModified — `posts` columns, `[slug]/page.tsx`, `JsonLd.tsx`
+
+- **`meta_title` / `meta_description`** override the `<title>`, meta description, and OG/Twitter
+  card when set (else post title + excerpt). Set in the editor's SEO section.
+- **`cover_image`** is a visible hero at the top of the post AND the OG image fallback (ahead of
+  the SEO-only `featured_image`). Distinct roles: featured = social-only/hidden, cover = shown.
+- **Real `dateModified`**: `articleSchema` emits `updated_at` (was a placeholder = `datePublished`);
+  the meta line shows "Updated <date>" only when `updated_at` is >24h after `date` (so a save right
+  after publishing adds no noise). All three read through `posts.ts` rowToMeta (`updatedAt` etc.).
+
 ## Series / collections — `lib/series.ts`, `components/blog/SeriesBox.tsx`, `/series/[slug]`
 
 - **A series is a name + order on the post**, not a table: the `series` (text) and

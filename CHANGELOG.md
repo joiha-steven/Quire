@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-07-23 — per-post SEO, cover image, real dateModified (batch 6a)
+
+Post-metadata half of the editor-completeness batch.
+
+- **Per-post SEO overrides:** `meta_title` / `meta_description` columns. When set they drive the
+  `<title>`, meta description, and OpenGraph/Twitter card; blank falls back to the post title +
+  excerpt (unchanged behaviour). Editor: an "SEO title / SEO description" section in the post
+  settings panel.
+- **Cover image:** a `cover_image` — a visible hero shown at the top of the post (and the OG image
+  fallback, ahead of the SEO-only featured image). Editor: a Cover image picker.
+- **Real `dateModified`:** the Article/BlogPosting JSON-LD now emits the actual last-saved time
+  (was a placeholder equal to `datePublished`); the post meta line shows "Updated <date>" when an
+  edit lands >24h after publishing. Uses the existing `updated_at`.
+- Migration `2026-07-23-post-meta.sql`. i18n ×6 (public "Updated" + admin labels).
+
+**Deferred to batch 6b** (render-layer editor extras): footnotes, callouts/admonitions, code
+copy button, and X/Instagram/gist embeds.
+
 ## 2026-07-23 — series / collections (batch 5)
 
 Group posts into an ordered **series** (e.g. a multi-part guide).
