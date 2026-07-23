@@ -1167,15 +1167,27 @@ body.book-open { overflow: hidden; }
 .book-overlay {
   position: fixed; inset: 0; z-index: 60;
   display: grid; grid-template-rows: auto 1fr;   /* top chrome + stage; no footer */
-  background: var(--color-bg); color: var(--color-text);
   font-family: var(--font-reading);
+  /* Book mode is ALWAYS warm paper (sepia), regardless of the site theme / dark mode — a
+     printed page, not a screen. Overriding the theme tokens here recolours everything inside
+     (prose text/headings/links/rules) to sepia in one place; the base page keeps its own
+     tokens, so closing the reader restores the previous colours automatically. */
+  --color-bg: #f4ecd8;
+  --color-text: #5b4636;
+  --color-heading: #33291d;
+  --color-meta: #a08d72;
+  --color-link: #7a5230;
+  --color-accent: #7a5230;
+  --color-rule: #ddd0b6;
+  background: var(--color-bg); color: var(--color-text);
 }
 
-/* Top bar: title centred + larger; the page count and close sit together at the right. */
-.book-chrome { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 clamp(16px, 4vw, 48px); }
+/* Top bar: title recedes (regular weight, faint, ~body size) so the article stays the focus;
+   the page count and close sit together at the right. */
+.book-chrome { position: relative; display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 clamp(16px, 4vw, 48px); }
 .book-top { border-bottom: 1px solid var(--color-rule); }
 .book-title {
-  font-size: 1.15rem; font-weight: 400; color: var(--color-meta); text-align: center;
+  font-size: 1rem; font-weight: 400; color: var(--color-meta); text-align: center;
   max-width: min(70%, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .book-topright {
@@ -1207,6 +1219,22 @@ body.book-open { overflow: hidden; }
 .book-flow pre { max-height: var(--book-page-h, 70vh); overflow: auto; }
 /* First column opens flush with the top of the page (no leading gap). */
 .book-flow.prose > :first-child { margin-top: 0; }
+
+/* Western book touches. Oldstyle figures + discretionary ligatures where the reading face
+   carries them (serif faces do; sans quietly ignores). */
+.book-flow { font-feature-settings: "onum" 1, "liga" 1, "dlig" 1; }
+/* Drop cap: the first paragraph opens with a large raised initial spanning ~3 lines — the
+   classic chapter opening. Only the first paragraph of the first column gets it. */
+.book-flow.prose > p:first-child::first-letter {
+  float: left;
+  margin: 0.02em 0.09em 0 0;
+  font-size: 3.1em;
+  line-height: 0.72;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+/* The line beside a drop cap shouldn't also be indented. */
+.book-flow.prose > p:first-child { text-indent: 0; }
 
 .book-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;

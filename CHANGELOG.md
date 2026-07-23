@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode: sepia, drop cap, #read link (v1.4.32)
+
+- **Always warm-paper (sepia)** regardless of the site theme / dark mode — book mode overrides
+  the theme tokens to a paper palette; closing restores the previous colours automatically.
+- **`#read` deep link:** book mode is now driven by the URL hash — `…/slug#read` opens it on
+  load, the toggle is a real `<a href="#read">` (shareable / copy-link), and Back closes it.
+- **Drop cap** on the opening paragraph + oldstyle figures / ligatures where the reading face
+  has them — the classic Western chapter opening.
+- **Title** smaller (body size) and regular weight, so it recedes further.
+- **First-line alignment fixed:** the reader now clones the inner `.prose` (one level, not the
+  `#post-body` wrapper), so the first paragraph's top margin actually zeroes and the first
+  column opens flush with the second.
+
 ## 2026-07-23 — book mode width + title (v1.4.31)
 
 - **Spread now spans the full layout footprint incl. both side gutters** (`viewport − 2×rail
