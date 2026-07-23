@@ -283,6 +283,28 @@
   `resolveSeries` (like categories/tags). ISR-cached; an admin save purges via
   `revalidatePath('/','layout')`.
 
+## Book reading mode — `components/blog/BookMode.tsx`, `features.bookMode`
+
+- **What:** an opt-in "Chế độ đọc sách" link on the post meta line (after the reading time)
+  opens the article as a **fullscreen two-column book spread**, paged horizontally with the
+  arrow keys / on-screen arrows and a soft fade between spreads. Gated by `features.bookMode`
+  (default **on**; toggle in Admin → Settings → Features). **Posts only** (rendered in the post
+  branch of `[slug]/page.tsx`).
+- **Not the Fullscreen API.** A fixed overlay (`.book-overlay`, `body.book-open` locks scroll)
+  covers the viewport, so **desktop and iPad behave identically** and there are no Safari
+  fullscreen quirks. Hidden below the iPad width (`@media (max-width: 767px)`), so mobile never
+  shows it.
+- **How it paginates:** the reader **clones** the already-rendered `#post-body` markup (Shiki
+  highlight, images, footnotes intact — no re-render, cloned images forced `loading=eager`
+  since later columns sit off-screen), flows it into a CSS `column-width` element of a fixed
+  page height, and reads `scrollWidth` to count columns → spreads = `ceil(cols / 2)`. Advancing
+  translates the flow by two columns and crossfades. Recomputes on resize + once webfonts
+  settle (`document.fonts.ready`). Base page keeps normal scroll, so **SEO / a11y / find-in-page
+  are untouched** (book mode is pure client enhancement).
+- **Media** stays column-width (no full-bleed) and is capped to one page height (`--book-page-h`)
+  with `break-inside: avoid`, so images/code/tables never overflow a spread. `--font-reading`
+  drives the body; all colours are theme tokens. Respects `prefers-reduced-motion` (no fade).
+
 ## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
 
 - The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**

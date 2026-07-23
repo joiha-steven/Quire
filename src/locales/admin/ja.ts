@@ -347,6 +347,8 @@ const ja = {
   featDeck: 'リード文',
   featBookText: '書籍組み',
   featBookTextDesc: '段落の間を空けずに一行目を字下げし、広い画面では両端揃えにします。',
+  featBookMode: 'ブック表示モード',
+  featBookModeDesc: '記事を全画面の2段組みブックとして開けるようにします（デスクトップとiPad）。',
   featDeckDesc: '記事タイトルの下、本文の上に抜粋を表示します。',
   seoCanonical: 'サイトアドレス（canonical）',
   seoCanonicalHint: 'サイトマップ、RSS、スキーマ、llms.txt、OG画像、canonicalタグに使用されます。空欄の場合はサイトのURL（SITE_URL）を使用します。',

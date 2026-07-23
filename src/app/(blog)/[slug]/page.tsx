@@ -24,6 +24,7 @@ import { Lightbox } from '@/components/blog/Lightbox'
 import { CodeCopy } from '@/components/blog/CodeCopy'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { SeriesBox } from '@/components/blog/SeriesBox'
+import { BookMode } from '@/components/blog/BookMode'
 import { SubscribeForm } from '@/components/blog/SubscribeForm'
 import { getMailStatus } from '@/lib/mail'
 import { CommentsLazy } from '@/components/blog/CommentsLazy'
@@ -192,6 +193,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
             {formatDate(post.date, language)}
             {features.readingTime &&
               ` · ${formatCount(words, language)} ${t(language).wordsSuffix} · ${minutes} ${t(language).readingSuffix}`}
+            {features.bookMode && (
+              <>
+                {' · '}
+                <BookMode title={post.title} lang={language} />
+              </>
+            )}
           </p>
           {/* Single post/page title = H1 scale (--fs-h1); list cards use H2 a step down. */}
           <h1 className="reading-font mt-2 fs-h1 font-semibold">{post.title}</h1>
@@ -227,7 +234,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           </div>
         )}
 
-        <div className="mt-10">
+        <div id="post-body" className="mt-10">
           <PostContent markdown={post.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
 

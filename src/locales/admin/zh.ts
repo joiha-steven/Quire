@@ -347,6 +347,8 @@ const zh = {
   featDeck: '导语',
   featBookText: '书籍排版',
   featBookTextDesc: '每段首行缩进而非空行分段，宽屏时两端对齐。',
+  featBookMode: '书籍阅读模式',
+  featBookModeDesc: '让读者以全屏双栏书籍方式打开文章（桌面和 iPad）。',
   featDeckDesc: '在文章标题下方、正文上方显示摘要。',
   seoCanonical: '站点地址（canonical）',
   seoCanonicalHint: '用于站点地图、RSS、schema、llms.txt、OG 图片和 canonical 标签。留空将自动使用站点 URL（SITE_URL）。',

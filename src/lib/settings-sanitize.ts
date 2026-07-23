@@ -112,6 +112,7 @@ export function sanitizeFeatures(input: unknown, fallback: FeatureSettings): Fea
     categoryLabel: bool(o.categoryLabel, fallback.categoryLabel),
     deck: bool(o.deck, fallback.deck),
     bookText: bool(o.bookText, fallback.bookText),
+    bookMode: bool(o.bookMode, fallback.bookMode),
     infiniteScroll: bool(o.infiniteScroll, fallback.infiniteScroll),
     gridView: bool(o.gridView, fallback.gridView),
   }
