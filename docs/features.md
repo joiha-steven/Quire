@@ -185,6 +185,24 @@
   (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
   a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
 
+## Series / collections — `lib/series.ts`, `components/blog/SeriesBox.tsx`, `/series/[slug]`
+
+- **A series is a name + order on the post**, not a table: the `series` (text) and
+  `series_order` (int) columns on `posts`. A post belongs to at most one series. Assign it in
+  the editor (Settings panel: a Series field with a datalist of existing names + an Order
+  number shown once a series is set). `getAllSeriesNames` feeds the autocomplete (incl. drafts).
+- **Ordering** (`orderSeries`, pure): `series_order` ascending, then date ascending — so a
+  series reads oldest-to-newest / lowest-order-first. `getSeriesForPost(slug)` returns the
+  ordered PUBLIC siblings + the current index + prev/next (a draft/scheduled part never shows).
+- **Series box** (`SeriesBox.tsx`) renders at the top of a post when its series has >1 public
+  part: a `Part n/total` line linking to `/series/[slug]`, the ordered list (current part
+  highlighted, not linked), and prev/next links. Colours are theme tokens only (`border-rule`,
+  `text-meta`, `text-heading`, `link-accent`).
+- **`/series/[slug]`** lists a series in order via `BlogListing` (which preserves the given
+  order — it only paginates). Slug derived with `slugify` and reverse-resolved by
+  `resolveSeries` (like categories/tags). ISR-cached; an admin save purges via
+  `revalidatePath('/','layout')`.
+
 ## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
 
 - The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**

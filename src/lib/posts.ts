@@ -14,7 +14,7 @@ import { saveRedirect, clearRedirectForPath } from '@/lib/redirects'
 import { getSettings } from '@/lib/settings'
 
 // Metadata columns (everything except the heavy `content` body) for list reads.
-const META_COLS = 'slug,title,date,status,categories,tags,featured_image,excerpt,reading_minutes'
+const META_COLS = 'slug,title,date,status,categories,tags,featured_image,excerpt,reading_minutes,series,series_order'
 
 // A row as stored in Postgres (snake_case, store-relative image refs).
 type PostRow = {
@@ -27,6 +27,8 @@ type PostRow = {
   featured_image: string | null
   excerpt: string | null
   reading_minutes: number | null
+  series: string | null
+  series_order: number | null
   content?: string | null
 }
 
@@ -42,6 +44,8 @@ function rowToMeta(row: PostRow): Post {
     featuredImage: row.featured_image ? expandBlob(row.featured_image) : undefined,
     excerpt: row.excerpt ?? undefined,
     readingMinutes: row.reading_minutes ?? undefined,
+    series: row.series ?? undefined,
+    seriesOrder: row.series != null ? (row.series_order ?? 0) : undefined,
   }
 }
 
@@ -58,6 +62,8 @@ function toRow(post: PostWithContent): PostRow {
     featured_image: post.featuredImage ? collapseBlob(post.featuredImage) : null,
     excerpt: post.excerpt ?? null,
     reading_minutes: readingMinutes(post.content),
+    series: post.series?.trim() || null,
+    series_order: post.series?.trim() ? (post.seriesOrder ?? 0) : 0,
     content: collapseBlob(post.content),
   }
 }
@@ -71,6 +77,8 @@ function projection(p: PostWithContent): string {
     status: p.status,
     categories: p.categories,
     tags: p.tags,
+    series: p.series ?? '',
+    seriesOrder: p.seriesOrder ?? 0,
     featuredImage: p.featuredImage ? collapseBlob(p.featuredImage) : '',
     excerpt: p.excerpt ?? '',
     content: collapseBlob(p.content),
@@ -164,6 +172,8 @@ function normalize(input: Partial<PostWithContent>, excerptWords = 50): PostWith
     status: input.status === 'published' ? 'published' : 'draft',
     categories: input.categories ?? [],
     tags: input.tags ?? [],
+    series: input.series?.trim() || undefined,
+    seriesOrder: input.series?.trim() ? (input.seriesOrder ?? 0) : undefined,
     featuredImage: input.featuredImage || undefined,
     excerpt,
     content,

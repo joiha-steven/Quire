@@ -21,6 +21,7 @@ type Props = {
   initial?: PostWithContent
   allCategories: string[]
   allTags: string[]
+  allSeries: string[]
   contentWidth: number
   typewriterEffects: boolean
 }
@@ -43,13 +44,15 @@ function toDraft(initial?: PostWithContent): Draft {
     status: initial?.status ?? 'draft',
     categories: initial?.categories ?? [],
     tags: initial?.tags ?? [],
+    series: initial?.series ?? '',
+    seriesOrder: initial?.seriesOrder ?? 0,
     featuredImage: initial?.featuredImage ?? '',
     excerpt: initial?.excerpt ?? '',
     content: initial?.content ?? '',
   }
 }
 
-export function PostForm({ initial, allCategories, allTags, contentWidth, typewriterEffects }: Props) {
+export function PostForm({ initial, allCategories, allTags, allSeries, contentWidth, typewriterEffects }: Props) {
   const t = useAdminT()
   const router = useRouter()
   const { notify } = useToast()
@@ -133,6 +136,8 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
         status: statusOverride ?? d.status,
         categories: d.categories,
         tags: d.tags,
+        series: d.series.trim() || undefined,
+        seriesOrder: d.series.trim() ? d.seriesOrder : undefined,
         featuredImage: d.featuredImage || undefined,
         excerpt: d.excerpt,
         content,
@@ -360,7 +365,7 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
                 {draft.status === 'published' && savedSlug && !scheduled && <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="text-neutral-500 hover:text-neutral-900">{t.viewPost}</a>}
               </div>
             </div>
-            <PostSettings draft={draft} update={update} allCategories={allCategories} allTags={allTags} onPickFeatured={() => setPicker('featured')} />
+            <PostSettings draft={draft} update={update} allCategories={allCategories} allTags={allTags} allSeries={allSeries} onPickFeatured={() => setPicker('featured')} />
           </aside>
         )}
       </div>

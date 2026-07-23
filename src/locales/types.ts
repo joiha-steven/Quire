@@ -32,6 +32,11 @@ export type Dict = {
   featuredTitle: string
   tagsTitle: string
   relatedTitle: string
+  seriesLabel: string
+  seriesPartPrefix: string
+  seriesPrev: string
+  seriesNext: string
+  emptySeries: string
   notFoundTitle: string
   notFoundText: string
   errorTitle: string
@@ -167,6 +172,9 @@ export type AdminStrings = {
   scheduled: string
   scheduledForPrefix: string
   status: string
+  seriesField: string
+  seriesOrder: string
+  seriesPlaceholder: string
   categories: string
   tags: string
   featuredImage: string

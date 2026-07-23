@@ -15,6 +15,8 @@ export type Draft = {
   status: PostStatus
   categories: string[]
   tags: string[]
+  series: string
+  seriesOrder: number
   featuredImage: string
   excerpt: string
   content: string
@@ -25,10 +27,11 @@ type Props = {
   update: (partial: Partial<Draft>) => void
   allCategories: string[]
   allTags: string[]
+  allSeries: string[]
   onPickFeatured: () => void
 }
 
-export function PostSettings({ draft, update, allCategories, allTags, onPickFeatured }: Props) {
+export function PostSettings({ draft, update, allCategories, allTags, allSeries, onPickFeatured }: Props) {
   const t = useAdminT()
   return (
     <div className="space-y-5">
@@ -84,6 +87,30 @@ export function PostSettings({ draft, update, allCategories, allTags, onPickFeat
         onChange={(tags) => update({ tags })}
         lowercase
       />
+
+      <div className="space-y-3">
+        <Input
+          label={t.seriesField}
+          value={draft.series}
+          onChange={(e) => update({ series: e.target.value })}
+          placeholder={t.seriesPlaceholder}
+          list="series-names"
+        />
+        <datalist id="series-names">
+          {allSeries.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+        {draft.series.trim() && (
+          <Input
+            label={t.seriesOrder}
+            type="number"
+            value={String(draft.seriesOrder)}
+            onChange={(e) => update({ seriesOrder: Number(e.target.value) || 0 })}
+            className="w-24"
+          />
+        )}
+      </div>
 
       <div className="space-y-1.5">
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.featuredImage}</span>

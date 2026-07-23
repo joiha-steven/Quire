@@ -14,6 +14,8 @@ export type Post = {
   featuredImage?: string // stored image URL; used only for SEO/social meta, never shown
   excerpt?: string // auto-extracted from first paragraph if empty
   readingMinutes?: number // estimated read time, computed from the body at save (for lists)
+  series?: string // optional series/collection name this post belongs to (undefined = none)
+  seriesOrder?: number // position within the series (ascending); undefined when no series
   deletedAt?: string // ISO 8601; set only on trashed (soft-deleted) rows, else undefined
 }
 

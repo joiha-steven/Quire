@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
+import { getSeriesForPost } from '@/lib/series'
 import { termSlug } from '@/lib/taxonomy'
 import { getPage, getPublicPages } from '@/lib/pages'
 import { getMedia } from '@/lib/media'
@@ -21,6 +22,7 @@ import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { Lightbox } from '@/components/blog/Lightbox'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
+import { SeriesBox } from '@/components/blog/SeriesBox'
 import { CommentsLazy } from '@/components/blog/CommentsLazy'
 import { getCommentEnv } from '@/lib/comment-env'
 import { ogImageUrl } from '@/lib/og'
@@ -112,6 +114,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const minutes = readingMinutes(post.content)
     const words = wordCount(post.content)
     const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
+    const series = post.series ? await getSeriesForPost(post.slug) : null
     const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
@@ -193,6 +196,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           <Rail>
             <Toc headings={headings} title={tx.tocIndex} postTitle={post.title} meta={tocMeta} />
           </Rail>
+        )}
+
+        {series && series.posts.length > 1 && (
+          <div className="mt-8">
+            <SeriesBox info={series} lang={language} />
+          </div>
         )}
 
         <div className="mt-10">
