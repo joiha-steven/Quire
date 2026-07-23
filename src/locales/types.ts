@@ -471,6 +471,21 @@ export type AdminStrings = {
   analyticsColDepth: string
   analyticsColSource: string
   analyticsColCountry: string
+  analyticsAvgTime: string
+  analyticsBounceRate: string
+  analyticsColTime: string
+  analyticsChannels: string
+  analyticsChannelDirect: string
+  analyticsChannelSearch: string
+  analyticsChannelSocial: string
+  analyticsChannelReferral: string
+  analyticsDevices: string
+  analyticsBrowsers: string
+  analyticsSystems: string
+  analyticsDepthDist: string
+  analyticsAllPages: string
+  analyticsUnitSamples: string
+  analyticsUnknown: string
   analyticsRange24h: string
   analyticsRange7: string
   analyticsRange30: string

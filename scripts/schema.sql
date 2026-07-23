@@ -20,7 +20,8 @@ create table if not exists public.schema_migrations (
 );
 insert into public.schema_migrations (name) values
   ('2026-06-25-analytics-deepening.sql'),
-  ('2026-06-25-analytics-fix-visitor-counts.sql')
+  ('2026-06-25-analytics-fix-visitor-counts.sql'),
+  ('2026-07-22-analytics-v2.sql')
 on conflict (name) do nothing;
 
 -- ----- posts -----------------------------------------------------------------
@@ -230,21 +231,27 @@ create table if not exists public.analytics_events (
   visitor       text not null,
   referrer_host text,                         -- external referrer host (no path/query); null = direct/internal
   country       text,                          -- ISO 3166-1 alpha-2 from the edge, if available
+  device        text,                          -- coarse UA bucket: desktop | mobile | tablet (no raw UA stored)
+  browser       text,                          -- coarse UA bucket: Chrome | Safari | Firefox | …
+  os            text,                          -- coarse UA bucket: Windows | macOS | iOS | Android | …
   created_at    timestamptz not null default now()
 );
 create index if not exists analytics_events_created_idx on public.analytics_events (created_at);
 create index if not exists analytics_events_path_idx    on public.analytics_events (path);
+create index if not exists analytics_events_device_idx  on public.analytics_events (device);
 
--- ----- analytics_scroll (max scroll depth sample per page leave) --------------
+-- ----- analytics_scroll (max scroll depth + dwell sample per page leave) -------
 create table if not exists public.analytics_scroll (
   id         bigint generated always as identity primary key,
   path       text not null,
   depth      integer not null,
+  dwell_ms   integer,                          -- ms on the page before leaving (null if not measured)
   visitor    text not null,
   created_at timestamptz not null default now()
 );
 create index if not exists analytics_scroll_created_idx on public.analytics_scroll (created_at);
 create index if not exists analytics_scroll_path_idx    on public.analytics_scroll (path);
+create index if not exists analytics_scroll_dwell_idx   on public.analytics_scroll (dwell_ms);
 
 -- ----- RLS: lock every table to server-side (service_role) access only --------
 alter table public.posts            enable row level security;
@@ -264,16 +271,48 @@ alter table public.analytics_events enable row level security;
 alter table public.analytics_scroll enable row level security;
 
 -- ----- RPC: analytics summary for the admin dashboard ------------------------
--- since   = window start; top_n = how many top pages; bucket = 'hour' (24h range)
--- or 'day'; prev_since = start of the PREVIOUS window [prev_since, since) used for
--- the period-over-period trend (null -> no trend). Also returns new/returning
--- visitor counts and the top referrer hosts + countries (group B). The old 3-arg
--- signature is dropped in the same migration so calls stay unambiguous.
+-- since   = window start; top_n = how many rows per top list; bucket = 'hour'
+-- (24h) / 'day' / 'week' / 'month'; prev_since = start of the PREVIOUS window
+-- [prev_since, since) for the period-over-period trend (null -> no trend); tz =
+-- IANA zone the time buckets are truncated in, so "days" match local midnight.
+-- Returns totals, engagement (avg depth + dwell + single-page visitors), the
+-- time series, top pages, new/returning, referrers + countries + channels, the
+-- device/browser/os audience facets, and the read-depth distribution. Helpers
+-- analytics_channel / analytics_facet back the derived groupings.
+create or replace function public.analytics_channel(host text)
+returns text language sql immutable as $$
+  select case
+    when host is null or host = '' then 'direct'
+    when host ~* 'google\.|bing\.|yahoo\.|duckduckgo|yandex|baidu|ecosia\.|brave\.|startpage|search\.' then 'search'
+    when host ~* 'facebook|fb\.com|instagram|twitter|(^|\.)x\.com|t\.co|linkedin|reddit|youtu|pinterest|tiktok|threads\.net|mastodon|telegram|t\.me|whatsapp|(^|\.)vk\.com' then 'social'
+    else 'referral'
+  end;
+$$;
+
+-- Top N distinct-visitor counts for one low-cardinality column (device/browser/os).
+-- Null values surface as 'Unknown' so pre-v2 rows still show up.
+create or replace function public.analytics_facet(since timestamptz, col text, top_n integer)
+returns jsonb language plpgsql stable as $$
+declare result jsonb;
+begin
+  execute format($q$
+    select coalesce(jsonb_agg(jsonb_build_object('name', name, 'visitors', visitors) order by visitors desc), '[]'::jsonb)
+    from (
+      select coalesce(nullif(%I, ''), 'Unknown') as name, count(distinct visitor)::int as visitors
+      from public.analytics_events where created_at >= $1
+      group by 1 order by count(distinct visitor) desc limit $2
+    ) f
+  $q$, col) into result using since, top_n;
+  return result;
+end;
+$$;
+
 create or replace function public.analytics_summary(
   since timestamptz,
   top_n integer default 10,
   bucket text default 'day',
-  prev_since timestamptz default null
+  prev_since timestamptz default null,
+  tz text default 'UTC'
 )
 returns jsonb
 language sql
@@ -283,15 +322,28 @@ as $$
     'totalViews', (select count(*) from public.analytics_events where created_at >= since),
     'uniqueVisitors', (select count(distinct visitor) from public.analytics_events where created_at >= since),
     'avgReadDepth', (select coalesce(round(avg(depth))::int, 0) from public.analytics_scroll where created_at >= since),
+    'avgDwellMs', (select coalesce(round(avg(dwell_ms))::int, 0)
+                     from public.analytics_scroll where created_at >= since and dwell_ms is not null),
+    -- Visitors who viewed exactly one page in the window (bounce-ish signal).
+    'singlePageVisitors', (
+      select count(*) from (
+        select visitor from public.analytics_events
+        where created_at >= since group by visitor having count(*) = 1
+      ) s
+    ),
     'topPages', coalesce((
-      select jsonb_agg(jsonb_build_object('path', path, 'views', views, 'visitors', visitors, 'avgDepth', avg_depth))
+      select jsonb_agg(jsonb_build_object('path', path, 'views', views, 'visitors', visitors,
+                                          'avgDepth', avg_depth, 'avgDwellMs', avg_dwell))
       from (
         select e.path,
                count(*)::int as views,
                count(distinct e.visitor)::int as visitors,
                (select coalesce(round(avg(s.depth))::int, 0)
                   from public.analytics_scroll s
-                  where s.path = e.path and s.created_at >= since) as avg_depth
+                  where s.path = e.path and s.created_at >= since) as avg_depth,
+               (select coalesce(round(avg(s.dwell_ms))::int, 0)
+                  from public.analytics_scroll s
+                  where s.path = e.path and s.created_at >= since and s.dwell_ms is not null) as avg_dwell
         from public.analytics_events e
         where e.created_at >= since
         group by e.path
@@ -300,16 +352,18 @@ as $$
       ) x
     ), '[]'::jsonb),
     'daily', coalesce((
-      select jsonb_agg(jsonb_build_object('day', day, 'views', views, 'visitors', visitors))
+      select jsonb_agg(jsonb_build_object('day', day, 'views', views, 'visitors', visitors) order by ord)
       from (
-        select to_char(date_trunc(bucket, created_at),
-                       case when bucket = 'hour' then 'YYYY-MM-DD HH24:00' else 'YYYY-MM-DD' end) as day,
+        select date_trunc(bucket, created_at at time zone tz) as ord,
+               to_char(date_trunc(bucket, created_at at time zone tz),
+                       case bucket when 'hour' then 'YYYY-MM-DD HH24:00'
+                                   when 'month' then 'YYYY-MM'
+                                   else 'YYYY-MM-DD' end) as day,
                count(*)::int as views,
                count(distinct visitor)::int as visitors
         from public.analytics_events
         where created_at >= since
-        group by date_trunc(bucket, created_at)
-        order by date_trunc(bucket, created_at)
+        group by 1, 2
       ) d
     ), '[]'::jsonb),
     -- Previous window [prev_since, since) for the trend; null when prev_since is null.
@@ -342,6 +396,96 @@ as $$
         where created_at >= since and country is not null and country <> ''
         group by country order by count(distinct visitor) desc limit top_n
       ) c
+    ), '[]'::jsonb),
+    -- Traffic channels derived from the referrer host, distinct visitors each.
+    'channels', coalesce((
+      select jsonb_agg(jsonb_build_object('channel', channel, 'visitors', visitors) order by visitors desc)
+      from (
+        select public.analytics_channel(referrer_host) as channel, count(distinct visitor)::int as visitors
+        from public.analytics_events where created_at >= since
+        group by 1
+      ) ch
+    ), '[]'::jsonb),
+    'devices',  public.analytics_facet(since, 'device',  top_n),
+    'browsers', public.analytics_facet(since, 'browser', top_n),
+    'systems',  public.analytics_facet(since, 'os',      top_n),
+    -- Read-depth distribution: quartile buckets (0=0-25% … 3=76-100%).
+    'depthBuckets', coalesce((
+      select jsonb_agg(jsonb_build_object('bucket', bucket, 'samples', samples) order by bucket)
+      from (
+        select least(3, depth / 25) as bucket, count(*)::int as samples
+        from public.analytics_scroll where created_at >= since
+        group by 1
+      ) b
+    ), '[]'::jsonb)
+  );
+$$;
+
+-- ----- RPC: per-page drill-down --------------------------------------------
+-- One page's trend, sources, audience + engagement over [since, now) with an
+-- optional previous window for the trend. Same tz/bucket semantics as above.
+create or replace function public.analytics_page(
+  page_path text,
+  since timestamptz,
+  bucket text default 'day',
+  prev_since timestamptz default null,
+  tz text default 'UTC'
+)
+returns jsonb
+language sql
+stable
+as $$
+  select jsonb_build_object(
+    'path', page_path,
+    'totalViews', (select count(*) from public.analytics_events where path = page_path and created_at >= since),
+    'uniqueVisitors', (select count(distinct visitor) from public.analytics_events where path = page_path and created_at >= since),
+    'avgReadDepth', (select coalesce(round(avg(depth))::int, 0) from public.analytics_scroll where path = page_path and created_at >= since),
+    'avgDwellMs', (select coalesce(round(avg(dwell_ms))::int, 0)
+                     from public.analytics_scroll where path = page_path and created_at >= since and dwell_ms is not null),
+    'prevViews', (select count(*) from public.analytics_events
+                    where path = page_path and prev_since is not null and created_at >= prev_since and created_at < since),
+    'prevVisitors', (select count(distinct visitor) from public.analytics_events
+                       where path = page_path and prev_since is not null and created_at >= prev_since and created_at < since),
+    'daily', coalesce((
+      select jsonb_agg(jsonb_build_object('day', day, 'views', views, 'visitors', visitors) order by ord)
+      from (
+        select date_trunc(bucket, created_at at time zone tz) as ord,
+               to_char(date_trunc(bucket, created_at at time zone tz),
+                       case bucket when 'hour' then 'YYYY-MM-DD HH24:00'
+                                   when 'month' then 'YYYY-MM'
+                                   else 'YYYY-MM-DD' end) as day,
+               count(*)::int as views,
+               count(distinct visitor)::int as visitors
+        from public.analytics_events
+        where path = page_path and created_at >= since
+        group by 1, 2
+      ) d
+    ), '[]'::jsonb),
+    'topReferrers', coalesce((
+      select jsonb_agg(jsonb_build_object('host', host, 'visitors', visitors))
+      from (
+        select referrer_host as host, count(distinct visitor)::int as visitors
+        from public.analytics_events
+        where path = page_path and created_at >= since and referrer_host is not null and referrer_host <> ''
+        group by referrer_host order by count(distinct visitor) desc limit 10
+      ) r
+    ), '[]'::jsonb),
+    'topCountries', coalesce((
+      select jsonb_agg(jsonb_build_object('country', country, 'visitors', visitors))
+      from (
+        select country, count(distinct visitor)::int as visitors
+        from public.analytics_events
+        where path = page_path and created_at >= since and country is not null and country <> ''
+        group by country order by count(distinct visitor) desc limit 10
+      ) c
+    ), '[]'::jsonb),
+    'depthBuckets', coalesce((
+      select jsonb_agg(jsonb_build_object('bucket', bucket, 'samples', samples) order by bucket)
+      from (
+        select least(3, depth / 25) as bucket, count(*)::int as samples
+        from public.analytics_scroll where path = page_path and created_at >= since
+        group by 1
+      ) b
     ), '[]'::jsonb)
   );
 $$;

@@ -149,7 +149,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `themes.ts` | `THEME_PRESETS`, `themesToCss`, `paletteOptions`, … | 6 owner-customizable palettes. `themesToCss` emits EVERY palette's vars. Add one = append to `THEME_PRESETS` |
 | `comments.ts` / `comment-md.ts` | `getCommentTree`, `buildCommentTree`, `addComment`, `countsByPosts`, `renderCommentMarkdown` | Text-only reader comments (off by default). Public tree excludes email, tombstones deleted-but-replied, re-roots orphans. `comment-md` = bold/italic-only, escape-first. Client island fetches no-store → instant, no revalidate |
 | `integration-keys.ts` / `comment-env.ts` | `getIntegrationKeys`, `getIntegrationStatus`, `saveIntegrationKeys`, `getCommentEnv` | SERVER-ONLY Turnstile secrets in `integration_keys` table (env fallback), set in admin — like `backup_state`, NEVER in `settings.data`. `getCommentEnv` (async) = which comment integrations are usable + public site key |
-| `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getViewTotals`, `isBot` | Cookieless; `visitor` = salted hash of IP+UA (no PII); bots + admin/api + owner skipped. Kept FOREVER |
+| `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getPageAnalytics`, `getViewTotals`, `isBot` | Cookieless; `visitor` = salted hash of IP+UA (no PII); bots + admin/api + owner skipped. Kept FOREVER. `recordView` stores COARSE UA buckets (device/browser/os via `ua.ts`) — never the raw UA. `recordScroll` also samples dwell (ms). Buckets truncated in `ANALYTICS_TZ`. v2 sections (engagement/channels/audience/drill-down) need `2026-07-22-analytics-v2.sql`; fall back to base shape until applied |
 | `activity.ts` | `logActivity`, `logActivityError`, `getActivity`, `clearActivity` | `activity_log`; gated by `features.activityLog`, never throws; `logActivity` called via `after()` from every mutating route; `logActivityError` (action `error`) is scheduled by `logError` (`api.ts`) on route failures |
 | `media-usage.ts` | `findUnusedMedia` | Read-only audit; badges orphans, never deletes |
 | `backup.ts` / `backup-state.ts` / `gdrive.ts` | (see `docs/backups.md`) | Drive snapshot/restore + the server-only secret store + Drive REST/OAuth |
@@ -161,7 +161,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
 | `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
 | `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
-| others | `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
+| others | `ua.ts` (coarse device/browser/os buckets — no raw UA), `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
 
 ## Caching — ISR pages + tagged DB reads, purge on save
 

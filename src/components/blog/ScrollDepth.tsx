@@ -20,6 +20,7 @@ export function ScrollDepth() {
     if (!pathname) return
     let max = currentDepth()
     let sent = false
+    const start = performance.now() // for the dwell (time-on-page) sample
 
     const onScroll = () => {
       const d = currentDepth()
@@ -28,7 +29,8 @@ export function ScrollDepth() {
     const send = () => {
       if (sent || max <= 0) return
       sent = true
-      const body = JSON.stringify({ path: pathname, depth: max })
+      const dwell = Math.round(performance.now() - start)
+      const body = JSON.stringify({ path: pathname, depth: max, dwell })
       try {
         if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
         else fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true })

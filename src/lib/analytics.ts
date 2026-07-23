@@ -21,31 +21,71 @@
 
 import { createHash } from 'node:crypto'
 import { db } from '@/lib/db'
+import { parseUa } from '@/lib/ua'
 
-export type TopPage = { path: string; views: number; visitors: number; avgDepth: number }
+export type TopPage = { path: string; views: number; visitors: number; avgDepth: number; avgDwellMs?: number }
 export type DailyPoint = { day: string; views: number; visitors: number }
 export type TopReferrer = { host: string; visitors: number }
 export type TopCountry = { country: string; visitors: number }
+export type ChannelStat = { channel: string; visitors: number }
+export type NameStat = { name: string; visitors: number } // device / browser / os facet
+export type DepthBucket = { bucket: number; samples: number } // 0 = 0-25% … 3 = 76-100%
 export type AnalyticsSummary = {
   totalViews: number
   uniqueVisitors: number
   avgReadDepth: number
   topPages: TopPage[]
   daily: DailyPoint[]
-  // Optional — present only once the analytics-deepening migration is applied
-  // (scripts/migrations/2026-06-25-analytics-deepening.sql). The UI hides each
-  // section until its data shows up, so pre-migration the page still works.
+  // Optional — present only once the analytics-deepening / v2 migrations are
+  // applied. The UI hides each section until its data shows up, so pre-migration
+  // the page still works.
   prevViews?: number
   prevVisitors?: number
   returningVisitors?: number
   topReferrers?: TopReferrer[]
   topCountries?: TopCountry[]
+  // v2 (2026-07-22-analytics-v2.sql): engagement, channels, audience facets.
+  avgDwellMs?: number
+  singlePageVisitors?: number
+  channels?: ChannelStat[]
+  devices?: NameStat[]
+  browsers?: NameStat[]
+  systems?: NameStat[]
+  depthBuckets?: DepthBucket[]
 }
 
+// One page's drill-down (analytics_page RPC). Empty on failure.
+export type PageSummary = {
+  path: string
+  totalViews: number
+  uniqueVisitors: number
+  avgReadDepth: number
+  avgDwellMs: number
+  prevViews?: number
+  prevVisitors?: number
+  daily: DailyPoint[]
+  topReferrers: TopReferrer[]
+  topCountries: TopCountry[]
+  depthBuckets: DepthBucket[]
+}
+
+export type Bucket = 'hour' | 'day' | 'week' | 'month'
+
 const EMPTY: AnalyticsSummary = { totalViews: 0, uniqueVisitors: 0, avgReadDepth: 0, topPages: [], daily: [] }
+const EMPTY_PAGE = (path: string): PageSummary => ({
+  path, totalViews: 0, uniqueVisitors: 0, avgReadDepth: 0, avgDwellMs: 0, daily: [], topReferrers: [], topCountries: [], depthBuckets: [],
+})
+
+// IANA zone the admin time buckets are truncated in (so "days" match local
+// midnight, not UTC). Set ANALYTICS_TZ per instance; defaults to UTC. Validated
+// loosely to keep a bad value from reaching Postgres as SQL.
+function reportTz(): string {
+  const tz = (process.env.ANALYTICS_TZ ?? '').trim()
+  return /^[A-Za-z0-9_+/-]{1,40}$/.test(tz) ? tz : 'UTC'
+}
 
 // Common crawlers / preview bots — don't count them as readers.
-const BOT_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|vkshare|whatsapp|telegram|discord|headless|lighthouse|pagespeed|gtmetrix|monitor|uptime|curl|wget|python-requests|axios|node-fetch/i
+const BOT_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|vkshare|whatsapp|telegram|discord|headless|lighthouse|pagespeed|gtmetrix|monitor|uptime|curl|wget|python-requests|axios|node-fetch|gptbot|oai-searchbot|chatgpt|claudebot|claude-web|anthropic|ccbot|perplexity|bytespider|amazonbot|google-extended|meta-external|scrapy|semrush|ahrefs|dataforseo/i
 
 export function isBot(ua: string): boolean {
   return !ua || BOT_RE.test(ua)
@@ -83,41 +123,53 @@ export async function recordView(
     const path = normalizePath(rawPath)
     if (!path) return
     const base = { path, visitor: visitorHash(ip, ua) }
-    // Try with the group-B columns; if they don't exist yet (pre-migration) the
+    const { device, browser, os } = parseUa(ua)
+    // Try with the extended columns; if they don't exist yet (pre-migration) the
     // insert errors, so we retry the base row — a view is never lost.
-    const { error } = await db()
-      .from('analytics_events')
-      .insert({ ...base, referrer_host: referrerHost || null, country: country || null })
+    const { error } = await db().from('analytics_events').insert({
+      ...base,
+      referrer_host: referrerHost || null,
+      country: country || null,
+      device,
+      browser,
+      os,
+    })
     if (error) await db().from('analytics_events').insert(base)
   } catch (error) {
     console.error(`[ERROR] analytics.recordView: ${(error as Error).message}`)
   }
 }
 
-// Record one scroll-depth sample (0–100, % of the page reached before leaving).
-export async function recordScroll(rawPath: string, depth: number, ip: string, ua: string): Promise<void> {
+// Record one scroll-depth sample (0–100, % of page reached before leaving) plus
+// an optional dwell time (ms on the page). Falls back to a dwell-less row if the
+// v2 column isn't there yet, so a sample is never lost pre-migration.
+export async function recordScroll(rawPath: string, depth: number, ip: string, ua: string, dwellMs?: number): Promise<void> {
   try {
     if (isBot(ua)) return
     const path = normalizePath(rawPath)
     if (!path) return
     const d = Math.max(0, Math.min(100, Math.round(depth)))
-    await db().from('analytics_scroll').insert({ path, depth: d, visitor: visitorHash(ip, ua) })
+    const base = { path, depth: d, visitor: visitorHash(ip, ua) }
+    const dwell = typeof dwellMs === 'number' && isFinite(dwellMs) ? Math.max(0, Math.min(86_400_000, Math.round(dwellMs))) : null
+    const { error } = await db().from('analytics_scroll').insert({ ...base, dwell_ms: dwell })
+    if (error) await db().from('analytics_scroll').insert(base)
   } catch (error) {
     console.error(`[ERROR] analytics.recordScroll: ${(error as Error).message}`)
   }
 }
 
 // Aggregated stats for the last `days` days. `bucket` controls the chart grain
-// ('hour' for the 24h view, 'day' otherwise). One RPC round-trip; empty on failure.
-export async function getAnalytics(days: number, bucket: 'hour' | 'day' = 'day'): Promise<AnalyticsSummary> {
+// (hour for 24h, day for a week/month, month for a year). One RPC round-trip;
+// empty on failure.
+export async function getAnalytics(days: number, bucket: Bucket = 'day', topN = 10): Promise<AnalyticsSummary> {
   try {
     const sinceMs = Date.now() - days * 86_400_000
     const since = new Date(sinceMs).toISOString()
     const prevSince = new Date(sinceMs - days * 86_400_000).toISOString() // the window just before `since`
-    // Try the extended RPC (trend + new/returning + referrers/countries); fall
-    // back to the base 3-arg shape if the deepening migration isn't applied yet.
-    let { data, error } = await db().rpc('analytics_summary', { since, top_n: 10, bucket, prev_since: prevSince })
-    if (error) ({ data, error } = await db().rpc('analytics_summary', { since, top_n: 10, bucket }))
+    // Try the v2 RPC (tz + engagement + channels + audience); fall back to the
+    // base shape if only the pre-v2 migration is applied.
+    let { data, error } = await db().rpc('analytics_summary', { since, top_n: topN, bucket, prev_since: prevSince, tz: reportTz() })
+    if (error) ({ data, error } = await db().rpc('analytics_summary', { since, top_n: topN, bucket }))
     if (error || !data) {
       if (error) console.error(`[ERROR] analytics.getAnalytics: ${error.message}`)
       return EMPTY
@@ -126,6 +178,25 @@ export async function getAnalytics(days: number, bucket: 'hour' | 'day' = 'day')
   } catch (error) {
     console.error(`[ERROR] analytics.getAnalytics: ${(error as Error).message}`)
     return EMPTY
+  }
+}
+
+// Per-page drill-down for the last `days` days (analytics_page RPC). Empty on
+// failure or when the v2 migration isn't applied yet.
+export async function getPageAnalytics(path: string, days: number, bucket: Bucket = 'day'): Promise<PageSummary> {
+  try {
+    const sinceMs = Date.now() - days * 86_400_000
+    const since = new Date(sinceMs).toISOString()
+    const prevSince = new Date(sinceMs - days * 86_400_000).toISOString()
+    const { data, error } = await db().rpc('analytics_page', { page_path: path, since, bucket, prev_since: prevSince, tz: reportTz() })
+    if (error || !data) {
+      if (error) console.error(`[ERROR] analytics.getPageAnalytics: ${error.message}`)
+      return EMPTY_PAGE(path)
+    }
+    return data as PageSummary
+  } catch (error) {
+    console.error(`[ERROR] analytics.getPageAnalytics: ${(error as Error).message}`)
+    return EMPTY_PAGE(path)
   }
 }
 
