@@ -4,14 +4,15 @@
 
 - **Library (Images) is calmer and more usable.** New toolbar: total **count + size**, a **name
   search**, and a **sort** (newest / name / size). Each tile keeps the info you wanted — `dims · size
-  · date` — but the date is now compact and the whole line is one tidy row; the per-tile copy /
-  download / delete actions reveal on hover (always shown on touch) so the grid reads clean by
-  default. The three Library tabs now use the shared kit `Tabs` (was a one-off inline copy).
+  · date` on one tidy row with a compact date — and the per-tile copy / download / delete actions now
+  **overlay the thumbnail** (revealed on hover, always shown on touch) so they cost **zero layout
+  height** and the grid reads clean. The grid is 5-across at desktop (was 6) so the caption fits
+  without truncating. The three Library tabs use the shared kit `Tabs` (was a one-off inline copy).
 - **Settings reorganized for clearer grouping.** WordPress **import moved out of Integrations** into
-  **Content** (it's a one-time content tool, not an integration), so Integrations is now purely
-  external services (Backup, MCP, Cloudflare). **SEO** is full-width (a lone card no longer sits in a
-  half-empty two-column row). **Appearance** is regrouped: palette on the left, the type stack (font
-  / typography / rendering) on the right, and the wide **custom-CSS** editor full-width below.
+  **Content** (a one-time content tool, not an integration), so Integrations is now purely external
+  services (Backup, MCP, Cloudflare). **Appearance** is two balanced columns — palette + custom CSS on
+  the left, the type stack (font / typography / rendering) on the right — and **SEO** is full-width.
+  Nothing stretches a narrow form across a lone full-width row.
 - No behaviour or data changes — pure admin layout/UX; all settings and library actions work exactly
   as before.
 
