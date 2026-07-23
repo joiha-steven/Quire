@@ -45,7 +45,8 @@ export function Pagination({
 }) {
   if (totalPages <= 1) return null
   const label = t(lang).pageLabel
-  const base = 'min-w-9 rounded-lg px-3 py-1.5 text-center t-small'
+  // >=44px tap target (WCAG 2.5.8): min size + centered content.
+  const base = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-3 text-center t-small'
 
   return (
     <nav className="mt-12 flex flex-wrap items-center justify-center gap-1.5" aria-label="Pagination">

@@ -7,6 +7,7 @@ const zh = {
   categoryLabel: '分类',
   tagLabel: '标签',
   pageLabel: '页',
+  skipToContent: '跳到内容',
   menu: '菜单',
   gridView: '网格视图',
   listView: '列表视图',

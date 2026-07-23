@@ -7,6 +7,7 @@ const ko = {
   categoryLabel: '카테고리',
   tagLabel: '태그',
   pageLabel: '페이지',
+  skipToContent: '본문으로 건너뛰기',
   menu: '메뉴',
   gridView: '그리드 보기',
   listView: '목록 보기',

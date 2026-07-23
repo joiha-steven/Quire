@@ -7,6 +7,7 @@ const ja = {
   categoryLabel: 'カテゴリー',
   tagLabel: 'タグ',
   pageLabel: 'ページ',
+  skipToContent: '本文へスキップ',
   menu: 'メニュー',
   gridView: 'グリッド表示',
   listView: 'リスト表示',

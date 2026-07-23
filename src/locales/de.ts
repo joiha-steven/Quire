@@ -7,6 +7,7 @@ const de = {
   categoryLabel: 'Kategorie',
   tagLabel: 'Schlagwort',
   pageLabel: 'Seite',
+  skipToContent: 'Zum Inhalt springen',
   menu: 'Menü',
   gridView: 'Rasteransicht',
   listView: 'Listenansicht',

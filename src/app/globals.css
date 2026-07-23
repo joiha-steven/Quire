@@ -165,7 +165,7 @@ body { font-optical-sizing: auto; }
   --c-bg: #fbfbfa;
   --c-text: #26262b;
   --c-heading: #14141a;
-  --c-meta: #8a8a90;
+  --c-meta: #6a6a70; /* AA on --c-bg (>=4.5:1) — secondary text: dates, captions, excerpts */
   --c-link: #14141a;
   --c-accent: #14141a;
   --c-rule: #e9e9e4;
@@ -212,15 +212,61 @@ body { font-optical-sizing: auto; }
 }
 
 /* Public reading chrome stays square. Admin is deliberately excluded: its app-like
-   controls use the radii declared by the shared UI kit and Tailwind utilities. */
-*:not(.admin-shell *),
-*:not(.admin-shell *)::before,
-*:not(.admin-shell *)::after {
+   controls use the radii declared by the shared UI kit and Tailwind utilities.
+   `[data-round]` opts a public element back out (media-viewer controls that must be
+   circular, e.g. the lightbox buttons). */
+*:not(.admin-shell *):not([data-round]),
+*:not(.admin-shell *):not([data-round])::before,
+*:not(.admin-shell *):not([data-round])::after {
   border-radius: 0 !important;
 }
 input[type='radio'],
 input[type='checkbox'] {
   border-radius: revert !important;
+}
+
+/* One visible keyboard focus ring everywhere (WCAG 2.4.7). Uses the accent token so
+   it reads on any palette; inputs that set `outline-none` must supply their own. */
+:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+/* Skip link: hidden until focused, then pinned top-left so keyboard/screen-reader
+   users can jump past the header controls (WCAG 2.4.1). */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 0.875rem;
+  background: var(--c-heading);
+  color: var(--c-bg);
+  font-size: var(--fs-small);
+  transform: translateY(-150%);
+  transition: transform var(--dur-fast) var(--ease);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* Clean print/PDF: drop the chrome, force black-on-white readable type. */
+@media print {
+  header,
+  footer,
+  .with-rail > :not(main),
+  .skip-link {
+    display: none !important;
+  }
+  main {
+    padding-top: 0 !important;
+  }
+  :root {
+    --c-bg: #fff;
+    --c-text: #000;
+    --c-heading: #000;
+    --c-meta: #333;
+  }
 }
 
 :where(.dark) {

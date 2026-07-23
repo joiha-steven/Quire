@@ -9,6 +9,7 @@ export type Dict = {
   tagLabel: string
   pageLabel: string
   menu: string
+  skipToContent: string
   gridView: string
   listView: string
   palette: string
@@ -455,6 +456,10 @@ export type AdminStrings = {
   seoFallbackLabel: string
   // time machine
   timeMachine: string
+  unsaved: string
+  attributes: string
+  hideAttributes: string
+  history: string
   tmIntro: string
   restore: string
   tmLatest: string

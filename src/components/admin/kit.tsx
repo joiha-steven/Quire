@@ -144,7 +144,7 @@ export function StatCard({
         {icon && <span className="text-neutral-300 dark:text-neutral-600">{icon}</span>}
       </div>
       <div className="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">{label}</div>
-      {sub && <div className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{sub}</div>}
+      {sub && <div className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{sub}</div>}
     </>
   )
   if (href) {
@@ -175,7 +175,7 @@ export function EmptyState({
     <div className={`flex flex-col items-center justify-center px-6 py-16 text-center ${className}`}>
       {icon && <div className="mb-3 text-neutral-300 dark:text-neutral-600">{icon}</div>}
       <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-neutral-400 dark:text-neutral-500">{description}</p>}
+      {description && <p className="mt-1 max-w-sm text-sm text-neutral-500 dark:text-neutral-400">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )

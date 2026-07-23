@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-07-23 — accessibility pass (batch 2)
+
+Audit-driven a11y + polish across the reader and admin (no feature change):
+
+- **Contrast:** secondary text (`--c-meta`) darkened to meet WCAG AA in light mode
+  (dates, captions, excerpts, ToC, pagination); admin helper text likewise.
+- **Keyboard focus:** one visible `:focus-visible` ring site-wide; comment fields no
+  longer strip their outline.
+- **Skip link:** a localized "skip to content" jump (all 6 languages) + `<main id>` so
+  keyboard/screen-reader users bypass the header controls.
+- **Headings:** a body `#` is demoted to `<h2>` so the post title stays the only `<h1>`
+  (fixes the outline / duplicate-h1).
+- **Comment form:** every field now has an accessible label (`aria-label`).
+- **Lightbox:** its round controls render round again (they were squared by the global
+  sharp-corner reset); pagination tap targets meet the 44px minimum.
+- **Print:** a clean print/PDF stylesheet (drops chrome, black-on-white type).
+- **i18n:** the last hardcoded Vietnamese strings in the editor chrome moved to locales.
+
 ## 2026-07-23 — pre-SaaS hardening (batch 1): safer restore + robustness
 
 Foundational fixes from the pre-SaaS audit (no user-facing behaviour change):
