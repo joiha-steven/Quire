@@ -30,6 +30,26 @@ describe('videoEmbed', () => {
 
   it('returns null for a non-video URL', () => {
     expect(videoEmbed('https://example.com/article')).toBeNull()
+  })
+
+  it('embeds a Spotify track/album/playlist', () => {
+    expect(videoEmbed('https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT')).toEqual({
+      kind: 'spotify',
+      embed: 'https://open.spotify.com/embed/track/4cOdK2wGLETKBW3PvgPWqT',
+    })
+    expect(videoEmbed('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M')?.embed).toBe(
+      'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M',
+    )
+  })
+
+  it('embeds an Apple Music album on the embed host', () => {
+    expect(videoEmbed('https://music.apple.com/us/album/1989-taylors-version/1713845538')?.embed).toBe(
+      'https://embed.music.apple.com/us/album/1989-taylors-version/1713845538',
+    )
+  })
+
+  it('rejects an Apple Music URL with a quote (iframe-src breakout guard)', () => {
+    expect(videoEmbed('https://music.apple.com/us/album/x"onerror=1/1')).toBeNull()
     expect(isVideoUrl('https://example.com/article')).toBe(false)
   })
 })

@@ -4,6 +4,7 @@ import { marked, type Tokens } from 'marked'
 import { videoEmbed, videoFileUrl } from '@/lib/video'
 import { collapseBlob } from '@/lib/blob'
 import { highlightCode } from '@/lib/highlight'
+import { prepareFootnotes, applyFootnotes } from '@/lib/footnotes'
 import { slugify } from '@/lib/utils'
 
 const escapeHtml = (s: string) =>
@@ -191,6 +192,9 @@ function buildVideos(html: string): string {
       }
       const v = videoEmbed(url)
       if (!v) return whole
+      // Spotify / Apple Music are audio players — a short fixed-height frame, not 16:9.
+      if (v.kind === 'spotify' || v.kind === 'applemusic')
+        return `<div class="audio-embed"><iframe src="${v.embed}" loading="lazy" allow="encrypted-media; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
       return `<div class="video-embed${wide}"><iframe src="${v.embed}" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
     },
   )
@@ -208,7 +212,10 @@ export async function PostContent({
   // Intrinsic width/height per collapsed pathname (for CLS-free rendering).
   imageDims?: ImageDims
 }) {
-  const parsed = dedupeHeadingIds(buildVideos(groupGalleries(buildFigures(buildCallouts(await marked.parse(markdown)), readyOriginals, imageDims))))
-  const html = await highlightBlocks(parsed)
+  // Pull footnote refs/defs out of the markdown FIRST (references become placeholders
+  // that survive marked), then re-insert the <sup> links + list after rendering.
+  const fn = prepareFootnotes(markdown)
+  const parsed = dedupeHeadingIds(buildVideos(groupGalleries(buildFigures(buildCallouts(await marked.parse(fn.markdown)), readyOriginals, imageDims))))
+  const html = applyFootnotes(await highlightBlocks(parsed), fn.refs, fn.defs)
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }

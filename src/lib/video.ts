@@ -2,7 +2,10 @@
 // embed URL. Videos are stored in content as a plain URL on its own line, so the
 // blog stays 100% Markdown; the renderer turns known URLs into responsive
 // embeds. Shared by the public renderer and the editor's Video node.
-export type VideoKind = 'youtube' | 'vimeo' | 'tiktok'
+// Video kinds size to a 16:9 frame; 'spotify'/'applemusic' are AUDIO players sized to a
+// short fixed-height frame instead (see PostContent `audio-embed`). All are plain
+// <iframe> embeds (no third-party widget script), like the video ones.
+export type VideoKind = 'youtube' | 'vimeo' | 'tiktok' | 'spotify' | 'applemusic'
 
 export function videoEmbed(url: string): { kind: VideoKind; embed: string } | null {
   const u = url.trim()
@@ -13,6 +16,13 @@ export function videoEmbed(url: string): { kind: VideoKind; embed: string } | nu
     return { kind: 'vimeo', embed: `https://player.vimeo.com/video/${m[1]}` }
   if ((m = u.match(/tiktok\.com\/.*\/video\/(\d+)/)))
     return { kind: 'tiktok', embed: `https://www.tiktok.com/embed/v2/${m[1]}` }
+  // Spotify track/album/playlist/episode/show → the official /embed player.
+  if ((m = u.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/)))
+    return { kind: 'spotify', embed: `https://open.spotify.com/embed/${m[1]}/${m[2]}` }
+  // Apple Music: the embed host mirrors the public path. Only allow the known content
+  // types + a quote-free path so the URL can't break out of the iframe src attribute.
+  if ((m = u.match(/^https?:\/\/music\.apple\.com\/([a-z]{2}\/(?:album|playlist|song|music-video)\/[^"'\s]+)$/i)))
+    return { kind: 'applemusic', embed: `https://embed.music.apple.com/${m[1]}` }
   return null
 }
 

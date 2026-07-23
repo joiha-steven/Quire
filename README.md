@@ -1,6 +1,6 @@
 <div align="center">
 
-# **quire**blog &nbsp;`v1.4.23`
+# **quire**blog &nbsp;`v1.4.24`
 
 **An AI-operated personal blog platform. Self-hosted, no cloud lock-in.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -37,7 +37,7 @@ All the writing happens in a polished `/admin` (or over MCP). Text lives in **Po
 
 | Area | What you get |
 |:---|:---|
-| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · sticky one-row toolbar · optional typewriter caret + key feedback · drag-drop / paste image upload (JPG · PNG · WebP · AVIF · GIF · SVG) with responsive `sharp` variants (original + AVIF/WebP) · captioned figures (left/center/right, column / large / full-bleed / gallery grid) · tables · video embeds · callouts (`> [!NOTE]`) · copy-code button · 3-version time machine · offline local autosave · one-click draft preview · scheduled publishing (future date → live on time) |
+| 🖋️&nbsp;**Editor** | TipTap 3 + Markdown · sticky one-row toolbar · optional typewriter caret + key feedback · drag-drop / paste image upload (JPG · PNG · WebP · AVIF · GIF · SVG) with responsive `sharp` variants (original + AVIF/WebP) · captioned figures (left/center/right, column / large / full-bleed / gallery grid) · tables · video · Spotify · Apple Music embeds · footnotes (`[^1]`) · callouts (`> [!NOTE]`) · copy-code button · 3-version time machine · offline local autosave · one-click draft preview · scheduled publishing (future date → live on time) |
 | 🎨&nbsp;**Look** | a calm, editorial admin · 6 customizable light+dark palettes (+ an accent) · one tunable type system (per-role size/leading/tracking, no hardcoded sizes) · four built-in reading fonts (or upload a custom font per weight), scoped to reading text |
 | 🌍&nbsp;**i18n** | Admin + site in `en · vi · de · ja · zh · ko` |
 | 🔍&nbsp;**Reading** | instant local + Postgres full-text search · a left sidebar rail (categories + tags, or a post's ToC) · related posts · reading time · progress bar · full-bleed images on mobile |
