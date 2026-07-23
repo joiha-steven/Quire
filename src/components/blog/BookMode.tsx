@@ -34,12 +34,24 @@ function spreadWidth(): number {
 export function BookMode({ title, lang }: { title: string; lang: SiteLang }) {
   const tx = t(lang)
   const [open, setOpen] = useState(false)
+  // `#read` drives the reader, so it's a real, shareable link: /slug#read opens book mode on
+  // load, the toggle is a plain <a href="#read">, and Back closes it (the hash leaves history).
+  useEffect(() => {
+    const sync = () => setOpen(window.location.hash === '#read')
+    sync()
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+  const close = useCallback(() => {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    setOpen(false)
+  }, [])
   return (
     <>
-      <button type="button" className="book-mode-toggle" onClick={() => setOpen(true)}>
+      <a className="book-mode-toggle" href="#read">
         {tx.bookMode}
-      </button>
-      {open && <BookReader title={title} tx={tx} onClose={() => setOpen(false)} />}
+      </a>
+      {open && <BookReader title={title} tx={tx} onClose={close} />}
     </>
   )
 }
@@ -79,10 +91,13 @@ function BookReader({
   // Clone the rendered post body into the flow once, force-eager its images (they sit off-
   // screen in later columns, so lazy-load would never fire), then measure.
   useEffect(() => {
-    const flow = flowRef.current
     const src = document.getElementById('post-body')
+    const flow = flowRef.current
     if (!flow || !src) return
-    flow.innerHTML = src.innerHTML
+    // Clone the INNER .prose content (not #post-body's wrapper) so the flow has ONE .prose
+    // level — its first child is the real first paragraph, so the top-margin reset + drop cap
+    // land on it and the first column opens flush with the second.
+    flow.innerHTML = (src.querySelector('.prose') ?? src).innerHTML
     flow.querySelectorAll('img').forEach((img) => {
       img.loading = 'eager'
       img.removeAttribute('fetchpriority')

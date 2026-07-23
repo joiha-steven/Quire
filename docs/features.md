@@ -293,7 +293,11 @@
 - **Not the Fullscreen API.** A fixed overlay (`.book-overlay`, `body.book-open` locks scroll)
   covers the viewport, so **desktop and iPad behave identically** and there are no Safari
   fullscreen quirks. Hidden below the iPad width (`@media (max-width: 767px)`), so mobile never
-  shows it.
+  shows it. **Always sepia** — the overlay overrides the theme colour tokens to a warm-paper
+  palette regardless of the site theme / dark mode; closing restores the page's own tokens.
+- **`#read` deep link.** The reader is driven by the URL hash: the toggle is a real
+  `<a href="#read">`, `…/slug#read` opens book mode on load, and Back closes it (the hash sits in
+  history). ESC / ✕ `replaceState` the hash away. A **drop cap** opens the first paragraph.
 - **How it paginates:** the reader **clones** the already-rendered `#post-body` markup (Shiki
   highlight, images, footnotes intact — no re-render, cloned images forced `loading=eager`
   since later columns sit off-screen), flows it into a CSS `column-width` element sized so the
