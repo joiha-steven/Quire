@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode: single paper background (v1.4.36)
+
+- Dropped the floating page-sheet-on-desk look: book mode is now ONE flat warm-paper
+  background across the whole reader (no two-tone surface, no sheet shadow).
+- Paper grain is baked into that single background (desaturated fractal noise, multiplied)
+  and dialled up a touch so the texture reads more clearly.
+
 ## 2026-07-23 — book mode split out + excerpt-tracking fix (v1.4.35)
 
 - **Fix — cramped post-card excerpts:** the mono-chrome letter-spacing nudge
