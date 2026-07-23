@@ -38,6 +38,8 @@ export type Dict = {
   seriesNext: string
   emptySeries: string
   updatedPrefix: string
+  copyCode: string
+  copiedCode: string
   notFoundTitle: string
   notFoundText: string
   errorTitle: string

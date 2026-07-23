@@ -37,6 +37,8 @@ const zh = {
   seriesNext: '下一篇',
   emptySeries: '该系列还没有文章。',
   updatedPrefix: '更新于',
+  copyCode: '复制',
+  copiedCode: '已复制',
   notFoundTitle: '页面未找到',
   notFoundText: '您查找的页面不存在或已被移动。',
   errorTitle: '出错了',

@@ -37,6 +37,8 @@ const en = {
   seriesNext: 'Next',
   emptySeries: 'No posts in this series yet.',
   updatedPrefix: 'Updated',
+  copyCode: 'Copy',
+  copiedCode: 'Copied',
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',
   errorTitle: 'Something went wrong',

@@ -37,6 +37,8 @@ const ko = {
   seriesNext: '다음',
   emptySeries: '이 시리즈에는 아직 글이 없습니다.',
   updatedPrefix: '수정',
+  copyCode: '복사',
+  copiedCode: '복사됨',
   notFoundTitle: '페이지를 찾을 수 없습니다',
   notFoundText: '찾으시는 페이지가 존재하지 않거나 이동되었습니다.',
   errorTitle: '문제가 발생했습니다',

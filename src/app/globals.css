@@ -710,6 +710,42 @@ html[data-list='grid'] .tl-feed article {
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
 }
+/* Callouts (a `> [!NOTE]` blockquote): monochrome — an accent left-border + a bold
+   label carry the meaning, so it stays on the palette (no semantic colours). */
+.prose .callout {
+  border-left: 3px solid var(--c-accent);
+  background: var(--c-rule);
+  padding: 0.7em 1.1em;
+  margin: 1.5em 0;
+}
+.prose .callout > :first-child { margin-top: 0; }
+.prose .callout > :last-child { margin-bottom: 0; }
+.prose .callout-label {
+  font-weight: 600;
+  color: var(--c-heading);
+  font-size: var(--fs-small);
+  margin-bottom: 0.25em;
+}
+/* Copy button attached to each code block by the CodeCopy island. Revealed on hover
+   (always shown on touch). Positioned against the <pre> box. */
+.prose pre { position: relative; }
+.code-copy {
+  position: absolute;
+  top: 0.4em;
+  right: 0.4em;
+  font-size: var(--fs-small);
+  line-height: 1;
+  color: var(--c-meta);
+  background: var(--c-bg);
+  border: 1px solid var(--c-rule);
+  padding: 0.25em 0.55em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.prose pre:hover .code-copy { opacity: 1; }
+.code-copy:hover { color: var(--c-heading); }
+@media (hover: none) { .code-copy { opacity: 1; } }
 .prose code {
   /* One typeface site-wide: code reuses the site font (no separate monospace
      family), only a touch smaller. Owner rule: a single font for everything. */

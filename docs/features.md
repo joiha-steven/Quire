@@ -185,6 +185,19 @@
   (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
   a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
 
+## Callouts + copy-code — `PostContent.tsx` (`buildCallouts`), `CodeCopy.tsx`
+
+- **Callouts:** write a blockquote whose first line is `[!NOTE]` / `[!TIP]` / `[!WARNING]` /
+  `[!IMPORTANT]` / `[!CAUTION]`. `buildCallouts` (a post-process on marked's HTML) rewrites it to
+  `<div class="callout callout-<type>">` with a bold label; an unknown `[!FOO]` or a plain quote
+  is untouched. Styling is monochrome (accent left-border + label) to stay on the palette — no
+  semantic colours. CSS in `globals.css` (`.callout`, `.callout-label`).
+- **Copy-code:** the `CodeCopy` client island (mounted on the post/page when the body has a code
+  fence) attaches a "Copy" button to every `.prose pre` on mount (Shiki renders the code
+  server-side, so the button is added client-side; idempotent across client navigations).
+- **Deferred:** footnotes (the renderer escapes raw HTML → needs a `marked` extension) and X /
+  Instagram / gist embeds (need third-party widget scripts + CSP allowances).
+
 ## Per-post SEO + cover + dateModified — `posts` columns, `[slug]/page.tsx`, `JsonLd.tsx`
 
 - **`meta_title` / `meta_description`** override the `<title>`, meta description, and OG/Twitter

@@ -64,6 +64,28 @@ marked.use({
   },
 })
 
+// GFM-style callouts: a blockquote whose first line is `[!NOTE]` (TIP/WARNING/
+// IMPORTANT/CAUTION) becomes a labelled callout box. Monochrome by design (an accent
+// left-border + a bold label — the label carries the meaning), matching the calm
+// palette. The non-greedy blockquote match doesn't handle a nested blockquote inside a
+// callout (rare); such a case is left as a plain blockquote.
+const CALLOUT_LABELS: Record<string, string> = {
+  note: 'Note', tip: 'Tip', warning: 'Warning', important: 'Important', caution: 'Caution',
+}
+function buildCallouts(html: string): string {
+  return html.replace(/<blockquote>\s*([\s\S]*?)<\/blockquote>/g, (whole, inner: string) => {
+    const m = inner.match(/^\s*<p>\s*\[!(\w+)\]/i)
+    if (!m) return whole
+    const type = m[1].toLowerCase()
+    const label = CALLOUT_LABELS[type]
+    if (!label) return whole
+    const body = inner
+      .replace(/^\s*<p>\s*\[!\w+\]\s*(?:<br\s*\/?>\s*)?/i, '<p>') // drop the marker
+      .replace(/^\s*<p>\s*<\/p>\s*/, '') // and an empty leading paragraph (title on its own line)
+    return `<div class="callout callout-${type}"><p class="callout-label">${label}</p>${body}</div>`
+  })
+}
+
 // 2nd occurrence of a slug → `slug-2`, etc. MUST match extractHeadings' counter
 // (both walk H2/H3 in document order) or the ToC anchors break.
 function dedupeHeadingIds(html: string): string {
@@ -186,7 +208,7 @@ export async function PostContent({
   // Intrinsic width/height per collapsed pathname (for CLS-free rendering).
   imageDims?: ImageDims
 }) {
-  const parsed = dedupeHeadingIds(buildVideos(groupGalleries(buildFigures(await marked.parse(markdown), readyOriginals, imageDims))))
+  const parsed = dedupeHeadingIds(buildVideos(groupGalleries(buildFigures(buildCallouts(await marked.parse(markdown)), readyOriginals, imageDims))))
   const html = await highlightBlocks(parsed)
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 }

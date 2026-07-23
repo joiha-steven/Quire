@@ -37,6 +37,8 @@ const ja = {
   seriesNext: '次へ',
   emptySeries: 'このシリーズにはまだ記事がありません。',
   updatedPrefix: '更新',
+  copyCode: 'コピー',
+  copiedCode: 'コピーしました',
   notFoundTitle: 'ページが見つかりません',
   notFoundText: 'お探しのページは存在しないか、移動されました。',
   errorTitle: '問題が発生しました',
