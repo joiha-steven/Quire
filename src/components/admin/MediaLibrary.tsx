@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/Toast'
 import { formatBytes } from '@/lib/utils'
 import { formatDate } from '@/lib/i18n'
 import { ImageUploader } from './ImageUploader'
+import { MediaToolbar, type MediaSort } from './MediaToolbar'
 import { useAdminT, useAdminLang } from './I18nProvider'
 
 type Props = {
@@ -24,6 +25,15 @@ type Props = {
 
 const PAGE = 50 // render this many, then load more on scroll (keeps it light)
 
+// Compact numeric date (e.g. 22/07/26) — keeps the metadata line to one tidy row.
+function compactDate(iso: string, lang: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: '2-digit' })
+  } catch {
+    return ''
+  }
+}
+
 export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectMany, onClose }: Props) {
   const t = useAdminT()
   const lang = useAdminLang()
@@ -33,6 +43,8 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
   const [zoom, setZoom] = useState<MediaItem | null>(null)
   const [visible, setVisible] = useState(PAGE)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<MediaSort>('new')
   const sentinel = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -168,14 +180,26 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
     }
   }
 
-  const filtered = onlyUnused && unused ? items.filter((m) => unused.has(m.url)) : items
+  // Compose the visible list: unused filter → name search → sort. Total count +
+  // size (below) are over the whole library, not the filtered view.
+  const q = query.trim().toLowerCase()
+  const view = [...(onlyUnused && unused ? items.filter((m) => unused.has(m.url)) : items)]
+    .filter((m) => !q || m.filename.toLowerCase().includes(q))
+    .sort((a, b) =>
+      sort === 'name'
+        ? a.filename.localeCompare(b.filename)
+        : sort === 'size'
+          ? b.size - a.size
+          : +new Date(b.uploadedAt) - +new Date(a.uploadedAt),
+    )
+  const totalSize = items.reduce((n, m) => n + (m.size || 0), 0)
   const grid = (
     <>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-        {filtered.slice(0, visible).map((m) => (
+        {view.slice(0, visible).map((m) => (
           <figure
             key={m.url}
-            className={`relative overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 ${
+            className={`group relative overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 ${
               (mode === 'page' || multi) && selected.has(m.url)
                 ? 'border-neutral-900 ring-2 ring-neutral-900 dark:border-white dark:ring-white'
                 : 'border-neutral-200 dark:border-neutral-800'
@@ -208,12 +232,14 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
               <p className="truncate font-medium text-neutral-700 dark:text-neutral-300" title={m.filename}>
                 {m.filename}
               </p>
-              <p className="text-neutral-400">
+              <p className="truncate text-neutral-400" title={`${m.width && m.height ? `${m.width}×${m.height} · ` : ''}${formatBytes(m.size)} · ${formatDate(m.uploadedAt, lang)}`}>
                 {m.width && m.height ? `${m.width}×${m.height} · ` : ''}
-                {formatBytes(m.size)} · {formatDate(m.uploadedAt, lang)}
+                {formatBytes(m.size)} · {compactDate(m.uploadedAt, lang)}
               </p>
+              {/* Actions stay out of the way: always visible on touch, revealed on
+                  hover/focus at ≥sm so the default grid reads clean. */}
               {mode === 'page' && (
-                <div className="flex flex-wrap gap-3 pt-1">
+                <div className="flex flex-wrap gap-3 pt-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                   <button onClick={() => copyUrl(m.url)} className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
                     {t.copyUrl}
                   </button>
@@ -229,13 +255,26 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
           </figure>
         ))}
       </div>
-      {visible < filtered.length && <div ref={sentinel} className="h-10" />}
+      {visible < view.length && <div ref={sentinel} className="h-10" />}
     </>
   )
 
   const body = (
     <div className="space-y-5">
       <ImageUploader onUploaded={(uploaded) => setItems((prev) => [...uploaded, ...prev])} />
+      {mode === 'page' && items.length > 0 && (
+        <MediaToolbar
+          count={items.length}
+          totalSize={totalSize}
+          query={query}
+          onQuery={(v) => {
+            setQuery(v)
+            setVisible(PAGE)
+          }}
+          sort={sort}
+          onSort={setSort}
+        />
+      )}
       {mode === 'page' && items.length > 0 && (
         <div className="flex flex-wrap justify-end gap-4">
           {selected.size > 0 && (
@@ -289,6 +328,8 @@ export function MediaLibrary({ mode = 'page', multi = false, onSelect, onSelectM
         <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.loading}</p>
       ) : items.length === 0 ? (
         <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.noMedia}</p>
+      ) : view.length === 0 ? (
+        <p className="py-10 text-center text-neutral-400 dark:text-neutral-500">{t.mediaNoMatch}</p>
       ) : (
         grid
       )}

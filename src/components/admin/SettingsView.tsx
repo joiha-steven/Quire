@@ -102,28 +102,34 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
         </div>
       )}
 
-      {/* Content: reading features + reader comments. */}
+      {/* Content: reading features + reader comments + WordPress import. */}
       {tab === 'content' && (
-        <div className="grid items-start gap-5 xl:grid-cols-2">
-          <Card title={t.cardFeatures}>
-            <FeatureFields
-              features={s.features}
-              onChange={(features) => update({ features })}
-              relatedCount={s.relatedCount}
-              onRelatedCount={(relatedCount) => update({ relatedCount })}
-            />
-          </Card>
-          <Card title={t.cardComments}>
-            <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
-            <CommentKeys comments={s.comments} env={commentEnv} />
+        <div className="space-y-5">
+          <div className="grid items-start gap-5 xl:grid-cols-2">
+            <Card title={t.cardFeatures}>
+              <FeatureFields
+                features={s.features}
+                onChange={(features) => update({ features })}
+                relatedCount={s.relatedCount}
+                onRelatedCount={(relatedCount) => update({ relatedCount })}
+              />
+            </Card>
+            <Card title={t.cardComments}>
+              <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
+              <CommentKeys comments={s.comments} env={commentEnv} />
+            </Card>
+          </div>
+          <Card title={t.cardImport}>
+            <ImportFields />
           </Card>
         </div>
       )}
 
-      {/* Appearance: theme colours, font, type scale, rendering, custom CSS. */}
+      {/* Appearance: theme colours on the left, the type stack on the right, then
+          custom CSS full-width so the wide editor isn't crammed in a column. */}
       {tab === 'appearance' && (
-        <div className="grid items-start gap-5 xl:grid-cols-2">
-          <div className="space-y-6">
+        <div className="space-y-5">
+          <div className="grid items-start gap-5 xl:grid-cols-2">
             <Card title={t.navAppearance}>
               {/* Palette selection now lives on the PUBLIC site only — the admin
                   chrome just toggles light/dark. This sets the site's default + which
@@ -141,57 +147,58 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
                 onChangeEnabled={(enabledPalettes) => update({ enabledPalettes })}
               />
             </Card>
-          </div>
-          <div className="space-y-6">
-            <Card title={t.cardFont}>
-              <FontFields
-                value={s.fontPreset}
-                onChange={(fontPreset, typography) => update({ fontPreset, typography })}
-                chromeFont={s.chromeFont}
-                onChromeFont={(chromeFont) => update({ chromeFont })}
-              />
-              <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-                <FontUpload value={s.customFont} onChange={(customFont) => update({ customFont })} />
-              </div>
-            </Card>
-            <Card title={t.cardTypography}>
-              <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
-            </Card>
-            <Card title={t.cardRendering}>
-              <AdvancedFields
-                typography={s.typography}
-                onTypography={(typography) => update({ typography })}
-                motion={s.motion}
-                onMotion={(motion) => update({ motion })}
-              />
-            </Card>
-            <Card title={t.customCss}>
-              <div className="space-y-1.5">
-                <textarea
-                  value={s.customCss}
-                  onChange={(e) => update({ customCss: e.target.value })}
-                  rows={10}
-                  spellCheck={false}
-                  placeholder={'.prose h2 { letter-spacing: -0.01em }'}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            <div className="space-y-5">
+              <Card title={t.cardFont}>
+                <FontFields
+                  value={s.fontPreset}
+                  onChange={(fontPreset, typography) => update({ fontPreset, typography })}
+                  chromeFont={s.chromeFont}
+                  onChromeFont={(chromeFont) => update({ chromeFont })}
                 />
-                <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
-              </div>
-            </Card>
+                <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                  <FontUpload value={s.customFont} onChange={(customFont) => update({ customFont })} />
+                </div>
+              </Card>
+              <Card title={t.cardTypography}>
+                <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
+              </Card>
+              <Card title={t.cardRendering}>
+                <AdvancedFields
+                  typography={s.typography}
+                  onTypography={(typography) => update({ typography })}
+                  motion={s.motion}
+                  onMotion={(motion) => update({ motion })}
+                />
+              </Card>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* SEO: search + social metadata. */}
-      {tab === 'seo' && (
-        <div className="grid items-start gap-5 xl:grid-cols-2">
-          <Card title="SEO">
-            <SeoFields s={s} update={update} />
+          <Card title={t.customCss}>
+            <div className="space-y-1.5">
+              <textarea
+                value={s.customCss}
+                onChange={(e) => update({ customCss: e.target.value })}
+                rows={8}
+                spellCheck={false}
+                placeholder={'.prose h2 { letter-spacing: -0.01em }'}
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+              />
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.customCssHint}</p>
+            </div>
           </Card>
         </div>
       )}
 
-      {/* Integrations: Google Drive backups + MCP server + Cloudflare cache purge. */}
+      {/* SEO: search + social metadata. Full-width — a single card in a 2-col grid
+          left half the row empty. */}
+      {tab === 'seo' && (
+        <Card title="SEO">
+          <SeoFields s={s} update={update} />
+        </Card>
+      )}
+
+      {/* Integrations: external services only — Google Drive backups + MCP server +
+          Cloudflare cache purge. (WordPress import moved to Content — it's a one-time
+          tool, not an integration.) */}
       {tab === 'integrations' && (
         <div className="grid items-start gap-5 xl:grid-cols-2">
           <Card title={t.backupTitle}>
@@ -202,9 +209,6 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           </Card>
           <Card title={t.cardCloudflare}>
             <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
-          </Card>
-          <Card title={t.cardImport}>
-            <ImportFields />
           </Card>
         </div>
       )}

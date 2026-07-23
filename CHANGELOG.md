@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-07-23 — admin Library + Settings declutter
+
+- **Library (Images) is calmer and more usable.** New toolbar: total **count + size**, a **name
+  search**, and a **sort** (newest / name / size). Each tile keeps the info you wanted — `dims · size
+  · date` — but the date is now compact and the whole line is one tidy row; the per-tile copy /
+  download / delete actions reveal on hover (always shown on touch) so the grid reads clean by
+  default. The three Library tabs now use the shared kit `Tabs` (was a one-off inline copy).
+- **Settings reorganized for clearer grouping.** WordPress **import moved out of Integrations** into
+  **Content** (it's a one-time content tool, not an integration), so Integrations is now purely
+  external services (Backup, MCP, Cloudflare). **SEO** is full-width (a lone card no longer sits in a
+  half-empty two-column row). **Appearance** is regrouped: palette on the left, the type stack (font
+  / typography / rendering) on the right, and the wide **custom-CSS** editor full-width below.
+- No behaviour or data changes — pure admin layout/UX; all settings and library actions work exactly
+  as before.
+
 ## 2026-07-22 — analytics v2: engagement, audience, sources, per-page drill-down
 
 - **Much deeper Analytics.** The overview now shows five headline metrics — views, visitors
