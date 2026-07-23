@@ -7,6 +7,7 @@ const en = {
   categoryLabel: 'Category',
   tagLabel: 'Tag',
   pageLabel: 'Page',
+  skipToContent: 'Skip to content',
   menu: 'Menu',
   gridView: 'Grid view',
   listView: 'List view',

@@ -7,6 +7,7 @@ const vi = {
   categoryLabel: 'Danh mục',
   tagLabel: 'Thẻ',
   pageLabel: 'Trang',
+  skipToContent: 'Tới nội dung',
   menu: 'Menu',
   gridView: 'Dạng lưới',
   listView: 'Dạng danh sách',

@@ -10,6 +10,7 @@ import { SearchTrigger } from '@/components/blog/SearchTrigger'
 import { Track } from '@/components/blog/Track'
 import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 import { singleRailCss } from '@/lib/rail-css'
+import { t } from '@/lib/i18n'
 
 export default async function BlogLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings()
@@ -30,6 +31,8 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
       <style dangerouslySetInnerHTML={{ __html: singleRailCss(settings.contentWidth) }} />
       {/* Owner CSS, public pages only (admin is never touched). Sanitized in settings.ts. */}
       {settings.customCss && <style dangerouslySetInnerHTML={{ __html: settings.customCss }} />}
+        {/* First focusable element: jump past the header controls to the content. */}
+        <a href="#content" className="skip-link">{t(settings.language).skipToContent}</a>
         <header className="py-7">
           {/* Logo and the icon row share ONE flex line so the icons stay centered
               on the logo's vertical midline at any logo size. The description sits
@@ -79,7 +82,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
         {/* Positioning context for the rail: it wraps the content, not the header,
             so the rail's first line lands level with the content's first line. */}
         <div className="with-rail flex flex-1 flex-col">
-          <main className="flex-1 pt-12 pb-4">{children}</main>
+          <main id="content" className="flex-1 pt-12 pb-4">{children}</main>
         </div>
       <footer
         className="site-footer py-12 text-center t-small text-meta"

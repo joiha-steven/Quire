@@ -305,13 +305,13 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/admin/content" className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">← {t.navDashboard}</Link>
           <span className="hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
-          <span className="hidden text-sm text-neutral-400 sm:block">
-            {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : dirty ? 'Chưa lưu' : ''}
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+            {saving ? t.saving : savedAt ? `${t.savedAtPrefix} ${formatTime(savedAt)}` : dirty ? t.unsaved : ''}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => setSettingsOpen((v) => !v)} className="min-h-10 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-600 shadow-sm hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-            {settingsOpen ? 'Ẩn thuộc tính' : 'Thuộc tính'}
+            {settingsOpen ? t.hideAttributes : t.attributes}
           </button>
           {savedSlug && <button type="button" onClick={openPreview} className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">{t.previewDraft}</button>}
           <Button variant="secondary" onClick={() => handleSave('draft', t.savedDraft)} disabled={saving || !dirty}>{t.saveDraft}</Button>
@@ -351,9 +351,9 @@ export function PostForm({ initial, allCategories, allTags, contentWidth, typewr
         {settingsOpen && (
           <aside className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto dark:border-neutral-800 dark:bg-neutral-900">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Thuộc tính</h2>
+              <h2 className="text-sm font-semibold">{t.attributes}</h2>
               <div className="flex gap-3 text-xs">
-                {savedSlug && <button type="button" onClick={() => setTimeMachine(true)} className="text-neutral-500 hover:text-neutral-900">Lịch sử</button>}
+                {savedSlug && <button type="button" onClick={() => setTimeMachine(true)} className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white">{t.history}</button>}
                 {draft.status === 'published' && savedSlug && <a href={`/${savedSlug}`} target="_blank" rel="noopener" className="text-neutral-500 hover:text-neutral-900">{t.viewPost}</a>}
               </div>
             </div>

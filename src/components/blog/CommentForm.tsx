@@ -13,8 +13,10 @@ export const MAX = 1000
 export type Draft = { name: string; email: string; website: string; content: string }
 const EMPTY: Draft = { name: '', email: '', website: '', content: '' }
 
+// No `outline-none`: the global `:focus-visible` ring (globals.css) must show for
+// keyboard users (WCAG 2.4.7); the border shift is an extra affordance.
 const inputClass =
-  't-small w-full rounded-lg border border-rule bg-bg px-3 py-2 text-text outline-none focus:border-heading'
+  't-small w-full rounded-lg border border-rule bg-bg px-3 py-2 text-text focus:border-heading'
 
 export function SignInButton({ label, provider }: { label: string; provider: 'google' }) {
   return (
@@ -81,6 +83,7 @@ export function CommentForm({
           <input
             className={inputClass}
             placeholder={s.commentName}
+            aria-label={s.commentName}
             value={draft.name}
             onChange={(e) => set('name', e.target.value)}
             autoFocus={autoFocus}
@@ -90,6 +93,7 @@ export function CommentForm({
             className={inputClass}
             type="email"
             placeholder={`${s.commentEmail} · ${s.commentEmailNote}`}
+            aria-label={s.commentEmail}
             value={draft.email}
             onChange={(e) => set('email', e.target.value)}
             maxLength={120}
@@ -97,6 +101,7 @@ export function CommentForm({
           <input
             className={inputClass}
             placeholder={s.commentWebsite}
+            aria-label={s.commentWebsite}
             value={draft.website}
             onChange={(e) => set('website', e.target.value)}
           />
@@ -112,6 +117,7 @@ export function CommentForm({
           <textarea
             className={`${inputClass} min-h-[6rem] resize-y`}
             placeholder={s.commentBody}
+            aria-label={s.commentBody}
             value={draft.content}
             onChange={(e) => set('content', e.target.value.slice(0, MAX))}
           />

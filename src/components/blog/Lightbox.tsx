@@ -87,6 +87,7 @@ export function Lightbox({ lang }: { lang: SiteLang }) {
       <img
         src={view.src}
         alt={view.alt}
+        data-round
         className="max-h-[85vh] max-w-full rounded object-contain"
         onClick={(e) => e.stopPropagation()}
       />
@@ -99,6 +100,7 @@ export function Lightbox({ lang }: { lang: SiteLang }) {
         type="button"
         aria-label={s.lightboxClose}
         onClick={close}
+        data-round
         className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-2xl text-white/80 hover:bg-white/10 hover:text-white"
       >
         ✕
@@ -112,6 +114,7 @@ export function Lightbox({ lang }: { lang: SiteLang }) {
               e.stopPropagation()
               go(-1)
             }}
+            data-round
             className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-3xl text-white/80 hover:bg-white/10 hover:text-white sm:left-4"
           >
             ‹
@@ -123,6 +126,7 @@ export function Lightbox({ lang }: { lang: SiteLang }) {
               e.stopPropagation()
               go(1)
             }}
+            data-round
             className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-3xl text-white/80 hover:bg-white/10 hover:text-white sm:right-4"
           >
             ›

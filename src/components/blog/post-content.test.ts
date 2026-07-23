@@ -32,11 +32,13 @@ describe('markdown render — security', () => {
 })
 
 describe('markdown render — structure', () => {
-  it('gives H2 and H3 slug ids but leaves H1 without one', async () => {
+  it('gives H2 and H3 slug ids and demotes a body H1 to H2 (the page title is the only h1)', async () => {
     const html = await render('## Hello World\n\n### Sub Section\n\n# Big Title')
     expect(html).toContain('<h2 id="hello-world">')
     expect(html).toContain('<h3 id="sub-section">')
-    expect(html).toContain('<h1>Big Title</h1>')
+    // A body `#` must NOT emit a second <h1>; it becomes an anchored <h2>.
+    expect(html).not.toContain('<h1')
+    expect(html).toContain('<h2 id="big-title">Big Title</h2>')
   })
 
   it('de-dupes ids for duplicate headings (foo, foo-2)', async () => {
