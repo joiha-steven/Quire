@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2026-07-23 — series / collections (batch 5)
+
+Group posts into an ordered **series** (e.g. a multi-part guide).
+
+- **A series is just a name + order on the post** (`series`, `series_order` columns) — no
+  separate table. Assign one in the editor (Series field with autocomplete of existing
+  names + an Order number). Migration `2026-07-23-series.sql`.
+- **Series box** at the top of every post in a series: the ordered list of parts (current
+  one highlighted), a "Part n/total" label, and prev/next links within the series
+  (`lib/series.ts` → `getSeriesForPost`; public parts only). Ordered by `series_order`, then
+  chronologically as a tiebreak.
+- **`/series/[slug]` page** lists a series in order (a new public route, ISR-cached; slug
+  derived like categories/tags). i18n ×6. +4 tests.
+
 ## 2026-07-23 — URL redirects (batch 4)
 
 Move a URL without breaking links. Manage 301/302 redirects in **Settings → SEO**.

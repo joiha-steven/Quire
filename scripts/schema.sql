@@ -37,6 +37,8 @@ create table if not exists public.posts (
   excerpt         text,
   reading_minutes integer,
   content         text not null default '',
+  series          text,                                 -- optional series/collection name (null = none)
+  series_order    integer not null default 0,           -- position within the series
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
   -- Soft delete: NULL = live, a timestamp = in Trash. Nothing is hard-deleted on a
@@ -54,6 +56,10 @@ create index if not exists posts_search_gin      on public.posts using gin (sear
 create index if not exists posts_categories_gin  on public.posts using gin (categories);
 create index if not exists posts_tags_gin        on public.posts using gin (tags);
 create index if not exists posts_deleted_at_idx   on public.posts (deleted_at);
+create index if not exists posts_series_idx       on public.posts (series);
+-- Back-compat: add the series columns to a pre-existing posts table.
+alter table public.posts add column if not exists series       text;
+alter table public.posts add column if not exists series_order integer not null default 0;
 
 -- ----- pages (share the /{slug} namespace with posts) ------------------------
 create table if not exists public.pages (

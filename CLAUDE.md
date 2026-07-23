@@ -127,6 +127,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | Font preload / CSS size / island JS / LCP / what a reader loads | `docs/performance.md` (the resource-loading law), `lib/themes.ts` (`fontPreloadHrefs`), `src/app/{layout.tsx,globals.css,theme.css,admin/admin.css}` | `docs/conventions.md` |
 | Admin chrome / editor toolbar / typewriter feedback | `docs/admin-redesign-2026-07.md`, `docs/worklog-2026-07-13.md`, `components/admin/Editor.tsx`, `components/admin/EditorMenus.tsx` | `components/admin/kit.tsx`, `docs/features.md` |
 | Search / ToC / related / preview | `lib/posts.ts`, `api/search`, `components/blog/PostContent.tsx` | `docs/features.md` |
+| Series / collections / prev-next / `/series/[slug]` | `lib/series.ts` (`orderSeries`/`getSeriesForPost`/`resolveSeries`), `components/blog/SeriesBox.tsx`, `src/app/(blog)/series/[slug]` | `docs/features.md` "Series / collections" |
 | SEO / sitemap / feed / robots / OG | `docs/seo-pwa.md`, `src/app/{robots,sitemap,llms.txt,feed.xml,og}` | `lib/og.ts` |
 | PWA / manifest / favicon | `docs/seo-pwa.md`, `src/app/manifest.ts`, `src/app/layout.tsx` | — |
 | MCP server | `docs/mcp.md`, `src/lib/mcp/*`, `src/app/api/mcp/*` | — |
@@ -163,6 +164,7 @@ Terse role per file; the authoritative detail is the code comments.
 | `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
 | `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
 | `redirects.ts` / `redirect-path.ts` | `getRedirects`, `saveRedirect`, `deleteRedirect`, `clearRedirectForPath` / `normalizePath`, `isValidDestination` | User-managed 301/302 rows (`redirects` table). Resolved in `middleware.ts` (real HTTP redirect, edge-safe fetch — NOT `db()`). `redirect-path.ts` is pure + import-safe from the edge middleware. savePost/savePage auto-add a 301 on rename + clear a live slug's stale redirect |
+| `series.ts` | `orderSeries`, `getSeriesForPost`, `getSeriesList`, `resolveSeries`, `getAllSeriesNames` | Post series = `series`+`series_order` columns (no table). Ordered public siblings + prev/next for the `SeriesBox`; `/series/[slug]` listing. Built on cached `getPublicPosts`/`getIndex` |
 | `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
 | others | `scheduled.ts` (`sweepScheduled`/`newlyLive` — future-dated published posts go live on time via cron), `ua.ts` (coarse device/browser/os buckets — no raw UA), `video.ts`, `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
 
