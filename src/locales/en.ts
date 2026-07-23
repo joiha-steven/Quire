@@ -33,8 +33,6 @@ const en = {
   relatedTitle: 'Related posts',
   seriesLabel: 'Series',
   seriesPartPrefix: 'Part',
-  seriesPrev: 'Previous',
-  seriesNext: 'Next',
   emptySeries: 'No posts in this series yet.',
   copyCode: 'Copy',
   copiedCode: 'Copied',

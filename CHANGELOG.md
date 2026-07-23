@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-07-23 — admin Series manager + series-box polish (v1.4.28)
+
+- **New Content → Series tab** (`SeriesManager.tsx`): lists every series (incl. drafts) with
+  its ordered parts. Per series you can **rename** it (across all its posts, merges on
+  collision), **remove** it (clears `series`+`series_order`; the posts stay), and **reorder**
+  parts with up/down arrows. Backed by owner-gated `POST /api/series` (`updateSeries` /
+  `reorderSeries`). Series data is derived from the dashboard's existing post index — no extra
+  fetch.
+- **Series box slimmed:** dropped the prev/next links (redundant with the ordered list); tuned
+  the inner padding + part spacing. Removed the now-orphaned `seriesPrev`/`seriesNext` locale
+  keys and the `prev`/`next` fields on `SeriesInfo`.
+- **JetBrains Mono tracking:** the mono chrome ran airy — gave `jetbrains-mono` the same
+  negative letter-spacing treatment Plex Mono already had (`-0.05em`, a touch tighter since
+  JetBrains is wider), scoped to chrome text only (the reader's prose is untouched).
+- **Refactor:** pure series ordering/grouping (`orderSeries`, `seriesEntries`) moved to a
+  client/edge-safe `lib/series-order.ts` so the client `SeriesManager` can import it without
+  dragging the db/sharp chain into the browser bundle; `series.ts` re-exports it.
+
 ## 2026-07-23 — drop the visible "Updated" line on posts
 
 - Removed the "Updated <date>" text from the post meta line (owner preference — it added

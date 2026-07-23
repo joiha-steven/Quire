@@ -34,8 +34,6 @@ export type Dict = {
   relatedTitle: string
   seriesLabel: string
   seriesPartPrefix: string
-  seriesPrev: string
-  seriesNext: string
   emptySeries: string
   copyCode: string
   copiedCode: string
@@ -105,6 +103,11 @@ export type AdminStrings = {
   confirmDeleteTerm: string
   noTerms: string
   renamed: string
+  // series manager (Content → Series tab)
+  tabSeries: string
+  noSeries: string
+  confirmDeleteSeries: string
+  seriesReordered: string
   signOut: string
   clearCache: string
   cacheCleared: string

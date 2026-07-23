@@ -33,8 +33,6 @@ const ko = {
   relatedTitle: '관련 게시물',
   seriesLabel: '시리즈',
   seriesPartPrefix: '파트',
-  seriesPrev: '이전',
-  seriesNext: '다음',
   emptySeries: '이 시리즈에는 아직 글이 없습니다.',
   copyCode: '복사',
   copiedCode: '복사됨',

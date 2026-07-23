@@ -4,28 +4,22 @@
 // part never shows), built on the already-cached getPublicPosts / getIndex reads.
 
 import type { Post } from '@/types'
+import { db } from '@/lib/db'
 import { getPublicPosts, getIndex } from '@/lib/posts'
 import { slugify } from '@/lib/utils'
+import { orderSeries } from '@/lib/series-order'
+
+// Re-exported for server callers + tests; defined in the client-safe pure module.
+export { orderSeries, seriesEntries, type SeriesEntry } from '@/lib/series-order'
 
 export type SeriesInfo = {
   name: string
   slug: string
   posts: Post[] // ordered
   currentIndex: number
-  prev?: Post
-  next?: Post
 }
 
-// Order within a series: explicit order first, chronological as the tiebreak. Pure.
-export function orderSeries(posts: Post[]): Post[] {
-  return [...posts].sort(
-    (a, b) =>
-      (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0) ||
-      new Date(a.date).getTime() - new Date(b.date).getTime(),
-  )
-}
-
-// The series a post belongs to, with its ordered public siblings + prev/next. Null if
+// The series a post belongs to, with its ordered public siblings. Null if
 // the post has no series (or isn't public).
 export async function getSeriesForPost(slug: string): Promise<SeriesInfo | null> {
   const all = await getPublicPosts()
@@ -38,8 +32,6 @@ export async function getSeriesForPost(slug: string): Promise<SeriesInfo | null>
     slug: slugify(current.series),
     posts,
     currentIndex,
-    prev: posts[currentIndex - 1],
-    next: posts[currentIndex + 1],
   }
 }
 
@@ -71,4 +63,33 @@ export async function resolveSeries(slug: string): Promise<{ name: string | null
 export async function getAllSeriesNames(): Promise<string[]> {
   const all = await getIndex()
   return [...new Set(all.map((p) => p.series).filter((s): s is string => !!s))].sort()
+}
+
+// Rename a series across ALL its posts, or remove it (newName null → clear series +
+// reset order). Scalar column, so a single equality-matched UPDATE — no read-modify-write
+// (unlike updateTerm's arrays). Returns posts changed. Rename into an existing name just
+// merges (order ties break by date, same as everywhere).
+export async function updateSeries(name: string, newName: string | null): Promise<number> {
+  const clean = newName?.trim() || null
+  const patch = clean ? { series: clean } : { series: null, series_order: 0 }
+  const { data } = await db().from('posts').update(patch).eq('series', name).select('slug')
+  return data?.length ?? 0
+}
+
+// Set series_order to match the given slug order (0-based) for one series. Only rows
+// still in this series are touched; unknown slugs are no-ops. Returns rows changed.
+export async function reorderSeries(name: string, orderedSlugs: string[]): Promise<number> {
+  let changed = 0
+  await Promise.all(
+    orderedSlugs.map(async (slug, i) => {
+      const { data } = await db()
+        .from('posts')
+        .update({ series_order: i })
+        .eq('series', name)
+        .eq('slug', slug)
+        .select('slug')
+      if (data?.length) changed++
+    }),
+  )
+  return changed
 }

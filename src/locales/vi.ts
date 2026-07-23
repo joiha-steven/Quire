@@ -33,8 +33,6 @@ const vi = {
   relatedTitle: 'Bài viết liên quan',
   seriesLabel: 'Loạt bài',
   seriesPartPrefix: 'Phần',
-  seriesPrev: 'Trước',
-  seriesNext: 'Tiếp',
   emptySeries: 'Chưa có bài nào trong loạt này.',
   copyCode: 'Sao chép',
   copiedCode: 'Đã chép',

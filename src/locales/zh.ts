@@ -33,8 +33,6 @@ const zh = {
   relatedTitle: '相关文章',
   seriesLabel: '系列',
   seriesPartPrefix: '第',
-  seriesPrev: '上一篇',
-  seriesNext: '下一篇',
   emptySeries: '该系列还没有文章。',
   copyCode: '复制',
   copiedCode: '已复制',
