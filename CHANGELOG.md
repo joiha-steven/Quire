@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode: more Western-book touches (v1.4.33)
+
+- **Small-caps opening line** beside the drop cap (the traditional raised-initial companion).
+- **Asterism section breaks:** markdown `---` (`<hr>`) renders as a centred ⁂ instead of a rule.
+- **Page number** styled as `— n / total —`.
+- **Faint book spine** down the centre gutter between the two columns (sits on the viewport, so
+  it holds still while pages flip).
+
 ## 2026-07-23 — book mode: sepia, drop cap, #read link (v1.4.32)
 
 - **Always warm-paper (sepia)** regardless of the site theme / dark mode — book mode overrides
