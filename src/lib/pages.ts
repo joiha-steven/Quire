@@ -7,6 +7,7 @@ import { collapseBlob, expandBlob } from '@/lib/blob'
 import { db, liveOnly } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { ensureSlugFree } from '@/lib/slugs'
+import { saveRedirect, clearRedirectForPath } from '@/lib/redirects'
 
 const META_COLS = 'slug,title,status,featured_image'
 
@@ -113,10 +114,13 @@ export async function savePage(
     .upsert({ ...toRow(page), updated_at: new Date().toISOString() })
   if (error) throw new Error(`savePage: ${error.message}`)
 
-  // If the slug changed, drop the old row.
+  // If the slug changed, drop the old row + leave a 301 from the old path.
   if (previousSlug && previousSlug !== page.slug) {
     await db().from('pages').delete().eq('slug', previousSlug)
+    await saveRedirect({ source: `/${previousSlug}`, destination: `/${page.slug}`, permanent: true })
   }
+  // The live slug wins over any redirect that used it as a source (and no self-loop).
+  await clearRedirectForPath(`/${page.slug}`)
 
   return toMeta(page) // full URLs for the client
 }

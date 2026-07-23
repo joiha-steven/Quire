@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 2026-07-23 — URL redirects (batch 4)
+
+Move a URL without breaking links. Manage 301/302 redirects in **Settings → SEO**.
+
+- **New `redirects` table** + `lib/redirects.ts` (CRUD) + owner-gated `api/redirects`.
+  Migration `2026-07-23-redirects.sql`.
+- **Real HTTP redirects from middleware.** `middleware.ts` resolves the request path
+  against a redirect map (301 permanent / 302 temporary) BEFORE any render — a page-level
+  `redirect()` under a route with a `loading.tsx` is downgraded by Next to a 200
+  meta-refresh, so the redirect must come from the edge. The map is fetched from PostgREST
+  with a plain (edge-safe) fetch and cached in-process for 60s; the matcher now runs on all
+  paths except `/_next` and `/uploads`. Fail-open — a lookup error never blocks a request.
+- **Auto-301 on slug rename.** Renaming a post/page slug adds a permanent redirect from the
+  old path (existing links + search results keep working); saving a slug also clears any
+  stale redirect that used it as a source, so live content always wins and a rename-back
+  can't self-loop.
+- Admin: a **Redirects** card (list + add + delete) in Settings → SEO. i18n ×6. +8 tests.
+
 ## 2026-07-23 — scheduled publishing (batch 3)
 
 Publish a post with a **future date** and it goes live on time, automatically.

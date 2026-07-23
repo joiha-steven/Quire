@@ -77,6 +77,11 @@ can move without rewriting anything.
   window; the cron's `sweepScheduled` only makes it *punctual* by purging+warming once the
   time is crossed (a frequent publish tick + an hourly backstop). Deriving visibility from the
   date keeps one source of truth and needs no flip-write, migration, or watermark.
+- **Redirects**: user-managed 301/302 (and an auto-301 on slug rename) resolve in
+  `middleware.ts`, before any render — a page-level `redirect()` under the `(blog)` route
+  (it has a `loading.tsx`) is downgraded by Next to a 200 meta-refresh, so a real HTTP
+  redirect must come from the edge. Middleware stays free of the node-only `db()` client: it
+  reads the redirect map with a plain PostgREST `fetch`, cached in-process for 60s.
 - **Render**: Markdown → HTML via `marked` (raw HTML is escaped, never executed);
   images become `<figure>`, lone video URLs become embeds, H2/H3 get slug ids.
 

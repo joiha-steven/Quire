@@ -254,6 +254,15 @@ create index if not exists analytics_scroll_created_idx on public.analytics_scro
 create index if not exists analytics_scroll_path_idx    on public.analytics_scroll (path);
 create index if not exists analytics_scroll_dwell_idx   on public.analytics_scroll (dwell_ms);
 
+-- ----- redirects (user-managed 301/302; resolved in middleware) --------------
+create table if not exists public.redirects (
+  id          bigint generated always as identity primary key,
+  source      text not null unique,           -- normalized request path, e.g. '/old-slug'
+  destination text not null,                   -- path ('/new-slug') or absolute URL
+  permanent   boolean not null default true,   -- true = 301, false = 302
+  created_at  timestamptz not null default now()
+);
+
 -- ----- RLS: lock every table to server-side (service_role) access only --------
 alter table public.posts            enable row level security;
 alter table public.pages            enable row level security;
@@ -270,6 +279,7 @@ alter table public.mcp_used_codes   enable row level security;
 alter table public.activity_log     enable row level security;
 alter table public.analytics_events enable row level security;
 alter table public.analytics_scroll enable row level security;
+alter table public.redirects        enable row level security;
 
 -- ----- RPC: analytics summary for the admin dashboard ------------------------
 -- since   = window start; top_n = how many rows per top list; bucket = 'hour'

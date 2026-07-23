@@ -22,6 +22,8 @@ export type ActivityAction =
   | 'mcp.token.create' | 'mcp.token.delete'
   // Content import (Admin → Settings → Integrations).
   | 'import.wordpress'
+  // URL redirects (Admin → Settings → SEO).
+  | 'redirect.save' | 'redirect.delete'
   // Google Drive backups (Admin → Settings → Advanced).
   | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
   // Reader comments (create is public; restore/purge from the admin Trash).

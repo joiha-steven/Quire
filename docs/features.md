@@ -163,6 +163,28 @@
   a ~65-min window as a backstop. No watermark is stored — an overlapping purge is an idempotent
   superset. Cron cadence: `docker-compose.yml` (bundled) / `docs/self-host-native.md` (crontab).
 
+## URL redirects — `lib/redirects.ts`, `middleware.ts`, Admin → Settings → SEO
+
+- **What:** owner-managed 301 (permanent) / 302 (temporary) redirects, plus an automatic
+  301 whenever a post/page slug is renamed (so existing links + search results survive a
+  move). Rows live in the `redirects` table (`source` unique, `destination`, `permanent`).
+- **Resolved in middleware, on purpose.** `middleware.ts` matches the request path against
+  the redirect map and returns a REAL HTTP `NextResponse.redirect(dest, 301|302)` before any
+  render. A page-level `redirect()` can't be used: under the `(blog)` route (which has a
+  `loading.tsx`) Next downgrades a post-stream redirect to a 200 client meta-refresh — the
+  same reason the `/page/1 → base` redirect lives in middleware. The map is read from
+  PostgREST with a plain (edge-safe) `fetch` — NOT the node-only `db()` client — and cached
+  in-process for 60s (self-hosted middleware is one long-lived Node process), so the hot path
+  is a `Map.get`. Fail-open: a fetch error never blocks a request. The matcher runs on every
+  path except `/_next` and `/uploads`.
+- **Live content always wins.** Saving a post/page at slug X deletes any redirect whose
+  `source` is `/X` (`clearRedirectForPath`), so a live URL is never shadowed by a stale
+  redirect and a rename-back (A→B then B→A) can't create a self-loop. A new redirect applies
+  within the 60s cache TTL.
+- **Admin:** a Redirects card (list + add + delete) in Settings → SEO. `source` is normalized
+  (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
+  a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
+
 ## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
 
 - The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**
