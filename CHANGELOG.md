@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode split out + excerpt-tracking fix (v1.4.35)
+
+- **Fix — cramped post-card excerpts:** the mono-chrome letter-spacing nudge
+  (`data-chrome-font` −0.04/−0.05em) was leaking onto `.reading-font` excerpts (they wear
+  `.t-body`), tightening the reader's words out of line with the rest. Now excluded via
+  `:not(.reading-font)`.
+- **Book mode fully separated (perf):** the heavy overlay moved to `BookReader.tsx`, **lazy-
+  loaded** via `next/dynamic` — its pagination code reaches the browser only when a reader
+  opens book mode. Book CSS moved out of global `globals.css` into `components/blog/book.css`,
+  imported by the toggle, so **listing pages no longer ship any book-mode code or CSS**.
+
 ## 2026-07-23 — book mode: paper standard (v1.4.34)
 
 Book mode is now its own printed-page standard, not the sepia theme:
