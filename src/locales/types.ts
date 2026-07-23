@@ -55,6 +55,11 @@ export type Dict = {
   nlLinkInvalid: string
   nlUnsubTitle: string
   nlUnsubBody: string
+  nlUnsubFooter: string
+  bcastRead: string
+  replySubject: string
+  replyIntro: string
+  replyRead: string
   notFoundTitle: string
   notFoundText: string
   errorTitle: string

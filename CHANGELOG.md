@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 2026-07-23 — newsletter broadcast + reply notifications (batch 7b)
+
+Completes the newsletter (built on 7a's subscribe/opt-in/SMTP foundation).
+
+- **Broadcast on publish.** When a post first goes live it is emailed ONCE to confirmed
+  subscribers (title + excerpt + link + per-recipient unsubscribe). Tracked by a new
+  `posts.broadcast_at`; the cron (`broadcastDuePosts`, run on the 5-min publish tick + the
+  hourly backstop) finds published, date-reached, not-yet-broadcast posts, sends, and stamps
+  them. Scheduled (future-dated) posts broadcast when they actually go live, not when saved.
+- **No back-catalogue spam.** The migration backfills every already-live post's `broadcast_at`,
+  and `broadcastDuePosts` stamps a due post even when SMTP is off or there are no subscribers —
+  so enabling the newsletter later never blasts old posts. Editing a post never re-broadcasts
+  (the upsert leaves `broadcast_at` untouched).
+- **Comment-reply notifications.** Replying to a comment emails the parent commenter (best-
+  effort, transactional; skips self-replies and a deleted parent). Sent via `after()` from the
+  comment route (`notifyReply`); no-op without SMTP.
+- Pure email builders (`lib/newsletter-email.ts`) — escaped, unit-tested. Migration
+  `2026-07-23-broadcast.sql`. i18n ×6. +3 tests.
+
+> **Enabling it:** set SMTP in Admin → Settings → Integrations → Newsletter. Until then the
+> sign-up form is hidden and all sends are no-ops (rows/stamps still recorded correctly).
+
 ## 2026-07-23 — footnotes + music embeds (batch 6c)
 
 - **Footnotes.** Write `a claim[^1]` + `[^1]: the source` — the reference renders as a

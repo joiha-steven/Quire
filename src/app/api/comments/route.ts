@@ -9,6 +9,7 @@
 import type { NextRequest } from 'next/server'
 import { after } from 'next/server'
 import { getCommentTree, addComment, CommentInputError, MAX_COMMENT_LEN } from '@/lib/comments'
+import { notifyReply } from '@/lib/comment-notify'
 import { getPost } from '@/lib/posts'
 import { getSettings } from '@/lib/settings'
 import { getCommenter } from '@/lib/auth'
@@ -125,6 +126,18 @@ export async function POST(req: NextRequest): Promise<Response> {
       throw error
     }
     after(() => logActivity('comment.create', postSlug))
+    // Reply → email the parent commenter (best-effort; no-op without SMTP).
+    if (parentId !== null) {
+      after(() =>
+        notifyReply({
+          parentId,
+          postSlug,
+          replierName: identity.name,
+          replierEmail: identity.email,
+          contentHtml: created.contentHtml,
+        }),
+      )
+    }
     logRequest(req, 200, start)
     return ok({ comment: created })
   } catch (error) {

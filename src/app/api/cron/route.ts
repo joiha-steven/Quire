@@ -11,6 +11,7 @@ import { db } from '@/lib/db'
 import { finalizePendingVariants, finalizePendingThumbs } from '@/lib/media'
 import { revalidateEverything, purgeAndWarm } from '@/lib/revalidate'
 import { sweepScheduled, PUBLISH_TICK_LOOKBACK_MS, HOURLY_LOOKBACK_MS } from '@/lib/scheduled'
+import { broadcastDuePosts } from '@/lib/broadcast'
 import { maybeRunBackup } from '@/lib/backup'
 import { ok, fail, logRequest, logError } from '@/lib/api'
 
@@ -41,8 +42,13 @@ export async function GET(req: NextRequest): Promise<Response> {
     // posts live — no variant/backup sweep. Its short lookback matches the tick cadence.
     if (req.nextUrl.searchParams.get('publish') === '1') {
       const published = await sweepScheduled(PUBLISH_TICK_LOOKBACK_MS)
+      // Email confirmed subscribers about any post that just went live (once).
+      const broadcast = await broadcastDuePosts().catch((e) => {
+        logError(req, e)
+        return { posts: 0, emails: 0 }
+      })
       logRequest(req, 200, start)
-      return ok({ alive: true, published })
+      return ok({ alive: true, published, broadcast })
     }
     // Deploy hook: `?purge=1` purges everything (Next paths + the Cloudflare zone) THEN
     // re-warms the origin ISR, so a code deploy — which runs no admin write — flushes the
@@ -71,6 +77,11 @@ export async function GET(req: NextRequest): Promise<Response> {
     } catch (e) {
       logError(req, e)
     }
+    // Broadcast backstop (in case the 5-min publish tick was down).
+    const broadcast = await broadcastDuePosts().catch((e) => {
+      logError(req, e)
+      return { posts: 0, emails: 0 }
+    })
     // Full-snapshot backup when enabled, connected, and the interval has elapsed.
     // Self-contained errors (never break keep-alive); logged so a silent scheduled
     // backup failure still surfaces in Admin → Log.
@@ -79,7 +90,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       return { ran: false, error: (e as Error).message }
     })
     logRequest(req, 200, start)
-    return ok({ alive: true, purged: doPurge, warmed, finalized, thumbs, published, backup })
+    return ok({ alive: true, purged: doPurge, warmed, finalized, thumbs, published, broadcast, backup })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)

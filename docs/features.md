@@ -201,7 +201,21 @@
 - **Sign-up form** (`SubscribeForm`) renders at the foot of a post ONLY when SMTP is configured
   (`getMailStatus().configured`). Owner manages subscribers (list + counts + delete) via
   `api/subscribers`.
-- **Deferred (7b):** broadcast-on-publish + comment-reply notifications (need live SMTP to verify).
+- **Broadcast on publish** (`lib/broadcast.ts` `broadcastDuePosts`, run by the cron on the 5-min
+  publish tick + the hourly backstop). A post is "due" when it is `published`, its `date` has
+  passed, it isn't trashed, and `posts.broadcast_at` is null. Each due post is emailed once to
+  every confirmed subscriber (title + excerpt + link + per-recipient unsubscribe link) and then
+  STAMPED (`broadcast_at = now`). The stamp happens even when SMTP is off or there are no
+  subscribers, so turning the newsletter on later never blasts the back-catalogue; the migration
+  backfills already-live posts. Editing a post never re-broadcasts — `savePost`'s upsert doesn't
+  include `broadcast_at`, so PostgREST leaves it untouched. Scheduled (future-dated) posts
+  broadcast when they actually go live.
+- **Comment-reply notifications** (`lib/comment-notify.ts` `notifyReply`, fired via `after()`
+  from the comment POST route on a reply). Emails the parent commenter (their `author_email`) a
+  link to the thread. Best-effort + transactional: skips a self-reply (same email), a deleted
+  parent, and no-ops without SMTP. Never throws.
+- **Email bodies** are built by pure, escaped, unit-tested helpers in `lib/newsletter-email.ts`
+  (`broadcastEmail`, `replyEmail`) — reused by the cron + the comment route.
 
 ## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
 
