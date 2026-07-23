@@ -37,6 +37,8 @@ const de = {
   seriesNext: 'Weiter',
   emptySeries: 'Noch keine Beiträge in dieser Serie.',
   updatedPrefix: 'Aktualisiert',
+  copyCode: 'Kopieren',
+  copiedCode: 'Kopiert',
   notFoundTitle: 'Seite nicht gefunden',
   notFoundText: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',
   errorTitle: 'Etwas ist schiefgelaufen',

@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 2026-07-23 — callouts + copy-code button (batch 6b)
+
+Render-layer editor extras.
+
+- **Callouts:** a blockquote whose first line is `[!NOTE]` (also `TIP` / `WARNING` /
+  `IMPORTANT` / `CAUTION`) renders as a labelled callout box. Monochrome by design — an accent
+  left-border + a bold label carry the meaning, so it stays on the palette (no semantic
+  colours). Post-processed in `PostContent.tsx` (`buildCallouts`); an unknown `[!FOO]` or a
+  plain quote is left untouched. +4 tests.
+- **Copy-code button:** every code block gets a "Copy" button (the `CodeCopy` client island
+  attaches it on mount — the code HTML is server-rendered by Shiki). Revealed on hover, always
+  shown on touch. i18n ×6.
+
+**Still deferred (need heavier work, tracked separately):** footnotes — the markdown renderer
+escapes raw HTML, so these need a proper `marked` extension, not post-processing; and X /
+Instagram / gist embeds — those require third-party widget scripts + CSP allowances.
+
 ## 2026-07-23 — per-post SEO, cover image, real dateModified (batch 6a)
 
 Post-metadata half of the editor-completeness batch.

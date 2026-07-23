@@ -11,6 +11,36 @@ async function render(markdown: string): Promise<string> {
   return props.dangerouslySetInnerHTML?.__html ?? ''
 }
 
+describe('callouts', () => {
+  it('turns a [!NOTE] blockquote into a labelled callout', async () => {
+    const html = await render('> [!NOTE]\n> Heads up here')
+    expect(html).toContain('class="callout callout-note"')
+    expect(html).toContain('class="callout-label">Note<')
+    expect(html).toContain('Heads up here')
+    expect(html).not.toContain('[!NOTE]')
+  })
+
+  it('supports tip/warning/important/caution', async () => {
+    for (const [type, label] of [['TIP', 'Tip'], ['WARNING', 'Warning'], ['IMPORTANT', 'Important'], ['CAUTION', 'Caution']] as const) {
+      const html = await render(`> [!${type}]\n> body`)
+      expect(html).toContain(`callout-${type.toLowerCase()}`)
+      expect(html).toContain(`>${label}<`)
+    }
+  })
+
+  it('leaves an unknown [!FOO] blockquote as a plain blockquote', async () => {
+    const html = await render('> [!FOO]\n> body')
+    expect(html).toContain('<blockquote>')
+    expect(html).not.toContain('callout')
+  })
+
+  it('leaves an ordinary blockquote untouched', async () => {
+    const html = await render('> just a quote')
+    expect(html).toContain('<blockquote>')
+    expect(html).not.toContain('callout')
+  })
+})
+
 describe('markdown render — security', () => {
   it('escapes raw HTML instead of executing it (<script> shown as text)', async () => {
     const html = await render('<script>alert(1)</script>')

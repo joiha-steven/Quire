@@ -21,6 +21,7 @@ import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
 import { Lightbox } from '@/components/blog/Lightbox'
+import { CodeCopy } from '@/components/blog/CodeCopy'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { SeriesBox } from '@/components/blog/SeriesBox'
 import { CommentsLazy } from '@/components/blog/CommentsLazy'
@@ -154,6 +155,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         <BackToTop label={t(language).backToTop} />
         <ScrollDepth />
         {imageUrls.length > 0 && <Lightbox lang={language} />}
+        {post.content.includes('```') && <CodeCopy label={tx.copyCode} copiedLabel={tx.copiedCode} />}
         {settings.seo.autoSchema && (
           <JsonLd
             data={articleSchema({
@@ -291,6 +293,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
       <article>
         <h1 className="reading-font fs-h1 font-semibold">{page.title}</h1>
         {extractImageUrls(page.content).length > 0 && <Lightbox lang={language} />}
+        {page.content.includes('```') && <CodeCopy label={t(language).copyCode} copiedLabel={t(language).copiedCode} />}
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />
         </div>
