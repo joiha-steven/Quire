@@ -1168,18 +1168,21 @@ body.book-open { overflow: hidden; }
   position: fixed; inset: 0; z-index: 60;
   display: grid; grid-template-rows: auto 1fr;   /* top chrome + stage; no footer */
   font-family: var(--font-reading);
-  /* Book mode is ALWAYS warm paper (sepia), regardless of the site theme / dark mode — a
-     printed page, not a screen. Overriding the theme tokens here recolours everything inside
-     (prose text/headings/links/rules) to sepia in one place; the base page keeps its own
-     tokens, so closing the reader restores the previous colours automatically. */
-  --color-bg: #f4ecd8;
-  --color-text: #5b4636;
-  --color-heading: #33291d;
-  --color-meta: #a08d72;
-  --color-link: #7a5230;
-  --color-accent: #7a5230;
-  --color-rule: #ddd0b6;
-  background: var(--color-bg); color: var(--color-text);
+  /* Book mode is its OWN standard, not the site theme (nor dark mode): a printed page. A light
+     warm PAPER sheet with near-black ink, floating on a slightly deeper SURFACE (the desk /
+     binding) for real open-book depth. Overriding the theme tokens here recolours everything
+     inside (prose text/headings/links/rules) in one place; the base page keeps its own tokens,
+     so closing the reader restores the previous colours automatically. */
+  --book-surface: #e8e1d2;   /* the desk behind the page */
+  --book-paper: #f8f4ec;     /* the page itself — warm near-white, black ink reads on it */
+  --color-bg: var(--book-paper);
+  --color-text: #211f1a;     /* near-black ink */
+  --color-heading: #16130d;
+  --color-meta: #8d8676;
+  --color-link: #2f2c25;
+  --color-accent: #2f2c25;
+  --color-rule: #d8cfbc;
+  background: var(--book-surface); color: var(--color-text);
 }
 
 /* Top bar: title recedes (regular weight, faint, ~body size) so the article stays the focus;
@@ -1200,9 +1203,23 @@ body.book-open { overflow: hidden; }
 
 .book-stage {
   position: relative; display: flex; align-items: center; justify-content: center;
-  min-height: 0; padding: clamp(16px, 3vh, 40px) 0;
+  min-height: 0; padding: clamp(20px, 4vh, 52px) 0;
 }
-.book-viewport { height: 100%; overflow: hidden; }
+/* The reading area is a PAPER SHEET: its own warm-white background, inner page margins, and a
+   soft shadow lifting it off the darker surface — an open page on a desk. */
+.book-viewport {
+  position: relative; height: 100%; overflow: hidden;
+  background: var(--book-paper);
+  padding: clamp(18px, 3.2vh, 40px) clamp(22px, 2.6vw, 48px);
+  box-shadow: 0 14px 50px rgba(45, 35, 15, 0.17), 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+/* Faint paper grain over the sheet so the flat screen reads as printed stock (not a glowing
+   panel). Multiplied at low opacity; the text paints above it. */
+.book-viewport::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.4; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
 .book-flow {
   height: 100%;
   column-gap: 56px;                         /* == COL_GAP in BookMode.tsx */

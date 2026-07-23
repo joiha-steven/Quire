@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-07-23 — book mode: paper standard (v1.4.34)
+
+Book mode is now its own printed-page standard, not the sepia theme:
+- **Paper palette:** near-black ink on a light warm-white page (was brown-on-tan sepia).
+- **Page as a sheet:** the reading area is a paper sheet with inner margins + a soft shadow,
+  floating on a slightly deeper surface (the desk / binding) — real open-book depth.
+- **Paper grain:** a faint multiplied noise texture over the sheet so the flat screen reads as
+  printed stock, not a glowing panel.
+
 ## 2026-07-23 — book mode: more Western-book touches (v1.4.33)
 
 - **Small-caps opening line** beside the drop cap (the traditional raised-initial companion).
