@@ -36,7 +36,6 @@ const vi = {
   seriesPrev: 'Trước',
   seriesNext: 'Tiếp',
   emptySeries: 'Chưa có bài nào trong loạt này.',
-  updatedPrefix: 'Cập nhật',
   copyCode: 'Sao chép',
   copiedCode: 'Đã chép',
   nlHeading: 'Đăng ký nhận bản tin',

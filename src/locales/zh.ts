@@ -36,7 +36,6 @@ const zh = {
   seriesPrev: '上一篇',
   seriesNext: '下一篇',
   emptySeries: '该系列还没有文章。',
-  updatedPrefix: '更新于',
   copyCode: '复制',
   copiedCode: '已复制',
   nlHeading: '订阅邮件通讯',

@@ -36,7 +36,6 @@ const ja = {
   seriesPrev: '前へ',
   seriesNext: '次へ',
   emptySeries: 'このシリーズにはまだ記事がありません。',
-  updatedPrefix: '更新',
   copyCode: 'コピー',
   copiedCode: 'コピーしました',
   nlHeading: 'ニュースレターを購読',

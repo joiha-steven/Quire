@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2026-07-23 — drop the visible "Updated" line on posts
+
+- Removed the "Updated <date>" text from the post meta line (owner preference — it added
+  noise). The JSON-LD `dateModified` (invisible, SEO) is kept. Orphaned `updatedPrefix`
+  locale key removed from all 6 dictionaries.
+
 ## 2026-07-23 — JetBrains Mono chrome font
 
 - Added **JetBrains Mono** as a second self-hosted monospace option for the system/chrome
