@@ -24,6 +24,8 @@ import { Lightbox } from '@/components/blog/Lightbox'
 import { CodeCopy } from '@/components/blog/CodeCopy'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { SeriesBox } from '@/components/blog/SeriesBox'
+import { SubscribeForm } from '@/components/blog/SubscribeForm'
+import { getMailStatus } from '@/lib/mail'
 import { CommentsLazy } from '@/components/blog/CommentsLazy'
 import { getCommentEnv } from '@/lib/comment-env'
 import { ogImageUrl } from '@/lib/og'
@@ -120,6 +122,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     const words = wordCount(post.content)
     const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
     const series = post.series ? await getSeriesForPost(post.slug) : null
+    const mail = await getMailStatus() // show the subscribe form only when SMTP is set up
     const commentEnv = settings.comments.enabled ? await getCommentEnv() : null
     const hasTaxo = post.tags.length > 0 || post.categories.length > 0
     const showComments = Boolean(settings.comments.enabled && commentEnv)
@@ -268,6 +271,12 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
               <RelatedPosts posts={related} lang={language} />
             </div>
           </>
+        )}
+
+        {mail.configured && (
+          <div className="mt-10">
+            <SubscribeForm lang={language} />
+          </div>
         )}
 
         {showComments && commentEnv && (

@@ -53,6 +53,9 @@ function isPublicApi(pathname: string): boolean {
     pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/track') ||
     pathname.startsWith('/api/search') ||
+    // Newsletter: public sign-up + the confirm/unsubscribe links clicked from email.
+    pathname.startsWith('/api/subscribe') ||
+    pathname.startsWith('/api/newsletter') ||
     // Public read: raw Markdown of a post/page (Accept: text/markdown negotiation).
     pathname.startsWith('/api/md/') ||
     // ONLY the exact collection endpoint (GET list + POST create) is public; the

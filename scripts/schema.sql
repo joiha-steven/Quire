@@ -217,8 +217,25 @@ create table if not exists public.integration_keys (
   turnstile_secret_key text,
   cloudflare_api_token text,
   cloudflare_zone_id   text,
+  smtp_host            text,             -- newsletter SMTP (server-only secrets)
+  smtp_port            integer,
+  smtp_user            text,
+  smtp_pass            text,
+  smtp_from            text,
+  smtp_secure          boolean not null default true,
   constraint integration_keys_singleton check (id = 1)
 );
+
+-- ----- subscribers (newsletter; double opt-in) -------------------------------
+create table if not exists public.subscribers (
+  id           bigint generated always as identity primary key,
+  email        text not null unique,
+  status       text not null default 'pending' check (status in ('pending', 'confirmed', 'unsubscribed')),
+  token        text not null,                 -- secret for confirm + unsubscribe links
+  created_at   timestamptz not null default now(),
+  confirmed_at timestamptz
+);
+create index if not exists subscribers_status_idx on public.subscribers (status);
 -- Upgrade path: drop the removed Facebook-login columns from a pre-existing table,
 -- and add the Cloudflare cache-purge columns to a pre-existing table.
 alter table public.integration_keys
@@ -292,6 +309,7 @@ alter table public.activity_log     enable row level security;
 alter table public.analytics_events enable row level security;
 alter table public.analytics_scroll enable row level security;
 alter table public.redirects        enable row level security;
+alter table public.subscribers      enable row level security;
 
 -- ----- RPC: analytics summary for the admin dashboard ------------------------
 -- since   = window start; top_n = how many rows per top list; bucket = 'hour'
