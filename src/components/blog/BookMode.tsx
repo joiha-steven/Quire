@@ -12,8 +12,7 @@ import { createPortal } from 'react-dom'
 import type { SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
 
-const SIDE_MARGIN = 56 // px of breathing room on each side of the spread
-const MAX_WIDTH = 1120 // px cap so columns don't get too wide on huge monitors
+const FALLBACK_WIDTH = 900 // px, only if #post-body can't be measured
 const COL_GAP = 56 // px between the two columns
 const FADE_MS = 200 // spread-to-spread crossfade
 
@@ -50,7 +49,9 @@ function BookReader({
   const measure = useCallback(() => {
     const flow = flowRef.current
     if (!flow) return
-    const contentW = Math.min(window.innerWidth - SIDE_MARGIN * 2, MAX_WIDTH)
+    // Match the site's own content column so the spread is exactly as wide as the page
+    // reads normally (#post-body carries the reading width incl. the shell's padding).
+    const contentW = document.getElementById('post-body')?.clientWidth || FALLBACK_WIDTH
     const colW = Math.floor((contentW - COL_GAP) / 2)
     flow.style.setProperty('--book-col-w', `${colW}px`)
     flow.style.width = `${colW * 2 + COL_GAP}px` // the visible viewport = exactly 2 columns
@@ -121,12 +122,17 @@ function BookReader({
   const atEnd = spread >= spreadCount - 1
 
   return createPortal(
-    <div className="book-overlay" role="dialog" aria-modal="true" aria-label={tx.bookMode}>
+    <div className="book-overlay book-text" role="dialog" aria-modal="true" aria-label={tx.bookMode}>
       <div className="book-chrome book-top">
         <span className="book-title">{title}</span>
-        <button type="button" className="book-x" onClick={onClose} aria-label={tx.bookModeClose} title={tx.bookModeClose}>
-          ✕
-        </button>
+        <div className="book-topright">
+          <span className="book-count tabular-nums">
+            {spread + 1} / {spreadCount}
+          </span>
+          <button type="button" className="book-x" onClick={onClose} aria-label={tx.bookModeClose} title={tx.bookModeClose}>
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="book-stage">
@@ -158,12 +164,6 @@ function BookReader({
         >
           ›
         </button>
-      </div>
-
-      <div className="book-chrome book-bottom">
-        <span className="book-count tabular-nums">
-          {spread + 1} / {spreadCount}
-        </span>
       </div>
     </div>,
     document.body,

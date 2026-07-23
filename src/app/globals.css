@@ -1166,17 +1166,21 @@ body.book-open { overflow: hidden; }
 
 .book-overlay {
   position: fixed; inset: 0; z-index: 60;
-  display: grid; grid-template-rows: auto 1fr auto;
+  display: grid; grid-template-rows: auto 1fr;   /* top chrome + stage; no footer */
   background: var(--color-bg); color: var(--color-text);
   font-family: var(--font-reading);
 }
 
-.book-chrome { display: flex; align-items: center; height: 52px; padding: 0 clamp(16px, 4vw, 48px); }
-.book-top { justify-content: space-between; border-bottom: 1px solid var(--color-rule); }
-.book-bottom { justify-content: center; border-top: 1px solid var(--color-rule); }
+/* Top bar: title centred + larger; the page count and close sit together at the right. */
+.book-chrome { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 clamp(16px, 4vw, 48px); }
+.book-top { border-bottom: 1px solid var(--color-rule); }
 .book-title {
-  font-size: 0.8rem; letter-spacing: 0.02em; color: var(--color-meta);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 1.15rem; font-weight: 600; color: var(--color-heading); text-align: center;
+  max-width: min(70%, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.book-topright {
+  position: absolute; right: clamp(12px, 4vw, 44px); top: 0; height: 100%;
+  display: flex; align-items: center; gap: 16px;
 }
 .book-x { background: none; border: 0; cursor: pointer; color: var(--color-meta); font-size: 1rem; line-height: 1; padding: 8px; }
 .book-x:hover { color: var(--color-heading); }
@@ -1201,6 +1205,8 @@ body.book-open { overflow: hidden; }
 .book-flow :is(img, video, iframe, pre, table, blockquote, figure) { break-inside: avoid; }
 .book-flow :is(img, video, iframe) { max-width: 100%; max-height: var(--book-page-h, 70vh); object-fit: contain; }
 .book-flow pre { max-height: var(--book-page-h, 70vh); overflow: auto; }
+/* First column opens flush with the top of the page (no leading gap). */
+.book-flow.prose > :first-child { margin-top: 0; }
 
 .book-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
