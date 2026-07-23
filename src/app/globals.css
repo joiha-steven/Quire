@@ -365,16 +365,18 @@ h1, h2, h3, h4, h5 {
    system-chrome text (rail, header menu, footer, dates/meta, admin) reads too airy at 0
    tracking. Pull it in a touch — but ONLY when a mono chrome is active (`data-chrome-font`
    on <html>), and only the chrome. The reader's words are safe: `.prose`, `.fs-*` and
-   reading titles all set their OWN letter-spacing, so this body/.t-* nudge never reaches
-   them. Other chrome fonts (Inter, the reading font) keep default tracking. Measured
+   reading titles all set their OWN letter-spacing. But `.reading-font` text (post-card
+   excerpts, standfirsts) wears `.t-body`/`.t-small` while being the READER's words, so it is
+   excluded via `:not(.reading-font)` — otherwise the excerpt letters look hand-cramped versus
+   the rest. Other chrome fonts (Inter, the reading font) keep default tracking. Measured
    values hold the mono character while making each word cohere; JetBrains Mono runs wider
    than Plex, so it gets a touch more. */
 html[data-chrome-font="plex-mono"] body,
-html[data-chrome-font="plex-mono"] .t-small,
-html[data-chrome-font="plex-mono"] .t-body { letter-spacing: -0.04em; }
+html[data-chrome-font="plex-mono"] .t-small:not(.reading-font),
+html[data-chrome-font="plex-mono"] .t-body:not(.reading-font) { letter-spacing: -0.04em; }
 html[data-chrome-font="jetbrains-mono"] body,
-html[data-chrome-font="jetbrains-mono"] .t-small,
-html[data-chrome-font="jetbrains-mono"] .t-body { letter-spacing: -0.05em; }
+html[data-chrome-font="jetbrains-mono"] .t-small:not(.reading-font),
+html[data-chrome-font="jetbrains-mono"] .t-body:not(.reading-font) { letter-spacing: -0.05em; }
 
 /* One divider style for the whole site: faint, full width. */
 hr {
@@ -1147,138 +1149,3 @@ button:not(:disabled):active,
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
-
-/* ============================================================================
-   BOOK READING MODE — opt-in fullscreen 2-column overlay (components/blog/BookMode.tsx).
-   Desktop + iPad only: the toggle is hidden below the iPad width. Colours are theme
-   tokens only; body words use --font-reading, the same face as normal reading.
-   ============================================================================ */
-
-/* Inline toggle on the post meta line: reads like the meta text, underlines on hover. */
-.book-mode-toggle {
-  font: inherit; color: inherit; cursor: pointer;
-  background: none; border: 0; padding: 0; text-underline-offset: 3px;
-}
-.book-mode-toggle:hover { color: var(--color-heading); text-decoration: underline; }
-@media (max-width: 767px) { .book-mode-toggle { display: none; } } /* desktop + iPad only */
-
-body.book-open { overflow: hidden; }
-
-.book-overlay {
-  position: fixed; inset: 0; z-index: 60;
-  display: grid; grid-template-rows: auto 1fr;   /* top chrome + stage; no footer */
-  font-family: var(--font-reading);
-  /* Book mode is its OWN standard, not the site theme (nor dark mode): a printed page. A light
-     warm PAPER sheet with near-black ink, floating on a slightly deeper SURFACE (the desk /
-     binding) for real open-book depth. Overriding the theme tokens here recolours everything
-     inside (prose text/headings/links/rules) in one place; the base page keeps its own tokens,
-     so closing the reader restores the previous colours automatically. */
-  --book-surface: #e8e1d2;   /* the desk behind the page */
-  --book-paper: #f8f4ec;     /* the page itself — warm near-white, black ink reads on it */
-  --color-bg: var(--book-paper);
-  --color-text: #211f1a;     /* near-black ink */
-  --color-heading: #16130d;
-  --color-meta: #8d8676;
-  --color-link: #2f2c25;
-  --color-accent: #2f2c25;
-  --color-rule: #d8cfbc;
-  background: var(--book-surface); color: var(--color-text);
-}
-
-/* Top bar: title recedes (regular weight, faint, ~body size) so the article stays the focus;
-   the page count and close sit together at the right. */
-.book-chrome { position: relative; display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 clamp(16px, 4vw, 48px); }
-.book-top { border-bottom: 1px solid var(--color-rule); }
-.book-title {
-  font-size: 1rem; font-weight: 400; color: var(--color-meta); text-align: center;
-  max-width: min(70%, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.book-topright {
-  position: absolute; right: clamp(12px, 4vw, 44px); top: 0; height: 100%;
-  display: flex; align-items: center; gap: 16px;
-}
-.book-x { background: none; border: 0; cursor: pointer; color: var(--color-meta); font-size: 1rem; line-height: 1; padding: 8px; }
-.book-x:hover { color: var(--color-heading); }
-.book-count { font-size: 0.8rem; color: var(--color-meta); }
-
-.book-stage {
-  position: relative; display: flex; align-items: center; justify-content: center;
-  min-height: 0; padding: clamp(20px, 4vh, 52px) 0;
-}
-/* The reading area is a PAPER SHEET: its own warm-white background, inner page margins, and a
-   soft shadow lifting it off the darker surface — an open page on a desk. */
-.book-viewport {
-  position: relative; height: 100%; overflow: hidden;
-  background: var(--book-paper);
-  padding: clamp(18px, 3.2vh, 40px) clamp(22px, 2.6vw, 48px);
-  box-shadow: 0 14px 50px rgba(45, 35, 15, 0.17), 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-/* Faint paper grain over the sheet so the flat screen reads as printed stock (not a glowing
-   panel). Multiplied at low opacity; the text paints above it. */
-.book-viewport::before {
-  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  opacity: 0.4; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-}
-.book-flow {
-  height: 100%;
-  column-gap: 56px;                         /* == COL_GAP in BookMode.tsx */
-  column-width: var(--book-col-w, 340px);
-  column-fill: auto;
-  transition: opacity 200ms ease;           /* == FADE_MS */
-  will-change: transform, opacity;
-  max-width: none;                          /* override .prose max-width — columns govern width */
-}
-/* Media stays column-width (no full-bleed) and never taller than a page, so nothing
-   overflows the spread. Figures/code/tables don't split across a column break. */
-.book-flow :is(img, video, iframe, pre, table, blockquote, figure) { break-inside: avoid; }
-.book-flow :is(img, video, iframe) { max-width: 100%; max-height: var(--book-page-h, 70vh); object-fit: contain; }
-.book-flow pre { max-height: var(--book-page-h, 70vh); overflow: auto; }
-/* First column opens flush with the top of the page (no leading gap). */
-.book-flow.prose > :first-child { margin-top: 0; }
-
-/* Western book touches. Oldstyle figures + discretionary ligatures where the reading face
-   carries them (serif faces do; sans quietly ignores). */
-.book-flow { font-feature-settings: "onum" 1, "liga" 1, "dlig" 1; }
-/* Drop cap: the first paragraph opens with a large raised initial spanning ~3 lines — the
-   classic chapter opening. Only the first paragraph of the first column gets it. */
-.book-flow.prose > p:first-child::first-letter {
-  float: left;
-  margin: 0.02em 0.09em 0 0;
-  font-size: 3.1em;
-  line-height: 0.72;
-  font-weight: 600;
-  color: var(--color-heading);
-}
-/* The line beside a drop cap shouldn't also be indented. */
-.book-flow.prose > p:first-child { text-indent: 0; }
-/* Opening line in small caps — the traditional companion to a raised initial. */
-.book-flow.prose > p:first-child::first-line { font-variant: small-caps; letter-spacing: 0.03em; }
-
-/* Section breaks (markdown `---` → <hr>) become a centred asterism, not a rule. */
-.book-flow hr {
-  border: 0; height: auto; margin: 1.5em 0; text-align: center; background: none;
-}
-.book-flow hr::before {
-  content: "⁂"; color: var(--color-meta); font-size: 1.05em; letter-spacing: 0.35em;
-}
-
-/* Faint book spine down the centre gutter between the two columns. Sits on the viewport,
-   so it stays put while the pages flip beneath it. */
-.book-viewport { position: relative; }
-.book-viewport::after {
-  content: ""; position: absolute; top: 7%; bottom: 7%; left: 50%; width: 1px;
-  background: var(--color-rule); opacity: 0.7; pointer-events: none;
-}
-
-.book-arrow {
-  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
-  background: none; border: 0; cursor: pointer;
-  color: var(--color-meta); font-size: 2rem; line-height: 1; padding: 12px 16px;
-}
-.book-arrow:hover:not(:disabled) { color: var(--color-heading); }
-.book-arrow:disabled { opacity: 0.2; cursor: default; }
-.book-prev { left: clamp(4px, 2vw, 28px); }
-.book-next { right: clamp(4px, 2vw, 28px); }
-
-@media (prefers-reduced-motion: reduce) { .book-flow { transition: none; } }
