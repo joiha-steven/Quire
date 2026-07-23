@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeEnabledPalettes, sanitizeComments, sanitizeThemes } from '@/lib/settings-sanitize'
+import { sanitizeEnabledPalettes, sanitizeComments, sanitizeThemes, sanitizeFontUrl } from '@/lib/settings-sanitize'
 import { ALL_PALETTE_IDS, defaultThemes } from '@/lib/themes'
 
 const COMMENTS_OFF = { enabled: false, turnstile: false, googleAuth: false }
@@ -65,5 +65,23 @@ describe('sanitizeColors: accent back-compat', () => {
       expect(theme.light.accent).toMatch(/^#[0-9a-f]{6}$/i)
       expect(theme.dark.accent).toMatch(/^#[0-9a-f]{6}$/i)
     }
+  })
+})
+
+// A font src url lands raw in `@font-face { src: url(<here>) }`, so a hostile value
+// must not smuggle a scheme or break out of `url()`.
+describe('sanitizeFontUrl', () => {
+  it('accepts a store-relative path and an http(s) url', () => {
+    expect(sanitizeFontUrl('/uploads/files/font.woff2')).toBe('/uploads/files/font.woff2')
+    expect(sanitizeFontUrl('https://cdn.example.com/f.woff2')).toBe('https://cdn.example.com/f.woff2')
+  })
+
+  it('rejects javascript:/data: schemes and url()-breaking characters', () => {
+    expect(sanitizeFontUrl('javascript:alert(1)')).toBe('')
+    expect(sanitizeFontUrl('data:font/woff2;base64,AAAA')).toBe('')
+    expect(sanitizeFontUrl('/x.woff2") ; } body{display:none}')).toBe('')
+    expect(sanitizeFontUrl('/a b.woff2')).toBe('')
+    expect(sanitizeFontUrl(42)).toBe('')
+    expect(sanitizeFontUrl('')).toBe('')
   })
 })

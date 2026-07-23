@@ -20,7 +20,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // it, but a script can't flood analytics_events. Silently drop over the limit.
     if (path && rateLimited(`track:${clientIp(req)}`, 240)) return new Response(null, { status: 204 })
     if (path) {
-      const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
+      const ip = clientIp(req)
       const ua = req.headers.get('user-agent') ?? ''
       // A `depth` payload is a scroll-depth sample (sent on leave); otherwise it
       // is a page view (sent on load).

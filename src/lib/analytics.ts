@@ -134,7 +134,12 @@ export async function recordView(
       browser,
       os,
     })
-    if (error) await db().from('analytics_events').insert(base)
+    // Fall back to the base row ONLY when a column is missing (pre-migration, 42703);
+    // any other error is real — log it instead of silently dropping the source fields.
+    if (error) {
+      if (error.code === '42703') await db().from('analytics_events').insert(base)
+      else console.error(`[ERROR] analytics.recordView insert: ${error.message}`)
+    }
   } catch (error) {
     console.error(`[ERROR] analytics.recordView: ${(error as Error).message}`)
   }
@@ -152,7 +157,10 @@ export async function recordScroll(rawPath: string, depth: number, ip: string, u
     const base = { path, depth: d, visitor: visitorHash(ip, ua) }
     const dwell = typeof dwellMs === 'number' && isFinite(dwellMs) ? Math.max(0, Math.min(86_400_000, Math.round(dwellMs))) : null
     const { error } = await db().from('analytics_scroll').insert({ ...base, dwell_ms: dwell })
-    if (error) await db().from('analytics_scroll').insert(base)
+    if (error) {
+      if (error.code === '42703') await db().from('analytics_scroll').insert(base) // pre-migration
+      else console.error(`[ERROR] analytics.recordScroll insert: ${error.message}`)
+    }
   } catch (error) {
     console.error(`[ERROR] analytics.recordScroll: ${(error as Error).message}`)
   }

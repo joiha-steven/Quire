@@ -219,8 +219,25 @@ function sanitizeFamily(value: unknown): string {
   return typeof value === 'string' ? value.replace(/[^A-Za-z0-9 _-]/g, '').trim().slice(0, 64) : ''
 }
 
-// One uploaded weight: a known weight + a non-empty url. Maps the legacy single
-// `url` (no weight) to the 400 slot.
+// A font src url lands raw in `@font-face { src: url(<here>) }`, so it must be safe to
+// interpolate: only a store-relative path (`/uploads/...`) or an http(s) URL, and no
+// character that could break out of `url()` or smuggle a scheme (`javascript:`, `data:`,
+// quotes, parens, angle brackets, whitespace). Returns '' when it doesn't qualify.
+export function sanitizeFontUrl(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  const v = value.trim()
+  if (!v || /["'()<>\s]/.test(v) || /^\s*(javascript|data|vbscript):/i.test(v)) return ''
+  if (v.startsWith('/')) return v // store-relative (the normal uploaded-font case)
+  try {
+    const u = new URL(v)
+    return u.protocol === 'http:' || u.protocol === 'https:' ? v : ''
+  } catch {
+    return ''
+  }
+}
+
+// One uploaded weight: a known weight + a safe url. Maps the legacy single `url`
+// (no weight) to the 400 slot.
 function sanitizeFaces(input: unknown, legacyUrl: unknown): FontFace[] {
   const raw = Array.isArray(input)
     ? input
@@ -231,8 +248,9 @@ function sanitizeFaces(input: unknown, legacyUrl: unknown): FontFace[] {
   for (const f of raw) {
     const o = (f ?? {}) as Partial<FontFace>
     const w = typeof o.weight === 'number' ? o.weight : NaN
-    if (FONT_WEIGHTS.includes(w as (typeof FONT_WEIGHTS)[number]) && typeof o.url === 'string' && o.url.trim()) {
-      byWeight.set(w, o.url.trim())
+    const url = sanitizeFontUrl(o.url)
+    if (FONT_WEIGHTS.includes(w as (typeof FONT_WEIGHTS)[number]) && url) {
+      byWeight.set(w, url)
     }
   }
   return FONT_WEIGHTS.filter((w) => byWeight.has(w)).map((w) => ({ weight: w, url: byWeight.get(w)! }))

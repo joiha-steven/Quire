@@ -1,6 +1,6 @@
 // GET /api/cron — scheduled maintenance (hourly; run it from cron / your panel).
-// 1) Keep-alive ping: a trivial DB read so the Supabase free-tier project never
-//    pauses (it pauses after ~7 days with no requests).
+// 1) Keep-alive ping: a trivial DB read that also serves as a liveness probe for the
+//    self-hosted Postgres/PostgREST (and keeps any idle-suspending host warm).
 // 2) Finalize sweep: generate any still-missing display variants (variants:false)
 //    in case a post-save background `after()` didn't finish. The original always
 //    renders meanwhile, so this only upgrades compression — never fixes a blank.

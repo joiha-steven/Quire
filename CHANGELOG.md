@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 2026-07-23 — pre-SaaS hardening (batch 1): safer restore + robustness
+
+Foundational fixes from the pre-SaaS audit (no user-facing behaviour change):
+
+- **Backup restore is now transactional.** The content tables are cleared + re-inserted
+  inside one `restore_tables` DB transaction, so a mid-restore failure rolls the whole DB
+  back instead of leaving the site half-restored. Identity ids are preserved, so threaded
+  `comments.parent_id` links survive a restore (the old per-table path re-keyed and could
+  break them). Requires migration `2026-07-23-restore-rpc.sql`.
+- **Rate limiter no longer leaks memory** (evicts aged-out IP keys) and **prefers
+  `CF-Connecting-IP`** over the client-forwardable `X-Forwarded-For`, so a spoofed header
+  can't evade limits or poison the analytics visitor hash / country.
+- **CSP hardening:** added the safe, no-nonce subset (`object-src 'none'`, `base-uri`,
+  `form-action`, `frame-ancestors 'none'`); a full script-src+nonce policy is a follow-up.
+- **Analytics inserts no longer swallow real errors** — the base-row fallback fires only on
+  a genuine missing-column (42703, pre-migration); other errors are logged, not hidden.
+- **Font src URLs are validated** before landing in `@font-face { src: url(...) }` (rejects
+  `javascript:`/`data:` and `url()`-breaking characters).
+
 ## 2026-07-23 — admin Library + Settings declutter
 
 - **Library (Images) is calmer and more usable.** New toolbar: total **count + size**, a **name

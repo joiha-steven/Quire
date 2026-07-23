@@ -21,7 +21,8 @@ create table if not exists public.schema_migrations (
 insert into public.schema_migrations (name) values
   ('2026-06-25-analytics-deepening.sql'),
   ('2026-06-25-analytics-fix-visitor-counts.sql'),
-  ('2026-07-22-analytics-v2.sql')
+  ('2026-07-22-analytics-v2.sql'),
+  ('2026-07-23-restore-rpc.sql')
 on conflict (name) do nothing;
 
 -- ----- posts -----------------------------------------------------------------
@@ -498,4 +499,52 @@ stable
 as $$
   select coalesce(jsonb_object_agg(path, c), '{}'::jsonb)
   from (select path, count(*)::int c from public.analytics_events group by path) t;
+$$;
+
+-- ----- RPC: transactional restore -------------------------------------------
+-- Clears + re-inserts the given content tables in ONE transaction so a mid-restore
+-- failure rolls back instead of leaving the site half-restored. Identity ids are
+-- preserved (OVERRIDING SYSTEM VALUE) so comments.parent_id links survive; generated
+-- columns (posts.search) are skipped; the identity sequence is advanced past the
+-- restored max. Blobs are restored separately by the app (filesystem, not this txn).
+create or replace function public.restore_tables(payload jsonb, table_names text[])
+returns void
+language plpgsql
+as $$
+declare
+  t text;
+  cols text;
+  has_identity boolean;
+  seqname text;
+begin
+  foreach t in array table_names loop
+    execute format('delete from public.%I', t);
+  end loop;
+
+  foreach t in array table_names loop
+    if (payload ? t) and jsonb_typeof(payload -> t) = 'array' and jsonb_array_length(payload -> t) > 0 then
+      select string_agg(quote_ident(column_name), ', ')
+        into cols
+        from information_schema.columns
+        where table_schema = 'public' and table_name = t and is_generated <> 'ALWAYS';
+
+      select exists (
+        select 1 from information_schema.columns
+        where table_schema = 'public' and table_name = t and is_identity = 'YES'
+      ) into has_identity;
+
+      execute format(
+        'insert into public.%I (%s) %s select %s from jsonb_populate_recordset(null::public.%I, $1 -> %L)',
+        t, cols,
+        case when has_identity then 'overriding system value' else '' end,
+        cols, t, t
+      ) using payload;
+
+      seqname := pg_get_serial_sequence('public.' || t, 'id');
+      if seqname is not null then
+        execute format('select setval(%L, (select coalesce(max(id), 1) from public.%I))', seqname, t);
+      end if;
+    end if;
+  end loop;
+end;
 $$;

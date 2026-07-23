@@ -22,20 +22,6 @@ import { revalidateEverything } from '@/lib/revalidate'
 // rather than shipping secrets to Drive. Order matters on restore: `comments`
 // references `post_slug`, so it follows `posts`.
 export const TABLES = ['settings', 'posts', 'comments', 'pages', 'post_revisions', 'media', 'files', 'mcp_tokens', 'activity_log', 'analytics_events', 'analytics_scroll'] as const
-type Table = (typeof TABLES)[number]
-
-// Clearing a table on restore needs a WHERE that targets EVERY row by a column the
-// table actually has. Most tables carry a surrogate `id` (delete where id >= 0), but
-// `posts`/`pages` key off `slug`, `media` off `path`, and `files` off `url` — they
-// have NO `id` column, so a `.gte('id', 0)` errors (PostgREST 42703) and silently
-// leaves them un-cleared. Map each id-less table to a filter on its real PK; the rest
-// fall through to the id filter. Exported for the clear-filter unit test.
-export const CLEAR_BY_PK: Partial<Record<Table, { col: string; absent: string }>> = {
-  posts: { col: 'slug', absent: '' },
-  pages: { col: 'slug', absent: '' },
-  media: { col: 'path', absent: '' },
-  files: { col: 'url', absent: '' },
-}
 
 const SNAPSHOT_PREFIX = 'quire-'
 
@@ -143,14 +129,13 @@ export async function deleteBackup(fileId: string): Promise<void> {
   await deleteSnapshot(token, fileId)
 }
 
-// Restore a snapshot — DESTRUCTIVE. Replaces every text table (except settings,
-// which is upserted by id=1) and re-uploads every blob. A pre-restore snapshot is
-// taken first so the current state is recoverable. Surrogate `id`s are dropped on
-// insert (tables key off slug/path/url, so identity columns regenerate cleanly).
-// NOTE: each table is cleared then re-inserted independently — there is no
-// cross-table transaction, so a mid-restore failure leaves the site half-restored.
-// A single transactional RPC would be safer; until then every delete + insert is
-// error-checked so a failure THROWS (surfaced to the caller) rather than going silent.
+// Restore a snapshot — DESTRUCTIVE. Replaces every text table and re-uploads every
+// blob. A pre-restore snapshot is taken first so the current state is recoverable.
+// The content tables are cleared + re-inserted inside ONE transaction via the
+// `restore_tables` RPC, so a mid-restore failure rolls back cleanly instead of
+// leaving the site half-restored; identity ids are preserved so comments.parent_id
+// links survive. `settings` (the id=1 singleton) is upserted separately. Blobs are a
+// best-effort filesystem step after the DB is consistent (not in the txn).
 export async function restoreBackup(fileId: string): Promise<void> {
   const { token } = await connect()
   // Safety net: snapshot the live site BEFORE any destructive write. If this fails
@@ -168,30 +153,23 @@ export async function restoreBackup(fileId: string): Promise<void> {
   await fs.mkdir(work, { recursive: true })
   await tar.extract({ file: archive, cwd: work })
 
-  const dump = JSON.parse(await fs.readFile(path.join(work, 'db.json'), 'utf8')) as { tables: Record<string, Record<string, unknown>[]> }
-  for (const t of TABLES) {
-    const rows = dump.tables[t] ?? []
-    if (t === 'settings') {
-      if (rows[0]) await db().from('settings').upsert(rows[0])
-      continue
-    }
-    // Clear the table by a filter valid for its REAL primary key (id-keyed tables
-    // by `id >= 0`; slug/path/url-keyed tables by their PK <> '') and error-check it.
-    const pk = CLEAR_BY_PK[t]
-    const cleared = pk
-      ? await db().from(t).delete().neq(pk.col, pk.absent)
-      : await db().from(t).delete().gte('id', 0)
-    if (cleared.error) throw new Error(`restore clear ${t}: ${cleared.error.message}`)
-    if (rows.length) {
-      // Drop server-managed columns so the insert is accepted: the surrogate `id`
-      // (identity, regenerates) and `posts.search` (generated tsvector).
-      const stripped = rows.map((r) => { const copy = { ...r }; delete copy.id; delete copy.search; return copy })
-      for (let i = 0; i < stripped.length; i += 500) {
-        const { error } = await db().from(t).insert(stripped.slice(i, i + 500))
-        if (error) throw new Error(`restore ${t}: ${error.message}`)
-      }
-    }
+  const dump = JSON.parse(await fs.readFile(path.join(work, 'db.json'), 'utf8')) as { tables?: Record<string, Record<string, unknown>[]> }
+  const tables = dump.tables
+  if (!tables || typeof tables !== 'object') throw new Error('restore: snapshot db.json has no tables')
+
+  // settings is the id=1 singleton — upsert it, exclude it from the bulk restore.
+  if (tables.settings?.[0]) {
+    const { error } = await db().from('settings').upsert(tables.settings[0])
+    if (error) throw new Error(`restore settings: ${error.message}`)
   }
+  // Everything else clears + re-inserts atomically in one transaction (restore_tables
+  // RPC): a failure rolls the whole DB back, not half. Falls back to a clear error if
+  // the RPC isn't applied yet (pre-migration).
+  const contentTables = TABLES.filter((t) => t !== 'settings')
+  const payload: Record<string, unknown[]> = {}
+  for (const t of contentTables) payload[t] = tables[t] ?? []
+  const { error } = await db().rpc('restore_tables', { payload, table_names: contentTables })
+  if (error) throw new Error(`restore tables: ${error.message}`)
 
   // Re-upload every blob from the archive (overwrites; immutable names).
   const blobDir = path.join(work, 'blob')
