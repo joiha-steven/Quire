@@ -155,7 +155,7 @@ function BookReader({
         <span className="book-title">{title}</span>
         <div className="book-topright">
           <span className="book-count tabular-nums">
-            {spread + 1} / {spreadCount}
+            — {spread + 1} / {spreadCount} —
           </span>
           <button type="button" className="book-x" onClick={onClose} aria-label={tx.bookModeClose} title={tx.bookModeClose}>
             ✕

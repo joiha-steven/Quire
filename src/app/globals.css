@@ -1235,6 +1235,24 @@ body.book-open { overflow: hidden; }
 }
 /* The line beside a drop cap shouldn't also be indented. */
 .book-flow.prose > p:first-child { text-indent: 0; }
+/* Opening line in small caps — the traditional companion to a raised initial. */
+.book-flow.prose > p:first-child::first-line { font-variant: small-caps; letter-spacing: 0.03em; }
+
+/* Section breaks (markdown `---` → <hr>) become a centred asterism, not a rule. */
+.book-flow hr {
+  border: 0; height: auto; margin: 1.5em 0; text-align: center; background: none;
+}
+.book-flow hr::before {
+  content: "⁂"; color: var(--color-meta); font-size: 1.05em; letter-spacing: 0.35em;
+}
+
+/* Faint book spine down the centre gutter between the two columns. Sits on the viewport,
+   so it stays put while the pages flip beneath it. */
+.book-viewport { position: relative; }
+.book-viewport::after {
+  content: ""; position: absolute; top: 7%; bottom: 7%; left: 50%; width: 1px;
+  background: var(--color-rule); opacity: 0.7; pointer-events: none;
+}
 
 .book-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
