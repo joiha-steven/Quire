@@ -304,7 +304,9 @@
   spread is exactly as wide as the site's content column (`#post-body` width) at a fixed page
   height, and reads `scrollWidth` to count columns → spreads = `ceil(cols / 2)`. The overlay
   carries `book-text`, so the reading view's first-line indent + justified margins apply.
-  Advancing
+  **Wide images (`figure.img-wide`) render at column width here** — the desktop gutter-widening
+  (`singleRailCss`) is neutralised in `book.css`, so a wide image behaves like a normal one and
+  never spills into the next column/page. Advancing
   translates the flow by two columns and crossfades. Recomputes on resize + once webfonts
   settle (`document.fonts.ready`). Base page keeps normal scroll, so **SEO / a11y / find-in-page
   are untouched** (book mode is pure client enhancement).
