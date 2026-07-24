@@ -85,6 +85,17 @@ body.book-open { overflow: hidden; }
 .book-flow :is(img, video, iframe, pre, table, blockquote, figure) { break-inside: avoid; }
 .book-flow :is(img, video, iframe) { max-width: 100%; max-height: var(--book-page-h, 70vh); object-fit: contain; }
 .book-flow pre { max-height: var(--book-page-h, 70vh); overflow: auto; }
+/* A "wide" image/video has NO effect in book mode: it renders at column width like a
+   normal figure, so it can never spill into the next column/page. Overrides the desktop
+   gutter-widening injected by singleRailCss (rail-css.ts), which otherwise leaks in
+   because the book flow is also `.prose`. */
+.book-flow.prose figure.img-wide,
+.book-flow.prose .video-wide {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
 /* First column opens flush with the top of the page (no leading gap). */
 .book-flow.prose > :first-child { margin-top: 0; }
 
