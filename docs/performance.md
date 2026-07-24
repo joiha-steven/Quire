@@ -74,7 +74,11 @@ list (or the class won't emit). NEVER put an admin-only utility/chrome rule in `
 4. **No third-party analytics/tag JS on the reader.** Built-in cookieless analytics only
    (`Track`/`ScrollDepth` → `/api/track`). (Edge injections — e.g. Cloudflare Web Analytics
    / Bot JS Detections — are a dashboard concern, not code, and are redundant here.)
-5. **The framework baseline** (react-dom + Next App Router, ~130 KB gzip) and the RSC flight
+5. **Scroll-reveal is pure CSS first.** `.reveal` cards ease in via `animation-timeline: view()`
+   (globals.css) — zero JS on Chromium. `RevealFallback` (an IntersectionObserver island, gated
+   on `motion.enabled`) covers ONLY browsers without scroll-timeline (Safari/Firefox); the root
+   layout arms `data-reveal-js` pre-paint just there, so Chromium never ships or runs its JS.
+6. **The framework baseline** (react-dom + Next App Router, ~130 KB gzip) and the RSC flight
    payload are the floor; don't chase Lighthouse "legacy/unused JS" inside those vendor
    chunks — Turbopack doesn't strip them via `browserslist`, and they're not on the LCP path.
 

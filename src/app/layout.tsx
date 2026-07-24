@@ -7,8 +7,12 @@ import { fontPresetCss, fontPreloadHrefs, chromeFontCss } from '@/lib/themes'
 // Before paint: apply saved mode + palette to avoid a wrong-color flash. Default
 // palette is baked into :root, so only set data-palette when a stored palette is
 // still ENABLED — a palette the owner has since hidden falls back to the default.
-function noFouc(enabled: string[], gridView: boolean): string {
-  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p);if(${gridView}&&localStorage.getItem('list')==='grid')d.setAttribute('data-list','grid')}catch(e){}})();`
+// Also arms the JS scroll-reveal (data-reveal-js) BEFORE paint so the cards' hidden
+// state never flashes: only on browsers that lack CSS scroll-timeline (Safari/
+// Firefox), with motion on + no reduced-motion + IntersectionObserver — the exact
+// case RevealFallback covers. Everywhere else the attr stays unset (cards visible).
+function noFouc(enabled: string[], gridView: boolean, motion: boolean): string {
+  return `(function(){try{var d=document.documentElement;var m=localStorage.getItem('theme')||'system';var dk=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(m==='time'&&(function(){var h=new Date().getHours();return h>=18||h<6})());if(dk)d.classList.add('dark');var p=localStorage.getItem('palette');if(p&&${JSON.stringify(enabled)}.indexOf(p)>-1)d.setAttribute('data-palette',p);if(${gridView}&&localStorage.getItem('list')==='grid')d.setAttribute('data-list','grid');if(${motion}&&'IntersectionObserver' in window&&window.CSS&&CSS.supports&&!CSS.supports('animation-timeline: view()')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.setAttribute('data-reveal-js','on')}catch(e){}})();`
 }
 
 
@@ -73,7 +77,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style dangerouslySetInnerHTML={{ __html:
           typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) +
           chromeFontCss(chromeFont) }} />
-        <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes, features.gridView) }} />
+        <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes, features.gridView, motion.enabled) }} />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

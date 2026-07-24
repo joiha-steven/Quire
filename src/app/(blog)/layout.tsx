@@ -8,6 +8,7 @@ import { RailToggle } from '@/components/blog/RailToggle'
 import { GridToggle } from '@/components/blog/GridToggle'
 import { SearchTrigger } from '@/components/blog/SearchTrigger'
 import { Track } from '@/components/blog/Track'
+import { RevealFallback } from '@/components/blog/RevealFallback'
 import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 import { singleRailCss } from '@/lib/rail-css'
 import { t } from '@/lib/i18n'
@@ -79,6 +80,9 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
           )}
         </header>
         <Track />
+        {/* Scroll-reveal for Safari/Firefox (Chromium uses pure CSS). Gated on the
+            motion engine, so motion off ships zero client JS. */}
+        {settings.motion.enabled && <RevealFallback />}
         {/* Positioning context for the rail: it wraps the content, not the header,
             so the rail's first line lands level with the content's first line. */}
         <div className="with-rail flex flex-1 flex-col">
