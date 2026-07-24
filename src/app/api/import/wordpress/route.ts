@@ -7,6 +7,7 @@ import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { savePost } from '@/lib/posts'
 import { savePage } from '@/lib/pages'
+import { suppressBacklogBroadcast } from '@/lib/broadcast'
 import { parseWxr } from '@/lib/wordpress-import'
 import { SlugConflictError } from '@/lib/slugs'
 import { revalidateEverything } from '@/lib/revalidate'
@@ -71,6 +72,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       await saveUnique(slug, (s) => savePage({ ...rest, slug: s }))
       importedPages++
     }
+
+    // Imported published posts land with broadcast_at NULL — stamp them as already-sent so
+    // the next cron tick can't email the whole back catalogue to subscribers.
+    if (importedPosts > 0) await suppressBacklogBroadcast()
 
     if (importedPosts + importedPages > 0) revalidateEverything()
     after(() => logActivity('import.wordpress', `${importedPosts} posts + ${importedPages} pages`))

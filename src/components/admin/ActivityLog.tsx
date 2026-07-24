@@ -77,7 +77,7 @@ export function ActivityLog({ entries, enabled }: { entries: ActivityEntry[]; en
                   </td>
                   <td className="px-4 py-2">
                     <span
-                      className={`rounded-md px-2 py-0.5 text-xs ${
+                      className={`rounded-full px-2 py-0.5 text-xs ${
                         e.action === 'error'
                           ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
                           : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'

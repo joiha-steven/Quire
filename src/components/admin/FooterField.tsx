@@ -8,7 +8,7 @@ import { renderInlineMarkdown } from '@/lib/inline-md'
 import { useAdminT } from './I18nProvider'
 
 const TB_BTN =
-  'flex h-8 min-w-8 items-center justify-center rounded-md border border-neutral-300 px-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800'
+  'flex h-8 min-w-8 items-center justify-center rounded-lg border border-neutral-300 px-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800'
 
 export function FooterField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const t = useAdminT()

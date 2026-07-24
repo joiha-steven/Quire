@@ -36,7 +36,7 @@ function CaptionedImageView({ node, updateAttributes, selected }: NodeViewProps)
 
   const figCls = grid ? 'img-grid' : `img-${align}${wide ? ' img-wide' : ''}`
   const btn = (active: boolean) =>
-    `rounded-md px-2.5 py-1 text-xs font-medium ${
+    `rounded-lg px-2.5 py-1 text-xs font-medium ${
       active ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500'
     }`
 

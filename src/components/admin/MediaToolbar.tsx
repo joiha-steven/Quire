@@ -4,6 +4,7 @@
 // right. Split out of MediaLibrary to keep that file thin; presentational, all
 // state lives in the parent.
 import { formatBytes } from '@/lib/utils'
+import { CONTROL } from './kit'
 import { useAdminT } from './I18nProvider'
 
 export type MediaSort = 'new' | 'name' | 'size'
@@ -37,14 +38,14 @@ export function MediaToolbar({
           value={query}
           onChange={(e) => onQuery(e.target.value)}
           placeholder={t.mediaSearch}
-          className="w-40 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm outline-none transition-colors focus:border-neutral-900 sm:w-52 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className={`${CONTROL} w-40 sm:w-52`}
         />
         <label className="sr-only" htmlFor="media-sort">{t.sortLabel}</label>
         <select
           id="media-sort"
           value={sort}
           onChange={(e) => onSort(e.target.value as MediaSort)}
-          className="rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className={`${CONTROL} cursor-pointer pr-9`}
         >
           <option value="new">{t.sortNewest}</option>
           <option value="name">{t.sortName}</option>

@@ -47,3 +47,17 @@ export async function broadcastDuePosts(): Promise<{ posts: number; emails: numb
   }
   return { posts: due.length, emails }
 }
+
+// Stamp every already-published post that still has no `broadcast_at` as "sent" WITHOUT
+// emailing — the same thing the migration backfill does. Call it right after a bulk
+// import (WordPress): imported published posts persist with `broadcast_at = NULL`, so
+// without this the next cron tick would email the ENTIRE imported back catalogue to
+// every confirmed subscriber. (Same back-catalogue-burst guard as the newsletter toggle.)
+export async function suppressBacklogBroadcast(): Promise<void> {
+  const { error } = await db()
+    .from('posts')
+    .update({ broadcast_at: new Date().toISOString() })
+    .eq('status', 'published')
+    .is('broadcast_at', null)
+  if (error) throw new Error(`suppressBacklogBroadcast: ${error.message}`)
+}

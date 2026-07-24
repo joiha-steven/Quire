@@ -35,7 +35,7 @@ function VideoView({ node, updateAttributes, selected, editor, getPos }: NodeVie
   }
   const overlay = <div className="absolute inset-0 cursor-pointer" onMouseDown={selectNode} />
   const btn = (active: boolean) =>
-    `rounded-md px-2.5 py-1 text-xs font-medium ${
+    `rounded-lg px-2.5 py-1 text-xs font-medium ${
       active ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500'
     }`
   return (

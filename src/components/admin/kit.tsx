@@ -10,6 +10,12 @@ import type { ReactNode } from 'react'
 export const CARD =
   'rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none'
 
+// Canonical form-control chrome — shared by admin <input> and <select> so height,
+// padding, radius and focus never drift (they were hand-rolled + cramped before).
+// Matches the labeled `FIELD` in ui/Input.tsx. Callers add width (w-full or fixed).
+export const CONTROL =
+  'rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200 placeholder:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-500 dark:focus:ring-neutral-800 dark:placeholder:text-neutral-500'
+
 // Card: a titled panel. `title` optional (stat-style panels pass none). `actions`
 // renders on the right of the header row.
 export function Card({

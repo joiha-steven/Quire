@@ -57,12 +57,12 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
         title={t.analyticsTitle}
         actions={
           <div className="flex items-center gap-2">
-            <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+            <div className="flex gap-1 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800">
               {RANGES.map((r) => (
                 <Link
                   key={r}
                   href={`/admin/analytics?range=${r}`}
-                  className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+                  className={`rounded-lg px-3 py-1 text-sm font-medium transition ${
                     r === range ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
                   }`}
                 >
@@ -142,8 +142,9 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
             </tbody>
           </TableFrame>
 
-          {/* Sources: traffic channels + top external referrers. */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Sources + engagement: traffic channels + top external referrers + read-depth
+              split — three even columns (the row has room for all three). */}
+          <div className="grid gap-4 sm:grid-cols-3">
             <BarList
               title={t.analyticsChannels}
               unit={t.analyticsVisitors}
@@ -155,6 +156,12 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
               unit={t.analyticsVisitors}
               empty={t.analyticsNoData}
               rows={(data.topReferrers ?? []).map((r) => ({ key: r.host, label: r.host, value: r.visitors }))}
+            />
+            <BarList
+              title={t.analyticsDepthDist}
+              unit={t.analyticsUnitSamples}
+              empty={t.analyticsNoData}
+              rows={(data.depthBuckets ?? []).map((b) => ({ key: String(b.bucket), label: DEPTH_LABELS[b.bucket] ?? `${b.bucket}`, value: b.samples }))}
             />
           </div>
 
@@ -170,16 +177,6 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
             <BarList title={t.analyticsBrowsers} unit={t.analyticsVisitors} empty={t.analyticsNoData} rows={facetRows(data.browsers, t.analyticsUnknown)} />
             <BarList title={t.analyticsSystems} unit={t.analyticsVisitors} empty={t.analyticsNoData} rows={facetRows(data.systems, t.analyticsUnknown)} />
           </div>
-
-          {/* Engagement: read-depth distribution. */}
-          {(data.depthBuckets?.length ?? 0) > 0 && (
-            <BarList
-              title={t.analyticsDepthDist}
-              unit={t.analyticsUnitSamples}
-              empty={t.analyticsNoData}
-              rows={data.depthBuckets!.map((b) => ({ key: String(b.bucket), label: DEPTH_LABELS[b.bucket] ?? `${b.bucket}`, value: b.samples }))}
-            />
-          )}
         </>
       )}
     </div>

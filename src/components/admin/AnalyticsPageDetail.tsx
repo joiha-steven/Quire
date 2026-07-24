@@ -35,12 +35,12 @@ export function AnalyticsPageDetail({ data, title, range }: { data: PageSummary;
           </a>
         }
         actions={
-          <div className="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+          <div className="flex gap-1 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800">
             {RANGES.map((r) => (
               <Link
                 key={r}
                 href={`/admin/analytics?path=${encodeURIComponent(data.path)}&range=${r}`}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+                className={`rounded-lg px-3 py-1 text-sm font-medium transition ${
                   r === range ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
                 }`}
               >
