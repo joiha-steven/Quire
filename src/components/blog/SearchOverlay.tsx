@@ -109,7 +109,7 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
             onChange={(e) => setQ(e.target.value)}
             placeholder={t(lang).searchPlaceholder}
             aria-label={t(lang).search}
-            className="fs-h3 w-full bg-transparent py-3 outline-none placeholder:text-meta focus-visible:outline-none"
+            className="no-accent-ring fs-h3 w-full bg-transparent py-3 outline-none placeholder:text-meta"
           />
         </div>
         <div className="mt-4 max-h-[55vh] overflow-y-auto">

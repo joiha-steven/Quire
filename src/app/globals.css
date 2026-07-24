@@ -251,6 +251,13 @@ input[type='checkbox'] {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
 }
+/* Opt-out for a field that renders its OWN focus frame (e.g. the search box's
+   focus-within border): suppress the accent ring so the two don't fight. Unlayered
+   so it beats the rule above — a Tailwind `outline-none` utility, being in a lower
+   layer, cannot, no matter its specificity. */
+.no-accent-ring:focus-visible {
+  outline: none;
+}
 
 /* Skip link: hidden until focused, then pinned top-left so keyboard/screen-reader
    users can jump past the header controls (WCAG 2.4.1). */
