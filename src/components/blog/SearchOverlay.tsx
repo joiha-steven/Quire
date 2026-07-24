@@ -97,7 +97,7 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
             input suppresses the global accent focus ring (focus-visible:outline-none) so
             there is no offset red rectangle fighting the border. Leading magnifier = the
             same owner-approved glyph as the header search button. */}
-        <div className="flex items-center gap-3 rounded-xl border border-rule px-4 transition-colors focus-within:border-heading">
+        <div className="flex items-center gap-3 rounded-lg border border-rule px-4 transition-colors focus-within:border-heading">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-meta" aria-hidden>
             <circle cx="10.5" cy="10.5" r="6.5" />
             <path d="m15.5 15.5 4.5 4.5" />

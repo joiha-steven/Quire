@@ -6,6 +6,7 @@ import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { isScheduled } from '@/lib/utils'
 import { MultiSelect } from './MultiSelect'
+import { Combobox } from './Combobox'
 import { useAdminT } from './I18nProvider'
 
 export type Draft = {
@@ -93,18 +94,13 @@ export function PostSettings({ draft, update, allCategories, allTags, allSeries,
       />
 
       <div className="space-y-3">
-        <Input
+        <Combobox
           label={t.seriesField}
           value={draft.series}
-          onChange={(e) => update({ series: e.target.value })}
+          onChange={(series) => update({ series })}
           placeholder={t.seriesPlaceholder}
-          list="series-names"
+          options={allSeries}
         />
-        <datalist id="series-names">
-          {allSeries.map((s) => (
-            <option key={s} value={s} />
-          ))}
-        </datalist>
         {draft.series.trim() && (
           <Input
             label={t.seriesOrder}

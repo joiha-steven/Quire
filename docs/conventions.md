@@ -146,11 +146,15 @@ font, only the site language's subset(s), never the chrome font or an uploaded c
 - **One accent, one token.** `--c-accent` (per palette, editable in Admin → Appearance) paints the
   active rail marker and the title hover underline. It is seeded from each palette's `link`, so
   Mono stays monochrome. Never hardcode a highlight colour.
-- **Public reading chrome stays sharp; admin does not.** The global `border-radius: 0` reset in
-  `globals.css` excludes descendants of `.admin-shell`. Public pages therefore keep Quire's square,
-  reading-first character while admin uses the shared app-like radius scale: cards/tables/modals
-  `rounded-2xl` (16px), grouped controls `rounded-xl` (12px), buttons/inputs/nav rows `rounded-lg`
-  (8px), pills/switches fully round. Do not invent one-off radii; change shared primitives first.
+- **Rounded corners are allowed site-wide (public + admin).** The old global `border-radius: 0`
+  reset that forced the public frontend square has been DROPPED — elements now carry their own
+  `rounded-*` radius and unstyled elements stay square by default. Use ONE radius scale everywhere:
+  cards/tables/modals `rounded-2xl` (16px), grouped controls/segmented tracks `rounded-xl` (12px),
+  buttons/inputs/selects/nav rows `rounded-lg` (8px), pills/switches/badges fully round. Do not
+  invent one-off radii (no `rounded-md`); change shared primitives first (`kit.tsx` CARD/CONTROL/
+  Select/Tabs, `ui/*`, `iconButton.ts`). Admin `<select>` uses the styled `Select` (kit.tsx) and
+  free-text-with-suggestions uses `Combobox` — never a raw native `<select>`/`<datalist>` (their
+  OS popups can't be themed: wrong font, cramped, no hover).
 - **Public UI colours come ONLY from theme tokens — never hardcode `neutral-*`/`white`/`black`
   or a hex.** Vars `--c-bg/text/heading/meta/link/rule` are utilities (`bg-bg`, `text-text`,
   `text-heading`, `text-meta`, `text-link`, `border-rule`). Every line/border + faint surface

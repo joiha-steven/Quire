@@ -4,7 +4,7 @@
 // (neutral scale, no public theme tokens). No `'use client'`: these are presentational
 // — pure primitives render in server OR client trees; Tabs only takes props.
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import type { ReactNode, SelectHTMLAttributes } from 'react'
 
 // Canonical card surface. ONE radius + border + shadow for every admin panel.
 export const CARD =
@@ -15,6 +15,37 @@ export const CARD =
 // Matches the labeled `FIELD` in ui/Input.tsx. Callers add width (w-full or fixed).
 export const CONTROL =
   'rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200 placeholder:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-500 dark:focus:ring-neutral-800 dark:placeholder:text-neutral-500'
+
+// Styled <select>: kills the OS-native arrow (`appearance-none`) and draws our own
+// chevron, so a select matches the input chrome + the app font instead of the ugly
+// browser-default dropdown. Auto-width by default; pass `wrapClassName="flex w-full"`
+// + `className="w-full"` for a full-width field.
+export function Select({
+  className = '',
+  wrapClassName = 'inline-flex',
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & { wrapClassName?: string }) {
+  return (
+    <span className={`relative ${wrapClassName}`}>
+      <select {...props} className={`${CONTROL} cursor-pointer appearance-none pr-9 ${className}`}>
+        {children}
+      </select>
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </span>
+  )
+}
 
 // Card: a titled panel. `title` optional (stat-style panels pass none). `actions`
 // renders on the right of the header row.

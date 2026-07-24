@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { ToggleRow } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { formatDateTimeShort } from '@/lib/utils'
+import { Select } from './kit'
 import { useAdminT } from './I18nProvider'
 
 const INTERVALS = [1, 2, 3, 4, 7, 14, 30]
@@ -134,27 +135,29 @@ export function BackupFields({ backups, onChange }: { backups: BackupSettings; o
         <div className="grid gap-4 border-t border-neutral-200 p-4 sm:grid-cols-2 sm:p-5 dark:border-neutral-800">
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
             <span>{t.backupIntervalLabel}</span>
-            <select
+            <Select
               value={backups.intervalDays}
               onChange={(e) => onChange({ ...backups, intervalDays: Number(e.target.value) })}
-              className="mt-2 min-h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-normal shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-white dark:focus:ring-white/10"
+              wrapClassName="mt-2 flex w-full"
+              className="w-full font-normal"
             >
               {INTERVALS.map((n) => (
                 <option key={n} value={n}>{n}</option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
             <span>{t.backupKeepLabel}</span>
-            <select
+            <Select
               value={backups.keep}
               onChange={(e) => onChange({ ...backups, keep: Number(e.target.value) })}
-              className="mt-2 min-h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-normal shadow-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-white dark:focus:ring-white/10"
+              wrapClassName="mt-2 flex w-full"
+              className="w-full font-normal"
             >
               {KEEPS.map((n) => (
                 <option key={n} value={n}>{n}</option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
       </div>

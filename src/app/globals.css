@@ -231,19 +231,11 @@ body { font-optical-sizing: auto; }
   }
 }
 
-/* Public reading chrome stays square. Admin is deliberately excluded: its app-like
-   controls use the radii declared by the shared UI kit and Tailwind utilities.
-   `[data-round]` opts a public element back out (media-viewer controls that must be
-   circular, e.g. the lightbox buttons). */
-*:not(.admin-shell *):not([data-round]),
-*:not(.admin-shell *):not([data-round])::before,
-*:not(.admin-shell *):not([data-round])::after {
-  border-radius: 0 !important;
-}
-input[type='radio'],
-input[type='checkbox'] {
-  border-radius: revert !important;
-}
+/* Rounded corners are allowed site-wide: each element carries its own `rounded-*`
+   radius (Tailwind), and anything unstyled stays square by default. (Historically a
+   global `border-radius:0 !important` reset forced the whole public frontend square;
+   dropped so the reading chrome + controls round consistently with the admin kit.
+   `[data-round]` is now a harmless no-op — kept on the lightbox controls.) */
 
 /* One visible keyboard focus ring everywhere (WCAG 2.4.7). Uses the accent token so
    it reads on any palette; inputs that set `outline-none` must supply their own. */

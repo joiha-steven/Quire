@@ -4,6 +4,7 @@
 // posts; it renders in the sidebar "Featured" block (first 5, in this order) between
 // categories and tags. Parent owns state + save. Add from the dropdown, reorder with
 // ↑/↓, remove with ×. A chosen slug whose post is no longer public is dropped on load.
+import { Select } from './kit'
 import { useAdminT } from './I18nProvider'
 
 type Props = {
@@ -14,7 +15,6 @@ type Props = {
 
 const ROW = 'flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800'
 const ICON = 'shrink-0 rounded-lg px-2 py-1 text-neutral-500 hover:bg-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-neutral-800'
-const SELECT = 'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-400'
 
 export function FeaturedField({ posts, value, onChange }: Props) {
   const t = useAdminT()
@@ -42,12 +42,12 @@ export function FeaturedField({ posts, value, onChange }: Props) {
         </div>
       ))}
       {available.length > 0 && (
-        <select value="" onChange={(e) => e.target.value && onChange([...chosen, e.target.value])} className={SELECT}>
+        <Select value="" onChange={(e) => e.target.value && onChange([...chosen, e.target.value])} wrapClassName="flex w-full" className="w-full">
           <option value="">{t.featuredAdd}</option>
           {available.map((p) => (
             <option key={p.slug} value={p.slug}>{p.title || p.slug}</option>
           ))}
-        </select>
+        </Select>
       )}
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.featuredHint}</p>
     </div>
