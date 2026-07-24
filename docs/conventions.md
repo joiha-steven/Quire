@@ -29,6 +29,11 @@
   viewBox and render at 20px with 1.5–1.6px round strokes. A four-dot palette, split-contrast
   theme mark, and three-line menu were tried on 2026-07-12 and reverted; do not reintroduce
   them without visual approval. Their shared 40px button chrome still comes from `ICON_BTN`.
+- **The icon row is pulled right by `-mr-2.5` (10px) so the LAST glyph aligns flush with the
+  content column's right margin** — the 40px button centers a 20px glyph, leaving a 10px inset;
+  without the negative margin the rightmost icon sits 10px inside the margin while the logo is
+  flush-left (asymmetric). Every icon shares `ICON_BTN`, so this aligns whichever icon is last
+  (theme when palettes/grid are off; menu on mobile). Verified with a Playwright edge measure.
 - Theme default = **system** (no-FOUC script + `ThemeProvider` both `|| 'system'`); the toggle
   reflects the *applied* theme (`useSyncExternalStore` on `<html>.dark`; server snapshot =
   light → no hydration mismatch).

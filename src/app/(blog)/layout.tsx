@@ -63,7 +63,11 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
                 <span className="fs-h4 font-bold">{settings.title}</span>
               )}
             </Link>
-            <div className="flex shrink-0 items-center gap-0.5">
+            {/* -mr-2.5 optically aligns the LAST icon's glyph to the content column's right
+                margin: the 40px button centers a 20px glyph, so the glyph sits 10px inside the
+                button edge. Pulling the row right by that 10px lands the last glyph flush on the
+                margin — matching the logo's flush-left edge (header alignment is a HARD RULE). */}
+            <div className="-mr-2.5 flex shrink-0 items-center gap-0.5">
               {settings.features.search && <SearchTrigger lang={settings.language} />}
               {palettes.length > 1 && <PaletteToggle lang={settings.language} palettes={palettes} defaultId={settings.themePreset} />}
               <ThemeToggle lang={settings.language} />
