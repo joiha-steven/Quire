@@ -93,15 +93,25 @@ export function SearchOverlay({ lang, onClose }: { lang: SiteLang; onClose: () =
         className="h-fit w-full max-w-xl rounded-2xl border border-rule bg-bg p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <input
-          type="search"
-          autoFocus
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={t(lang).searchPlaceholder}
-          aria-label={t(lang).search}
-          className="fs-h3 w-full border-b border-rule bg-transparent pb-3 outline-none transition-colors focus:border-heading placeholder:text-meta"
-        />
+        {/* One even frame: the whole box border darkens on focus (focus-within), and the
+            input suppresses the global accent focus ring (focus-visible:outline-none) so
+            there is no offset red rectangle fighting the border. Leading magnifier = the
+            same owner-approved glyph as the header search button. */}
+        <div className="flex items-center gap-3 rounded-xl border border-rule px-4 transition-colors focus-within:border-heading">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-meta" aria-hidden>
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m15.5 15.5 4.5 4.5" />
+          </svg>
+          <input
+            type="search"
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t(lang).searchPlaceholder}
+            aria-label={t(lang).search}
+            className="fs-h3 w-full bg-transparent py-3 outline-none placeholder:text-meta focus-visible:outline-none"
+          />
+        </div>
         <div className="mt-4 max-h-[55vh] overflow-y-auto">
           {needle.length < 1 ? (
             <p className="py-8 text-center t-small text-meta">{t(lang).searchHint}</p>

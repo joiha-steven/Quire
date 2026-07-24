@@ -10,7 +10,7 @@
   font: inherit; color: inherit; cursor: pointer;
   background: none; border: 0; padding: 0; text-underline-offset: 3px;
 }
-.book-mode-toggle:hover { color: var(--color-heading); text-decoration: underline; }
+.book-mode-toggle:hover { color: var(--c-heading); text-decoration: underline; }
 @media (max-width: 767px) { .book-mode-toggle { display: none; } } /* desktop + iPad only */
 
 body.book-open { overflow: hidden; }
@@ -24,20 +24,22 @@ body.book-open { overflow: hidden; }
      ink, with a visible paper grain baked into the background so the flat screen reads as
      printed stock. Overriding the theme tokens here recolours everything inside (prose
      text/headings/links/rules) in one place; the base page keeps its own tokens, so closing
-     the reader restores the previous colours automatically. */
+     the reader restores the previous colours automatically. These MUST be the site's real
+     theme tokens (`--c-*`, see themes.ts), NOT `--color-*` — that mismatch used to leave the
+     body text following the theme, so dark mode showed white text on the paper. */
   --book-paper: #f9f4ec;     /* the page — warm near-white (a touch paler); black ink reads on it */
-  --color-bg: var(--book-paper);
+  --c-bg: var(--book-paper);
   /* Reading text is 15% larger than normal in book mode. It multiplies the owner's --fs-*
      roles (see globals.css), so it tracks the site's font-size setting: bump the setting and
      book mode stays 15% above it. Chrome (title/count use fixed rem) is unaffected. */
   --type-scale: 1.15;
-  --color-text: #211f1a;     /* near-black ink */
-  --color-heading: #16130d;
-  --color-meta: #8d8676;
-  --color-link: #2f2c25;
-  --color-accent: #2f2c25;
-  --color-rule: #d8cfbc;
-  color: var(--color-text);
+  --c-text: #211f1a;     /* near-black ink */
+  --c-heading: #16130d;
+  --c-meta: #8d8676;
+  --c-link: #2f2c25;
+  --c-accent: #2f2c25;
+  --c-rule: #d8cfbc;
+  color: var(--c-text);
   /* Grain is a desaturated fractal-noise layer multiplied into the paper colour — one uniform
      texture over the entire background (chrome + margins + columns alike). */
   background-color: var(--book-paper);
@@ -48,18 +50,18 @@ body.book-open { overflow: hidden; }
 /* Top bar: title recedes (regular weight, faint, ~body size) so the article stays the focus;
    the page count and close sit together at the right. */
 .book-chrome { position: relative; display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 clamp(16px, 4vw, 48px); }
-.book-top { border-bottom: 1px solid var(--color-rule); }
+.book-top { border-bottom: 1px solid var(--c-rule); }
 .book-title {
-  font-size: 1rem; font-weight: 400; color: var(--color-meta); text-align: center;
+  font-size: 1rem; font-weight: 400; color: var(--c-meta); text-align: center;
   max-width: min(70%, 720px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .book-topright {
   position: absolute; right: clamp(12px, 4vw, 44px); top: 0; height: 100%;
   display: flex; align-items: center; gap: 16px;
 }
-.book-x { background: none; border: 0; cursor: pointer; color: var(--color-meta); font-size: 1rem; line-height: 1; padding: 8px; }
-.book-x:hover { color: var(--color-heading); }
-.book-count { font-size: 0.8rem; color: var(--color-meta); }
+.book-x { background: none; border: 0; cursor: pointer; color: var(--c-meta); font-size: 1rem; line-height: 1; padding: 8px; }
+.book-x:hover { color: var(--c-heading); }
+.book-count { font-size: 0.8rem; color: var(--c-meta); }
 
 .book-stage {
   position: relative; display: flex; align-items: center; justify-content: center;
@@ -110,7 +112,7 @@ body.book-open { overflow: hidden; }
   font-size: 3.1em;
   line-height: 0.72;
   font-weight: 600;
-  color: var(--color-heading);
+  color: var(--c-heading);
 }
 /* The line beside a drop cap shouldn't also be indented. */
 .book-flow.prose > p:first-child { text-indent: 0; }
@@ -120,22 +122,22 @@ body.book-open { overflow: hidden; }
   border: 0; height: auto; margin: 1.5em 0; text-align: center; background: none;
 }
 .book-flow hr::before {
-  content: "⁂"; color: var(--color-meta); font-size: 1.05em; letter-spacing: 0.35em;
+  content: "⁂"; color: var(--c-meta); font-size: 1.05em; letter-spacing: 0.35em;
 }
 
 /* Faint book spine down the centre gutter between the two columns. Sits on the viewport,
    so it stays put while the pages flip beneath it. */
 .book-viewport::after {
   content: ""; position: absolute; top: 7%; bottom: 7%; left: 50%; width: 1px;
-  background: var(--color-rule); opacity: 0.7; pointer-events: none;
+  background: var(--c-rule); opacity: 0.7; pointer-events: none;
 }
 
 .book-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
   background: none; border: 0; cursor: pointer;
-  color: var(--color-meta); font-size: 2rem; line-height: 1; padding: 12px 16px;
+  color: var(--c-meta); font-size: 2rem; line-height: 1; padding: 12px 16px;
 }
-.book-arrow:hover:not(:disabled) { color: var(--color-heading); }
+.book-arrow:hover:not(:disabled) { color: var(--c-heading); }
 .book-arrow:disabled { opacity: 0.2; cursor: default; }
 .book-prev { left: clamp(4px, 2vw, 28px); }
 .book-next { right: clamp(4px, 2vw, 28px); }
