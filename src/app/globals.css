@@ -1074,14 +1074,16 @@ button:not(:disabled):active,
     :root[data-motion='on'] .reveal {
       animation: reveal-in linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 35%;
+      /* Fade across a longer travel so it FINISHES mid-screen, not down at the
+         bottom edge where the eye misses it (entry 35% was imperceptible). */
+      animation-range: entry 0% cover 30%;
     }
   }
 }
 @keyframes reveal-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -1096,8 +1098,8 @@ button:not(:disabled):active,
    attr is JS-set, so no-JS/unsupported paths never hide `.reveal` (no blank state). */
 :root[data-reveal-js='on'] .reveal {
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
+  transform: translateY(24px);
+  transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease);
 }
 :root[data-reveal-js='on'] .reveal.is-in {
   opacity: 1;
