@@ -56,6 +56,8 @@ const zh = {
   nlUnsubTitle: '已退订',
   nlUnsubBody: '你将不再收到邮件。随时可以重新订阅。',
   nlUnsubFooter: '退订',
+  nlUnsubConfirm: '确认您不想再收到邮件。',
+  nlUnsubConfirmBtn: '确认取消订阅',
   bcastRead: '阅读文章',
   replySubject: '你的评论有新回复',
   replyIntro: '{name} 回复了你在《{title}》的评论。',

@@ -56,6 +56,8 @@ const ko = {
   nlUnsubTitle: '구독을 해지했습니다',
   nlUnsubBody: '더 이상 메일을 받지 않습니다. 언제든 다시 구독할 수 있습니다.',
   nlUnsubFooter: '구독 해지',
+  nlUnsubConfirm: '이메일 수신을 중단하려면 확인하세요.',
+  nlUnsubConfirmBtn: '수신 거부 확인',
   bcastRead: '글 읽기',
   replySubject: '내 댓글에 새 답글',
   replyIntro: '{name}님이 "{title}"의 내 댓글에 답글을 남겼습니다.',

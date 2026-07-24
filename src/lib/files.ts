@@ -193,8 +193,20 @@ export async function addFilesBatch(
     const dot = f.filename.lastIndexOf('.')
     const rawExt = dot >= 0 ? f.filename.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : ''
     const base = slugify(dot >= 0 ? f.filename.slice(0, dot) : f.filename) || 'file'
-    const path = freeFilePath(base, rawExt, taken)
-    await uploadFile(path, f.body, f.contentType || 'application/octet-stream')
+    // Exclusive (O_EXCL) write so two concurrent same-name uploads can't overwrite each
+    // other + collide on the PK insert (mirrors media.ts writeUniqueOriginal): the loser
+    // gets EEXIST and takes the next free name.
+    let path = ''
+    for (let attempt = 0; ; attempt++) {
+      path = freeFilePath(base, rawExt, taken)
+      try {
+        await uploadFile(path, f.body, f.contentType || 'application/octet-stream', { exclusive: true })
+        break
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'EEXIST' && attempt < 50) continue
+        throw error
+      }
+    }
     rows.push({
       url: path,
       filename: f.filename,

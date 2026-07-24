@@ -56,6 +56,8 @@ const de = {
   nlUnsubTitle: 'Abgemeldet',
   nlUnsubBody: 'Du erhältst keine E-Mails mehr. Du kannst dich jederzeit wieder anmelden.',
   nlUnsubFooter: 'Abmelden',
+  nlUnsubConfirm: 'Bestätigen Sie, dass Sie keine E-Mails mehr erhalten möchten.',
+  nlUnsubConfirmBtn: 'Abmeldung bestätigen',
   bcastRead: 'Beitrag lesen',
   replySubject: 'Neue Antwort auf deinen Kommentar',
   replyIntro: '{name} hat auf deinen Kommentar zu "{title}" geantwortet.',

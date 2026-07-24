@@ -57,6 +57,8 @@ export type Dict = {
   nlUnsubTitle: string
   nlUnsubBody: string
   nlUnsubFooter: string
+  nlUnsubConfirm: string
+  nlUnsubConfirmBtn: string
   bcastRead: string
   replySubject: string
   replyIntro: string

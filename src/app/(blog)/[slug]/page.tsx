@@ -8,7 +8,7 @@ import { getPost, getPublicPosts, getRelatedPosts } from '@/lib/posts'
 import { getSeriesForPost } from '@/lib/series'
 import { termSlug } from '@/lib/taxonomy'
 import { getPage, getPublicPages } from '@/lib/pages'
-import { getMedia } from '@/lib/media'
+import { getMediaRefs } from '@/lib/media-refs'
 import { collapseBlob } from '@/lib/blob'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { formatDate, formatCount, t } from '@/lib/i18n'
@@ -20,7 +20,8 @@ import { TOC_ANCHORS } from '@/lib/toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
-import { Lightbox } from '@/components/blog/Lightbox'
+import { LightboxLazy } from '@/components/blog/LightboxLazy'
+import { CoverImage } from '@/components/blog/CoverImage'
 import { CodeCopy } from '@/components/blog/CodeCopy'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
 import { SeriesBox } from '@/components/blog/SeriesBox'
@@ -100,7 +101,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     getPost(slug),
     getPage(slug),
     getSettings(),
-    getMedia(),
+    getMediaRefs(),
   ])
   const { language } = settings
   // Originals whose AVIF/WebP variants exist — only these get a <picture>; the
@@ -152,7 +153,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {features.progressBar && <ReadingProgress />}
         <BackToTop label={t(language).backToTop} />
         <ScrollDepth />
-        {imageUrls.length > 0 && <Lightbox lang={language} />}
+        {imageUrls.length > 0 && <LightboxLazy lang={language} />}
         {post.content.includes('```') && <CodeCopy label={tx.copyCode} copiedLabel={tx.copiedCode} />}
         {settings.seo.autoSchema && (
           <JsonLd
@@ -216,17 +217,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
           </Rail>
         )}
 
-        {post.coverImage && (
-          // Visible hero. eslint-disable: intrinsic dims are unknown here; the CSS box
-          // (aspect-video) reserves space, so there is no layout shift.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.coverImage}
-            alt=""
-            className="mt-8 aspect-video w-full rounded-lg object-cover"
-            fetchPriority="high"
-          />
-        )}
+        {post.coverImage && <CoverImage src={post.coverImage} ready={readyOriginals} />}
 
         {series && series.posts.length > 1 && (
           <div className="mt-8">
@@ -301,7 +292,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     return (
       <article>
         <h1 className="reading-font fs-h1 font-semibold">{page.title}</h1>
-        {extractImageUrls(page.content).length > 0 && <Lightbox lang={language} />}
+        {extractImageUrls(page.content).length > 0 && <LightboxLazy lang={language} />}
         {page.content.includes('```') && <CodeCopy label={t(language).copyCode} copiedLabel={t(language).copiedCode} />}
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />

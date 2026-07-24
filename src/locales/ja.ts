@@ -56,6 +56,8 @@ const ja = {
   nlUnsubTitle: '購読を解除しました',
   nlUnsubBody: '今後メールは届きません。いつでも再購読できます。',
   nlUnsubFooter: '購読解除',
+  nlUnsubConfirm: 'メールの受信を停止することを確認してください。',
+  nlUnsubConfirmBtn: '配信停止を確認',
   bcastRead: '記事を読む',
   replySubject: 'あなたのコメントに返信がありました',
   replyIntro: '{name} さんが「{title}」のあなたのコメントに返信しました。',

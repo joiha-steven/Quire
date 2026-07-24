@@ -56,6 +56,8 @@ const en = {
   nlUnsubTitle: "You've unsubscribed",
   nlUnsubBody: "You won't receive any more emails. You can re-subscribe anytime.",
   nlUnsubFooter: 'Unsubscribe',
+  nlUnsubConfirm: 'Confirm that you want to stop receiving emails.',
+  nlUnsubConfirmBtn: 'Confirm unsubscribe',
   bcastRead: 'Read the post',
   replySubject: 'New reply to your comment',
   replyIntro: '{name} replied to your comment on "{title}".',

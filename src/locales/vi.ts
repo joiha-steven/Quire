@@ -56,6 +56,8 @@ const vi = {
   nlUnsubTitle: 'Đã hủy đăng ký',
   nlUnsubBody: 'Bạn sẽ không nhận email nữa. Có thể đăng ký lại bất cứ lúc nào.',
   nlUnsubFooter: 'Hủy đăng ký',
+  nlUnsubConfirm: 'Xác nhận bạn muốn ngừng nhận email.',
+  nlUnsubConfirmBtn: 'Xác nhận hủy đăng ký',
   bcastRead: 'Đọc bài',
   replySubject: 'Có phản hồi mới cho bình luận của bạn',
   replyIntro: '{name} đã trả lời bình luận của bạn ở "{title}".',

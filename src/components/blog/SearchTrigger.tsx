@@ -3,10 +3,13 @@
 // The header search button. Opens the modal SearchOverlay in place instead of
 // navigating to /search (the /search route still exists for deep links / no-JS).
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { SiteLang } from '@/types'
 import { t } from '@/lib/i18n'
 import { ICON_BTN } from '@/components/ui/iconButton'
-import { SearchOverlay } from './SearchOverlay'
+
+// Load the overlay chunk only on first open — it isn't needed until the reader searches.
+const SearchOverlay = dynamic(() => import('./SearchOverlay').then((m) => ({ default: m.SearchOverlay })), { ssr: false })
 
 export function SearchTrigger({ lang }: { lang: SiteLang }) {
   const [open, setOpen] = useState(false)
