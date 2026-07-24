@@ -20,7 +20,7 @@ import { TOC_ANCHORS } from '@/lib/toc'
 import { ReadingProgress } from '@/components/blog/ReadingProgress'
 import { BackToTop } from '@/components/blog/BackToTop'
 import { ScrollDepth } from '@/components/blog/ScrollDepth'
-import { LightboxLazy } from '@/components/blog/LightboxLazy'
+import { Lightbox } from '@/components/blog/Lightbox'
 import { CoverImage } from '@/components/blog/CoverImage'
 import { CodeCopy } from '@/components/blog/CodeCopy'
 import { RelatedPosts } from '@/components/blog/RelatedPosts'
@@ -153,7 +153,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
         {features.progressBar && <ReadingProgress />}
         <BackToTop label={t(language).backToTop} />
         <ScrollDepth />
-        {imageUrls.length > 0 && <LightboxLazy lang={language} />}
+        {imageUrls.length > 0 && <Lightbox lang={language} />}
         {post.content.includes('```') && <CodeCopy label={tx.copyCode} copiedLabel={tx.copiedCode} />}
         {settings.seo.autoSchema && (
           <JsonLd
@@ -292,7 +292,7 @@ export default async function EntryPage({ params }: PageProps<'/[slug]'>) {
     return (
       <article>
         <h1 className="reading-font fs-h1 font-semibold">{page.title}</h1>
-        {extractImageUrls(page.content).length > 0 && <LightboxLazy lang={language} />}
+        {extractImageUrls(page.content).length > 0 && <Lightbox lang={language} />}
         {page.content.includes('```') && <CodeCopy label={t(language).copyCode} copiedLabel={t(language).copiedCode} />}
         <div className="mt-8">
           <PostContent markdown={page.content} readyOriginals={readyOriginals} imageDims={imageDims} />
