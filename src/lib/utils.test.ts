@@ -121,4 +121,11 @@ describe('extractImageUrls', () => {
     const content = '![a](https://h/x.jpg) <img src="https://h/y.png"> again https://h/x.jpg'
     expect(extractImageUrls(content)).toEqual(['https://h/x.jpg', 'https://h/y.png'])
   })
+
+  // Self-hosted images are stored store-relative — these MUST be picked up too, else the
+  // Lightbox (gated by this) never mounts for local images.
+  it('also collects root-relative image URLs', () => {
+    const content = '![a](/uploads/media/foo.png) and ![b](/uploads/media/bar.webp)'
+    expect(extractImageUrls(content)).toEqual(['/uploads/media/foo.png', '/uploads/media/bar.webp'])
+  })
 })

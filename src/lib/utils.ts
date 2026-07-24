@@ -76,7 +76,10 @@ export function deriveExcerpt(markdown: string, maxWords = 50): string {
 // every image with the manhhung.me page that embeds it. Expects absolute URLs
 // (content from getPost/getPage is already expanded to absolute Blob URLs).
 export function extractImageUrls(content: string): string[] {
-  const re = /https?:\/\/[^\s"')]+\.(?:jpe?g|png|webp|avif|gif|svg)/gi
+  // Match absolute (https://…) AND root-relative (/uploads/media/…) image URLs — self-
+  // hosted images are stored store-relative, so an https-only regex missed them entirely
+  // (which silently disabled the Lightbox + the article-schema image fallback).
+  const re = /(?:https?:\/\/|\/)[^\s"')]+\.(?:jpe?g|png|webp|avif|gif|svg)/gi
   return [...new Set(content.match(re) ?? [])]
 }
 
