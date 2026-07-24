@@ -114,8 +114,6 @@ body.book-open { overflow: hidden; }
 }
 /* The line beside a drop cap shouldn't also be indented. */
 .book-flow.prose > p:first-child { text-indent: 0; }
-/* Opening line in small caps — the traditional companion to a raised initial. */
-.book-flow.prose > p:first-child::first-line { font-variant: small-caps; letter-spacing: 0.03em; }
 
 /* Section breaks (markdown `---` → <hr>) become a centred asterism, not a rule. */
 .book-flow hr {
