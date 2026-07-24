@@ -1074,9 +1074,9 @@ button:not(:disabled):active,
     :root[data-motion='on'] .reveal {
       animation: reveal-in linear both;
       animation-timeline: view();
-      /* Fade across a longer travel so it FINISHES mid-screen, not down at the
-         bottom edge where the eye misses it (entry 35% was imperceptible). */
-      animation-range: entry 0% cover 30%;
+      /* Fade over a short travel that still FINISHES in view (lower third), not
+         down at the bottom edge where the eye misses it (entry 35% was invisible). */
+      animation-range: entry 0% cover 20%;
     }
   }
 }
@@ -1099,7 +1099,7 @@ button:not(:disabled):active,
 :root[data-reveal-js='on'] .reveal {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease);
+  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
 }
 :root[data-reveal-js='on'] .reveal.is-in {
   opacity: 1;
