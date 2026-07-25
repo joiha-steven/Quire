@@ -40,7 +40,14 @@ Thanks for helping. Quire values small, correct, well-scoped changes.
 
 ## Before you open a PR — Definition of Done
 
-A change is done only when **`npm run check:all` exits 0**. It runs, offline with no
+A change is done only when **`npm run check:all` exits 0** *and* you have run the change
+on the local stack and looked at it. `check:all` catches broken code; it does not catch a
+column that truncates to nothing or a label that no longer matches the control. Bring up
+`docker-compose.dev.yml`, `npm run dev`, sign in with `DEV_LOGIN`, and drive the page with
+a headless browser (Playwright/Puppeteer — not vendored; `npx playwright install chromium`)
+so you can screenshot it and read the DOM rather than reasoning about CSS from source. Mail
+goes to Mailpit at <http://localhost:8025>. **Never test against a production site** — a
+send, delete or purge there is real and cannot be undone. It runs, offline with no
 credentials: `typecheck` + `lint` + the `check:routes`/`check:filesize`/`check:no-any`/
 `check:no-direct-blob`/`check:token-bust` guards + the `vitest` seam net. CI runs the
 same plus `npm run build`.

@@ -47,6 +47,25 @@ broad coverage; a release batch also runs `npm run build` + the `audit/` procedu
 a script can't. **Suspect data drift (media/blob mismatch)? Run `npm run check:consistency:live`
 BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). Report failures honestly.
 
+**5. RUN what you changed, on the LOCAL stack, and LOOK at it. Never test against production.**
+`check:all` proves the code compiles and the load-bearing seams hold. It cannot tell you the
+subscriber email column collapsed to `reader@e…`, or that a picker was still labelled for one item
+after becoming multi-select — both shipped, because nobody opened the page. Reading source is not
+verification.
+- **Bring the stack up:** `docker compose -f docker-compose.dev.yml up -d` (Postgres + PostgREST +
+  Mailpit) then `npm run dev`. Sign in with `DEV_LOGIN` — see [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+  "Getting set up". There is no excuse for an unseen admin change: the sign-in works with no Google
+  credentials.
+- **Drive it with headless Chromium** (Playwright/Puppeteer — not vendored here; install
+  `playwright-core` + `npx playwright install chromium`, or point at an existing install). Navigate,
+  click, screenshot, read the DOM, measure geometry. Do NOT reason about rendered CSS from source,
+  and do NOT ask the human to take screenshots for you.
+- **Email is testable too.** Mailpit catches everything at <http://localhost:8025>, so the whole
+  newsletter path (opt-in → confirm → broadcast → open pixel) runs end to end with no real inbox.
+  For template work alone, render a builder's output to a file and screenshot that — no send needed.
+- **Production is not a test environment.** Sends, deletes, purges and cache busts there are real
+  and irreversible; a newsletter cannot be unsent. Verify locally, then deploy.
+
 ## Architecture (operational)
 
 - **Text in Postgres (self-hosted; reached through PostgREST with the `supabase-js` client — bundled
