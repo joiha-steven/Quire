@@ -2,6 +2,23 @@
 
 # Quire Blog — operating notes
 
+> ## FROZEN — this tree accepts security patches only
+>
+> Quire 2.0 is being built in [`go/`](./go/) as a single Go binary on SQLite, at full
+> feature parity, and will replace this implementation. Plan: [`go/docs/00-plan.md`](./go/docs/00-plan.md).
+>
+> **This file's rules apply to `src/` only.** Work inside `go/` follows
+> [`go/CLAUDE.md`](./go/CLAUDE.md) instead.
+>
+> Rules for `src/` from 2026-07-26:
+> - Security patches only. No new features, no refactors, no dependency bumps beyond CVEs.
+> - Version stays at **1.4.37**. Do not bump.
+> - Deploy path is unchanged (`rsync src/`, bump `.deployment-id`, build, restart).
+> - Read it freely when porting behaviour to Go. Do not edit it for that purpose.
+>
+> Reason: a rewrite that chases a moving target does not finish. If a feature is worth
+> adding in the next two months, add it to Quire 2.0.
+
 Public, open-source blog platform. **Zero personal data in this repo.** Real
 credentials live only in the gitignored `.env.local` (native) or `.env.docker`
 (Docker); never commit them. Personal/instance facts are not tracked in git.
