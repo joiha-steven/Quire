@@ -7,7 +7,7 @@
 
 import type { NextRequest } from 'next/server'
 import { after } from 'next/server'
-import { previewBroadcast, broadcastPost, BroadcastError } from '@/lib/broadcast'
+import { previewBroadcast, broadcastPosts, BroadcastError } from '@/lib/broadcast'
 import { logActivity } from '@/lib/activity'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
@@ -26,12 +26,14 @@ export async function GET(req: NextRequest): Promise<Response> {
       logRequest(req, 401, start)
       return fail('Unauthorized', 401)
     }
-    const slug = req.nextUrl.searchParams.get('slug') ?? ''
-    if (!slug) {
+    // Repeated ?slug= — several posts go out as ONE digest, so the preview takes the
+    // same list the send will.
+    const slugs = req.nextUrl.searchParams.getAll('slug').filter(Boolean)
+    if (slugs.length === 0) {
       logRequest(req, 400, start)
       return fail('missing_slug', 400)
     }
-    const preview = await previewBroadcast(slug)
+    const preview = await previewBroadcast(slugs)
     logRequest(req, 200, start)
     return ok(preview)
   } catch (error) {
@@ -49,14 +51,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       logRequest(req, 401, start)
       return fail('Unauthorized', 401)
     }
-    const body = (await req.json().catch(() => ({}))) as { slug?: unknown; force?: unknown }
-    const slug = typeof body.slug === 'string' ? body.slug : ''
-    if (!slug) {
+    const body = (await req.json().catch(() => ({}))) as { slugs?: unknown; force?: unknown }
+    const slugs = Array.isArray(body.slugs) ? body.slugs.filter((s): s is string => typeof s === 'string' && !!s) : []
+    if (slugs.length === 0) {
       logRequest(req, 400, start)
       return fail('missing_slug', 400)
     }
-    const result = await broadcastPost(slug, { force: body.force === true })
-    after(() => logActivity('newsletter.send', `${slug} — ${result.sent}/${result.recipients}`))
+    const result = await broadcastPosts(slugs, { force: body.force === true })
+    after(() => logActivity('newsletter.send', `${slugs.join(',')} — ${result.sent}/${result.recipients}`))
     logRequest(req, 200, start)
     return ok(result)
   } catch (error) {

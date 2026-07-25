@@ -209,9 +209,10 @@
   an opaque OpenSSL "wrong version number"). Three tabs:
   - *People* — every subscriber with their send history from the log: emails sent, failures (with
     the last error), open rate, last send. Counts + delete.
-  - *Send* — pick a published post, review the REAL `broadcastEmail()` HTML in a `sandbox=""`
-    iframe (scripts/forms/navigation all blocked), then send. A post that already has successful
-    sends needs the resend checkbox first; the send itself is `confirm()`-gated.
+  - *Send* — tick one or MORE published posts, review the REAL `broadcastEmail()` HTML in a
+    `sandbox=""` iframe (scripts/forms/navigation all blocked), then send. Several posts go out as
+    ONE digest, never one email each. A post that already has successful sends needs the resend
+    checkbox first; the send itself is `confirm()`-gated.
   - *Test* — the three sample sends.
 - **Test send** (`POST /api/mail/test`, owner only, `NewsletterTest`). Three kinds — `smtp`
   (bare "it works" note), `post` (the broadcast, built from the newest published post, or a
@@ -244,9 +245,23 @@
   from the comment POST route on a reply). Emails the parent commenter (their `author_email`) a
   link to the thread. Best-effort + transactional: skips a self-reply (same email), a deleted
   parent, and no-ops without SMTP. Never throws.
-- **Email bodies** are built by pure, escaped, unit-tested helpers in `lib/newsletter-email.ts`
-  (`confirmEmail`, `broadcastEmail`, `replyEmail`) — reused by the subscribe route, the manual
-  broadcast, the comment route, the admin preview, and the test send.
+- **Email design** — `lib/newsletter-email.ts` builds every message (`confirmEmail`,
+  `broadcastEmail`, `replyEmail`) through ONE `shell()`, reused by the subscribe route, the manual
+  broadcast, the comment route, the admin preview and the test send. It is meant to read like the
+  blog, so:
+  - Colours are the owner's OWN palette (`getDefaultTheme(...).light` → `ThemeColors`), passed in
+    by each caller. Change the site theme and the email follows; nothing is hardcoded.
+  - **Table layout + inline styles on every element**, 600px centred column. Mail clients strip
+    `<style>` blocks, collapse margins and ignore flex/grid. Buttons are a `<table>`, not a padded
+    `<a>` — Outlook drops padding on inline elements. Cover refs are made ABSOLUTE (they are stored
+    store-relative and an inbox has no origin to resolve them against).
+  - Light only (`color-scheme: light`): a dark variant needs a `<style>` media query, which the
+    clients that most need it are likeliest to strip. No web font — a client will not load one.
+  - A hidden preheader (the inbox preview line), a per-post date, and a footer that says WHY the
+    reader is getting this next to the unsubscribe link (spam filters look for that pair).
+  - Structure: masthead (site name) · rule · lead post (cover + 26px title + excerpt + solid
+    button) · each further post (19px title + excerpt + text link, rule-separated) · rule · footer.
+  All values are escaped; the reply's `contentHtml` is already-sanitized comment markdown.
 
 ## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
 

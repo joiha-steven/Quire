@@ -585,6 +585,7 @@ const en = {
   nlPreview: 'Preview',
   nlPreviewHint: 'This is the exact email subscribers receive, minus the tracking pixel.',
   nlPreviewFailed: 'Could not build a preview for this post.',
+  nlPreviewEmpty: 'Tick a post to preview the email.',
   nlSubjectLabel: 'Subject',
   nlNoPosts: 'No published posts to send yet.',
   nlAlreadySent: 'Already sent to {n} address(es).',
@@ -595,6 +596,8 @@ const en = {
   nlSendDone: 'Sent to {sent} of {total}',
   nlSendFailed: 'Send failed',
   nlSendHint: 'Nothing is emailed automatically. A scheduled post goes live on time, but the newsletter only goes out when you press this.',
+  nlNPosts: '{n} posts',
+  nlDigestHint: 'The {n} ticked posts go out as ONE digest email, newest first — not one email each.',
   navCollapse: 'Collapse sidebar',
   navExpand: 'Expand sidebar',
 } satisfies AdminStrings

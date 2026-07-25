@@ -585,6 +585,7 @@ const vi = {
   nlPreview: 'Xem trước',
   nlPreviewHint: 'Đây đúng là email người đăng ký sẽ nhận, chỉ thiếu pixel đo lượt mở.',
   nlPreviewFailed: 'Không dựng được bản xem trước cho bài này.',
+  nlPreviewEmpty: 'Tick một bài để xem trước email.',
   nlSubjectLabel: 'Tiêu đề thư',
   nlNoPosts: 'Chưa có bài đã đăng nào để gửi.',
   nlAlreadySent: 'Đã gửi tới {n} địa chỉ rồi.',
@@ -595,6 +596,8 @@ const vi = {
   nlSendDone: 'Đã gửi {sent}/{total}',
   nlSendFailed: 'Gửi thất bại',
   nlSendHint: 'Không có gì tự động gửi. Bài hẹn giờ vẫn tự lên đúng giờ, nhưng bản tin chỉ đi khi bạn bấm nút này.',
+  nlNPosts: '{n} bài',
+  nlDigestHint: '{n} bài đã tick sẽ đi trong MỘT email gộp, bài mới nhất lên đầu, chứ không phải mỗi bài một email.',
   navCollapse: 'Thu gọn thanh bên',
   navExpand: 'Mở rộng thanh bên',
 } satisfies AdminStrings

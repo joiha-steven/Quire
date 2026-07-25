@@ -585,6 +585,7 @@ const ko = {
   nlPreview: '미리보기',
   nlPreviewHint: '구독자가 실제로 받는 메일입니다. 추적 픽셀만 빠져 있습니다.',
   nlPreviewFailed: '이 글의 미리보기를 만들지 못했습니다.',
+  nlPreviewEmpty: '글을 선택하면 메일을 미리 볼 수 있습니다.',
   nlSubjectLabel: '제목',
   nlNoPosts: '보낼 수 있는 발행된 글이 아직 없습니다.',
   nlAlreadySent: '이미 {n}개 주소로 보냈습니다.',
@@ -595,6 +596,8 @@ const ko = {
   nlSendDone: '{total}명 중 {sent}명에게 발송',
   nlSendFailed: '발송 실패',
   nlSendHint: '자동 발송은 없습니다. 예약 글은 제때 공개되지만 뉴스레터는 이 버튼을 눌러야 나갑니다.',
+  nlNPosts: '글 {n}개',
+  nlDigestHint: '선택한 {n}개는 한 통의 모아보기 메일로 나갑니다(최신순). 글마다 한 통이 아닙니다.',
   navCollapse: '사이드바 접기',
   navExpand: '사이드바 펼치기',
 } satisfies AdminStrings

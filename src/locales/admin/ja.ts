@@ -585,6 +585,7 @@ const ja = {
   nlPreview: 'プレビュー',
   nlPreviewHint: '購読者が受け取る実際のメールです（計測ピクセルのみ除く）。',
   nlPreviewFailed: 'この記事のプレビューを作成できませんでした。',
+  nlPreviewEmpty: '記事を選ぶとメールをプレビューできます。',
   nlSubjectLabel: '件名',
   nlNoPosts: '送信できる公開記事がまだありません。',
   nlAlreadySent: 'すでに {n} 件のアドレスへ送信済みです。',
@@ -595,6 +596,8 @@ const ja = {
   nlSendDone: '{total} 件中 {sent} 件に送信',
   nlSendFailed: '送信に失敗しました',
   nlSendHint: '自動送信はありません。予約記事は時間どおり公開されますが、ニュースレターはこのボタンを押したときだけ送られます。',
+  nlNPosts: '{n} 本の記事',
+  nlDigestHint: 'チェックした {n} 本は 1 通のまとめメールで送られます（新しい順）。記事ごとに 1 通ではありません。',
   navCollapse: 'サイドバーを折りたたむ',
   navExpand: 'サイドバーを展開',
 } satisfies AdminStrings

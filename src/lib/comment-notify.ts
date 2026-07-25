@@ -5,6 +5,7 @@
 import { db } from '@/lib/db'
 import { getSmtpConfig, isMailConfigured, sendMail } from '@/lib/mail'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
+import { getDefaultTheme } from '@/lib/themes'
 import { replyEmail } from '@/lib/newsletter-email'
 import { t } from '@/lib/i18n'
 
@@ -39,6 +40,7 @@ export async function notifyReply(opts: {
       postTitle,
       opts.replierName,
       opts.contentHtml,
+      getDefaultTheme(settings.themes, settings.themePreset).light,
     )
     await sendMail({ to: email, subject, html, kind: 'reply' })
   } catch (e) {

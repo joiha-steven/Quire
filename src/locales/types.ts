@@ -57,12 +57,14 @@ export type Dict = {
   nlUnsubTitle: string
   nlUnsubBody: string
   nlUnsubFooter: string
+  nlFooterWhy: string
   nlUnsubConfirm: string
   nlUnsubConfirmBtn: string
   mailTestSubject: string
   mailTestBody: string
   mailTestSamplePost: string
   bcastRead: string
+  bcastDigestSubject: string
   replySubject: string
   replyIntro: string
   replyRead: string
@@ -718,6 +720,7 @@ export type AdminStrings = {
   nlPreview: string
   nlPreviewHint: string
   nlPreviewFailed: string
+  nlPreviewEmpty: string
   nlSubjectLabel: string
   nlNoPosts: string
   nlAlreadySent: string
@@ -728,6 +731,8 @@ export type AdminStrings = {
   nlSendDone: string
   nlSendFailed: string
   nlSendHint: string
+  nlNPosts: string
+  nlDigestHint: string
   // sidebar collapse
   navCollapse: string
   navExpand: string

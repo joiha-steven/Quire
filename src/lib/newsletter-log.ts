@@ -27,12 +27,15 @@ const EMPTY: SendStats = { sent: 0, failed: 0, opened: 0, broadcasts: 0 }
 export const newOpenToken = (): string => randomBytes(18).toString('base64url')
 
 // Record one send. NEVER throws: a logging failure must not fail (or double-send) the
-// mail that already went out.
+// mail that already went out. `postSlugs` is a LIST because a digest is one email
+// carrying several posts — stored comma-joined so each post still gets credit in
+// `statsByPost` while the per-address count stays one-row-per-email (slugs are
+// slugified, so a comma can never appear inside one).
 export async function logSend(row: {
   email: string
   kind: SendKind
   ok: boolean
-  postSlug?: string
+  postSlugs?: string[]
   error?: string
   openToken?: string
 }): Promise<void> {
@@ -40,7 +43,7 @@ export async function logSend(row: {
     await db().from('newsletter_sends').insert({
       email: row.email.trim().toLowerCase(),
       kind: row.kind,
-      post_slug: row.postSlug ?? null,
+      post_slug: row.postSlugs?.length ? row.postSlugs.join(',') : null,
       ok: row.ok,
       error: row.error ?? null,
       // Only a delivered broadcast can be opened; don't burn a token on a failed send.
@@ -89,17 +92,21 @@ export async function statsByPost(): Promise<Map<string, SendStats>> {
   if (error || !data) return out
   for (const r of data as (Row & { post_slug: string | null })[]) {
     if (!r.post_slug) continue
-    const cur = out.get(r.post_slug) ?? { ...EMPTY }
-    if (r.ok) {
-      cur.sent++
-      cur.broadcasts++
-      if (r.opened_at) cur.opened++
-    } else {
-      cur.failed++
-      cur.lastError = r.error ?? undefined
+    // A digest row credits EVERY post it carried; one open counts for all of them
+    // (there is one pixel per email, not per post).
+    for (const slug of r.post_slug.split(',')) {
+      const cur = out.get(slug) ?? { ...EMPTY }
+      if (r.ok) {
+        cur.sent++
+        cur.broadcasts++
+        if (r.opened_at) cur.opened++
+      } else {
+        cur.failed++
+        cur.lastError = r.error ?? undefined
+      }
+      cur.lastAt = r.sent_at
+      out.set(slug, cur)
     }
-    cur.lastAt = r.sent_at
-    out.set(r.post_slug, cur)
   }
   return out
 }

@@ -585,6 +585,7 @@ const zh = {
   nlPreview: '预览',
   nlPreviewHint: '这就是订阅者会收到的邮件，只少了追踪像素。',
   nlPreviewFailed: '无法为这篇文章生成预览。',
+  nlPreviewEmpty: '勾选一篇文章即可预览邮件。',
   nlSubjectLabel: '主题',
   nlNoPosts: '还没有可发送的已发布文章。',
   nlAlreadySent: '已发送给 {n} 个地址。',
@@ -595,6 +596,8 @@ const zh = {
   nlSendDone: '已发送 {sent}/{total}',
   nlSendFailed: '发送失败',
   nlSendHint: '不会自动发送。定时文章仍会准时发布，但邮件通讯只在你按下这个按钮时才寄出。',
+  nlNPosts: '{n} 篇文章',
+  nlDigestHint: '勾选的 {n} 篇会合并成一封邮件发出（最新在前），不是每篇一封。',
   navCollapse: '收起侧边栏',
   navExpand: '展开侧边栏',
 } satisfies AdminStrings

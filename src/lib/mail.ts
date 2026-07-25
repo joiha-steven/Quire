@@ -84,19 +84,20 @@ export async function saveSmtpConfig(input: Partial<SmtpConfig>): Promise<void> 
 //
 // EVERY send is written to `newsletter_sends` from here, success or failure — the one
 // choke point, so no path can email an address without it showing up in the admin.
-// `kind` is therefore required; `postSlug`/`openToken` apply to broadcasts.
+// `kind` is therefore required; `postSlugs`/`openToken` apply to broadcasts (a digest
+// carries several posts in ONE email, hence a list).
 export async function sendMail(msg: {
   to: string
   subject: string
   html: string
   text?: string
   kind: SendKind
-  postSlug?: string
+  postSlugs?: string[]
   openToken?: string
 }): Promise<{ sent: boolean; error?: string }> {
   const cfg = await getSmtpConfig()
   const record = (ok: boolean, error?: string) =>
-    logSend({ email: msg.to, kind: msg.kind, ok, postSlug: msg.postSlug, error, openToken: msg.openToken })
+    logSend({ email: msg.to, kind: msg.kind, ok, postSlugs: msg.postSlugs, error, openToken: msg.openToken })
   if (!isMailConfigured(cfg)) {
     await record(false, 'smtp_not_configured')
     return { sent: false, error: 'smtp_not_configured' }

@@ -585,6 +585,7 @@ const de = {
   nlPreview: 'Vorschau',
   nlPreviewHint: 'Genau diese E-Mail erhalten die Abonnenten, ohne das Tracking-Pixel.',
   nlPreviewFailed: 'Für diesen Beitrag ließ sich keine Vorschau erzeugen.',
+  nlPreviewEmpty: 'Beitrag markieren, um die E-Mail zu sehen.',
   nlSubjectLabel: 'Betreff',
   nlNoPosts: 'Noch keine veröffentlichten Beiträge zum Senden.',
   nlAlreadySent: 'Bereits an {n} Adresse(n) gesendet.',
@@ -595,6 +596,8 @@ const de = {
   nlSendDone: 'An {sent} von {total} gesendet',
   nlSendFailed: 'Senden fehlgeschlagen',
   nlSendHint: 'Es wird nichts automatisch verschickt. Ein geplanter Beitrag geht pünktlich online, der Newsletter aber erst auf Knopfdruck.',
+  nlNPosts: '{n} Beiträge',
+  nlDigestHint: 'Die {n} markierten Beiträge gehen als EINE Sammel-E-Mail raus, neueste zuerst — nicht je eine pro Beitrag.',
   navCollapse: 'Seitenleiste einklappen',
   navExpand: 'Seitenleiste ausklappen',
 } satisfies AdminStrings
