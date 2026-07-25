@@ -5,8 +5,8 @@
 //
 //   node --env-file=.env.local scripts/cap-originals.mjs [--dry]
 //
-// Talks to PostgREST directly (respecting POSTGREST_DIRECT, like lib/db.ts) and reads
-// binaries straight off STORAGE_LOCAL_DIR (like blob-local.ts). --dry: preview only.
+// Talks to PostgREST directly (like lib/db.ts) and reads binaries straight off
+// STORAGE_LOCAL_DIR (like blob-local.ts). --dry: preview only.
 
 import sharp from 'sharp'
 import path from 'node:path'
@@ -15,13 +15,11 @@ import fs from 'node:fs/promises'
 const DRY = process.argv.includes('--dry')
 const CAP = 2048
 
-const URL_BASE = process.env.SUPABASE_URL
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-if (!URL_BASE || !KEY) throw new Error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY')
+const REST = process.env.POSTGREST_URL
+const TOKEN = process.env.POSTGREST_TOKEN
+if (!REST || !TOKEN) throw new Error('Missing POSTGREST_URL / POSTGREST_TOKEN')
 const DIR = path.resolve(process.env.STORAGE_LOCAL_DIR || './uploads')
-// Same rule as lib/db.ts: a bare PostgREST (native) has no /rest/v1 prefix.
-const REST = process.env.POSTGREST_DIRECT ? URL_BASE : `${URL_BASE}/rest/v1`
-const HEADERS = { apikey: KEY, Authorization: `Bearer ${KEY}` }
+const HEADERS = { apikey: TOKEN, Authorization: `Bearer ${TOKEN}` }
 
 async function pg(pathAndQuery, init = {}) {
   const res = await fetch(`${REST}${pathAndQuery}`, { ...init, headers: { ...HEADERS, ...(init.headers || {}) } })

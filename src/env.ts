@@ -8,13 +8,13 @@ import { z } from 'zod'
 const schema = z.object({
   AUTH_SECRET: z.string().min(1, 'AUTH_SECRET is required (generate with: npx auth secret)'),
   AUTHORIZED_EMAIL: z.string().min(1, 'AUTHORIZED_EMAIL is required (the owner sign-in email)'),
-  SUPABASE_URL: z
+  POSTGREST_URL: z
     .string()
-    .min(1, 'SUPABASE_URL is required (your PostgREST endpoint)')
-    .refine((v) => URL.canParse(v), 'SUPABASE_URL must be a valid URL'),
-  SUPABASE_SERVICE_ROLE_KEY: z
+    .min(1, 'POSTGREST_URL is required (your PostgREST endpoint)')
+    .refine((v) => URL.canParse(v), 'POSTGREST_URL must be a valid URL'),
+  POSTGREST_TOKEN: z
     .string()
-    .min(1, 'SUPABASE_SERVICE_ROLE_KEY is required (the service_role JWT)'),
+    .min(1, 'POSTGREST_TOKEN is required (the service_role JWT)'),
 })
 
 // Present-but-optional: warn (don't fail) so the app still boots for a first look.

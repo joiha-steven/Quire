@@ -15,20 +15,19 @@ import { normalizePath } from '@/lib/redirect-path'
 // edge, before any render. Self-hosted Next runs middleware in ONE long-lived Node
 // process, so this module-level map persists across requests — a Map.get on the hot
 // path, refreshed from PostgREST at most once per TTL. Edge-safe: a plain fetch (NOT
-// the node-only supabase-js `db()` client). Fail-open — a lookup error never blocks.
+// the node-only `db()` client). Fail-open — a lookup error never blocks.
 type Target = { destination: string; permanent: boolean }
 const REDIRECT_TTL_MS = 60_000
 let redirectCache: { at: number; map: Map<string, Target> } | null = null
 
 async function redirectMap(): Promise<Map<string, Target>> {
   if (redirectCache && Date.now() - redirectCache.at < REDIRECT_TTL_MS) return redirectCache.map
-  const base = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!base || !key) return redirectCache?.map ?? new Map()
-  const prefix = process.env.POSTGREST_DIRECT === '1' ? '' : '/rest/v1'
+  const base = process.env.POSTGREST_URL
+  const token = process.env.POSTGREST_TOKEN
+  if (!base || !token) return redirectCache?.map ?? new Map()
   try {
-    const res = await fetch(`${base}${prefix}/redirects?select=source,destination,permanent`, {
-      headers: { apikey: key, authorization: `Bearer ${key}` },
+    const res = await fetch(`${base}/redirects?select=source,destination,permanent`, {
+      headers: { apikey: token, authorization: `Bearer ${token}` },
       cache: 'no-store',
     })
     if (!res.ok) return redirectCache?.map ?? new Map()

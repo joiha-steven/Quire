@@ -4,7 +4,7 @@
 //   POSTGRES_PASSWORD          superuser password Postgres sets on first init
 //   PGPASSWORD                 same value, so PostgREST's libpq can connect
 //   PGRST_JWT_SECRET           HS256 secret PostgREST verifies tokens with
-//   SUPABASE_SERVICE_ROLE_KEY  the app's JWT (role=service_role), signed with it
+//   POSTGREST_TOKEN            the app's JWT (role=service_role), signed with it
 // PGRST_JWT_SECRET and the JWT MUST stay paired (the JWT is signed with it).
 // Usage:  node scripts/docker/gen-keys.mjs >> .env.docker
 import { createHmac, randomBytes } from 'node:crypto'
@@ -30,7 +30,7 @@ process.stdout.write(
     `POSTGRES_PASSWORD=${pgPassword}`,
     `PGPASSWORD=${pgPassword}`,
     `PGRST_JWT_SECRET=${jwtSecret}`,
-    `SUPABASE_SERVICE_ROLE_KEY=${sign({ role: 'service_role', iss: 'quire' })}`,
+    `POSTGREST_TOKEN=${sign({ role: 'service_role', iss: 'quire' })}`,
     '',
   ].join('\n'),
 )

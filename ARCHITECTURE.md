@@ -97,7 +97,7 @@ can move without rewriting anything.
 
 | Path | What |
 |---|---|
-| `src/lib/db.ts` | `supabase-js` client (server-only, `service_role`) pointed at PostgREST. Custom fetch: GET reads cache-eligible + tagged `db`; writes `no-store`; strips `/rest/v1` when `POSTGREST_DIRECT=1`. |
+| `src/lib/db.ts` | `@supabase/postgrest-js` client (server-only, `service_role`) pointed at PostgREST. Custom fetch: GET reads cache-eligible + tagged `db`; writes `no-store`. |
 | `src/lib/blob.ts` | Binary I/O only (images/files/icons). Facade over the local fs driver `blob-local.ts` (served at `/uploads`), lazy-loaded so `node:fs` stays off the client. |
 | `src/lib/{posts,pages,media,settings,revisions,activity}.ts` | Data layer over Postgres; `React.cache()` request dedup. `activity` = the admin activity log. |
 | `src/lib/{utils,i18n,og,preview,video,paginate,slugs,api,media-usage,themes,files}.ts` | Pure helpers + shared route helpers (`media-usage` = read-only unused-media audit; `themes` = the 6 built-in palettes + CSS emit; `files` = site-icon + attachment store). |
@@ -139,11 +139,12 @@ The admin UI contract, editor layout decisions, and the 13 July 2026 production 
   are POSTed to a server route (a Node host has no 4.5 MB body cap). `no-direct-blob` guards that no
   cloud storage SDK sneaks into `src`. **One codebase:** the image needs no backend env to build (the
   data layer degrades to empty), so the same source runs native or in Docker.
-- **Postgres + PostgREST, supabase-js as the client.** The data layer speaks to **PostgREST** over
-  Postgres via the `supabase-js` library, and uses nothing else from that stack (no Auth/Realtime/Storage
-  — sign-in is NextAuth, binaries are local files). The single seam is in `db.ts`: when `POSTGREST_DIRECT=1`
-  the custom `dbFetch` strips the `/rest/v1` path prefix supabase-js adds (bare PostgREST serves tables at
-  `/`), so supabase-js hits PostgREST directly with no proxy container. Postgres applies `scripts/schema.sql`
+- **Postgres + PostgREST, `@supabase/postgrest-js` as the client.** The data layer speaks to **PostgREST**
+  over Postgres via that library — the *standalone* PostgREST query builder that `supabase-js` wraps. We
+  depend on it directly because nothing else in that stack is used (no Auth/Realtime/Storage/Functions —
+  sign-in is NextAuth, binaries are local files), and pulling in the umbrella package would ship four
+  clients the app never calls. `POSTGREST_URL` is the endpoint that serves tables at `/<table>`, so the
+  client hits PostgREST directly with no proxy container and no path rewriting. Postgres applies `scripts/schema.sql`
   + a role/grant bootstrap on first init; `service_role` is `BYPASSRLS` (every table has RLS on with no
   policies). **Docker** bundles Postgres + PostgREST + the local store; **native** installs them directly.
   Net: no cloud account — text in a local Postgres volume, binaries on a local disk volume.

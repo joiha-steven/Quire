@@ -7,17 +7,17 @@
 //
 // Default: only NULL rows. --all: recompute every post. --dry: preview, no writes.
 
-import { createClient } from '@supabase/supabase-js'
+import { PostgrestClient } from '@supabase/postgrest-js'
 
 const DRY = process.argv.includes('--dry')
 const ALL = process.argv.includes('--all')
 
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY')
+const POSTGREST_URL = process.env.POSTGREST_URL
+const POSTGREST_TOKEN = process.env.POSTGREST_TOKEN
+if (!POSTGREST_URL || !POSTGREST_TOKEN) throw new Error('Missing POSTGREST_URL / POSTGREST_TOKEN')
 
-const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
+const db = new PostgrestClient(POSTGREST_URL, {
+  headers: { apikey: POSTGREST_TOKEN, authorization: `Bearer ${POSTGREST_TOKEN}` },
 })
 
 function toPlainText(markdown) {

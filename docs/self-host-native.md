@@ -11,7 +11,7 @@ Commands below assume Ubuntu/Debian + `root` (or `sudo`). Adjust paths to your b
 
 ```
 Internet → CDN/reverse proxy (TLS) → nginx → 127.0.0.1:3000  Next.js app (systemd/supervisor)
-                                                  │ supabase-js
+                                                  │ postgrest-js
                                                   ▼
                                     127.0.0.1:3001  PostgREST (systemd)
                                                   ▼
@@ -19,8 +19,8 @@ Internet → CDN/reverse proxy (TLS) → nginx → 127.0.0.1:3000  Next.js app (
 Binaries: STORAGE_LOCAL_DIR (media/ + files/), served at /uploads
 ```
 
-`supabase-js` is only a PostgREST HTTP client, so no Supabase cloud account is involved —
-`SUPABASE_URL` just points at your local PostgREST.
+The data layer speaks plain PostgREST over HTTP, so no cloud account is involved —
+`POSTGREST_URL` just points at your local PostgREST.
 
 ## 1. PostgreSQL
 
@@ -37,7 +37,7 @@ sudo -u postgres psql -d quire -f docker/initdb/03_grants.sql  # grants for serv
 Generate the secrets (DB password + PostgREST JWT secret + the app's `service_role` JWT):
 
 ```bash
-node scripts/docker/gen-keys.mjs   # prints PGPASSWORD, PGRST_JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY
+node scripts/docker/gen-keys.mjs   # prints PGPASSWORD, PGRST_JWT_SECRET, POSTGREST_TOKEN
 ```
 
 Create a dedicated login role for PostgREST that can assume `anon` / `service_role`:
@@ -75,9 +75,8 @@ install Node 20+ for that user, then:
 ```bash
 npm ci
 # create .env.local from .env.example — key values for native:
-#   SUPABASE_URL=http://127.0.0.1:3001
-#   POSTGREST_DIRECT=1
-#   SUPABASE_SERVICE_ROLE_KEY=<JWT from gen-keys.mjs>
+#   POSTGREST_URL=http://127.0.0.1:3001
+#   POSTGREST_TOKEN=<JWT from gen-keys.mjs>
 #   STORAGE_LOCAL_DIR=<app dir>/data/uploads   (mkdir it, owned by the site user)
 #   SITE_URL / AUTH_URL / AUTH_SECRET / AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET / AUTHORIZED_EMAIL / CRON_SECRET
 npm run build

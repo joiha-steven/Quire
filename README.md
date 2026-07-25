@@ -33,7 +33,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 An **open-source** (MIT), single-owner blog built for people who just want to **write** — and to **own the whole stack**. No SaaS, no vendor lock-in: text lives in your own **PostgreSQL**, binaries on your own **disk**, running on **your server**. The public site is statically cached so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
 
-All the writing happens in a polished `/admin` (or over MCP). Text lives in **PostgreSQL** (reached through **PostgREST** with the `supabase-js` client); images, files, and icons are plain files on the **local filesystem**. No git push to publish, no CMS to wrangle.
+All the writing happens in a polished `/admin` (or over MCP). Text lives in **PostgreSQL** (reached over **PostgREST**); images, files, and icons are plain files on the **local filesystem**. No git push to publish, no CMS to wrangle.
 
 | Area | What you get |
 |:---|:---|
@@ -98,7 +98,7 @@ sudo -u postgres psql -d quire -f scripts/schema.sql
 sudo -u postgres psql -d quire -f docker/initdb/03_grants.sql
 
 # 2. PostgREST (binary → systemd) on 127.0.0.1:3001, secrets from gen-keys.mjs
-node scripts/docker/gen-keys.mjs   # -> PGPASSWORD, PGRST_JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY
+node scripts/docker/gen-keys.mjs   # -> PGPASSWORD, PGRST_JWT_SECRET, POSTGREST_TOKEN
 
 # 3. App
 npm ci && npm run build
@@ -151,9 +151,8 @@ See [`.env.example`](./.env.example) (native) and [`.env.docker.example`](./.env
 | `AUTHORIZED_EMAIL` | ✅ | The only email allowed into `/admin` — your email |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ | Google OAuth "Web" client (admin sign-in + optional commenter login) — [Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) |
 | `SITE_URL` / `AUTH_URL` | ✅ | Canonical public URL of your instance (OG/sitemap/auth callbacks) |
-| `SUPABASE_URL` | ✅ | Your **PostgREST endpoint** (e.g. `http://127.0.0.1:3001`). Named `SUPABASE_` because the data layer uses the `supabase-js` client, which speaks PostgREST — **not** a Supabase cloud project |
-| `POSTGREST_DIRECT` | ✅ | `1` when talking to a bare PostgREST (strips the `/rest/v1` path prefix supabase-js adds) |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | HS256 JWT (`role=service_role`) signed with the PostgREST `jwt-secret` — generate both with `node scripts/docker/gen-keys.mjs` |
+| `POSTGREST_URL` | ✅ | Your **PostgREST endpoint** — the one serving tables at `/<table>` (e.g. `http://127.0.0.1:3001`) |
+| `POSTGREST_TOKEN` | ✅ | HS256 JWT (`role=service_role`) signed with the PostgREST `jwt-secret` — generate both with `node scripts/docker/gen-keys.mjs` |
 | `STORAGE_LOCAL_DIR` | ✅ | Directory that holds binaries (`media/`, `files/`), served at `/uploads` (Docker image defaults to `/app/uploads`) |
 | `CRON_SECRET` | ◻️ | Protects `/api/cron` (keep-alive + variant sweep + scheduled backup) — any random string |
 | `MCP_OAUTH_SECRET` | ◻️ | Signs MCP OAuth codes — random; falls back to `AUTH_SECRET` |
@@ -169,7 +168,7 @@ MCP tokens and the Google Drive backup connection are **created in the admin**, 
 git clone https://github.com/joiha-steven/Quire.git && cd Quire
 npm install
 docker compose up -d db rest        # a local Postgres + PostgREST just for dev
-cp .env.example .env.local          # fill in the values above (point SUPABASE_URL at the dev PostgREST)
+cp .env.example .env.local          # fill in the values above (point POSTGREST_URL at the dev PostgREST)
 npx auth secret                     # AUTH_SECRET
 npm run dev                         # http://localhost:3000/admin
 ```

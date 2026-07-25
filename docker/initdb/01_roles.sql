@@ -2,7 +2,7 @@
 -- Recreates the two Supabase roles the app + PostgREST rely on:
 --   anon         — the no-JWT role PostgREST falls back to; granted nothing, so an
 --                  unauthenticated request can reach no data.
---   service_role — the app's role (carried in the SUPABASE_SERVICE_ROLE_KEY JWT).
+--   service_role — the app's role (carried in the POSTGREST_TOKEN JWT).
 --                  BYPASSRLS mirrors Supabase: every table has RLS enabled with no
 --                  policies, and the app reaches them only by bypassing it.
 -- PostgREST connects as the superuser and SET ROLEs to whichever the JWT names.

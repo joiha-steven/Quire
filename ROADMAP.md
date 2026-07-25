@@ -36,7 +36,7 @@ platform-locked:
 - ISR + `revalidatePath`, the OG route, NextAuth and Markdown (gray-matter) all run
   under `next start` / standalone output.
 - Text content lives in **Postgres via PostgREST** — the app uses only the REST
-  layer through the `supabase-js` client, so a deploy bundles **Postgres + PostgREST**
+  layer, so a deploy bundles **Postgres + PostgREST**
   (self-hosted); binaries are store-relative on the local filesystem
   (`collapseBlob`/`expandBlob`), so a binary ref is just a path resolved against the
   local store.
@@ -80,9 +80,9 @@ as "bring your own bucket" (Phase 7).
 - `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + db + rest + cron). ✅
   The image builds with **no backend env** (data layer degrades to empty), so it is
   portable; env is supplied at runtime via `.env.docker`.
-- **Self-contained:** bundled **Postgres + PostgREST** + local FS store. supabase-js
-  unchanged — `db.ts` strips the `/rest/v1` prefix when `POSTGREST_DIRECT=1` so it hits
-  the local PostgREST. `scripts/docker/gen-keys.mjs` mints DB password + JWT. ✅
+- **Self-contained:** bundled **Postgres + PostgREST** + local FS store — `POSTGREST_URL`
+  points straight at it, no gateway in between. `scripts/docker/gen-keys.mjs` mints DB
+  password + JWT. ✅
 - Cron: a sidecar pings `/api/cron` hourly. ✅
 - *Still planned:* a GitHub Action that builds + publishes a versioned image to GHCR on
   each release tag, so updating is `docker compose pull && up -d`; optional bundled MinIO

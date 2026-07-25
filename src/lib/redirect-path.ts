@@ -1,5 +1,5 @@
 // Pure path helpers for the redirect subsystem. NO imports — safe to use from the
-// edge middleware (which must never pull in the node-only `db`/supabase-js bundle)
+// edge middleware (which must never pull in the node-only `db` client bundle)
 // AND from the server-side data layer (`redirects.ts`).
 
 // Normalize a request path for storage + lookup: force a single leading slash, drop

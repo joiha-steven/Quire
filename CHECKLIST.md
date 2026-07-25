@@ -15,7 +15,7 @@
 - [ ] Future-dated posts hidden until the date is reached
 - [ ] Past-date posts show the correct date
 - [ ] Postgres rows stay consistent after every write/delete (posts/pages/media/files)
-- [ ] `SUPABASE_URL` (PostgREST) + `POSTGREST_DIRECT` + `SUPABASE_SERVICE_ROLE_KEY` set in the target env (`.env.local` / `.env.docker`)
+- [ ] `POSTGREST_URL` + `POSTGREST_TOKEN` set in the target env (`.env.local` / `.env.docker`)
 - [ ] Deleting a media item moves it to Trash (it leaves the library but is NOT gone — the
   blob + every variant stay until purged from Trash)
 

@@ -23,23 +23,16 @@ if (existsSync('.env.local')) {
   }
 }
 
-const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STORAGE_LOCAL_DIR, POSTGREST_DIRECT } = process.env
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !STORAGE_LOCAL_DIR) {
-  console.log('~ check:consistency:live SKIPPED — missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / STORAGE_LOCAL_DIR (.env.local).')
+const { POSTGREST_URL, POSTGREST_TOKEN, STORAGE_LOCAL_DIR } = process.env
+if (!POSTGREST_URL || !POSTGREST_TOKEN || !STORAGE_LOCAL_DIR) {
+  console.log('~ check:consistency:live SKIPPED — missing POSTGREST_URL / POSTGREST_TOKEN / STORAGE_LOCAL_DIR (.env.local).')
   process.exit(0)
 }
 
-const { createClient } = await import('@supabase/supabase-js')
+const { PostgrestClient } = await import('@supabase/postgrest-js')
 
-// Mirror db.ts: bare PostgREST serves tables at `/<table>`, but supabase-js builds
-// `${url}/rest/v1/<table>` — strip that prefix when POSTGREST_DIRECT=1.
-const dbFetch = (input, init) => {
-  if (POSTGREST_DIRECT === '1' && typeof input === 'string') input = input.replace('/rest/v1', '')
-  return fetch(input, init)
-}
-const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-  global: { fetch: dbFetch },
+const db = new PostgrestClient(POSTGREST_URL, {
+  headers: { apikey: POSTGREST_TOKEN, authorization: `Bearer ${POSTGREST_TOKEN}` },
 })
 
 // Strip a leading `/uploads/` (with or without an origin) → store-relative pathname.

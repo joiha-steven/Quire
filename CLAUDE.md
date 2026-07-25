@@ -68,8 +68,8 @@ verification.
 
 ## Architecture (operational)
 
-- **Text in Postgres (self-hosted; reached through PostgREST with the `supabase-js` client — bundled
-  Postgres+PostgREST on Docker, or your own on native, see Env); binaries on the LOCAL FILESYSTEM via
+- **Text in Postgres (self-hosted; reached through PostgREST with the `@supabase/postgrest-js` client —
+  bundled Postgres+PostgREST on Docker, or your own on native, see Env); binaries on the LOCAL FILESYSTEM via
   the `blob.ts` facade** (served at `/uploads`; `STORAGE_LOCAL_DIR`). Tables (schema `public`):
   `posts` `pages` `post_revisions` `media` `files` `comments` `settings` `mcp_tokens` `mcp_clients`
   `mcp_used_codes` `backup_state` `integration_keys` `activity_log` `analytics_events` `analytics_scroll` `redirects` `subscribers` `newsletter_sends` — full DDL in
@@ -82,13 +82,11 @@ verification.
 - **Data flow:** public read = server component → `src/lib` (`getPost`/`getSettings`/…) →
   `marked` render (ISR-cached). Write = `src/app/api/*` route → `requireOwner()` → `src/lib`
   mutate Postgres/Blob → `src/lib/revalidate.ts` purge.
-- **Env:** `SUPABASE_URL` (your PostgREST endpoint) + `POSTGREST_DIRECT=1` + `SUPABASE_SERVICE_ROLE_KEY`
-  (HS256 `service_role` JWT, server-only) + `STORAGE_LOCAL_DIR` + `SITE_URL`/`AUTH_URL` + `AUTH_*` +
-  `AUTHORIZED_EMAIL` + `CRON_SECRET`. `SUPABASE_*` keep the name because the data layer uses `supabase-js`
-  (a PostgREST client) — NOT a Supabase cloud project. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
-  env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`). `db.ts` strips the
-  `/rest/v1` prefix when `POSTGREST_DIRECT=1` so supabase-js hits a bare PostgREST unchanged; DB password +
-  JWT secret + service key come from `scripts/docker/gen-keys.mjs`, roles/grants from `docker/initdb/`.
+- **Env:** `POSTGREST_URL` (your PostgREST endpoint, the one serving tables at `/<table>`) +
+  `POSTGREST_TOKEN` (HS256 `service_role` JWT, server-only) + `STORAGE_LOCAL_DIR` + `SITE_URL`/`AUTH_URL` +
+  `AUTH_*` + `AUTHORIZED_EMAIL` + `CRON_SECRET`. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
+  env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`). DB password +
+  JWT secret + service token come from `scripts/docker/gen-keys.mjs`, roles/grants from `docker/initdb/`.
   **Native:** `.env.example` + `docs/self-host-native.md`. **Docker:** `.env.docker.example` (bundles
   Postgres + PostgREST + local store + cron). Build needs no backend env (data layer degrades to empty).
   **Boot:** `src/instrumentation.ts` runs `validateEnv()` (`src/env.ts`) at server start (NOT build/edge)
@@ -134,7 +132,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 |---|---|---|
 | Image: upload / variant / responsive | `lib/media.ts`, `lib/blob.ts` (+ `lib/blob-local.ts`, `app/uploads/[...path]`), `lib/upload-client.ts`, `api/media/*`, `components/blog/PostContent.tsx` | `lib/media-usage.ts` |
 | Cache / stale / content not updating / ISR | `lib/revalidate.ts`, `lib/db.ts`, `lib/posts.ts` | ARCHITECTURE "Request flow" |
-| Auth / route 401 / route exposed / can't sign in locally | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`; `devLoginEnabled` = the LOCAL-ONLY owner sign-in, double-gated on `NODE_ENV !== 'production'` + a `DEV_LOGIN` secret, with `src/env.ts` refusing to boot production while it is set — pinned by `lib/dev-login.test.ts`, never weaken it), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO supabase-js), `api/<route>/route.ts` | `CONTRIBUTING.md` "Getting set up", `docs/mcp.md` if MCP |
+| Auth / route 401 / route exposed / can't sign in locally | `lib/auth.ts` (+ `lib/auth-shared.ts` = edge-safe `isAuthorized`; `devLoginEnabled` = the LOCAL-ONLY owner sign-in, double-gated on `NODE_ENV !== 'production'` + a `DEV_LOGIN` secret, with `src/env.ts` refusing to boot production while it is set — pinned by `lib/dev-login.test.ts`, never weaken it), `lib/api.ts`, `src/middleware.ts` (JWT via `getToken`, NO `db()` client), `api/<route>/route.ts` | `CONTRIBUTING.md` "Getting set up", `docs/mcp.md` if MCP |
 | Redirect not firing / 301 wrong / old URL 404s | `lib/redirects.ts`, `src/middleware.ts` (redirect map, edge-safe fetch), `lib/redirect-path.ts` (`normalizePath`), `api/redirects` | `docs/features.md` "URL redirects" |
 | Newsletter / subscribe / opt-in / SMTP not sending / test send | `lib/subscribers.ts`, `lib/mail.ts` (Nodemailer; config on `integration_keys`; EVERY send logged), `lib/newsletter-log.ts`, `api/subscribe`, `api/newsletter/*`, `api/mail` (+ `api/mail/test`), `components/admin/NewsletterFields.tsx` (SMTP creds only), `components/blog/Subscribe{Form,Trigger,Overlay}.tsx` | `docs/features.md` "Newsletter" |
 | Broadcast not sent / re-sent / open rate / reply notify | `lib/broadcast.ts` (`broadcastPost` — MANUAL only, no cron send), `api/broadcast`, `src/app/admin/newsletter`, `components/admin/Newsletter{View,Subscribers,Send,Test}.tsx`, `lib/newsletter-log.ts` + `api/newsletter/open` (pixel), `lib/comment-notify.ts`, `lib/newsletter-email.ts` | `docs/features.md` "Newsletter" |
@@ -164,7 +162,7 @@ Terse role per file; the authoritative detail is the code comments.
 
 | File | Key exports | Role |
 |---|---|---|
-| `db.ts` | `db()` | Server-only `service_role` client; GET reads cache-eligible + tagged `db`, writes `no-store`. ALL text access goes through here |
+| `db.ts` | `db()` | Server-only `service_role` PostgREST client (`@supabase/postgrest-js` — the standalone query builder, NOT supabase-js); GET reads cache-eligible + tagged `db`, writes `no-store`. ALL text access goes through here |
 | `blob.ts` | `blobUrl`, `uploadFile`, `readBlob`, `deleteByUrl/Pathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | Binaries only; facade over the LOCAL fs driver `blob-local.ts` (served at `/uploads` via `app/uploads/[...path]`), lazy-loaded so `node:fs` stays off the client. `collapse/expand` = store-relative refs. No cloud storage SDK anywhere in `src` (`check:no-direct-blob`) |
 | `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads `React.cache()` only. `savePost` snapshots prior version + stores `readingMinutes`. `updateTerm` renames (merges on collision) / removes a term across EVERY post |
 | `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors `posts.ts` |
@@ -209,7 +207,7 @@ mechanism + the *why* (and the old no-DB bug it replaced) → ARCHITECTURE.md "R
   state). Set `fetchCache = 'force-no-store'` on the `/admin` layout AND the owner-only list API
   routes not under `/admin` (`api/mcp/tokens`, `api/files`, `api/media`, `api/media/unused`,
   `api/posts/[slug]/revisions`, `api/backup`). (Caused "token list missing" + the 1.0.11–1.0.13 bug.)
-- **DO NOT** set Supabase GET reads to `no-store` (kills ISR) or enable `cacheComponents: true`; keep every write going through `revalidate.ts`.
+- **DO NOT** set `db()` GET reads to `no-store` (kills ISR) or enable `cacheComponents: true`; keep every write going through `revalidate.ts`.
 
 ## Rendering — `src/app/(blog)/[slug]/page.tsx`
 

@@ -41,8 +41,8 @@ describe('validateEnv', () => {
   const validBackend = {
     AUTH_SECRET: 'x',
     AUTHORIZED_EMAIL: 'owner@example.com',
-    SUPABASE_URL: 'http://localhost:3001',
-    SUPABASE_SERVICE_ROLE_KEY: 'k',
+    POSTGREST_URL: 'http://localhost:3001',
+    POSTGREST_TOKEN: 'k',
   }
 
   it('refuses to boot a production server while DEV_LOGIN is set', () => {

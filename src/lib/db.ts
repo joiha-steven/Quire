@@ -1,13 +1,18 @@
-// Supabase Postgres client — the data layer's storage for ALL text content
-// (posts, pages, revisions, media/file metadata, settings). Binaries (images,
-// attachments, icons) live on the local filesystem; see `blob.ts`.
+// PostgREST client — the data layer's storage for ALL text content (posts, pages,
+// revisions, media/file metadata, settings). Binaries (images, attachments, icons)
+// live on the local filesystem; see `blob.ts`.
 //
-// SERVER-ONLY. Uses the secret service_role key, which bypasses RLS. Every admin
+// SERVER-ONLY. Uses the secret service_role token, which bypasses RLS. Every admin
 // write is already owner-gated by next-auth (`requireOwner`) and public reads only
 // select published rows, so it is safe to centralize trust on the server here.
-// The key must NEVER reach the client — do not import this from a client component.
+// The token must NEVER reach the client — do not import this from a client component.
+//
+// `@supabase/postgrest-js` is the standalone PostgREST client (the query builder that
+// `supabase-js` wraps). Quire self-hosts Postgres + PostgREST and uses no other
+// Supabase service, so it depends on this package directly rather than dragging in
+// supabase-js's auth/realtime/storage/functions clients, which it never calls.
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { PostgrestClient } from '@supabase/postgrest-js'
 
 // Custom fetch so the data layer plays well with Next's caching:
 // - READS (GET) are cache-eligible (`next.revalidate`) so a public page that reads
@@ -24,41 +29,32 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 export const DB_TAG = 'db'
 const REVALIDATE = 3600
 
-// Self-host (Docker) talks to a BUNDLED PostgREST instead of Supabase's gateway.
-// supabase-js builds `${SUPABASE_URL}/rest/v1/<table>`; bare PostgREST serves tables
-// at `/<table>`, so when POSTGREST_DIRECT=1 we strip the `/rest/v1` prefix here. This
-// keeps the whole data layer (and supabase-js) byte-for-byte identical on both
-// targets — only the URL path differs. Unset → supabase-js keeps its default `/rest/v1` path.
-const POSTGREST_DIRECT = process.env.POSTGREST_DIRECT === '1'
-function restTarget(input: RequestInfo | URL): RequestInfo | URL {
-  if (!POSTGREST_DIRECT) return input
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : null
-  return url ? url.replace('/rest/v1', '') : input
-}
-
 function dbFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const target = restTarget(input)
   const method = (init?.method ?? 'GET').toUpperCase()
   if (method === 'GET' || method === 'HEAD') {
-    return fetch(target, { ...init, next: { revalidate: REVALIDATE, tags: [DB_TAG] } })
+    return fetch(input, { ...init, next: { revalidate: REVALIDATE, tags: [DB_TAG] } })
   }
-  return fetch(target, { ...init, cache: 'no-store' })
+  return fetch(input, { ...init, cache: 'no-store' })
 }
 
-let _client: SupabaseClient | undefined
+let _client: PostgrestClient | undefined
 
 // Lazy singleton: built on first use so a missing env var fails at call time
 // (degrade-friendly) rather than at module load, matching blob.ts's behavior.
-export function db(): SupabaseClient {
+//
+// POSTGREST_URL is the endpoint that serves tables at `/<table>` — a bundled or your
+// own PostgREST. (Behind Supabase's gateway that path is `/rest/v1`, so such a URL
+// includes the prefix; nothing here special-cases it.)
+export function db(): PostgrestClient {
   if (_client) return _client
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  const url = process.env.POSTGREST_URL
+  const token = process.env.POSTGREST_TOKEN
+  if (!url || !token) {
+    throw new Error('Missing POSTGREST_URL or POSTGREST_TOKEN')
   }
-  _client = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: { fetch: dbFetch },
+  _client = new PostgrestClient(url, {
+    headers: { apikey: token, authorization: `Bearer ${token}` },
+    fetch: dbFetch,
   })
   return _client
 }

@@ -17,9 +17,8 @@ Thanks for helping. Quire values small, correct, well-scoped changes.
   docker compose -f docker-compose.dev.yml up -d      # Postgres + PostgREST + Mailpit
   ```
 
-  Then point `.env.local` at it — `SUPABASE_URL=http://localhost:3001`,
-  `POSTGREST_DIRECT=1`, the `SUPABASE_SERVICE_ROLE_KEY` from `.env.docker` — and
-  `npm run dev`.
+  Then point `.env.local` at it — `POSTGREST_URL=http://localhost:3001` and the
+  `POSTGREST_TOKEN` from `.env.docker` — and `npm run dev`.
   - **Signing in without Google.** Most machines have no OAuth credentials, which
     would leave `/admin` unreachable. Set `DEV_LOGIN=<any secret>` in `.env.local` and
     a "Developer sign-in (local only)" option appears at `/api/auth/signin`; type that

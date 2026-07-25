@@ -31,7 +31,7 @@ services:
       retries: 12
     restart: unless-stopped
 
-  # PostgREST — the REST layer supabase-js talks to (was Supabase's API gateway).
+  # PostgREST — the REST layer the app's data layer talks to.
   # Reads PGRST_JWT_SECRET + PGPASSWORD straight from .env.docker; connects as the
   # superuser (db port is NOT exposed to the host) and SET ROLEs to the role named in
   # each request's JWT (service_role) or `anon` when there is none.
@@ -76,8 +76,7 @@ services:
     entrypoint: ["/bin/sh", "-c", "chown -R 1000:1000 /uploads"]
     restart: "no"
 
-  # The Next.js app. SUPABASE_URL points at the bundled PostgREST; POSTGREST_DIRECT
-  # makes db.ts strip the `/rest/v1` path prefix so supabase-js works unchanged.
+  # The Next.js app. POSTGREST_URL points at the bundled PostgREST.
   app:
     build: .
     image: quire
@@ -92,8 +91,7 @@ services:
         condition: service_completed_successfully
     env_file: .env.docker
     environment:
-      SUPABASE_URL: http://rest:3000
-      POSTGREST_DIRECT: "1"
+      POSTGREST_URL: http://rest:3000
     ports:
       - "3000:3000"
     volumes:
