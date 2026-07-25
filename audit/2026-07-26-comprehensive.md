@@ -146,11 +146,51 @@ No credentials or instance data in tracked files.
 - `src/components/admin/AnalyticsView.tsx` — range pills wrap; labels `whitespace-nowrap`
 - `audit/2026-07-26-comprehensive.md` (this report)
 
+## Addendum — follow-ups 1 and 2 shipped the same day (`cf5d126`)
+
+The owner approved both open items, so they landed in this pass after all.
+
+**Contrast.** A trap worth recording: production stores its palettes in
+`settings.data.themes`, which **overrides the code presets** — shipping new `THEME_PRESETS`
+alone would have changed nothing on the live site. Fixed in both places: the presets in code
+(for fresh installs) and the 10 stored leaf values on the live row, patched individually so
+owner customisations survive untouched (mono's red accent is still `#d80000`). scifi and amber
+move `accent` with `link` because those palettes define them as one colour. `themes.test.ts`
+now pins every preset at AA. **Live Lighthouse accessibility 96 → 100**, zero failing nodes.
+
+**Font weight axis.** `scripts/subset-font-weights.py` clamps `wght` to 400–700 and keeps
+`opsz`. Literata's LCP pair: **129.3 KB → 95.3 KB (-26%)**; 175 KB saved across the bundled
+families. Two things this pass got wrong first and corrected:
+- Verifying the axis by *advance width* reported JetBrains Mono as broken — a monospace font
+  keeps identical widths at every weight by design. Re-verified by ink coverage instead: rises
+  monotonically 34–66% from 400 to 700 across all four families.
+- Source Sans re-compresses *larger* after instancing, so the script now refuses to write any
+  file it would grow.
+
+**Measured result (mobile, median of 3 warm runs):**
+
+| | before | after |
+|:--|--:|--:|
+| Performance | 77 | **87** |
+| Accessibility | 96 | **100** |
+| LCP | 5.1 s | **4.0 s** |
+| LCP render delay | 4,428 ms | **3,493 ms** |
+| Total blocking time | 230 ms | **100 ms** |
+
+Caveat on method: the "before" column is a single run, the "after" is a median of three. A
+fourth run taken immediately after a cache purge scored 75 with LCP 5.2s — measuring against a
+cold origin, not a regression. Always warm the cache before comparing.
+
+**The font was not the whole story.** LCP is better but still 4.0s, and the render delay is
+still 3.5s — now dominated by main-thread script evaluation (964 ms), not bytes. The remaining
+levers are the 81.6 KB inline RSC payload from `infiniteScroll` and Cloudflare's bot script.
+
 ## Follow-ups
-1. **Owner decision — light-palette contrast (§5).** Table above is ready to apply.
-2. **Subset the Literata weight axis (§3)** — the one change that moves mobile LCP.
-3. **Reconsider Cloudflare Bot Fight Mode (§3)** — 422ms of main thread on every page load.
-4. **`middleware.ts` → `proxy.ts`** — Next 16 prints a deprecation warning on every build.
-5. **`nodemailer` (§1)** — recheck when `next-auth` widens its peer range.
-6. Carried over from 2026-06-23, still open: commenter `author_ip` is stored in plaintext with
+1. **Main-thread script cost is now the LCP long pole (§3)** — 964 ms of script evaluation,
+   with ~320 ms of unused JS. Weigh the `infiniteScroll` trade-off (whole list handed to a
+   client island) against server-rendering the first page and fetching the rest.
+2. **Reconsider Cloudflare Bot Fight Mode (§3)** — 422 ms of main thread on every page load.
+3. **`middleware.ts` → `proxy.ts`** — Next 16 prints a deprecation warning on every build.
+4. **`nodemailer` (§1)** — recheck when `next-auth` widens its peer range.
+5. Carried over from 2026-06-23, still open: commenter `author_ip` is stored in plaintext with
    no retention policy. Admin-only and deliberate, but undocumented for readers.
