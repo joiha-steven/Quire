@@ -24,8 +24,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // The bundled Docker stack writes Postgres data + uploads here (root-owned);
     // it is runtime data, not source — skip it so `npm run lint` works after
-    // `docker compose up`.
+    // `docker compose up`. The dev stack keeps Postgres in a named volume, so only
+    // its uploads dir lands in the tree.
     "data/**",
+    "data-dev-uploads/**",
   ]),
 ]);
 

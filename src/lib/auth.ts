@@ -8,7 +8,34 @@ import NextAuth from 'next-auth'
 import type { Provider } from 'next-auth/providers'
 import type { CommentProvider } from '@/types'
 import Google from 'next-auth/providers/google'
+import Credentials from 'next-auth/providers/credentials'
 import { isAuthorized } from '@/lib/auth-shared'
+
+// LOCAL DEVELOPMENT ONLY — sign in as the owner without Google, so the admin can be
+// driven (and tested headlessly) on a machine that has no OAuth credentials. Two gates,
+// both required:
+//   1. NODE_ENV !== 'production'. `next build && next start` and the Docker image are
+//      both production, so this provider CANNOT exist in a real deployment.
+//   2. DEV_LOGIN holds a secret that must be typed in. Not a bare on/off flag, so even
+//      a dev-mode server left exposed is not a one-click takeover.
+// `src/env.ts` additionally refuses to boot a production server while DEV_LOGIN is set.
+export function devLoginEnabled(nodeEnv = process.env.NODE_ENV, secret = process.env.DEV_LOGIN): boolean {
+  return nodeEnv !== 'production' && !!secret
+}
+
+const devLoginProvider = () =>
+  Credentials({
+    id: 'dev-login',
+    name: 'Developer sign-in (local only)',
+    credentials: { secret: { label: 'DEV_LOGIN secret', type: 'password' } },
+    authorize: (creds) => {
+      const given = typeof creds?.secret === 'string' ? creds.secret : ''
+      // Compare against the env secret; a wrong or empty value is simply not a sign-in.
+      if (!given || given !== process.env.DEV_LOGIN) return null
+      const email = process.env.AUTHORIZED_EMAIL ?? ''
+      return email ? { id: email, email, name: email } : null
+    },
+  })
 
 // Re-export so existing importers (`@/lib/auth`) keep working.
 export { isAuthorized } from '@/lib/auth-shared'
@@ -20,15 +47,25 @@ export { isAuthorized } from '@/lib/auth-shared'
 export const { handlers, auth, signOut } = NextAuth(async () => {
   const providers: Provider[] = []
   if (process.env.AUTH_GOOGLE_ID) providers.push(Google)
+  if (devLoginEnabled()) {
+    console.warn('[auth] DEV_LOGIN is on — the local developer sign-in is available. Never set this in production.')
+    providers.push(devLoginProvider())
+  }
   return {
     providers,
     callbacks: {
     // Persist email + name + which provider onto the JWT so the session can
     // expose a commenter's identity (the comment POST trusts it for OAuth users).
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       if (account?.provider) token.provider = account.provider
       if (profile?.email) token.email = profile.email
       if (profile?.name) token.name = profile.name
+      // Credentials sign-in (the dev login) has no OAuth `profile` — the identity comes
+      // back on `user` from authorize().
+      if (!profile && user?.email) {
+        token.email = user.email
+        token.name = user.name ?? user.email
+      }
       return token
     },
       async session({ session, token }) {

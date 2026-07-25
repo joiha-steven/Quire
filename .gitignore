@@ -39,6 +39,9 @@ yarn-error.log*
 # docker self-host: the bundled stack writes Postgres data + uploaded binaries
 # here (docker-compose bind mounts). Runtime data, never committed.
 /data/
+# docker-compose.dev.yml keeps its Postgres in a named Docker volume (outside the
+# tree); only the dev server's uploaded binaries land here.
+/data-dev-uploads/
 
 # typescript
 *.tsbuildinfo

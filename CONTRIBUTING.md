@@ -7,6 +7,31 @@ Thanks for helping. Quire values small, correct, well-scoped changes.
 - Node ≥ 20.9 (CI runs 24). `npm ci` to install.
 - Self-host locally with Docker (`docker compose up -d --build`) or natively — see
   [`README.md`](./README.md) and [`docs/self-host-native.md`](./docs/self-host-native.md).
+- **To actually work on the app**, don't use the production compose (its app container
+  is a production build: no hot reload, and the dev sign-in is gated off). Use the
+  backing-services stack and run the app yourself:
+
+  ```sh
+  cp .env.docker.example .env.docker
+  node scripts/docker/gen-keys.mjs >> .env.docker     # DB password + JWT secret + key
+  docker compose -f docker-compose.dev.yml up -d      # Postgres + PostgREST + Mailpit
+  ```
+
+  Then point `.env.local` at it — `SUPABASE_URL=http://localhost:3001`,
+  `POSTGREST_DIRECT=1`, the `SUPABASE_SERVICE_ROLE_KEY` from `.env.docker` — and
+  `npm run dev`.
+  - **Signing in without Google.** Most machines have no OAuth credentials, which
+    would leave `/admin` unreachable. Set `DEV_LOGIN=<any secret>` in `.env.local` and
+    a "Developer sign-in (local only)" option appears at `/api/auth/signin`; type that
+    secret and you are the owner. It is an auth bypass, so it has two gates and a
+    third alarm: the provider is not registered unless `NODE_ENV !== 'production'`, it
+    demands the secret rather than being a bare flag, and **a production server
+    refuses to boot while `DEV_LOGIN` is set** (`src/env.ts`). Pinned by
+    `src/lib/dev-login.test.ts` — do not weaken any of it.
+  - **Email.** The dev stack includes Mailpit: point Admin → Settings → Integrations at
+    host `localhost`, port `1025`, TLS off, and read everything it "sends" at
+    <http://localhost:8025>. The whole newsletter path (opt-in, broadcast, reply,
+    test send, the open pixel) works end to end with no real SMTP account or inbox.
 - Read [`CLAUDE.md`](./CLAUDE.md) (operating rules + invariants) and
   [`ARCHITECTURE.md`](./ARCHITECTURE.md) (the *why*) before a non-trivial change.
 - For admin/editor work, also read [`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md)

@@ -581,7 +581,7 @@ const de = {
   nlColOpenRate: 'Öffnungsrate',
   nlColLastSend: 'Letzter Versand',
   nlFailedSuffix: 'fehlgeschlagen',
-  nlPickPost: 'Beitrag zum Senden',
+  nlPickPost: 'Beiträge zum Senden',
   nlPreview: 'Vorschau',
   nlPreviewHint: 'Genau diese E-Mail erhalten die Abonnenten, ohne das Tracking-Pixel.',
   nlPreviewFailed: 'Für diesen Beitrag ließ sich keine Vorschau erzeugen.',

@@ -581,7 +581,7 @@ const en = {
   nlColOpenRate: 'Open rate',
   nlColLastSend: 'Last send',
   nlFailedSuffix: 'failed',
-  nlPickPost: 'Post to send',
+  nlPickPost: 'Posts to send',
   nlPreview: 'Preview',
   nlPreviewHint: 'This is the exact email subscribers receive, minus the tracking pixel.',
   nlPreviewFailed: 'Could not build a preview for this post.',

@@ -75,7 +75,9 @@ export function NewsletterSubscribers() {
           <tbody>
             {subs.map((s) => (
               <tr key={s.id} className={TROW}>
-                <td className="max-w-0 truncate px-4 py-2.5">{s.email}</td>
+                {/* max-w, not max-w-0: the latter collapses the column to its minimum
+                    and truncates every address even on a near-empty table. */}
+                <td className="max-w-[22rem] truncate px-4 py-2.5" title={s.email}>{s.email}</td>
                 <td className="px-4 py-2.5 text-neutral-500 dark:text-neutral-400">{s.status}</td>
                 <td className="whitespace-nowrap px-4 py-2.5 tabular-nums text-neutral-500 dark:text-neutral-400">{shortDate(s.createdAt)}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">

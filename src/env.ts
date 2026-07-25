@@ -25,7 +25,21 @@ const recommended: [string, string][] = [
   ['ANALYTICS_TZ', 'analytics day/week buckets are truncated in UTC (set an IANA zone, e.g. Asia/Ho_Chi_Minh)'],
 ]
 
+// The dev sign-in (see lib/auth.ts) is a real auth bypass, so it gets a second gate
+// here: a production server REFUSES TO START while DEV_LOGIN is set. The provider is
+// already unreachable in a production build; this makes the misconfiguration loud
+// instead of leaving the operator to assume it is doing something.
+function assertNoDevLoginInProduction(): void {
+  if (process.env.NODE_ENV === 'production' && process.env.DEV_LOGIN) {
+    throw new Error(
+      'DEV_LOGIN is set on a PRODUCTION server. It exists only for local development ' +
+        '(it signs you in as AUTHORIZED_EMAIL without Google). Unset it and restart.',
+    )
+  }
+}
+
 export function validateEnv(): void {
+  assertNoDevLoginInProduction()
   const parsed = schema.safeParse(process.env)
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  - ${i.message}`).join('\n')
