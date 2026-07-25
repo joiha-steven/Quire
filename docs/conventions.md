@@ -208,10 +208,12 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   files — `.env.local` only.
 - **Audits** (`audit/`): a full review per `audit/README.md` → dated `audit/YYYY-MM-DD-<scope>.md`;
   read the latest first so a pass starts from the last clean line.
-- **Versioning (owner's rule — do NOT auto-bump):** the version is currently **`1.4.x`**. Each change
-  bumps the patch `x`, a running counter with no semver meaning. The minor (`1.0` → … → `1.4`) moves
+- **Versioning (owner's rule — do NOT auto-bump):** the version is currently **`1.5.x`**. Each change
+  bumps the patch `x`, a running counter with no semver meaning. The minor (`1.0` → … → `1.5`) moves
   only when the owner asks — NEVER raise it (or `→ 2.0`) on your own. A code change bumps `x`;
   pure-docs may skip. On a bump, also update the **README title** version:
-  `` # **quire**blog `v1.4.x` `` (centered header, top of README).
+  `` # **quire**blog `v1.5.x` `` (centered header, top of README).
 - **Cutting a release:** `x` already current; `npm run build` + `npm run check:all` exit 0; push `main`;
-  `gh release create v1.4.<x> --title "v1.4.<x> - <tagline>" --notes "…"`.
+  `gh release create v1.5.<x> --title "v1.5.<x> - <tagline>" --notes "…"`.
+  Version lives in exactly three tracked places — `package.json`, the README title, and this
+  line; a CHANGELOG entry heading carries it too. Grep the old number before tagging.

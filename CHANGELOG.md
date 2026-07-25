@@ -1,5 +1,128 @@
 # CHANGELOG
 
+## 2026-07-26 — Quire 1.5: newsletter, a real dev stack, and a security pass (v1.5.0)
+
+The minor moves for two reasons: the blog can now **email its readers** as a first-class
+subsystem, and the self-host **environment variables were renamed** (see Breaking below).
+
+### ⚠️ Breaking — self-host env
+
+`SUPABASE_URL` → **`POSTGREST_URL`**, `SUPABASE_SERVICE_ROLE_KEY` → **`POSTGREST_TOKEN`**,
+and **`POSTGREST_DIRECT` is gone**. Rename the two keys in your `.env.local` / `.env.docker`
+*before* restarting — `src/env.ts` fails fast, so a server with the old names will not boot.
+`POSTGREST_URL` is the endpoint that serves tables at `/<table>`; behind Supabase's gateway
+that path is `/rest/v1`, so include the suffix in the URL itself.
+
+The names were a leftover: the data layer used the `supabase-js` client to speak PostgREST,
+long after Supabase itself was dropped. It now depends on **`@supabase/postgrest-js`** — the
+standalone query builder that `supabase-js` wraps — so `db()` keeps the same `.from()`/`.rpc()`
+surface, all 132 call sites across 28 files are unchanged, and four clients the app never
+called (auth, realtime, storage, functions) are no longer shipped.
+
+### Newsletter
+
+- **Admin → Newsletter**, a page of its own with three tabs. *People*: subscribers and each
+  address's real send history. *Send*: pick one or more posts, review the actual email HTML in
+  a sandboxed iframe, then send. *Test*: sample sends. Settings → Integrations now holds only
+  the SMTP credentials.
+- **Sending is a deliberate act.** There is no automatic broadcast: the cron publishes a
+  scheduled post on time but never emails anyone. The double-send guard reads the send log
+  rather than `broadcast_at`, which older posts still carry from the retired auto-send.
+- **A designed email, in your palette.** One shell for every message — 600px table, inline
+  styles, masthead with your actual logo, hidden preheader, an Outlook-safe button, and a
+  footer that says why the reader is getting this. Colours come from the owner's own theme.
+  The logo ships a **PNG twin** because Outlook on Windows cannot render WebP.
+- **Several posts are ONE digest**, never one message per post — newest leads, the rest follow
+  as a list. Each post still gets credit in the per-post stats.
+- **Every send is logged**, success and failure with the SMTP error, from the single choke
+  point in `sendMail` — no path can email an address without it showing up.
+- **Open tracking** via a 1×1 pixel whose token identifies the send row, never the address.
+  First hit wins; no IP, UA or referrer recorded; previews and test sends carry no token.
+  Links are not wrapped — there is no click tracking.
+- **Subscribe from any page** with a header envelope button (shown only when SMTP is
+  configured) that opens the form as a modal.
+- **Unsubscribe now confirms on POST.** A bare `GET` — email scanners, link prefetchers — no
+  longer silently unsubscribes someone; it renders a confirmation page instead.
+
+### Security
+
+A dependency audit found **14 known vulnerabilities, 3 critical**, because `next` was pinned
+to an exact version and patch releases never arrived. All criticals are gone:
+
+- **Auth.js** — a configuration error could make existence-based auth checks *fail open*, and
+  `getToken()` threw on a malformed `Bearer` header (called on every `/admin` and `/api`
+  request). → `next-auth` 5.0.0-beta.32 / `@auth/core` 0.41.3
+- **Next.js** — middleware/proxy bypass on App Router + Turbopack, plus nine more. → 16.2.11
+- **node-tar** — parse DoS and an infinite loop; restore unpacks archives. → 7.5.22
+- **fast-xml-parser** — entity-expansion reset, reachable through the WordPress importer. → 5.10.1
+- **sharp** / **postcss** — needed `overrides`, because the vulnerable copies were nested
+  inside `next` where a normal bump has no effect.
+- `nodemailer` deliberately stays on 7.x: none of its advisories touch an API this app uses,
+  and `next-auth`'s peer range forbids 9. Reasoning recorded in `audit/2026-07-26-comprehensive.md`.
+- **`/api/subscribers` was exempted from the edge owner guard** — `isPublicApi()` matched
+  `/api/subscribe` as a prefix. Nothing was exposed (the routes call `requireOwner()`), but
+  the defence-in-depth layer is restored and the match is now exact.
+
+### Accessibility
+
+- **All six light palettes failed WCAG AA on secondary text** (2.91:1–3.60:1 where 4.5:1 is
+  required at 14px); scifi and amber failed on link colour too. Corrected to the lightest
+  value that clears AA, hue and saturation untouched. Live Lighthouse accessibility **96 → 100**.
+- `themes.test.ts` now holds every preset to AA — a palette is data, so a bad value is
+  invisible in review.
+
+### Performance
+
+- **Font weight axes clamped to 400–700**, the only weights the app can render, keeping the
+  `opsz` axis that `font-optical-sizing: auto` opts into. The reading font's LCP pair drops
+  **129 KB → 95 KB**; 175 KB saved across the bundled families (`scripts/subset-font-weights.py`).
+- Responsive `<picture>` for the cover hero, a lean media select for the public post render
+  instead of reading the whole library, and a lazily-loaded search overlay.
+- Measured on the live site (mobile, median of three): **Performance 77 → 87, LCP 5.1s → 4.0s,
+  blocking time 230ms → 100ms.**
+
+### Working on Quire
+
+- **A local dev stack that actually works**: `docker-compose.dev.yml` brings up Postgres +
+  PostgREST + **Mailpit**, so `npm run dev` on the host has hot reload and the whole newsletter
+  path — opt-in, broadcast, reply, open pixel — runs end to end with no real SMTP account.
+- **`DEV_LOGIN`** adds a local-only owner sign-in, so `/admin` is reachable on a machine with
+  no Google credentials. It is an auth bypass, so it has two gates and an alarm: unregistered
+  unless `NODE_ENV !== 'production'`, it demands a secret rather than being a flag, and a
+  production server **refuses to boot** while it is set.
+- **Admin → Help rebuilt as a usable manual.**
+- Verification is now a rule, not a habit: run the change on the local stack and drive it with
+  a headless browser. Two UI defects shipped the week before purely because `check:all` passed
+  and nobody opened the page.
+- The static check scripts normalise path separators, so the guards work on Windows — they had
+  been reporting phantom violations and silently skipping their own exemption lists.
+
+### Fixes
+
+- **Lightbox was dead for self-hosted images** — the URL scan only matched absolute `https://`,
+  while local images are stored root-relative, so the island never rendered.
+- **WordPress import** stamps imported posts as already broadcast, so a later cron tick cannot
+  blast an entire back catalogue to subscribers.
+- **Book mode**: wide images spilled into the next column; dark mode leaked white text onto the
+  paper background (the overrides used the wrong variable prefix).
+- **Admin analytics scrolled sideways on a phone** — the header held its actions rigid, so four
+  range pills plus Export could neither shrink nor wrap.
+- File uploads use an exclusive write with retry, matching media originals.
+- Search box is one bordered field with no stray accent ring; the rightmost header icon aligns
+  to the content margin.
+- Scroll-reveal now works on Safari and Firefox via an IntersectionObserver fallback (Chromium
+  keeps the pure-CSS path and ships no extra JS), and the fade finishes mid-screen where the
+  eye actually is.
+
+### Look
+
+- The public frontend is rounded site-wide, matching the admin, instead of the global
+  square-corner reset.
+- Admin dropdowns are styled: a custom `Select` replaces the raw native control, and a
+  `Combobox` replaces the untypeable `<input list>` + `<datalist>`.
+- Shared input chrome, aligned radii, and the analytics read-depth panel moved up beside
+  Channels and Referrers.
+
 ## 2026-07-23 — book mode: 15% larger text + paler paper (v1.4.37)
 
 - Reading text in book mode is now 15% larger than normal, via a `--type-scale` multiplier on
