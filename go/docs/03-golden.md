@@ -131,9 +131,13 @@ Visual fidelity is then checked once per language by screenshot, not per block.
   date: 2026-XX-XX
 ```
 
-Empty at the start. Every entry is a deliberate decision with a named approver. If
-this file grows past roughly 20 entries, that is a signal the parser swap is not going
-well and the plan needs revisiting.
+Empty at the start. Every entry is a deliberate decision, reviewed by eye against the
+affected page before it is written down. Since Quire has exactly one user (see
+"Audience" in 00-plan.md), "looks right, accept it" is a sufficient standard here; the
+value of the file is that the decision was *seen*, not that it was ratified.
+
+If it grows past roughly 20 entries, that is a signal the parser swap is going badly
+and the plan needs revisiting.
 
 ## Compare and report
 

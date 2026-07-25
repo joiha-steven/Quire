@@ -14,9 +14,11 @@ The reason is NOT raw speed. It is:
    JavaScript across 13 files to render 6 KB (brotli) of article HTML. About 100 KB
    brotli of that is the structural floor of Next.js (react-dom 61 KB + client router
    34 KB) and cannot be removed while staying on Next. Target: under 15 KB brotli.
-2. **Operations.** Today a Quire instance needs Node, Next, PostgreSQL, PostgREST,
-   generated JWT keys, DB roles and grants, and a migration runner. Target: download
-   one binary, run it.
+2. **Operations.** Today the instance needs Node, Next, PostgreSQL, PostgREST,
+   generated JWT keys, DB roles and grants, and a migration runner, all maintained by
+   one person on one box. Target: one binary and one file. This is about the author's
+   own maintenance burden, not about making the project easier for strangers to adopt.
+   See "Audience" below.
 3. **Dependency surface.** The current tree pins `next` hard and carries unpatched
    critical advisories that cannot be resolved without breaking the pin. Go plus a
    handful of well-maintained libraries removes that treadmill.
@@ -161,9 +163,23 @@ Deviations from Quire 1.x that are intentional. Each needs to stay short and jus
 4. **Sessions do not survive cutover.** Everyone signs in again once. MCP tokens do
    survive.
 
-## Open questions
+## Audience (settled 2026-07-26)
 
-- Do any third parties currently self-host Quire 1.x? If yes, they need a documented
-  migration path and a deprecation window, and that changes the M4 gate.
-- Is the SaaS multi-tenant model "one SQLite file per tenant"? It is the natural fit
-  and worth designing for now even if it is not built yet.
+**There are no third-party self-hosters.** Quire runs one instance, `manhhung.me`, used
+by its author. The repository is public, but nobody else depends on it.
+
+**SaaS is not a goal.** It was an idea, not a plan. Nothing in Quire 2.0 is designed
+for multi-tenancy, and "one SQLite file per tenant" is noted only as the direction to
+take if that ever changes. Do not build for it, do not shape the schema around it.
+
+Consequences, which run through the rest of these specs:
+
+- M4 needs no deprecation window, no migration guide for others, no compatibility
+  promise. Cutover is a private operation.
+- Parity is judged by the one person who uses the product. Where the old and new
+  behaviour differ, "does this bother me" is a legitimate and sufficient test.
+- Operational simplicity still matters, but for the author's own server, not for
+  adoption. 400 MB of RAM and two extra processes are a real maintenance cost to one
+  person; they are no longer an argument about how many people would install it.
+- Anything built purely to be a good open-source citizen (upgrade paths, dialect
+  compatibility, deprecation shims) is out of scope.
