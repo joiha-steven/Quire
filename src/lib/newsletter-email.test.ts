@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import en from '@/locales/en'
-import { broadcastEmail, replyEmail } from '@/lib/newsletter-email'
+import { confirmEmail, broadcastEmail, replyEmail } from '@/lib/newsletter-email'
+
+describe('confirmEmail', () => {
+  it('links the opt-in URL and escapes the site title', () => {
+    const { subject, html } = confirmEmail(en, 'My <b>Blog</b>', 'https://blog.test/api/newsletter/confirm?token=TOK')
+    expect(subject).toContain('My <b>Blog</b>')
+    expect(html).toContain('https://blog.test/api/newsletter/confirm?token=TOK')
+    expect(html).toContain('My &lt;b&gt;Blog&lt;/b&gt;') // escaped in the body, not raw
+    expect(html).not.toContain('<b>Blog</b>')
+  })
+})
 
 describe('broadcastEmail', () => {
   it('links the post + a per-recipient unsubscribe, escapes the title', () => {

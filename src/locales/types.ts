@@ -59,6 +59,9 @@ export type Dict = {
   nlUnsubFooter: string
   nlUnsubConfirm: string
   nlUnsubConfirmBtn: string
+  mailTestSubject: string
+  mailTestBody: string
+  mailTestSamplePost: string
   bcastRead: string
   replySubject: string
   replyIntro: string
@@ -686,6 +689,14 @@ export type AdminStrings = {
   nlUnsub: string
   nlDeleteSub: string
   nlNoSubs: string
+  nlTestHeading: string
+  nlTestHint: string
+  nlTestTo: string
+  nlTestSmtp: string
+  nlTestPost: string
+  nlTestSubscribe: string
+  nlTestSent: string
+  nlTestFailed: string
   // sidebar collapse
   navCollapse: string
   navExpand: string

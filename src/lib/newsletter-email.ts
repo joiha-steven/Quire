@@ -1,5 +1,6 @@
-// Pure builders for the newsletter emails (broadcast a new post; notify a comment
-// reply). Kept separate from the send path so they're unit-testable and shared. All
+// Pure builders for the newsletter emails (confirm a sign-up; broadcast a new post;
+// notify a comment reply). Kept separate from the send path so they're unit-testable
+// and shared between the real send and the admin test send. All
 // interpolated values are escaped; the reply's `contentHtml` is the already-sanitized
 // comment markdown (bold/italic only, escaped at source).
 
@@ -8,6 +9,15 @@ import { escapeHtml } from '@/lib/utils'
 
 const button = (href: string, label: string) =>
   `<p><a href="${escapeHtml(href)}">${escapeHtml(label)}</a></p>`
+
+// Double opt-in email: the link that flips a pending subscriber to confirmed.
+export function confirmEmail(tx: Dict, siteTitle: string, confirmUrl: string): { subject: string; html: string } {
+  const html =
+    `<p>${tx.nlConfirmIntro.replace('{site}', escapeHtml(siteTitle))}</p>` +
+    button(confirmUrl, tx.nlConfirmButton) +
+    `<p style="color:#888;font-size:13px">${tx.nlConfirmIgnore}</p>`
+  return { subject: `${tx.nlConfirmSubject} — ${siteTitle}`, html }
+}
 
 export function broadcastEmail(
   tx: Dict,

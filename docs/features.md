@@ -199,8 +199,16 @@
   `sendMail` never throws: `{ sent:false, error:'smtp_not_configured' }` when unset, so subscribe
   still records the pending row. `isMailConfigured` = host + From present.
 - **Sign-up form** (`SubscribeForm`) renders at the foot of a post ONLY when SMTP is configured
-  (`getMailStatus().configured`). Owner manages subscribers (list + counts + delete) via
-  `api/subscribers`.
+  (`getMailStatus().configured`). The same gate also puts an envelope button in the public header
+  (`SubscribeTrigger`, last before the mobile drawer toggle) that opens the identical card as a
+  modal (`SubscribeOverlay`, lazy — Escape / backdrop closes), so a reader can subscribe from any
+  page. Owner manages subscribers (list + counts + delete) via `api/subscribers`.
+- **Test send** (`POST /api/mail/test`, owner only, `NewsletterFields`). Three kinds — `smtp`
+  (bare "it works" note), `post` (the broadcast, built from the newest published post, or a
+  stand-in on an empty blog), `subscribe` (the double opt-in confirmation) — each built by the
+  SAME builder the live path uses, so a green test means the real send works. Recipient defaults
+  to the signed-in owner's address; confirm/unsubscribe links carry a placeholder token, so they
+  deliberately land on the "invalid link" page. Uses the SAVED config, not the unsaved form.
 - **Broadcast on publish** (`lib/broadcast.ts` `broadcastDuePosts`, run by the cron on the 5-min
   publish tick + the hourly backstop). A post is "due" when it is `published`, its `date` has
   passed, it isn't trashed, and `posts.broadcast_at` is null. Each due post is emailed once to
@@ -215,7 +223,8 @@
   link to the thread. Best-effort + transactional: skips a self-reply (same email), a deleted
   parent, and no-ops without SMTP. Never throws.
 - **Email bodies** are built by pure, escaped, unit-tested helpers in `lib/newsletter-email.ts`
-  (`broadcastEmail`, `replyEmail`) — reused by the cron + the comment route.
+  (`confirmEmail`, `broadcastEmail`, `replyEmail`) — reused by the subscribe route, the cron, the
+  comment route, and the admin test send.
 
 ## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
 

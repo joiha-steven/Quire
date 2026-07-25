@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/Toast'
 import { useAdminT } from './I18nProvider'
 
 type MailStatus = { host: string; port: number; user: string; from: string; secure: boolean; hasPass: boolean; configured: boolean }
+type TestKind = 'smtp' | 'post' | 'subscribe'
 type Subscriber = { id: number; email: string; status: 'pending' | 'confirmed' | 'unsubscribed'; createdAt: string }
 type Counts = { confirmed: number; pending: number; unsubscribed: number }
 
@@ -22,6 +23,8 @@ export function NewsletterFields() {
   const [subs, setSubs] = useState<Subscriber[]>([])
   const [counts, setCounts] = useState<Counts>({ confirmed: 0, pending: 0, unsubscribed: 0 })
   const [busy, setBusy] = useState(false)
+  const [testTo, setTestTo] = useState('')
+  const [testing, setTesting] = useState<TestKind | null>(null)
 
   useEffect(() => {
     fetch('/api/mail')
@@ -58,6 +61,26 @@ export function NewsletterFields() {
     }
   }
 
+  // Fire one sample email through the SAVED config (not the unsaved form state), so a
+  // success here means the live send paths work too.
+  async function sendTest(kind: TestKind) {
+    setTesting(kind)
+    try {
+      const res = await fetch('/api/mail/test', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ kind, to: testTo }),
+      })
+      const j = (await res.json()) as ApiResponse<{ to: string }>
+      if (j.success && j.data) notify(t.nlTestSent.replace('{to}', j.data.to), 'success')
+      else notify(`${t.nlTestFailed}: ${j.success ? '' : j.error}`, 'error')
+    } catch {
+      notify(t.nlTestFailed, 'error')
+    } finally {
+      setTesting(null)
+    }
+  }
+
   async function removeSub(id: number) {
     const res = await fetch(`/api/subscribers/${id}`, { method: 'DELETE' })
     const j = (await res.json()) as ApiResponse<unknown>
@@ -81,6 +104,21 @@ export function NewsletterFields() {
         {t.nlSmtpSecure}
       </label>
       <Button onClick={save} disabled={busy}>{t.nlSaveSmtp}</Button>
+
+      {/* Test send: one button per email the blog actually sends, so each template can
+          be checked end-to-end before a reader ever triggers it. */}
+      <div className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.nlTestHeading}</p>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.nlTestHint}</p>
+        <div className="sm:max-w-sm">
+          <Input label={t.nlTestTo} type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)} autoComplete="off" />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => sendTest('smtp')} disabled={!!testing}>{t.nlTestSmtp}</Button>
+          <Button variant="secondary" onClick={() => sendTest('post')} disabled={!!testing}>{t.nlTestPost}</Button>
+          <Button variant="secondary" onClick={() => sendTest('subscribe')} disabled={!!testing}>{t.nlTestSubscribe}</Button>
+        </div>
+      </div>
 
       <div className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
         <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">

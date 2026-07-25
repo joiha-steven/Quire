@@ -7,8 +7,10 @@ import { PaletteToggle } from '@/components/theme/PaletteToggle'
 import { RailToggle } from '@/components/blog/RailToggle'
 import { GridToggle } from '@/components/blog/GridToggle'
 import { SearchTrigger } from '@/components/blog/SearchTrigger'
+import { SubscribeTrigger } from '@/components/blog/SubscribeTrigger'
 import { Track } from '@/components/blog/Track'
 import { RevealFallback } from '@/components/blog/RevealFallback'
+import { getMailStatus } from '@/lib/mail'
 import { renderInlineMarkdown, expandFooterTokens } from '@/lib/inline-md'
 import { singleRailCss } from '@/lib/rail-css'
 import { t } from '@/lib/i18n'
@@ -22,6 +24,8 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
   // Only load the palette switcher (a client island) when there's more than one palette to
   // switch between — otherwise its JS is dead weight.
   const palettes = enabledPaletteOptions(settings.themes, settings.enabledPalettes)
+  // Newsletter button: same gate as the in-post form — no sign-up UI without SMTP.
+  const mail = await getMailStatus()
   return (
     <div
       className={`mx-auto flex min-h-screen w-full flex-col px-8 sm:px-5${settings.features.bookText ? ' book-text' : ''}`}
@@ -74,6 +78,9 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
               {/* Grid/List switch for listing pages; self-hides on reading views. Gated by
                   the owner (features.gridView) — off keeps every listing a list. */}
               {settings.features.gridView && <GridToggle lang={settings.language} />}
+              {/* Newsletter sign-up in a modal. Sits after the view/appearance toggles
+                  but before the drawer button, which stays the rightmost control. */}
+              {mail.configured && <SubscribeTrigger lang={settings.language} />}
               {/* Mobile-only: opens the sidebar drawer. Hidden above the rail breakpoint
                   (gutter rail) and self-hides on pages with no rail (see RailToggle). */}
               <RailToggle lang={settings.language} />

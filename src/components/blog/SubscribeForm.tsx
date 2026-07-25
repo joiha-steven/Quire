@@ -1,13 +1,14 @@
 'use client'
 
 // Public newsletter sign-up. Posts to /api/subscribe (double opt-in) and shows an
-// inline status. Rendered only when SMTP is configured (see the post page). Colours
-// come from theme tokens, matching the reading surface.
+// inline status. Rendered only when SMTP is configured (see the post page + the
+// header button, which reuses this card as its modal panel — hence `autoFocus`).
+// Colours come from theme tokens, matching the reading surface.
 import { useState } from 'react'
 import type { SiteLang, ApiResponse } from '@/types'
 import { t } from '@/lib/i18n'
 
-export function SubscribeForm({ lang }: { lang: SiteLang }) {
+export function SubscribeForm({ lang, autoFocus = false }: { lang: SiteLang; autoFocus?: boolean }) {
   const tx = t(lang)
   const [email, setEmail] = useState('')
   const [state, setState] = useState<'idle' | 'done' | 'already' | 'error'>('idle')
@@ -47,6 +48,7 @@ export function SubscribeForm({ lang }: { lang: SiteLang }) {
         <input
           type="email"
           required
+          autoFocus={autoFocus}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={tx.nlPlaceholder}

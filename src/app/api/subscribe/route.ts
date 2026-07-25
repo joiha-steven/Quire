@@ -5,9 +5,9 @@
 import type { NextRequest } from 'next/server'
 import { addSubscriber, SubscribeError } from '@/lib/subscribers'
 import { sendMail } from '@/lib/mail'
+import { confirmEmail } from '@/lib/newsletter-email'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { t } from '@/lib/i18n'
-import { escapeHtml } from '@/lib/utils'
 import { rateLimited, clientIp } from '@/lib/rate-limit'
 import { ok, fail, logRequest, logError } from '@/lib/api'
 
@@ -43,14 +43,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     const tx = t(settings.language)
     const base = resolveSiteUrl(settings)
     const confirmUrl = `${base}/api/newsletter/confirm?token=${encodeURIComponent(token)}`
-    const site = escapeHtml(settings.title)
-    const html =
-      `<p>${tx.nlConfirmIntro.replace('{site}', site)}</p>` +
-      `<p><a href="${confirmUrl}">${tx.nlConfirmButton}</a></p>` +
-      `<p style="color:#888;font-size:13px">${tx.nlConfirmIgnore}</p>`
+    const { subject, html } = confirmEmail(tx, settings.title, confirmUrl)
     // Best-effort: the row is already pending, so even if mail is unconfigured the
     // owner can see the pending sign-up. Report whether the email actually went out.
-    const { sent } = await sendMail({ to: email.trim().toLowerCase(), subject: `${tx.nlConfirmSubject} — ${settings.title}`, html })
+    const { sent } = await sendMail({ to: email.trim().toLowerCase(), subject, html })
     logRequest(req, 200, start)
     return ok({ status: sent ? 'sent' : 'pending_no_mail' })
   } catch (error) {
