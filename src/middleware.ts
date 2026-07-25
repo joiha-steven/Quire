@@ -54,7 +54,9 @@ function isPublicApi(pathname: string): boolean {
     pathname.startsWith('/api/track') ||
     pathname.startsWith('/api/search') ||
     // Newsletter: public sign-up + the confirm/unsubscribe links clicked from email.
-    pathname.startsWith('/api/subscribe') ||
+    // EXACT match, not a prefix: `/api/subscribers` (owner-only list + delete) shares
+    // the first 14 characters and must stay behind the guard.
+    pathname === '/api/subscribe' ||
     pathname.startsWith('/api/newsletter') ||
     // Public read: raw Markdown of a post/page (Accept: text/markdown negotiation).
     pathname.startsWith('/api/md/') ||

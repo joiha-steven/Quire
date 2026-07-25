@@ -21,7 +21,7 @@ function isPublicApi(pathname) {
     pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/track') ||
     pathname.startsWith('/api/search') ||
-    pathname.startsWith('/api/subscribe') ||
+    pathname === '/api/subscribe' ||
     pathname.startsWith('/api/newsletter') ||
     pathname.startsWith('/api/md/') ||
     pathname === '/api/comments' ||
