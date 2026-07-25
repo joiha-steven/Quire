@@ -155,6 +155,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | MCP server | `docs/mcp.md`, `src/lib/mcp/*`, `src/app/api/mcp/*` | — |
 | Agent discovery / markdown negotiation / .well-known / Content-Signal / Link headers | `docs/agent-ready.md`, `lib/well-known.ts`, `src/app/.well-known/*`, `src/app/{auth.md,robots.txt,api/md/[slug]}`, `next.config.ts` | `docs/mcp.md` |
 | WordPress import | `lib/wordpress-import.ts` (pure WXR→posts/pages), `api/import/wordpress`, `components/admin/ImportFields.tsx` | `docs/features.md` |
+| Admin Help page / in-app manual | `components/admin/HelpGuide.tsx` (shell) + `HelpSections.tsx` + `HelpTables.tsx` + `help-kit.tsx`, `src/app/admin/help` — body is ENGLISH by design (mirrors the repo docs); ADD NEW FEATURES HERE, it is where a non-technical owner learns they exist | `docs/features.md` "Admin Help" |
 | Health / env / migrations / rate-limit | `api/health`, `src/env.ts` + `src/instrumentation.ts`, `scripts/migrate.sh` + `scripts/schema.sql` (`schema_migrations`), `lib/rate-limit.ts` | `docs/self-host-native.md` |
 
 ## Data layer map — `src/lib/`

@@ -271,6 +271,27 @@
     button) · each further post (19px title + excerpt + text link, rule-separated) · rule · footer.
   All values are escaped; the reply's `contentHtml` is already-sanitized comment markdown.
 
+## Admin Help — `/admin/help`, `HelpGuide` + `HelpSections` + `HelpTables`
+
+- The in-admin manual. **Body copy is ENGLISH by design** (it mirrors the repo docs, which are
+  canonical); only the nav label + page title come from `adminT`. Pure server components — zero
+  client JS on the page.
+- Shape: a numbered **first-five-minutes** path (the order a new blog is actually set up in, each
+  step a link), a **jump index** of chips, the reference **sections**, then two lookup **tables**.
+  The index is kept in the same order the sections render, so a chip's position predicts where it
+  lands.
+- Sections are laid out in **CSS columns, not a grid**: the cards differ wildly in height and a
+  grid aligns rows, leaving a dead gap under every short one. Each `Anchor` carries
+  `break-inside-avoid` so a card is never sliced across the column break.
+- The tables are the reason the page is worth opening: **Markdown** (the syntax beyond CommonMark —
+  callouts, footnotes, embeds) and **Troubleshooting** (symptom → fix, e.g. the 465-vs-587 TLS pair
+  that produces an opaque OpenSSL "wrong version number", and Cloudflare caching HTML so a reader
+  cannot refresh a stale page away).
+- Split across three files purely to stay under the 400-line cap: `HelpGuide` (shell),
+  `HelpSections` (reference cards), `HelpTables` (the two lookups), sharing `help-kit.tsx`.
+- **Adding a feature? Add it here too** — the page is the only place a non-technical owner learns
+  the feature exists.
+
 ## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
 
 - **Footnotes:** `text[^id]` + `[^id]: definition`. `prepareFootnotes` (pre-marked) pulls the
