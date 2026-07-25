@@ -4,8 +4,8 @@
 
 import { db } from '@/lib/db'
 import { getSmtpConfig, isMailConfigured, sendMail } from '@/lib/mail'
-import { getSettings, resolveSiteUrl } from '@/lib/settings'
-import { getDefaultTheme } from '@/lib/themes'
+import { getSettings } from '@/lib/settings'
+import { emailBrand } from '@/lib/email-brand'
 import { replyEmail } from '@/lib/newsletter-email'
 import { t } from '@/lib/i18n'
 
@@ -31,16 +31,13 @@ export async function notifyReply(opts: {
     const { data: postRow } = await db().from('posts').select('title').eq('slug', opts.postSlug).maybeSingle()
     const postTitle = (postRow as { title: string } | null)?.title ?? opts.postSlug
     const settings = await getSettings()
-    const base = resolveSiteUrl(settings)
     const { subject, html } = replyEmail(
       t(settings.language),
-      settings.title,
-      base,
+      emailBrand(settings),
       opts.postSlug,
       postTitle,
       opts.replierName,
       opts.contentHtml,
-      getDefaultTheme(settings.themes, settings.themePreset).light,
     )
     await sendMail({ to: email, subject, html, kind: 'reply' })
   } catch (e) {

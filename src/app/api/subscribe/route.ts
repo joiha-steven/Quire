@@ -7,7 +7,7 @@ import { addSubscriber, SubscribeError } from '@/lib/subscribers'
 import { sendMail } from '@/lib/mail'
 import { confirmEmail } from '@/lib/newsletter-email'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
-import { getDefaultTheme } from '@/lib/themes'
+import { emailBrand } from '@/lib/email-brand'
 import { t } from '@/lib/i18n'
 import { rateLimited, clientIp } from '@/lib/rate-limit'
 import { ok, fail, logRequest, logError } from '@/lib/api'
@@ -44,8 +44,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const tx = t(settings.language)
     const base = resolveSiteUrl(settings)
     const confirmUrl = `${base}/api/newsletter/confirm?token=${encodeURIComponent(token)}`
-    const theme = getDefaultTheme(settings.themes, settings.themePreset).light
-    const { subject, html } = confirmEmail(tx, settings.title, confirmUrl, base, theme)
+    const { subject, html } = confirmEmail(tx, emailBrand(settings), confirmUrl)
     // Best-effort: the row is already pending, so even if mail is unconfigured the
     // owner can see the pending sign-up. Report whether the email actually went out.
     const { sent } = await sendMail({ to: email.trim().toLowerCase(), subject, html, kind: 'confirm' })

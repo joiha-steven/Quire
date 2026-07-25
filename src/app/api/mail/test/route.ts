@@ -11,7 +11,7 @@ import { after } from 'next/server'
 import { sendMail } from '@/lib/mail'
 import { confirmEmail, broadcastEmail } from '@/lib/newsletter-email'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
-import { getDefaultTheme } from '@/lib/themes'
+import { emailBrand } from '@/lib/email-brand'
 import { getPublicPosts } from '@/lib/posts'
 import { getAuthState } from '@/lib/auth'
 import { logActivity } from '@/lib/activity'
@@ -54,8 +54,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     const settings = await getSettings()
     const tx = t(settings.language)
     const base = resolveSiteUrl(settings)
-    // The owner's own palette, so a test looks exactly like the real thing.
-    const theme = getDefaultTheme(settings.themes, settings.themePreset).light
+    // The owner's own logo + palette, so a test looks exactly like the real thing.
+    const brand = emailBrand(settings)
     let mail: { subject: string; html: string }
     if (kind === 'smtp') {
       mail = {
@@ -63,13 +63,13 @@ export async function POST(req: NextRequest): Promise<Response> {
         html: `<p>${escapeHtml(tx.mailTestBody)}</p>`,
       }
     } else if (kind === 'subscribe') {
-      mail = confirmEmail(tx, settings.title, `${base}/api/newsletter/confirm?token=${FAKE_TOKEN}`, base, theme)
+      mail = confirmEmail(tx, brand, `${base}/api/newsletter/confirm?token=${FAKE_TOKEN}`)
     } else {
       // Newest published post = exactly what the next broadcast would carry; on an
       // empty blog fall back to a stand-in so the layout is still previewable.
       const [latest] = await getPublicPosts()
       const post = latest ?? { slug: '', title: tx.mailTestSamplePost, excerpt: null }
-      mail = broadcastEmail(tx, settings.title, base, [post], FAKE_TOKEN, theme)
+      mail = broadcastEmail(tx, brand, [post], FAKE_TOKEN)
     }
 
     const { sent, error } = await sendMail({ to, ...mail, kind: 'test' })

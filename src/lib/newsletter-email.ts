@@ -15,6 +15,10 @@
 //    dark theme reads worse than a clean light one.
 //  - No web font: a mail client will not load one, so it falls back mid-render. The
 //    stack leads with the system UI face, which is what Inter is standing in for anyway.
+//  - The masthead is the owner's real LOGO when there is a mail-safe one (see
+//    `lib/email-brand.ts`), falling back to the site name as text. Images are blocked by
+//    default in a lot of inboxes, so the logo's `alt` is the site title: with images off
+//    the masthead still reads correctly instead of collapsing to nothing.
 
 import type { Dict } from '@/locales/types'
 import type { ThemeColors } from '@/types'
@@ -22,6 +26,19 @@ import { escapeHtml } from '@/lib/utils'
 
 // `dateLabel` is preformatted by the caller (which knows the site language), so these
 // builders stay pure string functions with no locale plumbing.
+// Resolved by `lib/email-brand.ts` — an ABSOLUTE url plus the display box, because an
+// inbox has no origin to resolve a relative path against and no CSS to size the image.
+export type EmailLogo = { url: string; width: number; height?: number }
+
+// Everything a message needs to look like the site. Bundled rather than passed as four
+// more positional arguments to each builder.
+export type EmailBrand = {
+  title: string
+  base: string
+  theme: ThemeColors
+  logo?: EmailLogo | null
+}
+
 export type EmailPost = {
   slug: string
   title: string
@@ -36,15 +53,19 @@ const WIDTH = 600
 // Absolute URL for an image ref that may be stored store-relative ("/uploads/…").
 const absolute = (base: string, url: string) => (/^https?:\/\//.test(url) ? url : `${base}${url.startsWith('/') ? '' : '/'}${url}`)
 
+// The masthead: the logo when there is one, else the site name set small and quiet.
+// Either way it links home and reads as the site title when images are blocked.
+function masthead(brand: EmailBrand): string {
+  const { theme: c, title, base, logo } = brand
+  const inner = logo
+    ? `<img src="${escapeHtml(logo.url)}" width="${logo.width}"${logo.height ? ` height="${logo.height}"` : ''} alt="${escapeHtml(title)}" style="display:block;border:0;width:${logo.width}px;max-width:100%;height:auto;">`
+    : `<span style="font-family:${FONT};font-size:14px;font-weight:600;letter-spacing:0.02em;color:${c.meta};">${escapeHtml(title)}</span>`
+  return `<a href="${escapeHtml(base)}" style="color:${c.meta};text-decoration:none;">${inner}</a>`
+}
+
 // The page shell: background, centred column, masthead, content, footer rule.
-function shell(
-  c: ThemeColors,
-  siteTitle: string,
-  base: string,
-  content: string,
-  footer: string,
-  preheader = '',
-): string {
+function shell(brand: EmailBrand, content: string, footer: string, preheader = ''): string {
+  const c = brand.theme
   return (
     `<!DOCTYPE html><html><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width,initial-scale=1">` +
@@ -56,10 +77,8 @@ function shell(
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${c.bg};">` +
     `<tr><td align="center" style="padding:40px 20px;">` +
     `<table role="presentation" width="${WIDTH}" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:${WIDTH}px;text-align:left;">` +
-    // Masthead: the site name, quiet and small — the post title is the headline.
-    `<tr><td style="padding-bottom:22px;font-family:${FONT};font-size:14px;font-weight:600;letter-spacing:0.02em;color:${c.meta};">` +
-    `<a href="${escapeHtml(base)}" style="color:${c.meta};text-decoration:none;">${escapeHtml(siteTitle)}</a>` +
-    `</td></tr>` +
+    // Masthead: logo or site name — quiet either way; the post title is the headline.
+    `<tr><td style="padding-bottom:22px;line-height:1;">${masthead(brand)}</td></tr>` +
     `<tr><td style="border-top:1px solid ${c.rule};font-size:0;line-height:0;">&nbsp;</td></tr>` +
     // The gap belongs ABOVE the closing rule: `padding-top` on the bordered cell would
     // draw the border first and push the space below it, so the rule ends up glued to
@@ -118,13 +137,12 @@ function postBlock(c: ThemeColors, tx: Dict, base: string, post: EmailPost, lead
 // the preview and the test send, so neither pollutes the open rate.
 export function broadcastEmail(
   tx: Dict,
-  siteTitle: string,
-  base: string,
+  brand: EmailBrand,
   posts: EmailPost[],
   unsubToken: string,
-  theme: ThemeColors,
   openToken?: string,
 ): { subject: string; html: string } {
+  const { title: siteTitle, base, theme } = brand
   const [lead, ...rest] = posts
   const blocks = [postBlock(theme, tx, base, lead, true)]
   for (const p of rest) {
@@ -137,9 +155,7 @@ export function broadcastEmail(
     : ''
   const subject = posts.length === 1 ? `${lead.title} — ${siteTitle}` : `${tx.bcastDigestSubject.replace('{n}', String(posts.length))} — ${siteTitle}`
   const html = shell(
-    theme,
-    siteTitle,
-    base,
+    brand,
     blocks.join(''),
     `${broadcastFooter(theme, tx, siteTitle, base, unsubToken)}${pixel}`,
     lead.excerpt ?? lead.title,
@@ -148,38 +164,32 @@ export function broadcastEmail(
 }
 
 // Double opt-in email: the link that flips a pending subscriber to confirmed.
-export function confirmEmail(
-  tx: Dict,
-  siteTitle: string,
-  confirmUrl: string,
-  base: string,
-  theme: ThemeColors,
-): { subject: string; html: string } {
+export function confirmEmail(tx: Dict, brand: EmailBrand, confirmUrl: string): { subject: string; html: string } {
+  const { title: siteTitle, theme } = brand
   const content =
     `<h1 style="margin:0 0 14px;font-family:${FONT};font-size:22px;line-height:1.3;font-weight:700;color:${theme.heading};">${escapeHtml(tx.nlConfirmSubject)}</h1>` +
     para(theme, tx.nlConfirmIntro.replace('{site}', escapeHtml(siteTitle))) +
     button(theme, confirmUrl, tx.nlConfirmButton)
   return {
     subject: `${tx.nlConfirmSubject} — ${siteTitle}`,
-    html: shell(theme, siteTitle, base, content, escapeHtml(tx.nlConfirmIgnore), tx.nlConfirmButton),
+    html: shell(brand, content, escapeHtml(tx.nlConfirmIgnore), tx.nlConfirmButton),
   }
 }
 
 export function replyEmail(
   tx: Dict,
-  siteTitle: string,
-  base: string,
+  brand: EmailBrand,
   postSlug: string,
   postTitle: string,
   replierName: string,
   contentHtml: string,
-  theme: ThemeColors,
 ): { subject: string; html: string } {
+  const { title: siteTitle, base, theme } = brand
   const url = `${base}/${postSlug}#comments`
   const intro = tx.replyIntro.replace('{name}', escapeHtml(replierName)).replace('{title}', escapeHtml(postTitle))
   const content =
     para(theme, intro) +
     `<blockquote style="margin:0 0 20px;padding:2px 0 2px 16px;border-left:3px solid ${theme.rule};font-family:${FONT};font-size:16px;line-height:1.65;color:${theme.text};">${contentHtml}</blockquote>` +
     button(theme, url, tx.replyRead)
-  return { subject: `${tx.replySubject} — ${siteTitle}`, html: shell(theme, siteTitle, base, content, '', intro) }
+  return { subject: `${tx.replySubject} — ${siteTitle}`, html: shell(brand, content, '', intro) }
 }

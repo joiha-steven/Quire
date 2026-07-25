@@ -18,8 +18,8 @@
 import { db, liveOnly } from '@/lib/db'
 import { getConfirmedSubscribers } from '@/lib/subscribers'
 import { getSmtpConfig, isMailConfigured, sendMail } from '@/lib/mail'
-import { getSettings, resolveSiteUrl } from '@/lib/settings'
-import { getDefaultTheme } from '@/lib/themes'
+import { getSettings } from '@/lib/settings'
+import { emailBrand } from '@/lib/email-brand'
 import { broadcastEmail, type EmailPost } from '@/lib/newsletter-email'
 import { newOpenToken, statsByPost } from '@/lib/newsletter-log'
 import { expandBlob } from '@/lib/blob'
@@ -61,9 +61,7 @@ async function readSendablePosts(slugs: string[], lang: SiteLang): Promise<Email
 export async function previewBroadcast(slugs: string[]): Promise<{ subject: string; html: string }> {
   const settings = await getSettings()
   const posts = await readSendablePosts(slugs, settings.language)
-  const theme = getDefaultTheme(settings.themes, settings.themePreset).light
-  const base = resolveSiteUrl(settings)
-  return broadcastEmail(t(settings.language), settings.title, base, posts, 'preview-token', theme)
+  return broadcastEmail(t(settings.language), emailBrand(settings), posts, 'preview-token')
 }
 
 // Send the chosen posts as one email to every confirmed subscriber. Each send is logged
@@ -82,15 +80,14 @@ export async function broadcastPosts(
   if (!isMailConfigured(cfg)) throw new BroadcastError('smtp_not_configured')
 
   const subs = await getConfirmedSubscribers()
-  const theme = getDefaultTheme(settings.themes, settings.themePreset).light
-  const base = resolveSiteUrl(settings)
+  const brand = emailBrand(settings)
   const tx = t(settings.language)
 
   let sent = 0
   let failed = 0
   for (const s of subs) {
     const openToken = newOpenToken()
-    const { subject, html } = broadcastEmail(tx, settings.title, base, posts, s.token, theme, openToken)
+    const { subject, html } = broadcastEmail(tx, brand, posts, s.token, openToken)
     const res = await sendMail({ to: s.email, subject, html, kind: 'broadcast', postSlugs: slugs, openToken })
     if (res.sent) sent++
     else failed++
