@@ -19,10 +19,33 @@ describe('emailLogo', () => {
     }
   })
 
-  it('refuses webp and svg — no email logo is better than a broken one', () => {
+  it('refuses webp and svg when there is no PNG twin — no logo beats a broken one', () => {
     for (const ext of ['webp', 'svg', 'avif']) {
       expect(emailLogo(settings({ showLogo: true, logoUrl: `/uploads/logo.${ext}` }), base), ext).toBeNull()
     }
+  })
+
+  // The common case: the site's logo IS a WebP (that is what the web render produces
+  // and what most owners upload), so without the twin the masthead would silently be
+  // text on almost every real site.
+  it('prefers the PNG twin, which rescues a webp/svg source', () => {
+    const logo = emailLogo(
+      settings({ showLogo: true, logoUrl: '/uploads/media/logo-red.webp', logoEmailUrl: '/uploads/files/logo-1-mail.png' }),
+      base,
+    )
+    expect(logo?.url).toBe('https://blog.test/uploads/files/logo-1-mail.png')
+  })
+
+  it('prefers the twin over a mail-safe original too (it is sized for the box)', () => {
+    const logo = emailLogo(
+      settings({ showLogo: true, logoUrl: '/uploads/original.png', logoEmailUrl: '/uploads/files/logo-1-mail.png' }),
+      base,
+    )
+    expect(logo?.url).toContain('logo-1-mail.png')
+  })
+
+  it('is null when the logo is hidden even if a twin exists', () => {
+    expect(emailLogo(settings({ showLogo: false, logoUrl: '/l.png', logoEmailUrl: '/t.png' }), base)).toBeNull()
   })
 
   it('is null when the owner turned the logo off or never set one', () => {

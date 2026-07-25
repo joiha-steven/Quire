@@ -180,6 +180,7 @@ export type SiteSettings = {
   logoWidth: number // px, horizontal width of the logo in the header
   logoRenderUrl: string // derived, display-sized WebP (2x for retina) generated from logoUrl at logoWidth; '' = serve original (vector/animated, or none). Regenerated + old one deleted whenever logoUrl/logoWidth change
   logoRenderHeight: number // displayed height (px) of the logo at logoWidth — set width+height on the <img> to reserve space (no CLS); 0 when unknown
+  logoEmailUrl: string // derived PNG twin of the logo, for the newsletter masthead ONLY. '' = none (vector/undecodable source), then the email falls back to the site name as text. PNG because WebP is unrenderable in Outlook on Windows and the web render is always WebP
   showLogo: boolean
   showDescription: boolean
   fontPreset: string // built-in font choice id (lib/themes FONT_PRESETS); '' -> Inter

@@ -91,6 +91,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   logoUrl: '',
   logoWidth: 120,
   logoRenderUrl: '',
+  logoEmailUrl: '',
   logoRenderHeight: 0,
   showLogo: false,
   showDescription: true,
@@ -168,6 +169,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
       ...stored,
       logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
       logoRenderUrl: expandBlob(stored.logoRenderUrl ?? DEFAULT_SETTINGS.logoRenderUrl),
+      logoEmailUrl: expandBlob(stored.logoEmailUrl ?? DEFAULT_SETTINGS.logoEmailUrl),
       faviconUrl: expandBlob(stored.faviconUrl ?? DEFAULT_SETTINGS.faviconUrl),
       appIconUrl: expandBlob(stored.appIconUrl ?? DEFAULT_SETTINGS.appIconUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
@@ -212,15 +214,24 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
   const logoWidth = clampNumber(input.logoWidth, 24, 600, current.logoWidth)
   let logoRenderUrl = current.logoRenderUrl
   let logoRenderHeight = current.logoRenderHeight
-  if (!showLogo || !logoUrl) {
+  let logoEmailUrl = current.logoEmailUrl
+  // Both derived files are rebuilt and cleaned up together — the email PNG twin must
+  // never outlive the logo it was made from, or a stale mark ships in a newsletter.
+  const dropDerived = async () => {
     if (current.logoRenderUrl) await deleteByPathname(collapseBlob(current.logoRenderUrl)).catch(() => {})
+    if (current.logoEmailUrl) await deleteByPathname(collapseBlob(current.logoEmailUrl)).catch(() => {})
+  }
+  if (!showLogo || !logoUrl) {
+    await dropDerived()
     logoRenderUrl = ''
     logoRenderHeight = 0
+    logoEmailUrl = ''
   } else if (logoUrl !== current.logoUrl || logoWidth !== current.logoWidth || !current.logoRenderUrl) {
     const rendered = await renderLogo(logoUrl, logoWidth)
-    if (current.logoRenderUrl) await deleteByPathname(collapseBlob(current.logoRenderUrl)).catch(() => {})
+    await dropDerived()
     logoRenderUrl = rendered?.url ?? ''
     logoRenderHeight = rendered?.height ?? 0
+    logoEmailUrl = rendered?.emailUrl ?? ''
   }
 
   // The (possibly new) default palette — used both as `themePreset` and as the
@@ -236,6 +247,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoWidth,
     logoRenderUrl,
     logoRenderHeight,
+    logoEmailUrl,
     showLogo,
     showDescription: input.showDescription ?? current.showDescription,
     faviconUrl: input.faviconUrl ?? current.faviconUrl,
@@ -271,6 +283,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     ...next,
     logoUrl: collapseBlob(next.logoUrl),
     logoRenderUrl: collapseBlob(next.logoRenderUrl),
+    logoEmailUrl: collapseBlob(next.logoEmailUrl),
     faviconUrl: collapseBlob(next.faviconUrl),
     appIconUrl: collapseBlob(next.appIconUrl),
     customFont: { ...next.customFont, faces: next.customFont.faces.map((x) => ({ ...x, url: collapseBlob(x.url) })) },

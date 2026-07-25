@@ -253,12 +253,14 @@
     senders share a letterhead. It carries the owner's OWN palette
     (`getDefaultTheme(...).light`) plus the masthead logo, bundled as `EmailBrand` rather than
     four more positional arguments.
-  - **The masthead is the real logo**, falling back to the site name as text. It uses the ORIGINAL
-    upload, NOT `logoRenderUrl`: that render is WebP, which Outlook on Windows (Word engine) cannot
-    display — the right file for the web header is the wrong one for an inbox. Only png/jpg/gif
-    pass; webp/svg/avif fall back to text rather than ship a broken image. The original is usually
-    wider than `logoWidth`, so it lands crisp on retina for free. `alt` is the site title, because
-    images are blocked by default in many inboxes and the letterhead must still read.
+  - **The masthead is the real logo.** Neither of the site's own logo files suits an inbox: the web
+    render (`logoRenderUrl`) is WebP, unrenderable in Outlook on Windows (Word engine), and the
+    untouched original is frequently WebP or SVG too — so `renderLogo` now emits a **PNG twin**
+    beside the WebP (`settings.logoEmailUrl`, `files/logo-<stamp>-mail.png`), rebuilt and deleted
+    in lockstep with it so a stale mark can never ship. `emailLogo` prefers the twin, falls back to
+    a mail-safe original (png/jpg/gif — for sites predating the twin), and only then to the site
+    name as text. `alt` is the site title, because images are blocked by default in many inboxes
+    and the letterhead must still read.
   - **Table layout + inline styles on every element**, 600px centred column. Mail clients strip
     `<style>` blocks, collapse margins and ignore flex/grid. Buttons are a `<table>`, not a padded
     `<a>` — Outlook drops padding on inline elements. Cover refs are made ABSOLUTE (they are stored

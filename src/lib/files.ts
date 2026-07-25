@@ -42,6 +42,11 @@ export async function uploadIcon(kind: string, body: ArrayBuffer | Buffer, conte
 // header width @2x (retina), never upscaled. Lives at files/logo-*.webp (no row,
 // no icon → hidden from grids); saveSettings deletes the prior one so exactly one
 // exists. Vector/animated/undecodable → null (caller serves the original as-is).
+//
+// PLUS a PNG twin for EMAIL. Nothing about the web render suits an inbox: WebP is
+// unrenderable in Outlook on Windows (the Word engine), and the untouched original is
+// often WebP or SVG too — so without this the newsletter masthead silently falls back
+// to plain text. PNG is the one raster every mail client has always understood.
 
 const LOGO_RASTER = /^image\/(png|jpe?g|webp)$/
 const LOGO_EXT_RASTER = /\.(png|jpe?g|jpg|webp)(?:$|[?#])/i
@@ -51,7 +56,7 @@ const LOGO_EXT_RASTER = /\.(png|jpe?g|jpg|webp)(?:$|[?#])/i
 export async function renderLogo(
   sourceUrl: string,
   width: number,
-): Promise<{ url: string; height: number } | null> {
+): Promise<{ url: string; height: number; emailUrl: string } | null> {
   if (!sourceUrl) return null
   let res: Response
   try {
@@ -73,11 +78,23 @@ export async function renderLogo(
       .webp({ quality: 85 })
       .toBuffer()
     const meta = await sharp(out).metadata()
-    const path = `files/logo-${Date.now()}.webp`
-    const url = await uploadFile(path, out, 'image/webp')
+    const stamp = Date.now()
+    const url = await uploadFile(`files/logo-${stamp}.webp`, out, 'image/webp')
     // Displayed height = CSS width × the rendered aspect ratio.
     const height = meta.width ? Math.round(width * (meta.height ?? 0) / meta.width) : 0
-    return { url, height }
+    // The email twin: same @2x box, PNG, alpha preserved so it sits on any background.
+    let emailUrl = ''
+    try {
+      const png = await sharp(src, { failOn: 'none' })
+        .rotate()
+        .resize({ width: Math.round(width * 2), withoutEnlargement: true })
+        .png({ compressionLevel: 9 })
+        .toBuffer()
+      emailUrl = await uploadFile(`files/logo-${stamp}-mail.png`, png, 'image/png')
+    } catch {
+      // Best effort: a missing email twin costs the newsletter its logo, not the header.
+    }
+    return { url, height, emailUrl }
   } catch {
     return null // decode/encode failure: caller falls back to the original
   }

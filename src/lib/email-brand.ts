@@ -15,15 +15,17 @@ import { resolveSiteUrl } from '@/lib/settings'
 const MAIL_SAFE_IMAGE = /\.(png|jpe?g|gif)(\?|#|$)/i
 
 // The logo to put in an email, or null to fall back to the site name as text.
-// Uses the ORIGINAL upload (always kept, whatever the owner picked) rather than the
-// display render: correctness in every inbox beats a few KB, and the original is
-// usually larger than `logoWidth`, so it lands crisp on a retina screen for free.
+// Preference order:
+//   1. `logoEmailUrl` — the PNG twin built alongside the web render, made for exactly
+//      this. Most sites land here, including every site whose logo is a WebP or JPEG.
+//   2. The ORIGINAL upload, when it happens to already be a mail-safe raster (a site
+//      that predates the twin, or one whose render failed).
+//   3. Nothing — text masthead. Better than a broken image in the letterhead.
 export function emailLogo(settings: SiteSettings, base: string): EmailLogo | null {
   if (!settings.showLogo || !settings.logoUrl) return null
-  if (!MAIL_SAFE_IMAGE.test(settings.logoUrl)) return null
-  const url = /^https?:\/\//.test(settings.logoUrl)
-    ? settings.logoUrl
-    : `${base}${settings.logoUrl.startsWith('/') ? '' : '/'}${settings.logoUrl}`
+  const source = settings.logoEmailUrl || (MAIL_SAFE_IMAGE.test(settings.logoUrl) ? settings.logoUrl : '')
+  if (!source) return null
+  const url = /^https?:\/\//.test(source) ? source : `${base}${source.startsWith('/') ? '' : '/'}${source}`
   return {
     url,
     width: settings.logoWidth,
