@@ -2,11 +2,14 @@
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-// Recursively list files under `dir` matching `test(path)`.
+// Recursively list files under `dir` matching `test(path)`. Paths are always
+// POSIX-separated: on Windows `join` yields `\`, which silently breaks every
+// caller that pattern-matches a path (the routes-guarded allowlist, the
+// file-size `locales/` exemption) — they'd report violations that don't exist.
 export function walk(dir, test) {
   const out = []
   for (const name of readdirSync(dir)) {
-    const p = join(dir, name)
+    const p = join(dir, name).replaceAll('\\', '/')
     if (statSync(p).isDirectory()) out.push(...walk(p, test))
     else if (test(p)) out.push(p)
   }
