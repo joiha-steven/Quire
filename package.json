@@ -44,12 +44,12 @@
     "fast-xml-parser": "^5.9.3",
     "marked": "^18.0.5",
     "mcp-handler": "^1.1.0",
-    "next": "16.2.9",
+    "next": "16.2.11",
     "next-auth": "^5.0.0-beta.31",
     "nodemailer": "^7.0.13",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.3",
     "shiki": "^4.2.0",
     "tar": "^7.5.16",
     "tiptap-markdown": "^0.9.0",
@@ -65,9 +65,13 @@
     "@types/react-dom": "^19",
     "@types/turndown": "^5.0.6",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "postcss": "^8.5.23",
+    "sharp": "^0.35.3"
   }
 }

@@ -57,12 +57,14 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
         title={t.analyticsTitle}
         actions={
           <div className="flex items-center gap-2">
-            <div className="flex gap-1 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800">
+            {/* Wraps on a phone: 4 range pills + Export are wider than 390px, and the
+                labels themselves stay on one line (`whitespace-nowrap` per pill). */}
+            <div className="flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1 dark:bg-neutral-800">
               {RANGES.map((r) => (
                 <Link
                   key={r}
                   href={`/admin/analytics?range=${r}`}
-                  className={`rounded-lg px-3 py-1 text-sm font-medium transition ${
+                  className={`whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium transition ${
                     r === range ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white' : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
                   }`}
                 >
@@ -74,7 +76,7 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
               type="button"
               onClick={exportCsv}
               disabled={!hasData}
-              className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              className="whitespace-nowrap rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
             >
               {t.analyticsExportCsv}
             </button>

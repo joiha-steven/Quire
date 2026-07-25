@@ -94,7 +94,10 @@ export function PageHeader({
         <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-neutral-950 dark:text-white">{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-sm leading-6 text-neutral-500 dark:text-neutral-400">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {/* `flex-wrap`, not `shrink-0`: a wide action set (Analytics' 4 range pills +
+          Export) is wider than a phone viewport and would otherwise push the page
+          into horizontal scroll instead of dropping onto a second line. */}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )
 }
