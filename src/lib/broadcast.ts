@@ -1,63 +1,79 @@
-// Broadcast-on-publish: email confirmed subscribers ONCE when a post first goes live.
-// Run by the cron (same ticks as the scheduled-publish sweep). A post is "due" when it
-// is published, its date has passed, it isn't trashed, and `broadcast_at` is still null.
-// SERVER-ONLY.
+// Manual newsletter broadcast: email ONE chosen post to the confirmed subscribers,
+// triggered by the owner from Admin → Newsletter. There is no automatic send — a
+// scheduled post goes live on time but never mails anyone by itself (owner's call:
+// every send is previewed and pressed by hand).
 //
-// Safety: every due post is STAMPED after processing, even when SMTP is unconfigured or
-// there are no confirmed subscribers — so turning the newsletter on later never bursts
-// the back catalogue. The migration backfills already-live posts as sent.
+// Double-send guard: `posts.broadcast_at` is stamped on every send, and the caller
+// must pass `force` to send a post that already has successful sends in the log. The
+// LOG is the source of truth for "already sent", not the stamp — older posts carry a
+// backfilled stamp from the old auto-broadcast era with no matching log rows.
+// SERVER-ONLY.
 
 import { db, liveOnly } from '@/lib/db'
 import { getConfirmedSubscribers } from '@/lib/subscribers'
 import { getSmtpConfig, isMailConfigured, sendMail } from '@/lib/mail'
 import { getSettings, resolveSiteUrl } from '@/lib/settings'
 import { broadcastEmail } from '@/lib/newsletter-email'
+import { newOpenToken, statsByPost } from '@/lib/newsletter-log'
+import { isPublicallyVisible } from '@/lib/utils'
 import { t } from '@/lib/i18n'
 
-type DuePost = { slug: string; title: string; excerpt: string | null }
+export type BroadcastPost = { slug: string; title: string; excerpt: string | null; broadcastAt?: string }
 
-export async function broadcastDuePosts(): Promise<{ posts: number; emails: number }> {
-  const nowIso = new Date().toISOString()
+export class BroadcastError extends Error {}
+
+// Read one publicly-visible post (only a live post can be mailed — the email links to it).
+async function readSendablePost(slug: string): Promise<BroadcastPost & { status: string; date: string }> {
   const { data, error } = await liveOnly(
-    db()
-      .from('posts')
-      .select('slug,title,excerpt')
-      .eq('status', 'published')
-      .lte('date', nowIso),
-  ).is('broadcast_at', null)
-  if (error) throw new Error(`broadcastDuePosts: ${error.message}`)
-  const due = (data ?? []) as DuePost[]
-  if (due.length === 0) return { posts: 0, emails: 0 }
+    db().from('posts').select('slug,title,excerpt,status,date,broadcast_at').eq('slug', slug),
+  ).maybeSingle()
+  if (error) throw new Error(`readSendablePost: ${error.message}`)
+  const row = data as (BroadcastPost & { status: string; date: string; broadcast_at: string | null }) | null
+  if (!row) throw new BroadcastError('post_not_found')
+  if (!isPublicallyVisible(row.status, row.date)) throw new BroadcastError('post_not_public')
+  return { ...row, broadcastAt: row.broadcast_at ?? undefined }
+}
 
+// Subject + HTML exactly as a subscriber would receive it, minus the tracking pixel and
+// with a placeholder unsubscribe token — for the admin preview pane.
+export async function previewBroadcast(slug: string): Promise<{ subject: string; html: string; post: BroadcastPost }> {
+  const post = await readSendablePost(slug)
   const settings = await getSettings()
+  const base = resolveSiteUrl(settings)
+  const { subject, html } = broadcastEmail(t(settings.language), settings.title, base, post, 'preview-token')
+  return { subject, html, post }
+}
+
+// Send `slug` to every confirmed subscriber. One email each, each logged (kind
+// 'broadcast') with its own open token. Returns what actually happened.
+export async function broadcastPost(
+  slug: string,
+  opts: { force?: boolean } = {},
+): Promise<{ sent: number; failed: number; recipients: number }> {
+  const post = await readSendablePost(slug)
+  if (!opts.force) {
+    const prior = (await statsByPost()).get(slug)
+    if (prior && prior.sent > 0) throw new BroadcastError('already_sent')
+  }
   const cfg = await getSmtpConfig()
-  const subs = isMailConfigured(cfg) ? await getConfirmedSubscribers() : []
+  if (!isMailConfigured(cfg)) throw new BroadcastError('smtp_not_configured')
+
+  const subs = await getConfirmedSubscribers()
+  const settings = await getSettings()
   const base = resolveSiteUrl(settings)
   const tx = t(settings.language)
 
-  let emails = 0
-  for (const post of due) {
-    for (const s of subs) {
-      const { subject, html } = broadcastEmail(tx, settings.title, base, post, s.token)
-      const { sent } = await sendMail({ to: s.email, subject, html })
-      if (sent) emails++
-    }
-    // Stamp regardless of send outcome — one-time; never re-broadcast.
-    await db().from('posts').update({ broadcast_at: nowIso }).eq('slug', post.slug)
+  let sent = 0
+  let failed = 0
+  for (const s of subs) {
+    const openToken = newOpenToken()
+    const { subject, html } = broadcastEmail(tx, settings.title, base, post, s.token, openToken)
+    const res = await sendMail({ to: s.email, subject, html, kind: 'broadcast', postSlug: slug, openToken })
+    if (res.sent) sent++
+    else failed++
   }
-  return { posts: due.length, emails }
-}
-
-// Stamp every already-published post that still has no `broadcast_at` as "sent" WITHOUT
-// emailing — the same thing the migration backfill does. Call it right after a bulk
-// import (WordPress): imported published posts persist with `broadcast_at = NULL`, so
-// without this the next cron tick would email the ENTIRE imported back catalogue to
-// every confirmed subscriber. (Same back-catalogue-burst guard as the newsletter toggle.)
-export async function suppressBacklogBroadcast(): Promise<void> {
-  const { error } = await db()
-    .from('posts')
-    .update({ broadcast_at: new Date().toISOString() })
-    .eq('status', 'published')
-    .is('broadcast_at', null)
-  if (error) throw new Error(`suppressBacklogBroadcast: ${error.message}`)
+  // Stamp even when nobody was reachable: it records that this post has been through
+  // the send flow, and keeps the column meaningful for anything still reading it.
+  await db().from('posts').update({ broadcast_at: new Date().toISOString() }).eq('slug', slug)
+  return { sent, failed, recipients: subs.length }
 }

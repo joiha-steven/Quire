@@ -69,7 +69,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       mail = broadcastEmail(tx, settings.title, base, post, FAKE_TOKEN)
     }
 
-    const { sent, error } = await sendMail({ to, ...mail })
+    const { sent, error } = await sendMail({ to, ...mail, kind: 'test' })
     if (!sent) {
       logRequest(req, 502, start)
       return fail(error || 'send_failed', 502)

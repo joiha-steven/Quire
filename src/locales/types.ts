@@ -697,6 +697,37 @@ export type AdminStrings = {
   nlTestSubscribe: string
   nlTestSent: string
   nlTestFailed: string
+  navNewsletter: string
+  nlPageHint: string
+  nlSmtpSettingsLink: string
+  nlManageLink: string
+  nlNoSmtpWarning: string
+  nlSmtpTlsMismatch: string
+  nlTabPeople: string
+  nlTabSend: string
+  nlTabTest: string
+  nlNoSubsHint: string
+  nlColEmail: string
+  nlColStatus: string
+  nlColJoined: string
+  nlColSent: string
+  nlColOpenRate: string
+  nlColLastSend: string
+  nlFailedSuffix: string
+  nlPickPost: string
+  nlPreview: string
+  nlPreviewHint: string
+  nlPreviewFailed: string
+  nlSubjectLabel: string
+  nlNoPosts: string
+  nlAlreadySent: string
+  nlAlreadySentShort: string
+  nlResendConfirm: string
+  nlSendButton: string
+  nlSendConfirm: string
+  nlSendDone: string
+  nlSendFailed: string
+  nlSendHint: string
   // sidebar collapse
   navCollapse: string
   navExpand: string

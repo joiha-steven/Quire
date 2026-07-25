@@ -3,6 +3,7 @@
 
 import type { NextRequest } from 'next/server'
 import { listSubscribers, subscriberCounts } from '@/lib/subscribers'
+import { statsByEmail } from '@/lib/newsletter-log'
 import { ok, fail, logRequest, logError, requireOwner } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
@@ -15,9 +16,11 @@ export async function GET(req: NextRequest): Promise<Response> {
       logRequest(req, 401, start)
       return fail('Unauthorized', 401)
     }
-    const [subscribers, counts] = await Promise.all([listSubscribers(), subscriberCounts()])
+    const [subscribers, counts, stats] = await Promise.all([listSubscribers(), subscriberCounts(), statsByEmail()])
+    // Attach each address's send history (one rollup read, not a query per row).
+    const rows = subscribers.map((s) => ({ ...s, stats: stats.get(s.email) ?? null }))
     logRequest(req, 200, start)
-    return ok({ subscribers, counts })
+    return ok({ subscribers: rows, counts })
   } catch (error) {
     logError(req, error)
     logRequest(req, 500, start)

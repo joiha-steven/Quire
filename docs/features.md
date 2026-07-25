@@ -185,7 +185,7 @@
   (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
   a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
 
-## Newsletter — `lib/subscribers.ts`, `lib/mail.ts`, `api/subscribe`, `api/newsletter/*`
+## Newsletter — `lib/subscribers.ts`, `lib/mail.ts`, `lib/newsletter-log.ts`, `api/subscribe`, `api/newsletter/*`, `api/broadcast`, Admin → Newsletter
 
 - **Double opt-in.** `subscribers` (email unique · status pending/confirmed/unsubscribed · a
   per-subscriber `token` used for BOTH confirm + unsubscribe links). `POST /api/subscribe`
@@ -202,29 +202,51 @@
   (`getMailStatus().configured`). The same gate also puts an envelope button in the public header
   (`SubscribeTrigger`, last before the mobile drawer toggle) that opens the identical card as a
   modal (`SubscribeOverlay`, lazy — Escape / backdrop closes), so a reader can subscribe from any
-  page. Owner manages subscribers (list + counts + delete) via `api/subscribers`.
-- **Test send** (`POST /api/mail/test`, owner only, `NewsletterFields`). Three kinds — `smtp`
+  page.
+- **Admin → Newsletter** (`/admin/newsletter`, `NewsletterView`) is where the list is worked;
+  Settings → Integrations keeps ONLY the SMTP credentials (`NewsletterFields`, which now derives
+  the TLS checkbox from the port — implicit TLS is 465, 587 is STARTTLS; the wrong pair fails with
+  an opaque OpenSSL "wrong version number"). Three tabs:
+  - *People* — every subscriber with their send history from the log: emails sent, failures (with
+    the last error), open rate, last send. Counts + delete.
+  - *Send* — pick a published post, review the REAL `broadcastEmail()` HTML in a `sandbox=""`
+    iframe (scripts/forms/navigation all blocked), then send. A post that already has successful
+    sends needs the resend checkbox first; the send itself is `confirm()`-gated.
+  - *Test* — the three sample sends.
+- **Test send** (`POST /api/mail/test`, owner only, `NewsletterTest`). Three kinds — `smtp`
   (bare "it works" note), `post` (the broadcast, built from the newest published post, or a
   stand-in on an empty blog), `subscribe` (the double opt-in confirmation) — each built by the
   SAME builder the live path uses, so a green test means the real send works. Recipient defaults
   to the signed-in owner's address; confirm/unsubscribe links carry a placeholder token, so they
   deliberately land on the "invalid link" page. Uses the SAVED config, not the unsaved form.
-- **Broadcast on publish** (`lib/broadcast.ts` `broadcastDuePosts`, run by the cron on the 5-min
-  publish tick + the hourly backstop). A post is "due" when it is `published`, its `date` has
-  passed, it isn't trashed, and `posts.broadcast_at` is null. Each due post is emailed once to
-  every confirmed subscriber (title + excerpt + link + per-recipient unsubscribe link) and then
-  STAMPED (`broadcast_at = now`). The stamp happens even when SMTP is off or there are no
-  subscribers, so turning the newsletter on later never blasts the back-catalogue; the migration
-  backfills already-live posts. Editing a post never re-broadcasts — `savePost`'s upsert doesn't
-  include `broadcast_at`, so PostgREST leaves it untouched. Scheduled (future-dated) posts
-  broadcast when they actually go live.
+- **Send log** (`newsletter_sends`, `lib/newsletter-log.ts`). `sendMail` writes ONE row per
+  outgoing email — success or failure, all four kinds (`confirm`/`broadcast`/`reply`/`test`) — so
+  no path can email an address without it showing up. Keyed by ADDRESS, not a subscriber FK:
+  reply notifications go to commenters who never subscribed. Deleting a subscriber clears their
+  rows. `statsByEmail`/`statsByPost` fold it once into the admin's columns; a failed send is not
+  counted as sent, and the open-rate denominator is successful BROADCASTS only.
+- **Open tracking.** A broadcast carries a 1x1 pixel at `GET /api/newsletter/open?t=` (public —
+  it is fetched by a mail client with no session). The token identifies the SEND row, never the
+  address, so the URL leaks no identity; the first hit wins (`is('opened_at', null)`) so a client
+  refetching can't inflate the count; no IP, UA or referrer is recorded. The preview and the test
+  send pass no token, so reviewing an email never counts as an open. Links are NOT wrapped, so
+  there is no click tracking and every URL in the mail is the real one.
+- **Manual broadcast** (`lib/broadcast.ts` `broadcastPost`, `POST /api/broadcast`). There is NO
+  automatic send: the cron publishes a scheduled post on time but never emails anyone (owner's
+  call — every send is previewed and pressed by hand). `broadcastPost` mails one publicly-visible
+  post to every confirmed subscriber, one email each with its own open token, and stamps
+  `posts.broadcast_at`. The double-send guard reads the LOG, not the stamp: posts from the old
+  auto-broadcast era carry a backfilled stamp with no matching log rows, so the stamp alone would
+  wrongly report them as sent. `force: true` (the admin's resend checkbox) overrides it. The route
+  lives at `/api/broadcast`, NOT under `/api/newsletter/*` — that prefix is the public
+  confirm/unsubscribe/pixel family and a send endpoint must stay owner-gated.
 - **Comment-reply notifications** (`lib/comment-notify.ts` `notifyReply`, fired via `after()`
   from the comment POST route on a reply). Emails the parent commenter (their `author_email`) a
   link to the thread. Best-effort + transactional: skips a self-reply (same email), a deleted
   parent, and no-ops without SMTP. Never throws.
 - **Email bodies** are built by pure, escaped, unit-tested helpers in `lib/newsletter-email.ts`
-  (`confirmEmail`, `broadcastEmail`, `replyEmail`) — reused by the subscribe route, the cron, the
-  comment route, and the admin test send.
+  (`confirmEmail`, `broadcastEmail`, `replyEmail`) — reused by the subscribe route, the manual
+  broadcast, the comment route, the admin preview, and the test send.
 
 ## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
 

@@ -32,6 +32,17 @@ describe('broadcastEmail', () => {
     const { html } = broadcastEmail(en, 'B', 'https://x.test', { slug: 's', title: 'T', excerpt: null }, 'k')
     expect(html).not.toContain('<p></p>')
   })
+
+  // The pixel is what makes the open rate real; the preview + test send must NOT carry
+  // one, or reviewing an email would count as a subscriber opening it.
+  it('embeds the open pixel only when given an open token', () => {
+    const withPixel = broadcastEmail(en, 'B', 'https://x.test', { slug: 's', title: 'T' }, 'k', 'OPEN1').html
+    expect(withPixel).toContain('https://x.test/api/newsletter/open?t=OPEN1')
+    expect(withPixel).toContain('width="1" height="1"')
+
+    const noPixel = broadcastEmail(en, 'B', 'https://x.test', { slug: 's', title: 'T' }, 'k').html
+    expect(noPixel).not.toContain('/api/newsletter/open')
+  })
 })
 
 describe('replyEmail', () => {

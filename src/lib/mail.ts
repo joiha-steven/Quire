@@ -5,6 +5,7 @@
 
 import nodemailer from 'nodemailer'
 import { db, DB_TAG } from '@/lib/db'
+import { logSend, type SendKind } from '@/lib/newsletter-log'
 import { revalidateTag } from 'next/cache'
 
 export type SmtpConfig = {
@@ -80,14 +81,26 @@ export async function saveSmtpConfig(input: Partial<SmtpConfig>): Promise<void> 
 // Send one email. Returns { sent } — degrades gracefully (never throws) when SMTP is
 // unconfigured or the send fails, so a caller (subscribe/broadcast) can decide what to
 // tell the user without a 500.
+//
+// EVERY send is written to `newsletter_sends` from here, success or failure — the one
+// choke point, so no path can email an address without it showing up in the admin.
+// `kind` is therefore required; `postSlug`/`openToken` apply to broadcasts.
 export async function sendMail(msg: {
   to: string
   subject: string
   html: string
   text?: string
+  kind: SendKind
+  postSlug?: string
+  openToken?: string
 }): Promise<{ sent: boolean; error?: string }> {
   const cfg = await getSmtpConfig()
-  if (!isMailConfigured(cfg)) return { sent: false, error: 'smtp_not_configured' }
+  const record = (ok: boolean, error?: string) =>
+    logSend({ email: msg.to, kind: msg.kind, ok, postSlug: msg.postSlug, error, openToken: msg.openToken })
+  if (!isMailConfigured(cfg)) {
+    await record(false, 'smtp_not_configured')
+    return { sent: false, error: 'smtp_not_configured' }
+  }
   try {
     const transport = nodemailer.createTransport({
       host: cfg.host,
@@ -102,9 +115,11 @@ export async function sendMail(msg: {
       html: msg.html,
       text: msg.text || msg.html.replace(/<[^>]+>/g, ''),
     })
+    await record(true)
     return { sent: true }
   } catch (error) {
     console.error(`[ERROR] mail.sendMail: ${(error as Error).message}`)
+    await record(false, (error as Error).message)
     return { sent: false, error: (error as Error).message }
   }
 }

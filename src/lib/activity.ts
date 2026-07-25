@@ -25,7 +25,7 @@ export type ActivityAction =
   // URL redirects (Admin → Settings → SEO).
   | 'redirect.save' | 'redirect.delete'
   // Newsletter (Admin → Settings → Integrations).
-  | 'subscriber.delete' | 'mail.config' | 'mail.test'
+  | 'subscriber.delete' | 'mail.config' | 'mail.test' | 'newsletter.send'
   // Google Drive backups (Admin → Settings → Advanced).
   | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
   // Reader comments (create is public; restore/purge from the admin Trash).

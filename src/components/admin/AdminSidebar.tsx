@@ -19,7 +19,7 @@ import { SIDEBAR_NAV, SIDEBAR_NAV_ACTIVE } from './headerActions'
 import { CacheButton } from './CacheButton'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import {
-  IconHome, IconAnalytics, IconContent, IconComment, IconMedia, IconTrash, IconSettings,
+  IconHome, IconAnalytics, IconContent, IconComment, IconMedia, IconNewsletter, IconTrash, IconSettings,
   IconLog, IconExternal, IconCache, IconSignOut, IconChevronLeft, IconHelp,
 } from './navIcons'
 
@@ -74,6 +74,7 @@ export function AdminSidebar({
     { href: '/admin/content', label: t.navDashboard, icon: <IconContent /> },
     { href: '/admin/comments', label: t.commentsNavTitle, icon: <IconComment /> },
     { href: '/admin/media', label: t.navMedia, icon: <IconMedia /> },
+    { href: '/admin/newsletter', label: t.navNewsletter, icon: <IconNewsletter /> },
     { href: '/admin/trash', label: t.navTrash, icon: <IconTrash /> },
     { href: '/admin/settings', label: t.navSettings, icon: <IconSettings /> },
     { href: '/admin/log', label: t.navLog, icon: <IconLog /> },

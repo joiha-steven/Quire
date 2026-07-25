@@ -40,7 +40,7 @@ export async function notifyReply(opts: {
       opts.replierName,
       opts.contentHtml,
     )
-    await sendMail({ to: email, subject, html })
+    await sendMail({ to: email, subject, html, kind: 'reply' })
   } catch (e) {
     console.error(`[ERROR] notifyReply: ${(e as Error).message}`)
   }

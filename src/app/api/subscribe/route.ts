@@ -46,7 +46,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const { subject, html } = confirmEmail(tx, settings.title, confirmUrl)
     // Best-effort: the row is already pending, so even if mail is unconfigured the
     // owner can see the pending sign-up. Report whether the email actually went out.
-    const { sent } = await sendMail({ to: email.trim().toLowerCase(), subject, html })
+    const { sent } = await sendMail({ to: email.trim().toLowerCase(), subject, html, kind: 'confirm' })
     logRequest(req, 200, start)
     return ok({ status: sent ? 'sent' : 'pending_no_mail' })
   } catch (error) {

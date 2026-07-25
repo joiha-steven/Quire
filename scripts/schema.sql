@@ -238,6 +238,26 @@ create table if not exists public.subscribers (
   confirmed_at timestamptz
 );
 create index if not exists subscribers_status_idx on public.subscribers (status);
+
+-- ----- newsletter_sends (one row per outgoing email) -------------------------
+-- Answers "how many mails has this address had", "who got this post", "what failed".
+-- Keyed by email, NOT a subscriber FK: reply notifications go to commenters who may
+-- never have subscribed. `open_token` sits behind the broadcast tracking pixel and
+-- identifies the SEND row, never the address.
+create table if not exists public.newsletter_sends (
+  id         bigint generated always as identity primary key,
+  email      text not null,
+  kind       text not null check (kind in ('confirm', 'broadcast', 'reply', 'test')),
+  post_slug  text,
+  sent_at    timestamptz not null default now(),
+  ok         boolean not null,
+  error      text,
+  open_token text unique,
+  opened_at  timestamptz
+);
+create index if not exists newsletter_sends_email_idx on public.newsletter_sends (email);
+create index if not exists newsletter_sends_post_idx  on public.newsletter_sends (post_slug) where post_slug is not null;
+
 -- Upgrade path: drop the removed Facebook-login columns from a pre-existing table,
 -- and add the Cloudflare cache-purge columns to a pre-existing table.
 alter table public.integration_keys

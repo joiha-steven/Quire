@@ -5,6 +5,7 @@
 
 import { randomBytes } from 'node:crypto'
 import { db } from '@/lib/db'
+import { deleteSendsFor } from '@/lib/newsletter-log'
 
 export type SubStatus = 'pending' | 'confirmed' | 'unsubscribed'
 export type Subscriber = {
@@ -92,7 +93,12 @@ export async function subscriberCounts(): Promise<{ confirmed: number; pending: 
   }
 }
 
+// Hard delete (the admin's explicit remove). The send log is keyed by address, so it is
+// cleared too — otherwise deleting a subscriber would leave their email on file.
 export async function deleteSubscriber(id: number): Promise<void> {
+  const { data } = await db().from('subscribers').select('email').eq('id', id).maybeSingle()
   const { error } = await db().from('subscribers').delete().eq('id', id)
   if (error) throw new Error(`deleteSubscriber: ${error.message}`)
+  const email = (data as { email: string } | null)?.email
+  if (email) await deleteSendsFor(email)
 }
