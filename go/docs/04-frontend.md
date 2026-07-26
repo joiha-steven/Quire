@@ -16,7 +16,13 @@ Two separate frontends with opposite budgets.
 | Admin, non-editor | target 10 KB | target 15 KB | fail above 25 KB JS |
 | Admin, editor page | around 140 KB | | informational only |
 
-For reference, the current post page is **196 KB brotli** of JS across 13 files.
+For reference, the current post page fetches **182 KB of JS (gzip, over the wire)**
+across 12 files, of which **143 KB is Next and React** and only 39 KB is the 23
+islands. The core-js polyfill chunk is `noModule` and is not counted. See the payload
+table in 00-plan.md.
+
+The islands are therefore not the problem today, and porting them to vanilla is not
+where the win comes from. The win comes from there being no framework underneath them.
 
 ## Public bundles
 

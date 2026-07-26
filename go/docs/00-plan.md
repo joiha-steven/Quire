@@ -10,10 +10,30 @@ codebase.
 
 The reason is NOT raw speed. It is:
 
-1. **Payload.** The public post page currently ships 738 KB raw / 196 KB brotli of
-   JavaScript across 13 files to render 6 KB (brotli) of article HTML. About 100 KB
-   brotli of that is the structural floor of Next.js (react-dom 61 KB + client router
-   34 KB) and cannot be removed while staying on Next. Target: under 15 KB brotli.
+1. **Payload.** Measured on the live site, a post page fetches **182 KB of JavaScript**
+   (gzip, over the wire) across 12 files to render roughly 30 KB of HTML.
+
+   | Chunk | KB | Removable? |
+   |---|---|---|
+   | react-dom | 70 | no |
+   | Next app-router client | 40 | no |
+   | Next runtime | 13 | no |
+   | ServerInsertedHTML | 9 | no |
+   | react | 6 | no |
+   | turbopack runtime | 4 | no |
+   | misc framework | 1 | no |
+   | **framework subtotal** | **143** | **no** |
+   | application code (the 23 islands) | 39 | partly |
+
+   **79% of the payload is framework.** Deleting every island on the site would save
+   39 KB and still leave 143 KB. That is the whole argument for leaving Next: the cost
+   is structural, not a result of the application being careless.
+
+   Target for Quire 2.0: under 15 KB.
+
+   Note: a 13th chunk (110 KB raw, core-js polyfills) is emitted with `noModule`, so
+   modern browsers never fetch it. It is excluded from every number above. An earlier
+   draft of this document wrongly counted it.
 2. **Operations.** Today the instance needs Node, Next, PostgreSQL, PostgREST,
    generated JWT keys, DB roles and grants, and a migration runner, all maintained by
    one person on one box. Target: one binary and one file. This is about the author's
