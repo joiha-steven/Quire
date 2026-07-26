@@ -34,6 +34,15 @@ The reason is NOT raw speed. It is:
    Note: a 13th chunk (110 KB raw, core-js polyfills) is emitted with `noModule`, so
    modern browsers never fetch it. It is excluded from every number above. An earlier
    draft of this document wrongly counted it.
+
+   **Compression is not a lever, measured 2026-07-26.** The origin gzips (Next.js
+   `compress` defaults to true; verified on the box: 233,341 B identity vs 72,834 B
+   gzip for one chunk, and Cloudflare serves exactly 72,834 B, so the edge passes the
+   origin's gzip through rather than applying its own brotli). Forcing brotli by
+   stripping `Accept-Encoding` upstream was tested per chunk and saves **956 bytes out
+   of 194,888, or 0.5%** — Cloudflare's on-the-fly brotli runs at a low quality level
+   roughly on par with gzip -9, and on several chunks it is larger. HTML and CSS
+   already arrive as zstd. Do not revisit this.
 2. **Operations.** Today the instance needs Node, Next, PostgreSQL, PostgREST,
    generated JWT keys, DB roles and grants, and a migration runner, all maintained by
    one person on one box. Target: one binary and one file. This is about the author's
