@@ -3,7 +3,7 @@
 // is only ENFORCED when the toggle is on AND a secret exists (see the comments
 // POST route, which checks `getCommentEnv().turnstileConfigured`).
 
-import { getIntegrationKeys } from '@/lib/integration-keys'
+import { getIntegrationKeys } from '@/store/integration-keys'
 
 const SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 

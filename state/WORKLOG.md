@@ -3,6 +3,32 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1: the first six `db()` modules on SQLite, and the query-builder mocks deleted
+
+`store/query.ts` (`one`/`all`/`run`/`tx`, deliberately not a query builder), `server/cache.ts`
+(`clearCache()`, Invariant 1 in its 2.0 form), then `integration-keys`, `slugs`, `redirects`,
+`revisions` and `pages` rewritten off `@supabase/postgrest-js` onto `bun:sqlite`. Signatures
+and semantics unchanged; the functions stay `async` although the driver is synchronous,
+because their callers already await them.
+
+**39 new tests, all against a real SQLite database.** The frozen tree had to mock the
+PostgREST builder, and `soft-delete.test.ts` went as far as hand-writing a filter engine,
+i.e. a second unverified copy of the database's behaviour. That is now deleted: a read path
+that drops `liveOnly` fails because SQLite really returns the trashed row. Suite: 223 pass,
+0 fail.
+
+Two deviations from pure motion, both forced by the storage change and both recorded in the
+ledger: revisions order by `saved_at desc, id desc` (Postgres had microsecond timestamps,
+these are milliseconds, and an untied ORDER BY would let the trim delete the wrong
+snapshot), and `saveIntegrationKeys` merges in TypeScript rather than assembling a SET
+clause from the payload.
+
+`settings` did not move: it needs `files.renderLogo`, which needs `sharp`, which would be
+2.0's first runtime dependency and deserves its own decision rather than being smuggled in
+under a data-layer commit. So `email-brand.test.ts` is still blocked.
+
+Typecheck errors: 11 to 6, all three remaining ones (`posts`, `settings`, `media`).
+
 ## 2026-07-27 — M1: 33 modules and 184 tests moved, suite green
 
 The slice ADR 0005 was betting on. 2,412 lines of pure logic plus 4,983 lines of locale

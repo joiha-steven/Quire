@@ -5,7 +5,7 @@
 // manual purge. Best-effort: never throws, logs on failure — a missed purge self-heals
 // on the CDN's own TTL / the next write. SERVER-ONLY.
 
-import { getIntegrationKeys } from '@/lib/integration-keys'
+import { getIntegrationKeys } from '@/store/integration-keys'
 
 // Purge the entire Cloudflare zone. No-op when unconfigured.
 export async function purgeCloudflare(): Promise<void> {

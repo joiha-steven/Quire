@@ -4,10 +4,14 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Now
 
-- [ ] **M1 — foundations and data layer** (`v2/docs/00-plan.md`). SQLite schema, importer
-      with its four verification tiers, the 132 `db()` call sites moved to `bun:sqlite`,
-      the six plpgsql functions reimplemented, ~6,500 lines of pure logic and all 35 test
-      files moved unchanged.
+- [ ] **M1 — foundations and data layer** (`v2/docs/00-plan.md`). Done: SQLite schema,
+      ~6,500 lines of pure logic and its tests moved unchanged, and the first six `db()`
+      modules (`integration-keys`, `slugs`, `redirects`, `revisions`, `pages`, plus
+      `store/query.ts` and `server/cache.ts`). Left: the remaining `db()` call sites, the
+      six plpgsql functions reimplemented, the importer with its four verification tiers.
+- [ ] **Decide on `sharp`** before porting `settings` / `files` / `media`. It would be
+      2.0's first runtime dependency and it is what `renderLogo` and every image variant
+      need. `settings` is blocked on it, and so is `news/email-brand.test.ts`.
 
 ## Next
 

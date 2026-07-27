@@ -8,8 +8,8 @@
 // That is exactly the case the old destructive sweeper missed.
 
 import { getIndex, getPost } from '@/lib/posts'
-import { getPageIndex, getPage } from '@/lib/pages'
-import { getRevisions } from '@/lib/revisions'
+import { getPageIndex, getPage } from '@/content/pages'
+import { getRevisions } from '@/content/revisions'
 import { getSettings } from '@/lib/settings'
 import { getMedia } from '@/lib/media'
 import { collapseBlob } from '@/media/blob'

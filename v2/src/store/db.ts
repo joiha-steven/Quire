@@ -96,3 +96,20 @@ export function liveOnly(table: string): string {
  */
 export const nowMs = (): number => Date.now()
 export const toDate = (ms: number | null): Date | null => (ms === null ? null : new Date(ms))
+
+/**
+ * The public types (`Post.date`, `MediaItem.uploadedAt`, ...) carry ISO 8601 strings and
+ * keep doing so: they cross into JSON payloads and templates unchanged. Only the storage
+ * representation changed, so the conversion belongs here and at no call site.
+ *
+ * `fromIso` throws rather than yielding NaN. Postgres rejected an unparseable timestamp;
+ * SQLite would happily bind NaN and store a wrong number, turning a loud failure into a
+ * post dated 1970.
+ */
+export const toIso = (ms: number): string => new Date(ms).toISOString()
+
+export function fromIso(iso: string): number {
+  const ms = Date.parse(iso)
+  if (Number.isNaN(ms)) throw new Error(`fromIso: unparseable timestamp ${JSON.stringify(iso)}`)
+  return ms
+}

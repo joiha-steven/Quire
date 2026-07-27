@@ -5,7 +5,7 @@
 // The Turnstile SITE key is public (it renders in the widget), so it's safe to
 // send to the client; no secret is ever exposed.
 
-import { getIntegrationStatus } from '@/lib/integration-keys'
+import { getIntegrationStatus } from '@/store/integration-keys'
 
 export type CommentEnv = {
   turnstileConfigured: boolean // a Turnstile secret exists (verification can run)
