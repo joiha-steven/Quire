@@ -39,6 +39,10 @@ import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
   handleConfirm, handleOpenPixel, handleSubscribe, handleUnsubscribeGet, handleUnsubscribePost,
 } from '@/web/newsletter'
+import {
+  handleEnrol, handleEnrolDone, handleLogin, handleLoginPage, handleLogout,
+  handleTwoFactor, handleTwoFactorPage,
+} from '@/web/auth-routes'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -233,6 +237,19 @@ export function createApp(): Hono {
   app.get('/api/newsletter/open', handleOpenPixel)
   app.get('/api/md/:slug', handleMarkdown)
   app.get('/manifest.webmanifest', handleManifest)
+
+  // ----- sign-in --------------------------------------------------------------
+  // The only write routes that cannot be owner-gated, because they are how one becomes an
+  // owner. Each is listed in `scripts/checks/routes-guarded.ts` with the reason it is
+  // public, so the exception is a decision on the record rather than an omission.
+
+  app.get('/login', handleLoginPage)
+  app.get('/login/2fa', handleTwoFactorPage)
+  app.post('/api/auth/login', handleLogin)
+  app.post('/api/auth/2fa', handleTwoFactor)
+  app.post('/api/auth/enrol', handleEnrol)
+  app.post('/api/auth/enrol/done', handleEnrolDone)
+  app.post('/api/auth/logout', handleLogout)
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot

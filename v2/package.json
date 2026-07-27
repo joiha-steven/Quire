@@ -15,9 +15,11 @@
     "test": "bun run build:assets && bun test",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/assets/js",
     "check:filesize": "bun scripts/checks/file-size.ts",
-    "check:all": "bun run build:assets && bun run typecheck && bun run check:filesize && bun run check:css && bun test",
+    "check:all": "bun run build:assets && bun run typecheck && bun run check:filesize && bun run check:css && bun run check:routes && bun test",
     "import-v1": "bun scripts/import-v1.ts",
-    "check:css": "bun scripts/checks/css-literal.ts"
+    "check:css": "bun scripts/checks/css-literal.ts",
+    "check:routes": "bun scripts/checks/routes-guarded.ts",
+    "user": "bun scripts/user.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.11.1",
@@ -30,6 +32,7 @@
     "hono": "^4.12.32",
     "marked": "18.0.5",
     "nodemailer": "^9.0.3",
+    "qrcode-generator": "^2.0.4",
     "satori": "^0.29.0",
     "sharp": "^0.35.3",
     "shiki": "4.2.0"

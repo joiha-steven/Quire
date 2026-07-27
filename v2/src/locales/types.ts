@@ -739,4 +739,39 @@ export type AdminStrings = {
   // sidebar collapse
   navCollapse: string
   navExpand: string
+  // sign-in (new in 2.0; see v2/docs/06-auth.md)
+  authSignIn: string
+  authUsername: string
+  authPassword: string
+  authShowPassword: string
+  authHidePassword: string
+  authCapsLock: string
+  authContinue: string
+  // Deliberately says nothing about WHICH was wrong. Same string for an unknown account
+  // and a wrong password, or the message itself becomes the account-existence oracle that
+  // the constant-time verification exists to close.
+  authBadCredentials: string
+  authLockedOut: string
+  authTwoFactor: string
+  authTwoFactorHint: string
+  authCode: string
+  authBadCode: string
+  authUseRecovery: string
+  authRecoveryCode: string
+  authRecoveryHint: string
+  authUseAuthenticator: string
+  authRestart: string
+  authSignOut: string
+  // first-run enrolment
+  authSetUp: string
+  authStepOf: string
+  authScanTitle: string
+  authScanHint: string
+  authManualEntry: string
+  authConfirmCode: string
+  authCodesTitle: string
+  authCodesHint: string
+  authCodesDownload: string
+  authCodesSaved: string
+  authDone: string
 }

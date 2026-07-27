@@ -150,12 +150,22 @@ quire user create --username hung --email hung@...
 quire user set-password --username hung
 ```
 
-The password is read from stdin, never from an argument, so it does not land in shell
-history. TOTP enrolment then happens in the browser at first sign-in, which is forced
-before the admin becomes reachable.
+Implemented as `bun run user <create|set-password|list>` (`v2/scripts/user.ts`).
 
-For local development, `quire user create --dev` seeds a known account and is refused
-when `NODE_ENV=production`, mirroring how `DEV_LOGIN` is double-gated today.
+The password is read from stdin, never from an argument, so it does not land in shell
+history. On a TTY it is read in raw mode with no echo; when stdin is a pipe it is read once
+and queued, so `echo "..." | bun run user create ...` answers both the password and the
+confirmation prompt. (Reading the stream per prompt returns nothing the second time — the
+first read drains it — which made every scripted install fail on "They did not match".)
+
+TOTP enrolment then happens in the browser at first sign-in, which is forced before the
+admin becomes reachable.
+
+`--dev` was dropped. It was specified to mirror `DEV_LOGIN`, but `DEV_LOGIN` existed
+because the frozen tree's only sign-in was Google OAuth, which cannot run against
+localhost without credentials. Password sign-in has no such problem: `bun run user create`
+IS the development path, so a second, weaker one gated on `NODE_ENV` would be a permanent
+liability bought for no convenience.
 
 ## The sign-in interface
 
@@ -176,8 +186,36 @@ The brief is "looks trustworthy", so the details are the point.
   code. A "use a recovery code instead" link below.
 - No "remember me" checkbox. The session is already 30 days.
 
-**First-run enrolment:** a three-step flow (set password, scan QR and confirm one code,
-save recovery codes) with a progress indicator, so it is obvious it has an end.
+**First-run enrolment:** the password already exists (the CLI set it), so the browser flow
+is TWO steps, not three — scan the QR and confirm one code, then save the recovery codes —
+with a "Step n of 2" indicator so it is obvious it has an end.
+
+Two properties of that flow are load-bearing, and both were found by running it rather
+than by reading it:
+
+- **The secret is held on the pending ticket, not written to `users`, until the confirming
+  code verifies.** An interrupted enrolment must not leave a secret behind that nobody has
+  scanned, because the next sign-in would then demand a code from an app that was never set
+  up, and the only way out is the command line.
+- **Confirming the code SPENDS it.** `setTotpSecret` resets the replay floor to null (the
+  old floor referred to a different secret), so without an explicit `setTotpLastStep` the
+  code just used to enrol is still unspent and replaying it signs in. That is exactly the
+  replay the guard exists to stop.
+- **The final step requires that enrolment actually completed.** The pending ticket alone
+  used to be enough to receive a session at `/api/auth/enrol/done`, which skipped two-factor
+  entirely on the one flow whose whole purpose is that two-factor is not optional.
+
+**QR code:** inline SVG via `qrcode-generator` (`src/render/qr.ts`). A hand-written encoder
+was rejected: QR is Reed-Solomon over a bit-interleaved layout, and a subtly wrong one
+produces an image that looks exactly like a QR code and cannot be scanned. `qrcode-generator`
+is a single file with no dependencies, chosen over the more popular `qrcode` (29 packages,
+including a CLI argument parser and a PNG encoder). The code is black on white regardless of
+theme — a dark theme rendering it inverted produces a code many scanners refuse, and it is
+the one place in the codebase where a hardcoded colour is the right answer.
+
+The base32 secret is shown as text beside it, grouped in fours. That is not a fallback: it
+is what makes the screen complete without the QR, since every authenticator accepts a typed
+key.
 
 **Settings → Security:** change password, re-enrol 2FA, regenerate recovery codes, active
 session list with revoke, and the recent entries from `activity_log` filtered to auth

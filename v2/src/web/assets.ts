@@ -7,9 +7,10 @@
 
 import coreJs from '@/assets/dist/core.js' with { type: 'text' }
 import postJs from '@/assets/dist/post.js' with { type: 'text' }
+import loginJs from '@/assets/dist/login.js' with { type: 'text' }
 
 /** Bundles by logical name. Adding one is an import and a line. */
-const BUNDLES: Record<string, string> = { core: coreJs, post: postJs }
+const BUNDLES: Record<string, string> = { core: coreJs, post: postJs, login: loginJs }
 
 /**
  * Short content hash. Not a security boundary, so speed matters more than collision

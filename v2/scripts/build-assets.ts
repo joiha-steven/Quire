@@ -21,6 +21,7 @@ const result = await Bun.build({
   entrypoints: [
     `${ROOT}src/assets/js/core.ts`,
     `${ROOT}src/assets/js/post.ts`,
+    `${ROOT}src/assets/js/login.ts`,
   ],
   outdir: OUT,
   target: 'browser',
@@ -48,6 +49,10 @@ if (!result.success) {
 const BUDGET: Record<string, number> = {
   'core.js': 6_500, // every public page: the beacon, the header's overlays, the listing controls
   'post.js': 8_000, // /{slug}: back to top, code copy, lightbox, subscribe, comments
+  // /login only, and NOT loaded with core.js: the sign-in page carries no beacon, no
+  // search overlay and no listing controls, so it pays for the reveal toggle, the caps-lock
+  // warning and the one-time-code paste, and nothing else.
+  'login.js': 1_500,
 }
 
 let over = false

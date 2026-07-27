@@ -1,0 +1,183 @@
+// The sign-in screens.
+//
+// Real server-rendered forms with a method and an action, so the whole flow works with
+// JavaScript switched off — same stance as the newsletter form and the search page. The
+// one island (`login.js`) adds the password visibility toggle and the caps-lock warning,
+// which are conveniences, not the mechanism.
+//
+// "Looks trustworthy" is the brief (06-auth.md), and the details are the point: the site's
+// own masthead, correct `autocomplete` attributes so a password manager fills it, and an
+// error that never says which half was wrong.
+
+import type { SiteSettings } from '@/types'
+import { adminT } from '@/i18n/admin-i18n'
+import { renderDocument, pageStyles } from '@/web/layout'
+import { PUBLIC_CSS } from '@/web/public.css'
+import { LOGIN_CSS } from '@/web/login.css'
+import { scriptTag } from '@/web/assets'
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+
+/** `{n}` style interpolation, the same shape the admin strings already use. */
+const fill = (template: string, values: Record<string, string | number>): string =>
+  template.replace(/\{(\w+)\}/g, (whole, key: string) =>
+    key in values ? String(values[key]) : whole)
+
+/** The masthead. A sign-in page that does not look like its site is what phishing gets wrong. */
+function masthead(settings: SiteSettings): string {
+  const logo = settings.logoUrl
+    ? `<img src="${escapeAttr(settings.logoUrl)}" alt="" width="40" height="40">`
+    : ''
+  return `<a class="login-brand" href="/">${logo}<span>${escapeHtml(settings.title)}</span></a>`
+}
+
+function shell(settings: SiteSettings, title: string, body: string): string {
+  return renderDocument(
+    settings,
+    // `noindex`: a sign-in page in search results is a phishing target and useless to a
+    // reader. The public pages want the opposite, which is why this is set here and not
+    // in the shared layout.
+    { title: `${title} · ${settings.title}`, extra: '<meta name="robots" content="noindex">' },
+    `${pageStyles(settings, PUBLIC_CSS)}\n${LOGIN_CSS}`,
+    `<div class="login-wrap">${masthead(settings)}<main class="login-card">${body}</main></div>`,
+    { scripts: scriptTag('login') },
+  )
+}
+
+/** An inline error, next to the field it belongs to rather than floating at the top. */
+const errorBox = (message: string | undefined): string =>
+  message === undefined ? '' : `<p class="login-error" role="alert">${escapeHtml(message)}</p>`
+
+export function passwordScreen(
+  settings: SiteSettings,
+  opts: { error?: string; username?: string; next?: string } = {},
+): string {
+  const s = adminT(settings.language)
+  const next = opts.next === undefined ? '' : `<input type="hidden" name="next" value="${escapeAttr(opts.next)}">`
+  return shell(settings, s.authSignIn, `
+<h1>${escapeHtml(s.authSignIn)}</h1>
+${errorBox(opts.error)}
+<form method="post" action="/api/auth/login" class="login-form">
+${next}
+<label for="username">${escapeHtml(s.authUsername)}</label>
+<input id="username" name="username" type="text" autocomplete="username" autocapitalize="none"
+       spellcheck="false" required autofocus value="${escapeAttr(opts.username ?? '')}">
+
+<label for="password">${escapeHtml(s.authPassword)}</label>
+<div class="login-reveal">
+  <input id="password" name="password" type="password" autocomplete="current-password" required>
+  <button type="button" data-reveal
+          data-show="${escapeAttr(s.authShowPassword)}"
+          data-hide="${escapeAttr(s.authHidePassword)}"
+          aria-label="${escapeAttr(s.authShowPassword)}">👁</button>
+</div>
+<p class="login-caps" data-caps hidden>${escapeHtml(s.authCapsLock)}</p>
+
+<button type="submit" class="login-submit">${escapeHtml(s.authContinue)}</button>
+</form>`)
+}
+
+export function twoFactorScreen(
+  settings: SiteSettings,
+  opts: { ticket: string; error?: string; recovery?: boolean; next?: string },
+): string {
+  const s = adminT(settings.language)
+  const next = opts.next === undefined ? '' : `<input type="hidden" name="next" value="${escapeAttr(opts.next)}">`
+  const recovery = opts.recovery === true
+
+  // The two modes differ only in the input and its labels, so they share one form rather
+  // than being two near-identical copies that drift.
+  const field = recovery
+    ? `<label for="code">${escapeHtml(s.authRecoveryCode)}</label>
+<input id="code" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters"
+       spellcheck="false" required autofocus placeholder="xxxxx-xxxxx">`
+    // `one-time-code` is what lets iOS and Android offer the code straight from the
+    // notification, and `inputmode=numeric` brings up the digit pad. A paste of the whole
+    // six digits works because there is one input, not six.
+    : `<label for="code">${escapeHtml(s.authCode)}</label>
+<input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+       pattern="[0-9]*" maxlength="7" required autofocus>`
+
+  const toggle = recovery
+    ? `<a href="/login/2fa?ticket=${encodeURIComponent(opts.ticket)}">${escapeHtml(s.authUseAuthenticator)}</a>`
+    : `<a href="/login/2fa?ticket=${encodeURIComponent(opts.ticket)}&amp;recovery=1">${escapeHtml(s.authUseRecovery)}</a>`
+
+  return shell(settings, s.authTwoFactor, `
+<h1>${escapeHtml(recovery ? s.authRecoveryCode : s.authTwoFactor)}</h1>
+<p class="login-hint">${escapeHtml(recovery ? s.authRecoveryHint : s.authTwoFactorHint)}</p>
+${errorBox(opts.error)}
+<form method="post" action="/api/auth/2fa" class="login-form">
+<input type="hidden" name="ticket" value="${escapeAttr(opts.ticket)}">
+${next}
+${field}
+<button type="submit" class="login-submit">${escapeHtml(s.authContinue)}</button>
+</form>
+<p class="login-alt">${toggle}</p>`)
+}
+
+/**
+ * First-run enrolment, step 1 of 2: the secret.
+ *
+ * `secret` is shown as text for manual entry. Every authenticator app accepts a typed key,
+ * which is why this screen is complete without the QR code beside it.
+ */
+export function enrolScreen(
+  settings: SiteSettings,
+  opts: { ticket: string; secret: string; qr?: string; error?: string },
+): string {
+  const s = adminT(settings.language)
+  // Grouped in fours: a 32-character key read off a screen and typed into a phone is
+  // otherwise a place to lose your position.
+  const grouped = (opts.secret.match(/.{1,4}/g) ?? []).join(' ')
+  const qr = opts.qr === undefined ? '' : `<div class="login-qr">${opts.qr}</div>`
+
+  return shell(settings, s.authSetUp, `
+<h1>${escapeHtml(s.authSetUp)}</h1>
+<p class="login-step">${escapeHtml(fill(s.authStepOf, { n: 1, total: 2 }))}</p>
+<h2>${escapeHtml(s.authScanTitle)}</h2>
+<p class="login-hint">${escapeHtml(s.authScanHint)}</p>
+${qr}
+<p class="login-hint">${escapeHtml(s.authManualEntry)}</p>
+<p class="login-secret"><code>${escapeHtml(grouped)}</code></p>
+${errorBox(opts.error)}
+<form method="post" action="/api/auth/enrol" class="login-form">
+<input type="hidden" name="ticket" value="${escapeAttr(opts.ticket)}">
+<label for="code">${escapeHtml(s.authCode)}</label>
+<input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+       pattern="[0-9]*" maxlength="7" required autofocus>
+<button type="submit" class="login-submit">${escapeHtml(s.authConfirmCode)}</button>
+</form>`)
+}
+
+/**
+ * First-run enrolment, step 2 of 2: the recovery codes.
+ *
+ * This is the only time they exist in plaintext. The confirmation is explicit, and the
+ * download is a data URI so it needs no extra route and no server round trip.
+ */
+export function recoveryCodesScreen(
+  settings: SiteSettings,
+  opts: { codes: string[]; download: string },
+): string {
+  const s = adminT(settings.language)
+  const list = opts.codes.map((code) => `<li><code>${escapeHtml(code)}</code></li>`).join('')
+  return shell(settings, s.authCodesTitle, `
+<h1>${escapeHtml(s.authCodesTitle)}</h1>
+<p class="login-step">${escapeHtml(fill(s.authStepOf, { n: 2, total: 2 }))}</p>
+<p class="login-hint">${escapeHtml(s.authCodesHint)}</p>
+<ol class="login-codes">${list}</ol>
+<p class="login-alt">
+  <a href="${escapeAttr(opts.download)}" download="quire-recovery-codes.txt">${escapeHtml(s.authCodesDownload)}</a>
+</p>
+<form method="post" action="/api/auth/enrol/done" class="login-form">
+<label class="login-check">
+  <input type="checkbox" name="saved" value="1" required>
+  <span>${escapeHtml(s.authCodesSaved)}</span>
+</label>
+<button type="submit" class="login-submit">${escapeHtml(s.authDone)}</button>
+</form>`)
+}
+
+export { fill as fillTemplate }

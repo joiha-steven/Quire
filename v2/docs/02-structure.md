@@ -110,6 +110,18 @@ router groups:
   once (Invariant 4). A new route is owner-gated by default; making it public is an
   explicit act, which is the opposite of today's `isPublicApi()` allowlist and safer.
 
+`ownerRouter()` (`src/web/guard.ts`) applies the gate AT CONSTRUCTION, so there is no
+router someone can create and then forget to guard. The CSRF origin check lives inside
+that same middleware rather than beside it: a cookie-authenticated write is exactly the
+request that needs both, and splitting them creates the possibility of mounting one
+without the other.
+
+`bun run check:routes` (`scripts/checks/routes-guarded.ts`) is the enforcement. It fails
+the build on any POST/PUT/PATCH/DELETE registered outside a gated router, unless its path
+appears in that script's `PUBLIC_WRITES` map WITH the reason it is public. Making the
+exception a list entry that carries an argument is the point; a naming convention would
+not be one. It caught a forgotten `/api/auth/enrol/done` the first time it ran.
+
 ## Invariants carried over
 
 1. **Cache is cleared completely after every write.** `clearCache()`, unconditional.
