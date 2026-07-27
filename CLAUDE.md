@@ -4,20 +4,26 @@
 
 > ## FROZEN — this tree accepts security patches only
 >
-> Quire 2.0 is being built in [`go/`](./go/) as a single Go binary on SQLite, at full
-> feature parity, and will replace this implementation. Plan: [`go/docs/00-plan.md`](./go/docs/00-plan.md).
+> Quire 2.0 is being built in [`v2/`](./v2/) as a single **Bun + Hono + SQLite** executable,
+> at full feature parity, and will replace this implementation. Plan:
+> [`v2/docs/00-plan.md`](./v2/docs/00-plan.md).
+> (`go/` was the previous plan and is [superseded](./go/SUPERSEDED.md). Do not build from it.)
 >
-> **This file's rules apply to `src/` only.** Work inside `go/` follows
-> [`go/CLAUDE.md`](./go/CLAUDE.md) instead.
+> **This file's rules apply to `src/` only.** Work inside `v2/` follows
+> [`v2/CLAUDE.md`](./v2/CLAUDE.md) instead.
 >
 > Rules for `src/` from 2026-07-26:
 > - Security patches only. No new features, no refactors, no dependency bumps beyond CVEs.
-> - Version stays at **1.4.37**. Do not bump.
+> - Version stays at **1.5.0**. Do not bump.
 > - Deploy path is unchanged (`rsync src/`, bump `.deployment-id`, build, restart).
-> - Read it freely when porting behaviour to Go. Do not edit it for that purpose.
+> - Read it freely when porting behaviour to v2. Do not edit it for that purpose.
+> - **One agreed exception (M0):** the font subset, the public/admin CSS split, and
+>   Speculation Rules ship here first. They are contained, they are needed regardless of
+>   what happens to v2, and their user-visible effect is larger than the entire
+>   JavaScript reduction. See `v2/docs/04-frontend.md`.
 >
 > Reason: a rewrite that chases a moving target does not finish. If a feature is worth
-> adding in the next two months, add it to Quire 2.0.
+> adding in the next month, add it to Quire 2.0.
 
 Public, open-source blog platform. **Zero personal data in this repo.** Real
 credentials live only in the gitignored `.env.local` (native) or `.env.docker`

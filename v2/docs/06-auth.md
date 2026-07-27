@@ -1,0 +1,187 @@
+# Authentication
+
+New in Quire 2.0. Decided 2026-07-27.
+
+**Google login is removed.** Sign-in is username + password + TOTP, entirely
+self-hosted. `next-auth` is deleted along with it.
+
+## Why
+
+- Ten-year horizon: an OAuth client, a Google Cloud project and a policy that Google can
+  change unilaterally are three external dependencies to keep alive for a decade, for a
+  login used by one person.
+- `next-auth` v5 encrypts its session as a JWE, which is unpleasant to verify anywhere
+  outside its own runtime. Removing it removes that constraint permanently.
+- The current sign-in page is a bare provider button. A blog that accepts comments and
+  runs a newsletter should have a sign-in page that looks like a product.
+
+Recovery codes cover the failure mode Google was implicitly insuring against (forgotten
+password, lost device).
+
+## Model
+
+One owner. The schema uses a `users` table with one row anyway, because a one-row table
+costs nothing and a hard-coded singleton costs a rewrite later.
+
+```sql
+create table users (
+  id             integer primary key autoincrement,
+  username       text not null unique,
+  email          text not null,
+  password_hash  text not null,               -- argon2id, via Bun.password
+  totp_secret    text,                        -- base32, NULL until enrolled
+  totp_last_step integer,                     -- replay guard, see below
+  created_at     integer not null,
+  updated_at     integer not null
+);
+
+create table sessions (
+  id           text primary key,              -- sha256 of the cookie token, never the token
+  user_id      integer not null references users(id) on delete cascade,
+  created_at   integer not null,
+  last_seen_at integer not null,
+  expires_at   integer not null,
+  user_agent   text,                          -- coarse bucket only, via ua.ts. No raw UA
+  ip_hash      text                           -- salted hash, consistent with analytics
+);
+
+create table recovery_codes (
+  user_id   integer not null references users(id) on delete cascade,
+  code_hash text not null,                    -- argon2id
+  used_at   integer,                          -- NULL until spent
+  primary key (user_id, code_hash)
+) without rowid;
+```
+
+`totp_secret` and `password_hash` are **never** read into any client-bound payload. Same
+rule as `backup_state.refresh_token` and `integration_keys` in the frozen tree.
+
+## Password
+
+- `Bun.password.hash(pw)` (argon2id by default) and `Bun.password.verify`. No dependency.
+- Minimum 12 characters. No composition rules, which push people toward worse passwords.
+  A short deny-list of the obvious ("password", the site name, the username) is enough.
+- **Constant-time failure.** When the username does not exist, still run a verify against
+  a fixed dummy hash before returning, so response timing does not disclose account
+  existence.
+- The error copy is the same for wrong username and wrong password.
+
+## TOTP
+
+RFC 6238, and deliberately the boring configuration so every authenticator app works:
+SHA-1, 30-second step, 6 digits. About 80 lines using `crypto.createHmac`, no library.
+
+- Accept the current step and one step either side (±30s clock drift).
+- **Replay guard:** store the step number that was accepted in `totp_last_step` and
+  reject any step less than or equal to it. Without this, a code shoulder-surfed inside
+  its 90-second window is replayable.
+- Enrolment produces an `otpauth://totp/Quire:<username>?secret=...&issuer=Quire` URI,
+  rendered as a QR code, with the base32 secret shown as text for manual entry.
+- 2FA is **required**, not optional. One user, no support desk, no reason for a weaker
+  path to exist.
+
+## Recovery codes
+
+- 10 codes, generated at enrolment, format `xxxxx-xxxxx` from a base32 alphabet with
+  ambiguous characters removed.
+- Stored argon2id-hashed. Single use: `used_at` is stamped on redemption.
+- Shown **once**, on a screen with a download button and an explicit "I have saved these"
+  confirmation.
+- Regenerating invalidates all previous codes, and says so before doing it.
+- A code substitutes for the TOTP step only. The password is still required.
+
+## Sessions
+
+- Token: 32 random bytes, base64url. The **hash** is the primary key; the raw token
+  exists only in the cookie. A database leak does not yield live sessions.
+- Cookie: `__Host-quire_session`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`.
+- Sliding expiry: 30 days from last use, absolute maximum 90 days.
+- `last_seen_at` is written at most once per hour to avoid a write per request.
+- Revocable: Settings lists active sessions (coarse device, approximate location by IP
+  hash bucket, last seen) with per-session revoke and a "sign out everywhere" button.
+- Changing the password revokes every session except the current one.
+
+## CSRF
+
+`SameSite=Lax` blocks cross-site form POSTs. On top of that, every state-changing
+request must present `Sec-Fetch-Site: same-origin` **or** a matching `Origin` header;
+requests with neither are rejected. The admin SPA sends JSON with a custom header, so
+the simple-request bypass does not apply to it.
+
+No token table, no hidden field. This is the modern shape and it has less to go wrong.
+
+## Rate limiting and lockout
+
+Extends the existing `rate-limit.ts` sliding window.
+
+| Surface | Limit | On exceeding |
+|---|---|---|
+| Password attempt, per IP | 10 / 15 min | 429 with `Retry-After` |
+| Password attempt, per username | 5 / 15 min | soft lock 15 min, message says so plainly |
+| TOTP attempt, per session | 5 total | the pending sign-in is destroyed, start over |
+| Recovery code attempt | 5 / hour, per IP | 429 |
+
+Every outcome is written to `activity_log`: `login`, `login_failed`, `totp_failed`,
+`recovery_used`, `password_changed`, `sessions_revoked`. This is the audit trail that
+makes "was someone trying to get in" answerable.
+
+## Bootstrap
+
+There is no sign-up. The first owner is created by the CLI:
+
+```
+quire user create --username hung --email hung@...
+quire user set-password --username hung
+```
+
+The password is read from stdin, never from an argument, so it does not land in shell
+history. TOTP enrolment then happens in the browser at first sign-in, which is forced
+before the admin becomes reachable.
+
+For local development, `quire user create --dev` seeds a known account and is refused
+when `NODE_ENV=production`, mirroring how `DEV_LOGIN` is double-gated today.
+
+## The sign-in interface
+
+The brief is "looks trustworthy", so the details are the point.
+
+**`/login`**, a real page on the site, not a framework-generated route.
+
+- Site logo and name at the top, same masthead as the blog. A sign-in page that does not
+  look like the site it belongs to is the exact thing phishing pages get wrong.
+- Two fields, labelled, with correct autocomplete attributes: `autocomplete="username"`
+  and `autocomplete="current-password"`. Password managers filling correctly is a real
+  trust signal and costs one attribute.
+- Password visibility toggle. A caps-lock warning.
+- Errors appear inline, next to the field, in plain language, and never reveal whether
+  the account exists.
+- **2FA is its own screen**, reached after the password is accepted, with
+  `autocomplete="one-time-code"` and a 6-digit input that accepts a paste of the whole
+  code. A "use a recovery code instead" link below.
+- No "remember me" checkbox. The session is already 30 days.
+
+**First-run enrolment:** a three-step flow (set password, scan QR and confirm one code,
+save recovery codes) with a progress indicator, so it is obvious it has an end.
+
+**Settings → Security:** change password, re-enrol 2FA, regenerate recovery codes, active
+session list with revoke, and the recent entries from `activity_log` filtered to auth
+events.
+
+House style applies throughout, per the `frontend-house-style` guidance: theme tokens
+only, one typeface, no all-caps, one divider style.
+
+## What is removed
+
+`next-auth`, `@auth/*`, the Google provider, the credentials provider, `AUTH_SECRET`,
+`AUTH_URL`, `AUTHORIZED_EMAIL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `DEV_LOGIN`, and
+the seven `next-auth` import sites.
+
+`MCP_OAUTH_SECRET` stays: MCP tokens and the MCP OAuth flow are a separate mechanism for
+a separate client, they are unaffected by this change, and their token hash format must
+be preserved across cutover (00-plan.md risk register).
+
+## Later, not now
+
+**Passkeys / WebAuthn** as an additional fast path alongside password + TOTP. Decided
+against for v2.0 to keep the surface small; the `users` table gains a `credentials`
+child table when it happens, and nothing above needs to change.

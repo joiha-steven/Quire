@@ -1,4 +1,12 @@
-# Quire 2.0 (Go) — operating notes
+# Quire 2.0 (Go) — SUPERSEDED 2026-07-27
+
+> **Do not build from this directory.** Quire 2.0 is now Bun + Hono + SQLite, in
+> [`../v2/`](../v2/docs/00-plan.md). Read [`SUPERSEDED.md`](./SUPERSEDED.md) for why, and
+> for which of these specs were salvaged.
+>
+> Everything below describes the abandoned Go plan and is kept for reference only.
+
+## Original operating notes (Go)
 
 This directory is Quire 2.0. The rules in the repository root `CLAUDE.md` describe the
 **frozen** Next.js implementation in `src/` and do not apply here.
