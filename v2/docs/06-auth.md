@@ -121,9 +121,25 @@ Extends the existing `rate-limit.ts` sliding window.
 | TOTP attempt, per session | 5 total | the pending sign-in is destroyed, start over |
 | Recovery code attempt | 5 / hour, per IP | 429 |
 
-Every outcome is written to `activity_log`: `login`, `login_failed`, `totp_failed`,
-`recovery_used`, `password_changed`, `sessions_revoked`. This is the audit trail that
-makes "was someone trying to get in" answerable.
+**Failures count; successes do not.** The window is checked before the attempt and charged
+only after it fails, and a correct password clears the username's window outright. Built
+2026-07-28 the other way first, where the sixth *successful* sign-in in a quarter of an
+hour locked the owner out of their own blog — which is a normal amount of signing in while
+setting up a new device. `overLimit` / `recordHit` / `clearLimit` in `server/rate-limit.ts`
+are the split; `rateLimited` keeps the record-and-verdict-together shape for public
+endpoints, where every request genuinely is a request.
+
+Every outcome is written to `activity_log`, named `auth.login`, `auth.login.failed`,
+`auth.totp.failed`, `auth.recovery.used`, `auth.password.changed`, `auth.totp.enrolled`,
+`auth.recovery.regenerated`, `auth.logout` and `auth.sessions.revoked` — the `<area>.<event>`
+shape the rest of that enum already uses, rather than the informal names this document
+first wrote them in.
+
+These are written by `logAuthEvent`, which **does not consult the `activityLog` feature
+toggle**. Every other entry in that log is a convenience (what did I change, and when);
+these are the answer to "was somebody trying to get in", and a security trail a setting can
+silence is one an intruder can silence. The toggle exists so the owner can stop recording
+their own edits, which is a different want.
 
 ## Bootstrap
 
@@ -179,6 +195,18 @@ the seven `next-auth` import sites.
 `MCP_OAUTH_SECRET` stays: MCP tokens and the MCP OAuth flow are a separate mechanism for
 a separate client, they are unaffected by this change, and their token hash format must
 be preserved across cutover (00-plan.md risk register).
+
+### `AUTH_SECRET` had a second job
+
+It was also the salt for the analytics visitor hash, via
+`process.env.AUTH_SECRET ?? 'quire'` — and the fallback was the worse half: a salt printed
+in the source is one anybody holding the database can reuse, trying candidate IP and user
+agent pairs until one matches. That is the single property the hash exists to deny.
+
+Replaced by the `server_secrets` table and `auth/secret.ts`: a 32-byte value generated on
+first use, per purpose (`analytics-visitor`, `session-ip`), never shown in any UI. One
+fewer environment variable for a self-hoster to set, and no way to leave it unset. Distinct
+per purpose so a confirmed guess in one table proves nothing about the other.
 
 ## Later, not now
 

@@ -294,6 +294,20 @@ create table if not exists render_cache (
   created_at integer not null
 ) without rowid;
 
+-- ----- server_secrets ---------------------------------------------------------
+-- Values the SERVER generates for itself, as opposed to `integration_keys`, which holds
+-- what the owner pastes in. Generated on first use and never shown in any UI, so a
+-- self-hoster has one less environment variable to set and cannot set it badly.
+--
+-- This exists because `AUTH_SECRET` leaves with next-auth (06-auth.md) and the analytics
+-- visitor hash was salted with it, falling back to the literal 'quire' when unset. A
+-- constant salt makes a salted hash of IP + user agent reversible by anyone holding the
+-- database, which is the one property that hash exists to deny.
+create table if not exists server_secrets (
+  name  text primary key,
+  value text not null
+) without rowid;
+
 -- ----- auth (new in 2.0; see v2/docs/06-auth.md) ------------------------------
 -- One owner, but a one-row table costs nothing and a hard-coded singleton costs a rewrite.
 -- `password_hash` and `totp_secret` are secrets and never reach a client-bound payload.

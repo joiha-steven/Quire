@@ -23,6 +23,7 @@ import { createHash } from 'node:crypto'
 import { parseUa } from '@/analytics/ua'
 import { bufferEvent, bufferScroll } from '@/analytics/buffer'
 import { nowMs } from '@/store/db'
+import { serverSecret } from '@/auth/secret'
 
 // Common crawlers / preview bots — don't count them as readers.
 const BOT_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|vkshare|whatsapp|telegram|discord|headless|lighthouse|pagespeed|gtmetrix|monitor|uptime|curl|wget|python-requests|axios|node-fetch|gptbot|oai-searchbot|chatgpt|claudebot|claude-web|anthropic|ccbot|perplexity|bytespider|amazonbot|google-extended|meta-external|scrapy|semrush|ahrefs|dataforseo/i
@@ -33,9 +34,16 @@ export function isBot(ua: string): boolean {
 
 // Stable per-visitor token: salted hash of IP + UA. The salt never leaves the
 // server, and the raw IP/UA are discarded — only this 16-byte hex is stored.
+//
+// The salt was `process.env.AUTH_SECRET ?? 'quire'`. `AUTH_SECRET` leaves with next-auth
+// (06-auth.md), and the fallback was the worse half anyway: a salt printed in the source
+// is one anybody can reuse to try candidate IP/UA pairs against a stolen table until one
+// matches. `serverSecret` generates its own on first use, so there is no unset case.
 function visitorHash(ip: string, ua: string): string {
-  const salt = process.env.AUTH_SECRET ?? 'quire'
-  return createHash('sha256').update(`${salt}|${ip}|${ua}`).digest('hex').slice(0, 32)
+  return createHash('sha256')
+    .update(`${serverSecret('analytics-visitor')}|${ip}|${ua}`)
+    .digest('hex')
+    .slice(0, 32)
 }
 
 // Normalize to a bare, bounded pathname (no query/hash). Returns null for paths

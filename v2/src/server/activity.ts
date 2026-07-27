@@ -33,6 +33,13 @@ export type ActivityAction =
   | 'comment.create' | 'comment.delete' | 'comment.restore' | 'comment.purge'
   // Server errors (unexpected failures from route handlers) — the error log.
   | 'error'
+  // Authentication (new in 2.0; see v2/docs/06-auth.md). Named `auth.*` to match the
+  // `<area>.<event>` shape of everything above, rather than the informal names in the
+  // spec prose. These are written by `logAuthEvent`, which does NOT consult the
+  // activityLog toggle — see there for why.
+  | 'auth.login' | 'auth.login.failed' | 'auth.totp.failed' | 'auth.recovery.used'
+  | 'auth.password.changed' | 'auth.totp.enrolled' | 'auth.recovery.regenerated'
+  | 'auth.logout' | 'auth.sessions.revoked'
 
 export type ActivityEntry = {
   id: number
@@ -56,6 +63,25 @@ export async function logActivity(action: ActivityAction, detail = ''): Promise<
     insert(action, detail)
   } catch (error) {
     console.error(`[ERROR] activity.logActivity(${action}): ${(error as Error).message}`)
+  }
+}
+
+/**
+ * Record an authentication event, ALWAYS — the `activityLog` feature toggle is
+ * deliberately not consulted.
+ *
+ * Everything else in this log is a convenience: what did I change, and when. The auth
+ * entries are the answer to "was somebody trying to get in", and a security trail that a
+ * setting can silence is one an attacker can silence. The toggle exists so the owner can
+ * stop recording their own edits, which is a different want.
+ *
+ * Never throws: failing to log a sign-in must not fail the sign-in.
+ */
+export function logAuthEvent(action: ActivityAction, detail = ''): void {
+  try {
+    insert(action, detail)
+  } catch (error) {
+    console.error(`[ERROR] activity.logAuthEvent(${action}): ${(error as Error).message}`)
   }
 }
 
