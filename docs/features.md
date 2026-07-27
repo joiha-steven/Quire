@@ -432,7 +432,7 @@
 - **Admin canvas:** `<main>` in the admin layout carries `.admin-canvas` (globals.css) — a flat,
   quiet neutral surface (one fill per light/dark mode); the sidebar + cards sit on solid surfaces
   above it. (The editorial redesign replaced the old dotted-grid canvas — see
-  `docs/admin-redesign-2026-07.md`.)
+  `docs/admin-design.md`.)
 - **Sidebar (`AdminSidebar`):** the collapse/expand control sits at the TOP next to the
   wordmark (a compact chrome button, NOT a nav row) so it can't be mistaken for Sign out;
   Sign out sits alone in the footer under its own divider. Palette selection was REMOVED
@@ -470,7 +470,7 @@
   a one-line **system footer** — DB reachability · storage · a **View site** link, from `getSystemInfo()`.
 - **The editorial redesign** removed the old home-page duplicate cards (SEO health, traffic sources,
   quick-actions row, taxonomy breakdown, and the rich system panel) — that data lives on its own pages
-  now; only the compact footer remains. See `docs/admin-redesign-2026-07.md`. (`admin/page.tsx` still
+  now; only the compact footer remains. See `docs/admin-design.md`. (`admin/page.tsx` still
   passes the `seo`/`sources` props, now unused by `Overview`.)
 - **Help / Guide:** Admin → Help (`/admin/help`, `HelpGuide.tsx`) — a concise, sectioned index (writing,
   settings, self-host, Cloudflare, cache/ops, MCP) linking out to the repo docs. **Content is English by

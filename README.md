@@ -17,7 +17,7 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 ![MCP](https://img.shields.io/badge/MCP-ready-7c3aed)
 ![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)
 
-[**🌐 Live demo**](https://manhhung.me) · [**Get your own copy**](#-get-your-own-copy) · [**Let an AI run it**](#-let-an-ai-agent-write--publish-mcp) · [**Architecture**](./ARCHITECTURE.md) · [**Roadmap**](./ROADMAP.md) · [**License**](#-license)
+[**🌐 Live demo**](https://manhhung.me) · [**Get your own copy**](#-get-your-own-copy) · [**Let an AI run it**](#-let-an-ai-agent-write--publish-mcp) · [**Architecture**](./ARCHITECTURE.md) · [**Roadmap**](./state/ROADMAP.md) · [**License**](#-license)
 
 <sub>The demo at **manhhung.me** is the author's personal blog — a live instance to see the *platform* in action, not a content showcase (ignore what it says, look at how it works).</sub>
 
@@ -185,13 +185,13 @@ Add `http://localhost:3000/api/auth/callback/google` to your Google client. `npm
 - **Writing feedback** is optional under *Settings → Appearance → Rendering*: it adds the editor's block caret, insert/delete movement and a restrained synthesized key sound. The master Motion setting and reduced-motion preference still win.
 - **Performance:** public pages are ISR-cached; every admin save purges exactly the affected pages through one place ([`src/lib/revalidate.ts`](./src/lib/revalidate.ts)), so edits are live next request without ever serving stale. Full design + the *why* in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
-The July 2026 admin redesign is documented in [`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md); the complete 13 July implementation/deployment log is in [`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
+The July 2026 admin redesign is documented in [`docs/admin-design.md`](./docs/admin-design.md); the complete 13 July implementation/deployment log is in [`state/reports/2026-07-13-admin-redesign.md`](./state/reports/2026-07-13-admin-redesign.md).
 
 ---
 
 ## 🗺️ Roadmap
 
-Native + Docker self-host shipped; next up: an S3/MinIO storage driver + a published GHCR image, publishing from Markdown note apps (Obsidian → Craft), and optional AI assist in the editor. See [`ROADMAP.md`](./ROADMAP.md).
+Native + Docker self-host shipped; next up: an S3/MinIO storage driver + a published GHCR image, publishing from Markdown note apps (Obsidian → Craft), and optional AI assist in the editor. See [`ROADMAP.md`](./state/ROADMAP.md).
 
 ---
 

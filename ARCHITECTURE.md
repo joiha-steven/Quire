@@ -1,9 +1,12 @@
 # Architecture
 
 A fresh-reader map of Quire Blog: the mental model, how a request flows, and the
-*why* behind the main decisions. Operational rules, invariants, and a per-area DEBUG
-ROUTER live in [`CLAUDE.md`](./CLAUDE.md); per-area detail lives in [`docs/`](./docs/)
-(conventions, features, seo-pwa, mcp, backups).
+*why* behind the main decisions. The rules themselves live elsewhere:
+[`CLAUDE.md`](./CLAUDE.md) is the router and the per-area DEBUG ROUTER,
+[`docs/invariants.md`](./docs/invariants.md) holds what must not break,
+[`docs/data-layer.md`](./docs/data-layer.md) the operational shape, and
+[`docs/`](./docs/README.md) the per-area detail. Why a decision was taken, and whether it
+still holds: [`docs/decisions/`](./docs/decisions/README.md).
 
 ## Mental model
 
@@ -109,8 +112,8 @@ can move without rewriting anything.
 | `src/components/{blog,admin,ui,theme}/` | UI. `ui/` = shared primitives (Button, Input, Switch, Toast). |
 
 The admin UI contract, editor layout decisions, and the 13 July 2026 production pass are recorded in
-[`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md) and
-[`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
+[`docs/admin-design.md`](./docs/admin-design.md) and
+[`state/reports/2026-07-13-admin-redesign.md`](./state/reports/2026-07-13-admin-redesign.md).
 
 ## Design decisions (the *why*)
 

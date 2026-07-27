@@ -206,7 +206,7 @@ On any behavior change, update the matching doc in the SAME change (Working prin
   Never let the README drift from how the app is actually installed and run.
 - Keep personal/instance values (credentials, the live domain) OUT of tracked
   files — `.env.local` only.
-- **Audits** (`audit/`): a full review per `audit/README.md` → dated `audit/YYYY-MM-DD-<scope>.md`;
+- **Audits** (`state/audits/`): a full review per `state/audits/README.md` → dated `state/audits/YYYY-MM-DD-<scope>.md`;
   read the latest first so a pass starts from the last clean line.
 - **Versioning (owner's rule — do NOT auto-bump):** the version is currently **`1.5.x`**. Each change
   bumps the patch `x`, a running counter with no semver meaning. The minor (`1.0` → … → `1.5`) moves

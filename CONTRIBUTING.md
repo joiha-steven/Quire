@@ -33,9 +33,9 @@ Thanks for helping. Quire values small, correct, well-scoped changes.
     test send, the open pixel) works end to end with no real SMTP account or inbox.
 - Read [`CLAUDE.md`](./CLAUDE.md) (operating rules + invariants) and
   [`ARCHITECTURE.md`](./ARCHITECTURE.md) (the *why*) before a non-trivial change.
-- For admin/editor work, also read [`docs/admin-redesign-2026-07.md`](./docs/admin-redesign-2026-07.md)
+- For admin/editor work, also read [`docs/admin-design.md`](./docs/admin-design.md)
   and the latest concrete implementation record, currently
-  [`docs/worklog-2026-07-13.md`](./docs/worklog-2026-07-13.md).
+  [`state/reports/2026-07-13-admin-redesign.md`](./state/reports/2026-07-13-admin-redesign.md).
 
 ## Before you open a PR — Definition of Done
 

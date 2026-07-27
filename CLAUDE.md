@@ -1,153 +1,90 @@
 @AGENTS.md
 
-# Quire Blog — operating notes
+# Quire Blog — router
 
 > ## FROZEN — this tree accepts security patches only
 >
 > Quire 2.0 is being built in [`v2/`](./v2/) as a single **Bun + Hono + SQLite** executable,
-> at full feature parity, and will replace this implementation. Plan:
-> [`v2/docs/00-plan.md`](./v2/docs/00-plan.md).
+> at full feature parity, and will replace this implementation.
+> Plan: [`v2/docs/00-plan.md`](./v2/docs/00-plan.md) · Decision: [ADR 0005](./docs/decisions/0005-rewrite-in-bun-hono-sqlite.md).
 > (`go/` was the previous plan and is [superseded](./go/SUPERSEDED.md). Do not build from it.)
 >
 > **This file's rules apply to `src/` only.** Work inside `v2/` follows
 > [`v2/CLAUDE.md`](./v2/CLAUDE.md) instead.
 >
-> Rules for `src/` from 2026-07-26:
+> Rules for `src/` from 2026-07-26 ([ADR 0003](./docs/decisions/0003-freeze-v1-rewrite-as-v2.md)):
 > - Security patches only. No new features, no refactors, no dependency bumps beyond CVEs.
 > - Version stays at **1.5.0**. Do not bump.
 > - Deploy path is unchanged (`rsync src/`, bump `.deployment-id`, build, restart).
 > - Read it freely when porting behaviour to v2. Do not edit it for that purpose.
-> - **One agreed exception (M0):** the font subset, the public/admin CSS split, and
->   Speculation Rules ship here first. They are contained, they are needed regardless of
->   what happens to v2, and their user-visible effect is larger than the entire
->   JavaScript reduction. See `v2/docs/04-frontend.md`.
->
-> Reason: a rewrite that chases a moving target does not finish. If a feature is worth
-> adding in the next month, add it to Quire 2.0.
+> - **One agreed exception (M0), already shipped:** font axes, the CSS split, and
+>   Speculation Rules. See [`docs/performance.md`](./docs/performance.md).
 
-Public, open-source blog platform. **Zero personal data in this repo.** Real
-credentials live only in the gitignored `.env.local` (native) or `.env.docker`
-(Docker); never commit them. Personal/instance facts are not tracked in git.
+Public, open-source blog platform. **Zero personal data in this repo.** Real credentials
+live only in the gitignored `.env.local` (native) or `.env.docker` (Docker); never commit
+them. Personal and instance facts are not tracked in git.
 
-> **Companion doc — don't duplicate it here.** [`ARCHITECTURE.md`](./ARCHITECTURE.md) =
-> the mental model + the *why* behind decisions. This file = operational rules, invariants,
-> and a per-area DEBUG ROUTER. When they'd overlap, the *why* lives there, the *rule* lives
-> here. DB schema = [`scripts/schema.sql`](./scripts/schema.sql). Per-area detail lives in
-> [`docs/`](./docs/) — the DEBUG ROUTER points you at the right file; don't preload them all.
+## This file is a ROUTER. It restates nothing.
+
+One rule lives in exactly one file, because two copies means one is wrong within a month.
+Capped at 170 lines and held there by `check:docs`, since it loads every turn.
+
+| Looking for | Go to |
+|---|---|
+| The mental model, the *why* | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| Load-bearing rules you must not break | [`docs/invariants.md`](./docs/invariants.md) |
+| `src/lib` map, caching contract, render path | [`docs/data-layer.md`](./docs/data-layer.md) |
+| Typography, layout, i18n, releases | [`docs/conventions.md`](./docs/conventions.md) |
+| What a feature does, per area | [`docs/features.md`](./docs/features.md) |
+| Fonts, CSS, island JS, prerender rule | [`docs/performance.md`](./docs/performance.md) |
+| SEO, feeds, OG, PWA · MCP · backups · self-host | [`docs/seo-pwa.md`](./docs/seo-pwa.md) · [`docs/mcp.md`](./docs/mcp.md) · [`docs/backups.md`](./docs/backups.md) · [`docs/self-host-native.md`](./docs/self-host-native.md) |
+| Agent discovery, markdown negotiation | [`docs/agent-ready.md`](./docs/agent-ready.md) |
+| Admin visual contract | [`docs/admin-design.md`](./docs/admin-design.md) |
+| **Why was this decided, does it still hold** | [`docs/decisions/`](./docs/decisions/README.md) |
+| Roadmap, tasks, open questions, worklog | [`state/`](./state/README.md) |
+| DB schema | [`scripts/schema.sql`](./scripts/schema.sql) |
+
+Anything dated is a snapshot and lives in `state/audits/` or `state/reports/`, which are
+**write-only**: never retro-edited, never swept for current context.
 
 ## Working principles
 
-How to work in this repo. These bias toward caution over speed; for trivial changes,
-use judgment. They reinforce the Conventions below — read both.
+Bias toward caution over speed; for trivial changes, use judgment.
 
-**1. Think before coding — don't assume, don't hide confusion, surface tradeoffs.**
-State assumptions explicitly; if uncertain, ask (use AskUserQuestion for genuine
-forks). If multiple interpretations exist, present them — don't pick silently. If a
-simpler approach exists, say so and push back when warranted. If something is unclear,
-stop, name what's confusing, and ask.
+**1. Think before coding.** State assumptions. If two readings are possible, present both
+rather than picking silently. If a simpler approach exists, say so and push back when
+warranted. If something is unclear, stop, name what is confusing, and ask.
 
-**2. Simplicity first — the minimum code that solves the problem, nothing speculative.**
-No features beyond what was asked. No abstractions for single-use code. No "flexibility"
-that wasn't requested. No error handling for impossible scenarios. If 200 lines could be
-50, rewrite it. Ask: "would a senior engineer call this overcomplicated?" — if yes,
-simplify. (This is also why the `lib/` data layer is thin and routes are thin handlers.)
+**2. Simplicity first.** The minimum code that solves the problem. No speculative
+abstractions, no flexibility nobody asked for, no error handling for impossible states. If
+200 lines could be 50, rewrite it.
 
-**3. Surgical changes — touch only what you must; clean up only your own mess.** Don't
-"improve" adjacent code/comments/formatting. Don't refactor what isn't broken. Match the
-existing style even if you'd do it differently. Remove imports/vars/functions that YOUR
-change orphaned; do NOT delete pre-existing dead code unless asked — mention it. Every
-changed line traces to the request. **Mandatory exception:** when you change behavior,
-update the matching docs in the SAME change (see "Conventions") — that's part of the
-request, not scope creep.
+**3. Surgical changes.** Touch only what the task requires. Do not "improve" adjacent code,
+comments or formatting. Match the existing style even if you would do it differently.
+Remove only what YOUR change orphaned; mention pre-existing dead code rather than deleting
+it. **Mandatory exception:** when behaviour changes, update the matching doc in the SAME
+change. That is part of the request, not scope creep.
 
-**4. Goal-driven execution — define success criteria, then loop until verified.** Recast a task
-as something checkable ("fix the bug" → "I reproduce it, then it's gone"); state a brief plan with
-a verify step. **Definition of Done — a change is DONE only when `npm run check:all` exits 0**
-(typecheck + lint + `check:routes`/`check:filesize`/`check:no-any`/`check:no-direct-blob` + the `npm test` seam net;
-offline, no creds). No "it compiles" exception; if a change touches behaviour not in `check:all`,
-add a test for it IN THE SAME commit. Seams pin load-bearing invariants only (see Invariants), NOT
-broad coverage; a release batch also runs `npm run build` + the `audit/` procedure + manual checks
-a script can't. **Suspect data drift (media/blob mismatch)? Run `npm run check:consistency:live`
-BEFORE reading code** (live, needs `.env.local`; skips cleanly without creds). Report failures honestly.
+**4. Definition of Done: `npm run check:all` exits 0.** Typecheck, lint, the static guards
+(`check:routes` / `filesize` / `no-any` / `no-direct-blob` / `token-bust` / `docs`) and the
+test seams. No "it compiles" exception. Behaviour not covered by `check:all` gets a test in
+the same commit. A release batch also runs `npm run build`, the `state/audits/` procedure,
+and the manual checks a script cannot do. Suspect media/blob drift? Run
+`npm run check:consistency:live` BEFORE reading code.
 
-**5. RUN what you changed, on the LOCAL stack, and LOOK at it. Never test against production.**
-`check:all` proves the code compiles and the load-bearing seams hold. It cannot tell you the
-subscriber email column collapsed to `reader@e…`, or that a picker was still labelled for one item
-after becoming multi-select — both shipped, because nobody opened the page. Reading source is not
-verification.
-- **Bring the stack up:** `docker compose -f docker-compose.dev.yml up -d` (Postgres + PostgREST +
-  Mailpit) then `npm run dev`. Sign in with `DEV_LOGIN` — see [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-  "Getting set up". There is no excuse for an unseen admin change: the sign-in works with no Google
-  credentials.
-- **Drive it with headless Chromium** (Playwright/Puppeteer — not vendored here; install
-  `playwright-core` + `npx playwright install chromium`, or point at an existing install). Navigate,
-  click, screenshot, read the DOM, measure geometry. Do NOT reason about rendered CSS from source,
-  and do NOT ask the human to take screenshots for you.
-- **Email is testable too.** Mailpit catches everything at <http://localhost:8025>, so the whole
-  newsletter path (opt-in → confirm → broadcast → open pixel) runs end to end with no real inbox.
-  For template work alone, render a builder's output to a file and screenshot that — no send needed.
-- **Production is not a test environment.** Sends, deletes, purges and cache busts there are real
-  and irreversible; a newsletter cannot be unsent. Verify locally, then deploy.
-
-## Architecture (operational)
-
-- **Text in Postgres (self-hosted; reached through PostgREST with the `@supabase/postgrest-js` client —
-  bundled Postgres+PostgREST on Docker, or your own on native, see Env); binaries on the LOCAL FILESYSTEM via
-  the `blob.ts` facade** (served at `/uploads`; `STORAGE_LOCAL_DIR`). Tables (schema `public`):
-  `posts` `pages` `post_revisions` `media` `files` `comments` `settings` `mcp_tokens` `mcp_clients`
-  `mcp_used_codes` `backup_state` `integration_keys` `activity_log` `analytics_events` `analytics_scroll` `redirects` `subscribers` `newsletter_sends` — full DDL in
-  `scripts/schema.sql`; data-model shapes + the *why* in ARCHITECTURE.md.
-  `backup_state` (single row) holds the **secret** Drive refresh token + run state and
-  is NEVER read into the client-bound settings payload (see `docs/backups.md`).
-- `src/lib` = data layer (`db.ts` Postgres, `blob.ts` binaries); `src/app/api` = thin
-  owner-gated handlers; UI in `src/components`. Writes are atomic upserts/deletes (no
-  read-modify-write manifest); reads always fresh + transactional.
-- **Data flow:** public read = server component → `src/lib` (`getPost`/`getSettings`/…) →
-  `marked` render (ISR-cached). Write = `src/app/api/*` route → `requireOwner()` → `src/lib`
-  mutate Postgres/Blob → `src/lib/revalidate.ts` purge.
-- **Env:** `POSTGREST_URL` (your PostgREST endpoint, the one serving tables at `/<table>`) +
-  `POSTGREST_TOKEN` (HS256 `service_role` JWT, server-only) + `STORAGE_LOCAL_DIR` + `SITE_URL`/`AUTH_URL` +
-  `AUTH_*` + `AUTHORIZED_EMAIL` + `CRON_SECRET`. MCP enabled + tokenized from the admin (no `MCP_TOKEN`
-  env); optional `MCP_OAUTH_SECRET` signs OAuth codes (falls back to `AUTH_SECRET`). DB password +
-  JWT secret + service token come from `scripts/docker/gen-keys.mjs`, roles/grants from `docker/initdb/`.
-  **Native:** `.env.example` + `docs/self-host-native.md`. **Docker:** `.env.docker.example` (bundles
-  Postgres + PostgREST + local store + cron). Build needs no backend env (data layer degrades to empty).
-  **Boot:** `src/instrumentation.ts` runs `validateEnv()` (`src/env.ts`) at server start (NOT build/edge)
-  and fails fast on missing required vars. **Upgrades:** `scripts/migrate.sh` applies pending
-  `scripts/migrations/*.sql` tracked in `schema_migrations` (Docker runs it as a one-shot; fresh installs
-  seed the ledger from `schema.sql`). **Probe:** `GET /api/health` (DB + store writable).
-- **Edge:** put a CDN/reverse proxy (e.g. Cloudflare) in front for global caching + TLS/HSTS; OG runs on
-  the edge runtime (so its bundled font loads). Detail → `docs/seo-pwa.md`.
-
-## Invariants — load-bearing, do not break
-
-Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by `npm run check:all`.
-
-1. **Revalidate is a SUPERSET — never under-purge.** Every admin write goes through ONE place,
-   `lib/revalidate.ts`; each helper runs `freshenData()` (`revalidateTag('db')`) THEN a
-   `revalidatePath` superset of what the change touches. *Enforced at:* `lib/revalidate.ts`.
-   *Test:* `lib/revalidate.test.ts`.
-2. **Posts + pages share ONE `/{slug}` namespace.** Every create/rename calls `ensureSlugFree`
-   → 409 `SlugConflictError` on collision (trashed rows still reserve their slug).
-   *Enforced at:* `lib/slugs.ts`. *Test:* `lib/slugs.test.ts`.
-3. **Image refs are stored store-relative.** `collapseBlob` strips the `/uploads` prefix on WRITE,
-   `expandBlob` re-adds it on READ — applied in the data layer only (posts/pages/settings), so stored
-   bytes carry no origin. *Enforced at:* `lib/blob.ts` + the data-layer files. *Test:* `lib/blob.test.ts`.
-4. **Every write/delete route calls `requireOwner()` first.** `src/middleware.ts` is the edge
-   defence-in-depth net (blocks `/admin` + owner-only `/api`); a NEW public/bearer route must be
-   added to `isPublicApi()` or it 401s. *Enforced at:* `lib/api.ts` + `src/middleware.ts`.
-   *Guard:* `check:routes` (static presence) + the middleware net; no integration test.
-5. **Raw HTML in markdown is escaped, never executed.** `html` renderer → `escapeHtml`; `safeHref` drops
-   `javascript:`/`data:`/`vbscript:`. *Enforced at:* `PostContent.tsx`. *Test:* `post-content.test.ts`.
-6. **Every delete is a soft delete.** `deleteX()` sets `deleted_at`; EVERY live read filters
-   `.is('deleted_at', null)` via `liveOnly()` (`db.ts`) — predicate defined ONCE; Trash reads the
-   complement. *Enforced at:* data-layer files + `docs/features.md`. *Test:* `lib/soft-delete.test.ts`.
-7. **Cache-bust is asymmetric.** Out-of-band writes (`backup_state`) MUST `revalidateTag(DB_TAG)`; MCP
-   token routes MUST NOT (`force-no-store`; busting `db` over-purges public). *Enforced at:*
-   `lib/backup-state.ts` vs `api/mcp/tokens`. *Test:* `check:token-bust` (backup side = coarse tripwire).
-
-> **Accepted risk — no drift check (2C):** `scripts/schema.sql` is hand-maintained, the app never runs
-> it. Any table/RPC/index change MUST update it in the SAME commit — review-enforced (live diff declined).
+**5. RUN what you changed and LOOK at it. Never test against production.** `check:all`
+proves the code compiles and the seams hold. It cannot tell you the subscriber email column
+collapsed to `reader@e…`, or that a picker was still labelled for one item after becoming
+multi-select. Both shipped, because nobody opened the page.
+- **Stack:** `docker compose -f docker-compose.dev.yml up -d` then `npm run dev`. Sign in
+  with `DEV_LOGIN` ([`CONTRIBUTING.md`](./CONTRIBUTING.md)) — no Google credentials needed,
+  so there is no excuse for an unseen admin change.
+- **Drive it with headless Chromium.** Navigate, click, screenshot, read the DOM, measure.
+  Do NOT reason about rendered CSS from source, and do NOT ask the human for screenshots.
+- **Email is testable.** Mailpit at <http://localhost:8025> runs the whole newsletter path.
+- ⚠ **The dev database's `settings` row differs from production.** Anything depending on it
+  (font preset, language, palette, feature flags) is read off the box, not from a local build.
+- **Production is not a test environment.** A newsletter cannot be unsent.
 
 ## DEBUG ROUTER — when you hit a symptom, read THESE files first
 
@@ -167,7 +104,7 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | Theme / palette / dark / FOUC | `lib/themes.ts`, `src/components/theme/*` | `docs/conventions.md` |
 | Typography / font / layout drift | `docs/conventions.md` FIRST, then the component | — |
 | Font preload / CSS size / island JS / LCP / what a reader loads | `docs/performance.md` (the resource-loading law), `lib/themes.ts` (`fontPreloadHrefs`), `src/app/{layout.tsx,globals.css,theme.css,admin/admin.css}` | `docs/conventions.md` |
-| Admin chrome / editor toolbar / typewriter feedback | `docs/admin-redesign-2026-07.md`, `docs/worklog-2026-07-13.md`, `components/admin/Editor.tsx`, `components/admin/EditorMenus.tsx` | `components/admin/kit.tsx`, `docs/features.md` |
+| Admin chrome / editor toolbar / typewriter feedback | `docs/admin-design.md`, `state/reports/2026-07-13-admin-redesign.md`, `components/admin/Editor.tsx`, `components/admin/EditorMenus.tsx` | `components/admin/kit.tsx`, `docs/features.md` |
 | Search / ToC / related / preview | `lib/posts.ts`, `api/search`, `components/blog/PostContent.tsx` | `docs/features.md` |
 | Book reading mode / fullscreen 2-column / "Chế độ đọc sách" toggle | `components/blog/BookMode.tsx` (tiny toggle + `#read` wiring; imports `book.css`), `components/blog/BookReader.tsx` (heavy overlay, **lazy** via `next/dynamic`), `components/blog/book.css` (post-route only), `features.bookMode`, `src/app/(blog)/[slug]/page.tsx` (`#post-body` + meta-line toggle) | `docs/features.md` "Book reading mode" |
 | Series / collections / `/series/[slug]` / admin Series tab | `lib/series.ts` (`getSeriesForPost`/`resolveSeries`/`updateSeries`/`reorderSeries`) + `lib/series-order.ts` (pure `orderSeries`/`seriesEntries`, client-safe), `components/blog/SeriesBox.tsx`, `components/admin/SeriesManager.tsx`, `api/series`, `src/app/(blog)/series/[slug]` | `docs/features.md` "Series / collections" |
@@ -179,97 +116,26 @@ Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by
 | Admin Help page / in-app manual | `components/admin/HelpGuide.tsx` (shell) + `HelpSections.tsx` + `HelpTables.tsx` + `help-kit.tsx`, `src/app/admin/help` — body is ENGLISH by design (mirrors the repo docs); ADD NEW FEATURES HERE, it is where a non-technical owner learns they exist | `docs/features.md` "Admin Help" |
 | Health / env / migrations / rate-limit | `api/health`, `src/env.ts` + `src/instrumentation.ts`, `scripts/migrate.sh` + `scripts/schema.sql` (`schema_migrations`), `lib/rate-limit.ts` | `docs/self-host-native.md` |
 
-## Data layer map — `src/lib/`
 
-Terse role per file; the authoritative detail is the code comments.
+## Hard rules
 
-| File | Key exports | Role |
-|---|---|---|
-| `db.ts` | `db()` | Server-only `service_role` PostgREST client (`@supabase/postgrest-js` — the standalone query builder, NOT supabase-js); GET reads cache-eligible + tagged `db`, writes `no-store`. ALL text access goes through here |
-| `blob.ts` | `blobUrl`, `uploadFile`, `readBlob`, `deleteByUrl/Pathname`, `listBlobs`, `blobOrigin`, `collapseBlob`, `expandBlob` | Binaries only; facade over the LOCAL fs driver `blob-local.ts` (served at `/uploads` via `app/uploads/[...path]`), lazy-loaded so `node:fs` stays off the client. `collapse/expand` = store-relative refs. No cloud storage SDK anywhere in `src` (`check:no-direct-blob`) |
-| `posts.ts` | `getIndex`, `getPublicPosts`, `getPost`, `savePost`, `deletePost`, `getCategories`, `getTags`, `updateTerm` | Reads `React.cache()` only. `savePost` snapshots prior version + stores `readingMinutes`. `updateTerm` renames (merges on collision) / removes a term across EVERY post |
-| `pages.ts` | `getPageIndex`, `getPublicPages`, `getPage`, `savePage`, `deletePage` | Mirrors `posts.ts` |
-| `revisions.ts` | `getRevisions`, `pushRevision`, `renameRevisions`, `deleteRevisions` | Last 3 overwritten versions/slug (`post_revisions` jsonb, store-relative). Re-slugged on rename, removed on delete |
-| `media.ts` | `getMedia`, `addMedia*`, `registerMediaBatch`, `deleteMedia*`, `finalizeContentMedia`, `finalizePendingVariants/Thumbs` | Metadata in `media` (`path` = PK), binaries on Blob. Browser→server multipart (`/api/media/upload`) writes bytes then thumbs+dims. ORIGINAL written with an EXCLUSIVE (O_EXCL) write so concurrent same-name uploads retry a fresh name (never overwrite → no PK 500); dims+thumb are best-effort (a valid original never fails the upload). Heavy `-1024/-1600` AVIF+WebP deferred via `after()`, cron-swept. Delete removes EVERY version. `PostContent` emits `<picture>` only when variants exist |
-| `files.ts` | `renderLogo`, `uploadIcon`, `uploadFont`, `getFiles`, `addFilesBatch`, `deleteFile*`, `getSiteIcons` | `files/` prefix = custom font, site icons (`favicon-`/`app-icon-`), attachment library. `deleteFile*` refuse `favicon-`/`app-icon-` |
-| `settings.ts` | `getSettings`, `saveSettings`, `DEFAULT_SETTINGS`, `resolveAppIcon`, `typographyToCss`, `fontToCss` | `React.cache()` only. Holds `themes` + `typography` + `customFont`; migrates legacy shapes; image/font urls store-relative |
-| `themes.ts` | `THEME_PRESETS`, `themesToCss`, `paletteOptions`, … | 6 owner-customizable palettes. `themesToCss` emits EVERY palette's vars. Add one = append to `THEME_PRESETS` |
-| `comments.ts` / `comment-md.ts` | `getCommentTree`, `buildCommentTree`, `addComment`, `countsByPosts`, `renderCommentMarkdown` | Text-only reader comments (off by default). Public tree excludes email, tombstones deleted-but-replied, re-roots orphans. `comment-md` = bold/italic-only, escape-first. Client island fetches no-store → instant, no revalidate |
-| `integration-keys.ts` / `comment-env.ts` | `getIntegrationKeys`, `getIntegrationStatus`, `saveIntegrationKeys`, `getCommentEnv` | SERVER-ONLY Turnstile secrets in `integration_keys` table (env fallback), set in admin — like `backup_state`, NEVER in `settings.data`. `getCommentEnv` (async) = which comment integrations are usable + public site key |
-| `analytics.ts` | `recordView`, `recordScroll`, `getAnalytics`, `getPageAnalytics`, `getViewTotals`, `isBot` | Cookieless; `visitor` = salted hash of IP+UA (no PII); bots + admin/api + owner skipped. Kept FOREVER. `recordView` stores COARSE UA buckets (device/browser/os via `ua.ts`) — never the raw UA. `recordScroll` also samples dwell (ms). Buckets truncated in `ANALYTICS_TZ`. v2 sections (engagement/channels/audience/drill-down) need `2026-07-22-analytics-v2.sql`; fall back to base shape until applied |
-| `activity.ts` | `logActivity`, `logActivityError`, `getActivity`, `clearActivity` | `activity_log`; gated by `features.activityLog`, never throws; `logActivity` called via `after()` from every mutating route; `logActivityError` (action `error`) is scheduled by `logError` (`api.ts`) on route failures |
-| `media-usage.ts` | `findUnusedMedia` | Read-only audit; badges orphans, never deletes |
-| `backup.ts` / `backup-state.ts` / `gdrive.ts` | (see `docs/backups.md`) | Drive snapshot/restore + the server-only secret store + Drive REST/OAuth |
-| `highlight.ts` | `highlightCode` | Server-side Shiki; zero client JS; null on failure → plain block |
-| `auth.ts` | `handlers`, `auth`, `signIn/Out`, `isAuthorized`, `getAuthState` | Anyone signs in; only `AUTHORIZED_EMAIL` is authorized |
-| `slugs.ts` | `ensureSlugFree`, `SlugConflictError` | Posts + pages share the namespace → 409 on collision |
-| `revalidate.ts` | `revalidateNewPost/Post/Page/Everything`, `warmCache` | Single source of cache invalidation (see Caching) |
-| `api.ts` | `ok`, `fail`, `logRequest`, `logError`, `requireOwner` | Every route calls `requireOwner()` first |
-| `taxonomy.ts` | `termSlug`, `resolveTerm` | Category/tag URL slug + reverse-resolve a slug to its display name (back-compat with raw pre-slug URLs) |
-| `wordpress-import.ts` | `parseWxr` | Pure WXR (.xml) → posts/pages (turndown HTML→MD); no I/O. `api/import/wordpress` persists via savePost/savePage |
-| `redirects.ts` / `redirect-path.ts` | `getRedirects`, `saveRedirect`, `deleteRedirect`, `clearRedirectForPath` / `normalizePath`, `isValidDestination` | User-managed 301/302 rows (`redirects` table). Resolved in `middleware.ts` (real HTTP redirect, edge-safe fetch — NOT `db()`). `redirect-path.ts` is pure + import-safe from the edge middleware. savePost/savePage auto-add a 301 on rename + clear a live slug's stale redirect |
-| `series.ts` / `series-order.ts` | `getSeriesForPost`, `getSeriesList`, `resolveSeries`, `getAllSeriesNames`, `updateSeries`, `reorderSeries` / `orderSeries`, `seriesEntries` (pure) | Post series = `series`+`series_order` columns (no table). Ordered public siblings for the `SeriesBox`; `/series/[slug]` listing; admin rename/remove/reorder. Pure order/grouping lives in `series-order.ts` (client/edge-safe — no db); `series.ts` re-exports it. Built on cached `getPublicPosts`/`getIndex` |
-| `subscribers.ts` / `mail.ts` / `newsletter-log.ts` | `addSubscriber`, `confirmSubscriber`, `unsubscribeByToken`, `getConfirmedSubscribers`, `listSubscribers` / `getSmtpConfig`, `saveSmtpConfig`, `sendMail`, `isMailConfigured` / `logSend`, `statsByEmail`, `statsByPost`, `recordOpen`, `newOpenToken` | Newsletter double opt-in (`subscribers` table, per-row token) + Nodemailer SMTP (config on `integration_keys`, server-only, env fallback). `sendMail` never throws — degrades when unconfigured — and is the ONE choke point that writes `newsletter_sends` (one row per email, every kind, success or failure) |
-| `broadcast.ts` / `comment-notify.ts` / `newsletter-email.ts` | `broadcastPosts`, `previewBroadcast` / `notifyReply` / `confirmEmail`, `broadcastEmail`, `replyEmail` | MANUAL broadcast only, one or MORE posts per send (several = ONE digest email, not one each); email HTML = table layout + inline styles; identity (palette + masthead logo) from `lib/email-brand.ts` `emailBrand(settings)`. Email logo = `settings.logoEmailUrl`, a PNG twin `renderLogo` emits beside the WebP web render (WebP is dead in Outlook); falls back to a mail-safe original, then to the site name as text. — the cron publishes but never emails; the owner picks a post in Admin → Newsletter, reviews the real HTML and presses send. Double-send guard reads the SEND LOG (not `broadcast_at`, which older posts carry from the retired auto-send); `force` overrides. Reply-notify: `after()` from the comment route emails the parent commenter. Email HTML = the pure escaped builders |
-| `rate-limit.ts` | `rateLimited`, `clientIp` | Shared in-memory per-IP sliding window; applied to public `track`/`search`/`mcp/register` (generous limits) |
-| others | `scheduled.ts` (`sweepScheduled`/`newlyLive` — future-dated published posts go live on time via cron), `footnotes.ts` (`prepareFootnotes`/`applyFootnotes` — `[^id]` refs+defs around marked, code-masked), `ua.ts` (coarse device/browser/os buckets — no raw UA), `video.ts` (video + Spotify/Apple Music iframe embeds), `paginate.ts`, `i18n.ts`, `admin-i18n.ts`, `og.ts`, `preview.ts`, `upload-client.ts`, `toc.ts`, `inline-md.ts`, `comment-tree.ts`, `image.ts`, `mime.ts`, `cdn.ts`, `safe-fetch.ts`, `settings-sanitize.ts`, `turnstile.ts`, `utils.ts` (`slugify`/`deriveExcerpt`/`escapeHtml`/`isPublicallyVisible`) | Pure/shared helpers |
+Full detail in [`docs/conventions.md`](./docs/conventions.md); the short form, because
+these are the ones broken by accident:
 
-## Caching — ISR pages + tagged DB reads, purge on save
-
-Two coordinated layers, both invalidated on every write so an edit is never stale. **Full
-mechanism + the *why* (and the old no-DB bug it replaced) → ARCHITECTURE.md "Request flow".**
-
-- Public pages export `revalidate = 3600`; `/[slug]` also has `generateStaticParams` (prerendered).
-  `db.ts` GET reads are cache-eligible + tagged `db`; writes are `no-store`. Pagination is
-  path-based (`/page/[n]`, `/category|tag/[slug]/page/[n]`; page 1 at the bare path).
-- Every admin write goes through `lib/revalidate.ts` (Invariant 1) — `freshenData()` then a `revalidatePath` superset; `Everything` (settings/taxonomy/media-delete/Clear) also `warmCache()`.
-- **GOTCHA — admin LIVE reads need `fetchCache = 'force-no-store'`, NOT just `dynamic =
-  'force-dynamic'`.** `db()` GET reads set an explicit `next:{revalidate,tags:['db']}` which
-  `force-dynamic` does NOT de-cache — so a tagged read stays in the 1h Data Cache and shows STALE
-  rows after an OUT-OF-BAND mutation that doesn't purge tag `db` (MCP/OAuth token mints, cron backup
-  state). Set `fetchCache = 'force-no-store'` on the `/admin` layout AND the owner-only list API
-  routes not under `/admin` (`api/mcp/tokens`, `api/files`, `api/media`, `api/media/unused`,
-  `api/posts/[slug]/revisions`, `api/backup`). (Caused "token list missing" + the 1.0.11–1.0.13 bug.)
-- **DO NOT** set `db()` GET reads to `no-store` (kills ISR) or enable `cacheComponents: true`; keep every write going through `revalidate.ts`.
-
-## Rendering — `src/app/(blog)/[slug]/page.tsx`
-
-- `revalidate = 3600` + `generateStaticParams` (all slugs) + `dynamicParams`. Reads `getPost` +
-  `getPage` (shared `/{slug}` namespace) + `getMedia` (the `<picture>` set). Admin `/admin/*` +
-  search/preview/og are dynamic.
-- **Taxonomy URLs use the SLUGIFIED term** (`lib/taxonomy.ts`): links call `termSlug(term)`, the
-  `category|tag/[slug]` routes call `resolveTerm(...)` → `notFound()` if none. New taxonomy
-  link/route MUST go through these (never hand-encode the name).
-
-## Conventions (HARD RULES)
-
-- Max 400 lines per file. No `any` (use `unknown` + narrowing). Every API handler: time + log the
-  request, try/catch with logged errors; only `AUTHORIZED_EMAIL` reaches `/admin`; all write/delete
-  routes owner-gated server-side via `requireOwner()` (Invariant 4).
-- **Public UI colours come ONLY from theme tokens** — never hardcode `neutral-*`/`white`/`black`/a
-  hex. **ONE typeface + NO hardcoded sizes everywhere** (`grep -rE "font-mono|text-\[" src` and
-  public `text-(sm|lg|xl…)` must stay clean). **One divider style** (the global `<hr>`); never
-  ALL-CAPS in shipped UI. Repeated chrome shares ONE class constant. *Full detail →
-  `docs/conventions.md`* (typography, header alignment, layout, divider).
-- UI text → `src/locales/` only, all 6 languages in sync (en default, vi/de/ja/zh/ko). Code /
-  comments / identifiers / filenames / commits → English. No hardcoded Vietnamese in `lib/` or
-  `api/` (components only). *Add-a-language / add-a-string steps → `docs/conventions.md`.*
-- **On any behaviour change, update the matching doc in the SAME change** (Working principle #3):
-  CLAUDE.md (rules), the relevant `docs/*`, ARCHITECTURE.md (why), CHANGELOG.md, README.md (versioning
-  + release steps → `docs/conventions.md`).
-- **Do NOT read CHANGELOG.md while coding/debugging** — it's append-only at release time; its history
-  is never needed to fix or understand code.
-
-## Per-area docs (`docs/`)
-
-Read on demand — the DEBUG ROUTER routes to each: `conventions` (typography, header align, layout,
-i18n, scripts, releases) · `features` (Trash, search/ToC/related, editor, dashboards, settings) ·
-`admin-redesign-2026-07` (admin visual contract) · `worklog-2026-07-13` (complete redesign/deploy record) ·
-`seo-pwa` (SEO, feeds, OG, region, PWA) · `mcp` (server, tokens, OAuth) · `backups` (Drive, cron) ·
-`performance` (resource-loading law: font preload, CSS split, island JS) ·
-`agent-ready` (markdown negotiation, .well-known discovery, Content-Signal, the /.well-known proxy rule).
+- **Max 400 lines per file. No `any`** (use `unknown` + narrowing).
+- Every API handler times and logs its request, try/catch with logged errors, and calls
+  `requireOwner()` first if it writes ([invariant 4](./docs/invariants.md)).
+- **Public UI colours come ONLY from theme tokens.** Never a hardcoded `neutral-*`, `white`,
+  `black` or hex. ONE typeface, no hardcoded sizes, one divider style, never ALL-CAPS.
+- UI text → `src/locales/` only, all 6 languages in sync. Code, comments, identifiers,
+  filenames, commits and docs → English. No hardcoded Vietnamese in `lib/` or `api/`.
+- **Behaviour change → update its doc in the same commit.** Rules to `docs/`, decisions to
+  `docs/decisions/` (append-only), what happened to `state/WORKLOG.md`.
+- **Do NOT read CHANGELOG.md while coding.** It is append-only at release time and its
+  history is never needed to fix or understand code.
 
 ## Next.js 16
 
-`params`/`searchParams` are async; use `PageProps<…>`/`RouteContext<…>`. DB-read cache rules → Caching
-(`no-store` + `cacheComponents:true` forbidden). Unfamiliar API → read `node_modules/next/dist/docs/` (`AGENTS.md`).
+`params`/`searchParams` are async; use `PageProps<…>`/`RouteContext<…>`. DB-read cache rules
+→ [`docs/data-layer.md`](./docs/data-layer.md) (`no-store` + `cacheComponents:true`
+forbidden). Unfamiliar API → read `node_modules/next/dist/docs/` (`AGENTS.md`).
