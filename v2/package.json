@@ -26,15 +26,19 @@
     "@supabase/postgrest-js": "^2.110.8",
     "@types/bun": "latest",
     "@types/nodemailer": "^8.0.1",
+    "@types/turndown": "^5.0.6",
     "typescript": "^5.9.0"
   },
   "dependencies": {
+    "fast-xml-parser": "^5.10.1",
     "hono": "^4.12.32",
     "marked": "18.0.5",
     "nodemailer": "^9.0.3",
     "qrcode-generator": "^2.0.4",
     "satori": "^0.29.0",
     "sharp": "^0.35.3",
-    "shiki": "4.2.0"
+    "shiki": "4.2.0",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }

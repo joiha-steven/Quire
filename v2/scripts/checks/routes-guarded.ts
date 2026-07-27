@@ -30,6 +30,7 @@ const PUBLIC_WRITES = new Map<string, string>([
   ['/api/auth/enrol', 'first-run TOTP enrolment. Same pending ticket.'],
   ['/api/auth/enrol/done', 'acknowledging the recovery codes, which is where the first session is issued. Requires a ticket whose enrolment actually completed.'],
   ['/api/auth/logout', 'ending a session. Refusing this to an expired session would be perverse.'],
+  ['/api/cron', 'called by an external scheduler that has no session. Authorised by CRON_SECRET as a bearer token when one is set.'],
 ])
 
 type Finding = { file: string; line: number; method: string; path: string }
