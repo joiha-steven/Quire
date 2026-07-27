@@ -1,0 +1,128 @@
+// The admin dashboard's whole-site figures, ported from the `analytics_summary` plpgsql
+// function.
+//
+// The original was ONE Postgres call building a jsonb object out of a dozen scalar
+// subqueries. Here it is a dozen small statements against `analytics.db`, each of which
+// uses an index. That is fine at the present volume and is the shape 01-schema.md chose;
+// if `analytics_events` ever passes ~2 million rows and this takes more than 300 ms, the
+// answer is a daily rollup table maintained by the flush, not a cleverer query.
+
+import { analyticsQuery } from '@/store/query'
+import { bucketRanges, type Bucket } from '@/analytics/buckets'
+import {
+  channels, dailySeries, depthBuckets, engagement, facet, topCountries, topReferrers,
+  windowCounts,
+} from '@/analytics/aggregate'
+import { EMPTY_SUMMARY, reportTz, type AnalyticsSummary, type TopPage } from '@/analytics/types'
+
+export type { Bucket }
+
+const { all } = analyticsQuery
+
+/** Visitors who viewed exactly one page in the window (a bounce-ish signal). */
+function singlePageVisitors(since: number): number {
+  return all<{ n: number }>(
+    `select count(*) as n from (
+       select visitor from analytics_events where created_at >= $since
+        group by visitor having count(*) = 1)`,
+    { since },
+  )[0]?.n ?? 0
+}
+
+/** Visitors in the window who had also been seen before it. */
+function returningVisitors(since: number): number {
+  return all<{ n: number }>(
+    `select count(distinct e.visitor) as n from analytics_events e
+      where e.created_at >= $since
+        and exists (select 1 from analytics_events p
+                     where p.visitor = e.visitor and p.created_at < $since)`,
+    { since },
+  )[0]?.n ?? 0
+}
+
+/**
+ * Busiest pages, with their read depth and dwell.
+ *
+ * The original ran two correlated subqueries per returned path. Here the top N come first
+ * and their engagement is fetched in one grouped read keyed by that list, which is the
+ * same numbers with one round of work instead of 2N.
+ */
+function topPages(since: number, limit: number): TopPage[] {
+  const pages = all<{ path: string; views: number; visitors: number }>(
+    `select path, count(*) as views, count(distinct visitor) as visitors from analytics_events
+      where created_at >= $since group by path order by views desc limit $limit`,
+    { since, limit },
+  )
+  if (pages.length === 0) return []
+  const depth = new Map(
+    all<{ path: string; depth: number | null; dwell: number | null }>(
+      `select path, avg(depth) as depth, avg(dwell_ms) as dwell from analytics_scroll
+        where created_at >= $since and path in (select value from json_each($paths))
+        group by path`,
+      { since, paths: JSON.stringify(pages.map((p) => p.path)) },
+    ).map((r) => [r.path, r]),
+  )
+  return pages.map((p) => ({
+    path: p.path,
+    views: p.views,
+    visitors: p.visitors,
+    avgDepth: Math.round(depth.get(p.path)?.depth ?? 0),
+    avgDwellMs: Math.round(depth.get(p.path)?.dwell ?? 0),
+  }))
+}
+
+/**
+ * Aggregated stats for the last `days` days. `bucket` controls the chart grain (hour for
+ * 24h, day for a week/month, month for a year). Empty on failure: the dashboard degrades
+ * to zeroes rather than erroring, as it did before.
+ */
+export async function getAnalytics(days: number, bucket: Bucket = 'day', topN = 10): Promise<AnalyticsSummary> {
+  try {
+    const now = Date.now()
+    const since = now - days * 86_400_000
+    const prevSince = since - days * 86_400_000 // the window just before `since`
+
+    const current = windowCounts(since, null, null)
+    const previous = windowCounts(prevSince, since, null)
+    const { avgReadDepth, avgDwellMs } = engagement(since, null)
+
+    return {
+      totalViews: current.views,
+      uniqueVisitors: current.visitors,
+      avgReadDepth,
+      avgDwellMs,
+      singlePageVisitors: singlePageVisitors(since),
+      topPages: topPages(since, topN),
+      daily: dailySeries(bucketRanges(since, now, bucket, reportTz()), null),
+      prevViews: previous.views,
+      prevVisitors: previous.visitors,
+      returningVisitors: returningVisitors(since),
+      topReferrers: topReferrers(since, topN, null),
+      topCountries: topCountries(since, topN, null),
+      channels: channels(since),
+      devices: facet(since, 'device', topN),
+      browsers: facet(since, 'browser', topN),
+      systems: facet(since, 'os', topN),
+      depthBuckets: depthBuckets(since, null),
+    }
+  } catch (error) {
+    console.error(`[ERROR] analytics.getAnalytics: ${(error as Error).message}`)
+    return EMPTY_SUMMARY
+  }
+}
+
+/** All-time total views per path (`{ "/slug": 12, … }`) for the content tables. */
+export async function getViewTotals(): Promise<Record<string, number>> {
+  try {
+    const out: Record<string, number> = {}
+    for (const r of all<{ path: string; c: number }>(
+      `select path, count(*) as c from analytics_events group by path`,
+    )) {
+      out[r.path] = r.c
+    }
+    return out
+  } catch (error) {
+    console.error(`[ERROR] analytics.getViewTotals: ${(error as Error).message}`)
+    return {}
+  }
+}

@@ -3,6 +3,32 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1: analytics, and the six SQL functions are gone
+
+All six plpgsql functions reimplemented in TypeScript. **401 tests pass, 0 fail.**
+
+The hard part was never the aggregation, it was `date_trunc(bucket, created_at at time
+zone tz)`. SQLite has no timezone database, and a fixed offset is wrong in general because
+a DST day is 23 or 25 hours long, so stepping by 86,400,000 ms slides every later bucket by
+an hour. Boundaries are now computed in TypeScript with `Intl.DateTimeFormat` and handed to
+SQLite as explicit `[lo, hi)` pairs, which leaves the counting where the indexes are.
+
+**That code had a real bug and its own test found it.** The first formatter used
+`hour12: false`, under which a local midnight renders as hour "24" of the PREVIOUS day.
+That is exactly the instant day and week buckets start on, so the computed offset was a full
+day out and the fall-back day came back 23 hours long instead of 25. `hourCycle: 'h23'`
+fixes it; 16 tests now cover both transitions, Monday week starts, and the label formats.
+
+Two more things worth naming. Channels are folded in TypeScript over distinct
+(host, visitor) pairs, because the obvious shape (per-host counts summed by channel)
+double-counts anyone who arrived from two hosts in the same channel. And
+`analytics_facet`'s exception turned out unnecessary: three complete SQL literals picked
+from a fixed map do the job, so the no-assembled-SQL rule holds everywhere with no
+exception at all.
+
+Invariant 7 exists now: analytics writes buffer and flush every 2 seconds or 200 rows, in
+one transaction, never from a handler.
+
 ## 2026-07-27 — M1: newsletter and the small modules. Only analytics left
 
 `nodemailer` joins `sharp` as the second runtime dependency, then `activity`, `series`,

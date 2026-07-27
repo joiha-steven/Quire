@@ -1,0 +1,106 @@
+// Privacy-light, self-hosted page-view recording.
+//
+// WHY this design:
+// - No cookies, no localStorage, no third party. A visitor is identified only by a salted
+//   hash of (IP + user-agent), so NO raw IP / PII is ever stored — just an opaque token
+//   used to count uniques. The salt never leaves the server, so the token is stable enough
+//   for accurate unique counts and useless outside this instance.
+// - One row per view, plus two privacy-light source fields: the external referrer HOST
+//   only (never the full URL/path/query; NULL for direct/internal) and the ISO country
+//   code from the edge. No IP, no fingerprint.
+// - Bots are dropped by user-agent. Admin/API paths are never tracked, and the owner's own
+//   visits are excluded by the route.
+// - Retention: events are kept FOREVER (no purge) — the owner wants the full history.
+// - Scroll depth: a separate `analytics_scroll` table holds one "% of page reached before
+//   leaving" sample per post-leave, so a missed pagehide loses a depth sample but never
+//   a view.
+//
+// Writes go through the buffer (Invariant 7), never straight to the database. The frozen
+// tree inserted inline and carried a retry for a pre-migration schema; there is one schema
+// here, so that fallback is gone.
+
+import { createHash } from 'node:crypto'
+import { parseUa } from '@/analytics/ua'
+import { bufferEvent, bufferScroll } from '@/analytics/buffer'
+import { nowMs } from '@/store/db'
+
+// Common crawlers / preview bots — don't count them as readers.
+const BOT_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|vkshare|whatsapp|telegram|discord|headless|lighthouse|pagespeed|gtmetrix|monitor|uptime|curl|wget|python-requests|axios|node-fetch|gptbot|oai-searchbot|chatgpt|claudebot|claude-web|anthropic|ccbot|perplexity|bytespider|amazonbot|google-extended|meta-external|scrapy|semrush|ahrefs|dataforseo/i
+
+export function isBot(ua: string): boolean {
+  return !ua || BOT_RE.test(ua)
+}
+
+// Stable per-visitor token: salted hash of IP + UA. The salt never leaves the
+// server, and the raw IP/UA are discarded — only this 16-byte hex is stored.
+function visitorHash(ip: string, ua: string): string {
+  const salt = process.env.AUTH_SECRET ?? 'quire'
+  return createHash('sha256').update(`${salt}|${ip}|${ua}`).digest('hex').slice(0, 32)
+}
+
+// Normalize to a bare, bounded pathname (no query/hash). Returns null for paths
+// we never track (admin, api) so the caller can skip cheaply.
+export function normalizePath(raw: string): string | null {
+  let p = (raw || '').split('?')[0]!.split('#')[0]!.trim()
+  if (!p.startsWith('/')) return null
+  if (p.startsWith('/admin') || p.startsWith('/api')) return null
+  if (p.length > 1) p = p.replace(/\/+$/, '') // strip trailing slash (keep "/")
+  return p.slice(0, 512) || '/'
+}
+
+// Record one page view. Never throws (analytics must not break a page load).
+// referrerHost = external referrer host only (no path/query; '' = direct/internal);
+// country = ISO-3166 alpha-2 from the edge. Both are privacy-light and best-effort.
+export async function recordView(
+  rawPath: string,
+  ip: string,
+  ua: string,
+  referrerHost = '',
+  country = '',
+): Promise<void> {
+  try {
+    if (isBot(ua)) return
+    const path = normalizePath(rawPath)
+    if (!path) return
+    const { device, browser, os } = parseUa(ua)
+    bufferEvent({
+      path,
+      visitor: visitorHash(ip, ua),
+      referrerHost: referrerHost || null,
+      country: country || null,
+      device,
+      browser,
+      os,
+      createdAt: nowMs(),
+    })
+  } catch (error) {
+    console.error(`[ERROR] analytics.recordView: ${(error as Error).message}`)
+  }
+}
+
+// Record one scroll-depth sample (0-100, % of page reached before leaving) plus an
+// optional dwell time (ms on the page).
+export async function recordScroll(
+  rawPath: string,
+  depth: number,
+  ip: string,
+  ua: string,
+  dwellMs?: number,
+): Promise<void> {
+  try {
+    if (isBot(ua)) return
+    const path = normalizePath(rawPath)
+    if (!path) return
+    bufferScroll({
+      path,
+      depth: Math.max(0, Math.min(100, Math.round(depth))),
+      dwellMs: typeof dwellMs === 'number' && isFinite(dwellMs)
+        ? Math.max(0, Math.min(86_400_000, Math.round(dwellMs)))
+        : null,
+      visitor: visitorHash(ip, ua),
+      createdAt: nowMs(),
+    })
+  } catch (error) {
+    console.error(`[ERROR] analytics.recordScroll: ${(error as Error).message}`)
+  }
+}

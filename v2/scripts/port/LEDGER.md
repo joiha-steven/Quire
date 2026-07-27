@@ -140,6 +140,41 @@ unrelated key on that shared row (a Turnstile site key is enough) would come bac
 having been touched, and nothing in the UI would explain why. The column is nullable again
 and `news/mail.test.ts` has the regression case, named after the bug.
 
+## Rewritten, not moved (M1 analytics and the six SQL functions, 2026-07-27)
+
+| Destination | From | Notes |
+|---|---|---|
+| `analytics/channel.ts` | `analytics_channel(host)` | The three regexes copied verbatim, `~*` becoming a case-insensitive test. Pure, so the one judgement call in the SQL is now directly testable |
+| `analytics/buckets.ts` | `date_trunc(bucket, created_at at time zone tz)` | Boundaries computed in TypeScript, see below |
+| `analytics/buffer.ts` | new | Invariant 7: the flush buffer, 2 s or 200 rows |
+| `analytics/record.ts` | `analytics.ts` (write half) | Buffered instead of inline; the pre-migration retry is gone, there is one schema |
+| `analytics/aggregate.ts` | shared subqueries | Each helper holds two complete literals rather than one with an optional predicate |
+| `analytics/summary.ts` | `analytics_summary` | One plpgsql function becomes a dozen indexed statements |
+| `analytics/page.ts` | `analytics_page` | The same helpers with a path filter, so the two can no longer disagree about what "unique visitors" means |
+| `analytics/summary.ts` (`getViewTotals`) | `analytics_totals` | One GROUP BY |
+
+**`analytics_facet` did not need its exception.** 01-schema.md reserved "the one place
+allowed to assemble SQL from a variable" for the facet column name. Three complete literals
+selected from a fixed map do the same job, so the exception is unused and the no-assembled-SQL
+rule now holds everywhere without one.
+
+**Channels are folded in TypeScript over distinct (host, visitor) pairs.** SQLite has no
+regex and `bun:sqlite` has no user-defined functions. The tempting shape, per-host visitor
+counts summed by channel, DOUBLE-COUNTS anyone who arrived from two hosts in the same
+channel; the plpgsql version avoided that by grouping on the function's result, and the
+fold here does too. Pinned by a test.
+
+**A real bug in the timezone code, caught by its own test.** The first `Intl.DateTimeFormat`
+used `hour12: false`, under which a local midnight renders as hour "24" of the PREVIOUS day.
+That is exactly the instant day and week buckets start on, so the computed zone offset was a
+full day out and the fall-back day came back 23 hours long instead of 25. Fixed with
+`hourCycle: 'h23'`; 16 tests cover both DST transitions, Monday week starts, and the
+`to_char` label formats.
+
+**Empty buckets are still dropped**, matching `group by date_trunc(...)`. Emitting explicit
+zeros would be a better chart and the boundaries are right there to do it, but it changes
+what the admin receives, so it belongs next to the component that renders it.
+
 ## Moved, then pulled back out
 
 | File | Why |
@@ -155,4 +190,4 @@ and `news/mail.test.ts` has the regression case, named after the bug.
 | `gdrive`, `backup`, `backup-state` | Google Drive replaced by litestream (parity exception 1) |
 | `image`, `highlight`, `wordpress-import`, `well-known` | Need npm dependencies (`sharp`, `shiki`, `turndown`, MCP SDK). Land with their module |
 | `upload-client` | Browser-side; belongs to the admin SPA |
-| `analytics`, `og`(db parts), `mcp/*` | The last `db()` call sites. `analytics` carries the six SQL functions (01-schema.md section 3) and is the largest remaining piece of M1 |
+| `og`(db parts), `mcp/*` | The last `db()` call sites |
