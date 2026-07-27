@@ -165,12 +165,68 @@ they are the shape Invariant 3 stores: media is keyed on `path`, not `url`, and 
 must live under `media/`, because that is the prefix `usedMediaKeys` scans content for. A
 fixture that misses it makes the `in_use` guard look broken when it is fine.
 
+## M3: the remaining API surface (2026-07-28)
+
+| Destination | From | Routes |
+|---|---|---|
+| `web/admin/uploads.ts` | `app/api/{media,files}/**` | 13 |
+| `web/admin/news.ts` | `app/api/{mail,broadcast,subscribers,comments,integrations}/**` | 11 |
+| `web/admin/ops.ts` | `app/api/{cron,health,preview-link,import}/**` | 4 |
+| `web/admin/mcp.ts` | `app/api/mcp/{authorize,token,register,tokens}`, `.well-known/*` | 6 + 2 |
+| `import/wordpress.ts` | `lib/wordpress-import.ts` | the WXR parser, unchanged |
+| `mcp/{auth,consent}.ts` | `lib/mcp/{auth,consent}.ts` | the thin OAuth layer |
+
+**55 of 61 routes moved.** Details kept because each has a reason, not because the diff
+was mechanical:
+
+- The media library refuses the WHOLE batch on one bad type. A partial upload leaves the
+  owner working out which of twenty images landed.
+- Several media and file routes return the AUTHORITATIVE list after the write rather than
+  an acknowledgement. The grid is on screen while the owner deletes.
+- `GET /api/mail` returns `hasPass`, never `pass`, and `POST` patches field by field — so
+  saving the form without retyping the password does not wipe it, which is every save,
+  because the form cannot show it.
+- The test send uses a deliberately FAKE token. A test must look exactly like the real
+  thing and be completely inert to click.
+- A failed test send is 502, not 500. That is what tells the owner to check SMTP rather
+  than report a bug.
+- `/api/broadcast` takes REPEATED `?slug=`: several posts go out as one digest, so the
+  preview takes the same list the send will.
+- The cron bearer check is constant-time, and `timingSafeEqual` throws on a length
+  mismatch — so a wrong-length header would be a 500 rather than a 401 without the length
+  compare in front of it. There is a test for that.
+- The health probe checks the storage directory is WRITABLE, not merely present. A full
+  disk and a read-only mount both pass an existence check, and both are what a probe is for.
+
+### Two substitutions in the MCP OAuth layer
+
+Both forced by next-auth leaving, both recorded in `06-auth.md`:
+
+1. The code-signing secret was `MCP_OAUTH_SECRET || AUTH_SECRET`. The fallback is now a
+   generated per-purpose secret. Codes live 300 seconds, so rotating it is not a migration
+   concern — and the TOKEN hash format, which **is** one (00-plan.md risk register), is
+   untouched.
+2. The consent CSRF token was keyed to the next-auth session JWT; it is now keyed to the
+   stored session ID (the SHA-256 of the cookie token). The property is the same or better:
+   an attacker who can make the browser send the cookie still cannot READ it, so cannot
+   derive the ID.
+
+The account-takeover path the consent step exists to close is unchanged and now has a test
+named after it, plus one proving a CSRF token minted for one session is refused from
+another.
+
+### New in 2.0
+
+- Cron also purges expired sessions. They expire but their rows do not remove themselves,
+  and the request path deliberately only deletes the one it already holds.
+- `turndown-plugin-gfm` ships no types, so there is a hand-written 12-line declaration
+  rather than a dependency on a community `@types` package that has to survive a decade.
+
 ## Not moved yet
 
-40 of the 61 API routes: `media/*`, `files/*`, `mail`, `mail/test`, `broadcast`,
-`subscribers*`, `comments/[id]`, `comments/keys`, `backup/*`, `mcp/*`, `cron`, `health`,
-`search/index`, `import/wordpress`, `integrations/cloudflare`, `media/debug`,
-`media/unused`, `preview-link`.
-
-Plus `well-known`, the admin SPA itself, and `Turnstile` — the last unported island, which
-lands with the comment form's configuration.
+- **`backup/*` (6 routes)** and `lib/{backup,gdrive,backup-state}.ts`. The Google Drive
+  round trip cannot be exercised without a real OAuth client and refresh token.
+- **The MCP transport (`/api/mcp`) and its tools.** `mcp-handler` is Next-specific, so
+  Streamable HTTP has to be wired to the SDK directly. A rewrite, not a port.
+- **The admin SPA itself**, and `Turnstile` — the last unported island, which lands with
+  the comment form's configuration.

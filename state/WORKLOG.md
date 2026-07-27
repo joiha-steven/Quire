@@ -3,6 +3,31 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — M3: 55 of 61 API routes
+
+**900 tests, `check:all` green.** Four more commits: `605d00e` (media and files),
+`5ea49ed` (newsletter, moderation, integration keys), `96399e7` (cron, health, preview
+link, WordPress import), `d1b2638` (the MCP OAuth layer).
+
+**The MCP consent step is the one that mattered.** `/api/mcp/register` is public, so an
+attacker can register a client pointing at their own host and phish the owner into
+authorizing it — the redirect allowlist passes, because it really is registered for that
+client. Only consent plus a session-bound CSRF token stops the code being issued to them.
+Both now have a test named after the attack.
+
+Two substitutions forced by next-auth leaving: the OAuth code-signing secret falls back to
+a generated one instead of `AUTH_SECRET`, and the consent CSRF token is keyed to the stored
+session ID rather than a JWT. The MCP **token** hash format is untouched, which is the part
+the risk register cares about.
+
+Three test fixtures were wrong before the code was, and all three are worth knowing: media
+is keyed on `path` under `media/`, comments have `author_name`/`content`, and there is no
+`scheduled` status — a scheduled post is a PUBLISHED one with a future date.
+
+**Where this stops.** What remains needs things this machine does not have: the Drive
+backup needs real OAuth credentials, the admin SPA needs a browser, and the MCP transport
+is a rewrite rather than a port because `mcp-handler` is Next-specific.
+
 ## 2026-07-28 — M3: the first 21 API routes
 
 **827 tests, `check:all` green.** `c538a4b` (posts, pages, revisions) and `70bd33d`
