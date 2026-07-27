@@ -20,7 +20,11 @@ const CLAUDE_MD_MAX = 170
 const FILE_MAX = 700
 
 const isMd = (p) => p.endsWith('.md')
-const skip = (p) => /(^|[\\/])(node_modules|\.next|\.git)[\\/]/.test(p)
+// `v2/golden/corpus/` holds markdown FIXTURES, not documents. Their links point at
+// deliberately fake images and dangerous schemes, because that is exactly what they test.
+const skip = (p) =>
+  /(^|[\\/])(node_modules|\.next|\.git)[\\/]/.test(p) ||
+  /(^|[\\/])v2[\\/]golden[\\/]corpus[\\/]/.test(p)
 
 // `state/audits/` and `state/reports/` are WRITE-ONLY: a snapshot records what was true
 // on its date and is never retro-edited, so its links are historical and are allowed to

@@ -3,6 +3,33 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2 started: the renderer, and the byte-identical gate HELD
+
+`highlight` and `PostContent` ported. **541 tests, `check:all` green.** The article-body
+gate is met: **46/46 golden fixtures byte-identical to Quire 1.x**, including the ones that
+run Shiki.
+
+`PostContent` was already pure string manipulation with a React wrapper at the end, so the
+only change is the return value: a server component ending in `dangerouslySetInnerHTML`
+becomes a function returning the HTML string. Its 22 tests moved with only the two-line
+`render()` helper adapted.
+
+The reference HTML was produced by **running the frozen renderer**, not written by hand:
+`golden/capture-corpus.ts` imports the frozen component by relative path and runs it under
+Bun, writing nothing to `../src`. Hand-written expectations would only test that the port
+was transcribed consistently with itself.
+
+45 fixtures cover the 03-golden.md list, including the ones that are also security
+assertions: raw HTML escaped (Invariant 5), and `javascript:`/`data:`/`vbscript:` hrefs
+dropped, one of them tab-obfuscated.
+
+**A mistake worth recording:** `bun add` was run with the working directory at the repo
+root, so it edited the FROZEN tree's `package.json`, bumping `marked` and `shiki`. Reverted
+with `git checkout`. It surfaced something that matters, though: the frozen tree resolves
+`marked` 18.0.5 and `shiki` 4.2.0, older than what `bun add` picks, and v2 now pins those
+EXACT versions with no caret. A byte comparison against a floating dependency fails on a
+patch release and teaches everyone to ignore it.
+
 ## 2026-07-27 — M1 complete: the MCP store and `import-v1`
 
 `mcp/tokens`, `mcp/clients` and `mcp/used-codes` moved, then `import-v1` built.

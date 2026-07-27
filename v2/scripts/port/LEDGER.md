@@ -229,6 +229,49 @@ production is not a test environment.
 `--out`, because `openDatabases` owns both filenames and the server and the importer must
 not disagree about where they are. The spec now says so.
 
+## M2 begins: the renderer, and the byte-identical gate held (2026-07-27)
+
+| Destination | From | Change |
+|---|---|---|
+| `render/highlight.ts` | `highlight.ts` | Same Shiki call, now behind the content-addressed `render_cache` |
+| `render/post-content.ts` | `components/blog/PostContent.tsx` | Every transform byte-for-byte the same. The ONLY change is the return: a React server component ending in `dangerouslySetInnerHTML` becomes a function returning the HTML string |
+| `render/post-content.test.ts` | `components/blog/post-content.test.ts` | 22 assertions unchanged; only the two-line `render()` helper adapted |
+
+**`marked` and `shiki` are pinned to EXACT versions (18.0.5, 4.2.0), no caret**, matching
+what the frozen tree resolves. A byte comparison against a floating dependency fails on a
+patch release and teaches everyone to ignore it.
+
+### The golden harness
+
+45 hand-written markdown fixtures in `golden/corpus/`, covering the list in 03-golden.md:
+nested lists, lists containing code and tables, lazy continuation, setext headings,
+emphasis against Vietnamese diacritics and punctuation, intraword underscores, raw HTML
+(Invariant 5), `javascript:`/`data:`/`vbscript:` hrefs including a tab-obfuscated one,
+reference links with a missing target, footnotes defined before and after their reference,
+duplicates and orphans, GFM alignment and escaped pipes, task lists, three fence cases,
+hard breaks, entities, callouts, video URLs, image alignment and grids, a 900-character
+line, CRLF, a BOM, and a file with no trailing newline.
+
+**The reference HTML was produced by running the frozen renderer, not written by hand.**
+`golden/capture-corpus.ts` imports `../../src/components/blog/PostContent` by relative path
+and runs it under Bun; nothing in the frozen tree is written to. Hand-written expectations
+would only test that the port was transcribed consistently with itself, which is the thing
+least worth testing.
+
+**Result: 46/46 byte-identical**, including the fenced-code fixtures, which means Shiki's
+output through the new cache matches Shiki's output without it.
+
+`golden/v1/corpus/` is committed and is the CONTRACT. Regenerating it is a reviewed change:
+if 2.0 starts producing different markup, the fix is 2.0.
+
+### A mistake worth recording
+
+`bun add marked shiki hono` was run with the working directory at the repository root, so
+it edited the FROZEN tree's `package.json` and bumped `marked` 18.0.5 to 18.0.7 and `shiki`
+4.2.0 to 4.3.1. Reverted with `git checkout`. It also produced the useful fact above: the
+frozen tree pins older versions than `bun add` would pick, and matching them exactly is a
+precondition for the gate.
+
 ## Moved, then pulled back out
 
 | File | Why |
