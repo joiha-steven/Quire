@@ -19,6 +19,12 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 - [ ] **M4 — cutover**, then keep the frozen tree runnable for 3 to 6 months against a
       read-only copy so "did we lose something?" is answerable by comparison.
 
+- [ ] **Tighten `v2/tsconfig.json` after the port finishes.** It currently matches the
+      frozen tree exactly (`strict`, nothing beyond it). `noUncheckedIndexedAccess` was
+      tried during M1 and reverted: mid-port it turns a pure-motion diff into a
+      motion-plus-rewrite diff across every moved file, which is what the porting rule
+      exists to prevent. Turn it on as one reviewable pass once nothing is left to move.
+
 ## Deferred, with a reason
 
 - [ ] **Split `docs/features.md` (606 lines) into one spec per module** under `docs/specs/`.

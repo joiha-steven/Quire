@@ -9,16 +9,21 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
 
+    // `strict` matches the frozen tree exactly, ON PURPOSE. Turning on a stricter flag
+    // mid-port (noUncheckedIndexedAccess was tried first) turns a pure-motion diff into a
+    // motion-plus-rewrite diff across every moved file, which is what the porting rule in
+    // CLAUDE.md exists to prevent. Tightening is a separate, reviewable pass once the port
+    // is finished; tracked in state/TASKS.md.
     "strict": true,
-    "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
-    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "noEmit": true,
 
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] }
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src", "scripts"]
 }

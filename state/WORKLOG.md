@@ -3,6 +3,28 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1: 33 modules and 184 tests moved, suite green
+
+The slice ADR 0005 was betting on. 2,412 lines of pure logic plus 4,983 lines of locale
+data moved into `v2/`, and **184 tests pass under `bun test` from a suite written for
+vitest, without a single assertion touched.**
+
+Total edit cost: 46 import specifiers across 43 files. 28 were `@/lib/<name>` (2.0 has
+modules, not a `lib/` directory) and 18 repointed `from 'vitest'` to a local shim that maps
+vitest's call shapes onto `bun:test`. No module body and no test body changed.
+
+Two things went wrong and are worth keeping. The first `tsconfig.json` enabled
+`noUncheckedIndexedAccess`, which the frozen tree does not have; it produced ~20 errors in
+code that compiles cleanly at source, converting a pure-motion diff into a rewrite.
+Reverted, and tightening is now a task for after the port. The second: `prerender.ts` was
+copied into `server/` when it is browser code, which the DOM globals exposed immediately.
+Pulled back out and recorded, since it becomes part of `assets/js/core.js` in M2.
+
+`scripts/port/LEDGER.md` records every file moved, every file left behind with its reason,
+and the one test waiting on a dependency, so nothing can be dropped silently.
+
+Remaining typecheck errors: 11, every one tracing to the 6 modules not yet ported.
+
 ## 2026-07-27 — M1 started: Bun installed, SQLite schema live and tested
 
 Bun 1.3.14 installed via winget. Three assumptions checked against the real runtime before
