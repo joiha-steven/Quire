@@ -118,8 +118,59 @@ codebase where a hardcoded colour is the right answer.
 confirmation prompt always read empty and every scripted install failed on "They did not
 match".
 
+## M3: the first 21 API routes (2026-07-28)
+
+| Destination | From | Change |
+|---|---|---|
+| `web/admin/content.ts` | `app/api/{posts,pages}/**` | posts, pages, revisions |
+| `web/admin/site.ts` | `app/api/{taxonomy,series,redirects,settings,trash,activity,cache}/**` | the rest of the content-adjacent admin |
+
+Same paths, same request shapes, same status codes — including the two strings a client
+matches on rather than a status: `slug_taken` and `in_use:<n>`.
+
+They are materially shorter than what they replace, for three structural reasons and no
+cleverness: `requireOwner()` is a property of the router, `logRequest`/`logError` are
+middleware, and `revalidatePost(meta.slug, slug)` is `clearCache()`.
+
+**`app.onError(errorHandler())` replaces sixty-one copies of the same try/catch.** It logs
+to `activity_log` and returns a typed 500 **without** the exception message, which can
+carry a path, a SQL fragment or a token.
+
+**Where Invariant 1 removed real machinery.** `/api/settings` purged everything and then
+re-warmed several pages, because a cold ISR miss was expensive; a page now re-renders from
+SQLite in well under a millisecond, so warming is work done to avoid work that is already
+free. `/api/trash` revalidated selectively per kind and per action, and its media branch
+had to remember `revalidateEverything()` in two separate places.
+
+**`/api/cache/clear`** clears the Map and purges Cloudflare. The origin cache is already
+empty by then; what is left is the edge, which this server neither controls nor can
+re-render.
+
+### The gate leaked, and the fix is the point
+
+`ownerRouter()` first applied `requireOwner()` as `use('*')` on a sub-app. `app.route('/',
+sub)` copies that into the parent as `/*`, so **every public page on the site returned
+401.** Fifty-one tests failed and not one of them said why.
+
+The gate is now attached per registration. Invariant 4 survives intact — protection is
+still a property of WHERE a route is registered, not a line inside the handler — without
+the blast radius. There is a test named after the leak, so a recurrence reads as one clear
+failure instead of fifty-one mysterious ones.
+
+`param()` throws on a name the route's path does not contain, so a typo becomes a logged
+500 rather than a lookup for the empty slug that quietly 404s and reads as missing data.
+
+**Two test fixtures were wrong before the code was**, and both are worth stating because
+they are the shape Invariant 3 stores: media is keyed on `path`, not `url`, and the key
+must live under `media/`, because that is the prefix `usedMediaKeys` scans content for. A
+fixture that misses it makes the `in_use` guard look broken when it is fine.
+
 ## Not moved yet
 
-`mcp/auth`, `mcp/consent`, `mcp/tools`, `mcp/tools-library`, `well-known`, and the 61 API
-routes. `Turnstile` is the last unported island and lands with the comment form's
-configuration.
+40 of the 61 API routes: `media/*`, `files/*`, `mail`, `mail/test`, `broadcast`,
+`subscribers*`, `comments/[id]`, `comments/keys`, `backup/*`, `mcp/*`, `cron`, `health`,
+`search/index`, `import/wordpress`, `integrations/cloudflare`, `media/debug`,
+`media/unused`, `preview-link`.
+
+Plus `well-known`, the admin SPA itself, and `Turnstile` — the last unported island, which
+lands with the comment form's configuration.

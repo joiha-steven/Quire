@@ -3,6 +3,26 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — M3: the first 21 API routes
+
+**827 tests, `check:all` green.** `c538a4b` (posts, pages, revisions) and `70bd33d`
+(taxonomy, series, redirects, settings, trash, activity, cache). Same paths, same shapes,
+same status codes — including `slug_taken` and `in_use:<n>`, which clients match on as
+strings rather than statuses.
+
+**The gate leaked and it is worth remembering how.** `ownerRouter()` applied
+`requireOwner()` as `use('*')` on a sub-app, and `app.route('/', sub)` copies that into the
+parent as `/*` — so every public page returned 401. Fifty-one tests failed and none said
+why. The gate is now attached per registration; Invariant 4 is intact and there is a test
+named after the leak.
+
+**Invariant 1 keeps paying.** `/api/settings` no longer purges-then-warms (a page
+re-renders from SQLite in under a millisecond, so warming avoids work that is already
+free), and `/api/trash` no longer revalidates per kind and per action.
+
+`app.onError()` replaces sixty-one try/catch blocks and returns a typed 500 without the
+exception message, which can carry a path, a SQL fragment or a token.
+
 ## 2026-07-28 — M3 begins: auth, and the gate that enforces Invariant 4
 
 **791 tests, `check:all` green.** Two commits: the auth core (`614f4c3`) and the sign-in
