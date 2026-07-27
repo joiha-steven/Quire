@@ -59,15 +59,49 @@ export function requireOwner(): MiddlewareHandler<OwnerEnv> {
   }
 }
 
+type Handler = (c: Context) => Response | Promise<Response>
+
 /**
- * A router group behind the gate. Mount API routes on the result and they are protected
- * by construction.
+ * A path parameter, as a string.
  *
- * The gate is applied at construction rather than left to the caller, so there is no
- * ownerRouter() that someone can create and then forget to guard.
+ * Hono infers `:slug` from the literal path when a handler is typed against it. These
+ * handlers are typed against a bare `Context` — the price of the wrapper below — so it
+ * cannot, and every `param()` reads as possibly undefined.
+ *
+ * It throws rather than defaulting to `''`, so a misspelled name becomes a logged 500
+ * instead of a lookup for the empty slug that quietly 404s and looks like missing data.
  */
-export function ownerRouter(): Hono<OwnerEnv> {
-  const router = new Hono<OwnerEnv>()
-  router.use('*', requireOwner())
-  return router
+export function param(c: Context, name: string): string {
+  const value = c.req.param(name)
+  if (value === undefined) throw new Error(`route parameter :${name} is not in this route's path`)
+  return value
+}
+
+/**
+ * A router group behind the gate. Register a route on it and it is protected; there is no
+ * way to register one that is not.
+ *
+ * The gate is attached PER REGISTRATION, not as `use('*')` on the sub-app. That is not a
+ * style choice: `app.route('/', sub)` copies the sub-app's middleware into the parent as
+ * `/*`, so a `use('*')` gate here applied to every public page on the site. Every route
+ * 401'd, which at least failed loudly — the same mistake in the other direction would have
+ * been a silent hole.
+ *
+ * The invariant survives intact, because the gate is still a property of WHERE the route
+ * is registered rather than a line inside the handler.
+ */
+export class OwnerRouter {
+  /** Exposed so the caller can `app.route('/', ownerRouter.routes)`. */
+  readonly routes = new Hono<OwnerEnv>()
+  private readonly gate = requireOwner()
+
+  get(path: string, handler: Handler): void { this.routes.get(path, this.gate, handler) }
+  post(path: string, handler: Handler): void { this.routes.post(path, this.gate, handler) }
+  put(path: string, handler: Handler): void { this.routes.put(path, this.gate, handler) }
+  patch(path: string, handler: Handler): void { this.routes.patch(path, this.gate, handler) }
+  delete(path: string, handler: Handler): void { this.routes.delete(path, this.gate, handler) }
+}
+
+export function ownerRouter(): OwnerRouter {
+  return new OwnerRouter()
 }

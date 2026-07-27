@@ -33,7 +33,8 @@ import { handlePreview } from '@/web/preview'
 import { handleSearch } from '@/web/search-api'
 import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
 import { getMailStatus } from '@/news/mail'
-import { requestLogger } from '@/web/api'
+import { errorHandler, requestLogger } from '@/web/api'
+import { contentRoutes } from '@/web/admin/content'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
@@ -98,6 +99,10 @@ export function createApp(): Hono {
   // Every request is timed and logged here rather than at the end of each handler. A rule
   // kept by remembering it is a rule that a route eventually forgets.
   app.use('*', requestLogger())
+
+  // ...and the same argument for errors: a handler may throw, and this is the one place
+  // that becomes a logged, typed 500.
+  app.onError(errorHandler())
 
   // Cached HTML routes go through here so the cache rule lives in ONE place.
   const cached = (key: string, render: () => Promise<string | null>) => async () => {
@@ -250,6 +255,14 @@ export function createApp(): Hono {
   app.post('/api/auth/enrol', handleEnrol)
   app.post('/api/auth/enrol/done', handleEnrolDone)
   app.post('/api/auth/logout', handleLogout)
+
+  // ----- the admin API --------------------------------------------------------
+  // Mounted at the root because each route already carries its full `/api/...` path, and
+  // `route()` here would prefix them a second time. Every one of these is behind
+  // `requireOwner()` by virtue of the router it was registered on, not by a check inside
+  // it (Invariant 4), and `check:routes` fails the build if one escapes.
+
+  app.route('/', contentRoutes().routes)
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot
