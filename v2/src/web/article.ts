@@ -74,6 +74,11 @@ export async function renderArticle(slug: string): Promise<string | null> {
       `<time datetime="${escapeAttr(post.date)}">${escapeHtml(formatDate(post.date, settings.language))}</time>`,
       post.readingMinutes ? `${post.readingMinutes} min` : '',
       terms(post.categories, 'category'),
+      // Desktop and tablet only, hidden by CSS on a narrow screen: two columns of type in
+      // a phone-width viewport is worse than one, not better.
+      settings.features.bookMode
+        ? `<button type="button" class="book-mode-toggle" data-book-open>${escapeHtml(s.bookMode)}</button>`
+        : '',
     ].filter(Boolean)
     meta = `<p class="meta">${bits.join(' · ')}</p>`
 
@@ -151,6 +156,9 @@ export async function renderArticle(slug: string): Promise<string | null> {
       commentBody: s.commentBody,
       commentSubmit: s.commentSubmit,
       commentError: s.commentError,
+      bookModePrev: s.bookModePrev,
+      bookModeNext: s.bookModeNext,
+      bookModeClose: s.bookModeClose,
     },
     scripts: scriptTag('core') + scriptTag('post'),
   }

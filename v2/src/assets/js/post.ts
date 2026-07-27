@@ -11,6 +11,7 @@
 // is why it also works with JavaScript switched off.
 
 import { backToTop } from './back-to-top'
+import { book } from './book'
 import { codeCopy } from './code-copy'
 import { comments } from './comments'
 import { lightbox } from './lightbox'
@@ -21,3 +22,4 @@ codeCopy()
 lightbox()
 toc()
 comments()
+book()

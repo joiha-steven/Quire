@@ -172,6 +172,29 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 .toc a:hover{color:var(--c-heading)}
 .toc a[aria-current]{color:var(--c-heading);font-weight:500}
 
+/* Book mode. Its OWN standard rather than the site theme: paper and ink, not the reader's
+   palette, and the same on a dark site as a light one. Carried over from the frozen tree.
+   The columns come from column-width, so the BROWSER paginates and turning a page is one
+   scrollLeft assignment rather than a measurement loop fighting the layout engine. */
+.book-mode-toggle{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-underline-offset:3px}
+.book-mode-toggle:hover{color:var(--c-heading);text-decoration:underline}
+@media (max-width:767px){.book-mode-toggle{display:none}}
+
+.book-overlay[open]{display:grid}
+.book-overlay{grid-template-rows:auto 1fr;width:100%;max-width:100%;height:100%;max-height:100%;
+  border:0;padding:0;background:#f9f4ec;color:#1a1714;font-family:var(--font-reading)}
+.book-overlay::backdrop{background:#f9f4ec}
+.book-bar{display:flex;align-items:center;justify-content:center;gap:1rem;padding:.75rem 1rem;
+  font-family:var(--font-chrome);font-size:var(--fs-small);color:#6b6257}
+.book-bar button{border:0;background:none;color:inherit;font-size:1.25rem;line-height:1;cursor:pointer}
+.book-bar button:hover{color:#1a1714}
+.book-close{margin-left:auto}
+.book-stage{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;padding:0 3rem 3rem}
+.book-flow{height:100%;column-width:24rem;column-gap:3.5rem;text-align:justify;hyphens:auto}
+.book-flow>*{break-inside:avoid-column}
+.book-flow img,.book-flow figure{max-width:100%;break-inside:avoid}
+
 /* Comments and sign-up. The FORM is server-rendered markup, so these rules apply with or
    without JavaScript; the comment thread is built by the island, so its rules only ever
    match once the script has run. */

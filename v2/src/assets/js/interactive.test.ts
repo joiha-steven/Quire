@@ -6,7 +6,6 @@
 
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { comments as mountComments } from './comments'
-import { listing } from './listing'
 import { search } from './search'
 import { subscribe } from './subscribe'
 import { page, stubFetch, useDom } from './test-dom'
@@ -277,100 +276,5 @@ describe('search overlay', () => {
     page('<article>x</article>', LABELS)
     expect(() => search()).not.toThrow()
     expect(document.querySelector('.search-overlay')).toBeNull()
-  })
-})
-
-describe('listing controls', () => {
-  const page1 = `<div class="listing"><article class="card">One</article></div>
-    <nav class="pager"><a rel="next" href="/page/2">Older</a></nav>`
-  const LABELS = { gridView: 'Grid view', listView: 'List view' }
-
-  const nextPage = (cards: string, next: string | null) =>
-    `<html><body><div class="listing">${cards}</div>${
-      next ? `<nav class="pager"><a rel="next" href="${next}">Older</a></nav>` : ''
-    }</body></html>`
-
-  /** Drive the observer directly rather than faking a scroll. */
-  function captureObserver(): { fire: () => void } {
-    const box = { fire: () => {} }
-    globalThis.IntersectionObserver = class {
-      constructor(cb: (entries: { isIntersecting: boolean }[]) => void) {
-        box.fire = () => cb([{ isIntersecting: true }])
-      }
-      observe(): void {}
-      disconnect(): void {}
-    } as unknown as typeof IntersectionObserver
-    return box
-  }
-
-  beforeEach(() => {
-    try { localStorage.clear() } catch { /* ignore */ }
-    delete document.documentElement.dataset.list
-  })
-
-  it('remembers grid across page loads', () => {
-    page(`<button data-grid-toggle></button>${page1}`, LABELS)
-    captureObserver()
-    listing()
-    expect(document.documentElement.dataset.list).toBe('list')
-
-    document.querySelector<HTMLButtonElement>('[data-grid-toggle]')!.click()
-    expect(document.documentElement.dataset.list).toBe('grid')
-    expect(document.querySelector('[data-grid-toggle]')!.getAttribute('aria-pressed')).toBe('true')
-
-    // A second page load, same reader.
-    page(`<button data-grid-toggle></button>${page1}`, LABELS)
-    listing()
-    expect(document.documentElement.dataset.list).toBe('grid')
-  })
-
-  it('hides the toggle on a page with no list', () => {
-    page('<button data-grid-toggle></button><article>a post</article>', LABELS)
-    captureObserver()
-    listing()
-    expect(document.querySelector<HTMLButtonElement>('[data-grid-toggle]')!.hidden).toBe(true)
-  })
-
-  it('appends the next page and follows its pager', async () => {
-    page(page1, { ...LABELS, infinite: '' })
-    const observer = captureObserver()
-    stubFetch(() => new Response(nextPage('<article class="card">Two</article>', '/page/3')))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(document.querySelectorAll('.listing .card').length).toBe(2)
-  })
-
-  it('removes the pager once there is nothing left to page to', async () => {
-    page(page1, { ...LABELS, infinite: '' })
-    const observer = captureObserver()
-    stubFetch(() => new Response(nextPage('<article class="card">Two</article>', null)))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(document.querySelector('.pager')).toBeNull()
-  })
-
-  it('LEAVES the pager alone when a fetch fails', async () => {
-    // The reader still has a working link, which is the whole reason the pager was not
-    // replaced by this in the first place.
-    page(page1, { ...LABELS, infinite: '' })
-    const observer = captureObserver()
-    stubFetch(() => new Response('nope', { status: 500 }))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(document.querySelector('.pager a[rel="next"]')).not.toBeNull()
-  })
-
-  it('does nothing at all when the owner has infinite scroll off', async () => {
-    page(page1, LABELS) // no `infinite` attribute
-    const observer = captureObserver()
-    const urls = stubFetch(() => new Response(nextPage('<article class="card">Two</article>', null)))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(urls.length).toBe(0)
-    expect(document.querySelectorAll('.listing .card').length).toBe(1)
   })
 })

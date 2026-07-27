@@ -550,3 +550,45 @@ after. Worth remembering when chaining a check behind a pipe.
 
 Still to come in M2: the left rail (the contents list currently sits above the article
 rather than in the gutter) and book mode.
+
+## M2: book mode, and the last island (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/assets/js/book.ts` | `BookMode` + `BookReader` + `book.css` | The two-column reader |
+| `scripts/checks/css-literal.ts` | new | A guard for a mistake made three times |
+
+**post.js 7,860 b / 8,000.** Close to the line, which is the budget doing its job.
+
+**The browser paginates, not this file.** The frozen `BookReader` measured the flow and
+computed spreads in JavaScript. Here the stage is `column-width: 24rem` and turning a page
+is one `scrollLeft` assignment: the browser has already laid the columns out. Re-implementing
+pagination is how this kind of feature becomes a measurement loop fighting the layout engine,
+and it is 171 lines of React replaced by about 60 of plain code.
+
+**The overlay reads a CLONE.** The original `.prose` stays in the document, so the page a
+search engine and a screen reader see is untouched by anything that happens in the reader.
+There is a test for it, because it is the sort of thing a later refactor would "simplify"
+by moving the node.
+
+**Book mode keeps its own standard rather than the site theme** — paper and ink, the same
+on a dark site as a light one. Carried over deliberately from the frozen tree.
+
+**A guard for a mistake made three times.** `public.css.ts` is ONE template literal, so a
+backtick anywhere inside it ends the string. It has now happened three times, always in a
+comment, always around a CSS property name that reads naturally in backticks. Twice the
+server refused to boot; the third time the type checker pointed at a line that looked fine.
+A comment saying "no backticks" was already in the file when it happened the third time,
+which is the argument for `check:css` existing instead.
+
+The check itself got it wrong first: anchored on the first backtick in the FILE, it reported
+the module's own doc comment and failed on a clean file. A guard that cries wolf gets
+switched off, so it is anchored on the declaration now, and it was proved by injecting a
+backtick and watching it fail at the right line.
+
+**Two more file-size splits**, both caught by the guard: `interactive.test.ts` passed 400
+lines, so the listing and book suites moved to `shell.test.ts`.
+
+**M2 is complete apart from the left rail.** The table of contents currently sits above the
+article rather than in the left gutter; `render/rail-css.ts` is ported and unused. That is a
+layout decision rather than a port, and it is the one thing left.

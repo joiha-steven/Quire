@@ -3,6 +3,27 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: book mode, and a guard for a mistake made three times
+
+**684 tests, `check:all` green.** post.js 7,860 b of 8,000.
+
+The browser paginates, not the island: the stage is `column-width` and turning a page is
+one `scrollLeft` assignment. The frozen `BookReader` measured the flow and computed spreads
+in JavaScript — 171 lines of React replaced by about 60 of plain code. The overlay reads a
+clone, so the page a search engine and a screen reader see is untouched, and there is a test
+for that because it is the sort of thing a later refactor would "simplify" away.
+
+**`check:css` now exists.** `public.css.ts` is one template literal, so a backtick anywhere
+inside it ends the string. That has happened three times, always in a comment, always around
+a CSS property name that reads naturally in backticks — twice the server refused to boot. A
+comment saying "no backticks" was already in the file the third time, which is the argument
+for a check instead of prose. The check got it wrong first (it reported the module's own doc
+comment and failed on a clean file) and was then proved by injecting a backtick and watching
+it fail at the right line.
+
+**M2 is complete apart from the left rail.** The contents list sits above the article rather
+than in the gutter; that is a layout decision, not a port.
+
 ## 2026-07-27 — M2: the table of contents
 
 **680 tests, `check:all` green.** The list is server-rendered markup with real anchors, so

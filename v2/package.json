@@ -15,8 +15,9 @@
     "test": "bun run build:assets && bun test",
     "typecheck": "tsc --noEmit && tsc --noEmit -p src/assets/js",
     "check:filesize": "bun scripts/checks/file-size.ts",
-    "check:all": "bun run build:assets && bun run typecheck && bun run check:filesize && bun test",
-    "import-v1": "bun scripts/import-v1.ts"
+    "check:all": "bun run build:assets && bun run typecheck && bun run check:filesize && bun run check:css && bun test",
+    "import-v1": "bun scripts/import-v1.ts",
+    "check:css": "bun scripts/checks/css-literal.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.11.1",
