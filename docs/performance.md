@@ -46,13 +46,17 @@ the optical range:
 | `literata-latin` | 80,660 | **37,560** | −53% |
 | `literata-vietnamese` | 16,928 | **8,652** | −49% |
 | `sourceserif-latin` | 83,240 | **36,160** | −56% |
-| Preload set, `vi` + Literata | **95 KB** | **45 KB** | −53% |
+| **`manhhung.me` preload set** (Literata, `vi`) | **97,588** | **46,212** | **−53%** |
 
-This is **conditional**: the site's current preset is Inter, which has no `opsz` axis, so
-today's critical path (`inter-latin.woff2`, 36 KB) is unchanged. The saving lands the
-moment the owner picks Literata or Source Serif 4 in Admin → Appearance. Inter itself has
-no headroom left worth taking: its GSUB is already trimmed and the remaining bulk is
-38 KB of GPOS kerning, which cannot go without visibly damaging the text.
+That last row is the whole point: production runs Literata with `language: vi`, so the LCP
+preload is `literata-latin` **plus** `literata-vietnamese`, and this change takes **51 KB**
+off the critical path.
+
+> ⚠️ **Measure production, not a local build.** `.env.local` points at a dev database whose
+> `settings` row differs from the live one — during this work a local build reported the
+> preset as Inter with `lang="en"`, which is not what the site serves. Anything that depends
+> on `settings` (font preset, language, palette, enabled features) must be read off the box:
+> `curl -s http://127.0.0.1:3000/ | grep -o -- '--font-reading:[^;}]*'`.
 
 Narrowing the range instead was measured and is not competitive (`12–24` still costs
 58 KB). 18 was chosen by rendering 14/18/24 side by side: body copy is 18px, so pinning at

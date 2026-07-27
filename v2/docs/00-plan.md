@@ -184,25 +184,31 @@ milestone that only runs on localhost does not count as done.
 An explicit exception to the freeze, agreed because the changes are contained and needed
 no matter what happens to the rest of this plan.
 
-**Two of the three items turned out to be already done, and the measurement corrected the
-Go plan.** Recorded here because the wrong numbers were about to justify work that had no
-value.
+Deployed to `manhhung.me` at commit `58cf8f9`.
 
 | Planned | Found | Shipped |
 |---|---|---|
-| Subset Literata per script, 107 KB to 30 KB | Already subset. The preset is **Inter**, not Literata, so the LCP face is 36 KB and has no `opsz` axis. The 107 KB claim was false | `opsz` pinned at 18 on both book serifs, 180 KB off the font directory, 50 KB off the critical path **if** a serif is ever selected. `scripts/subset-font-axes.py` |
-| Split `public.css` from `admin.css`, "only partially honoured" | Fully honoured already. Verified in the build: public chunk **8,754 B brotli**, zero admin markers, admin chunk absent from a post's HTML | nothing to do |
-| Add Speculation Rules | Not present | Shipped, `eagerness: moderate`, with `/admin`, `/api`, `/uploads`, `/preview`, `/og` excluded |
+| Subset Literata per script, 107 KB to 30 KB | Already subset, and the preload rule was already correct. Real size **97,588 B** (latin + vietnamese, since the site runs `language: vi`) | `opsz` pinned at 18 on both book serifs: preload set **97,588 to 46,212, −53%**, and 180 KB off the font directory. `scripts/subset-font-axes.py` |
+| Split `public.css` from `admin.css`, "only partially honoured" | **Already fully honoured.** Verified in the build, not assumed: public chunk **8,754 B brotli**, zero admin markers, admin chunk absent from a post's HTML | nothing to do |
+| Add Speculation Rules | Not present | Shipped, `eagerness: moderate`, excluding `/admin`, `/api`, `/uploads`, `/preview`, `/og` |
 
-The genuine find was in the third item: **a prerendered page runs its JavaScript at
-speculation time**, so `Track` would have recorded a pageview on hover for pages nobody
-opened, and `ScrollDepth` would have counted the speculation wait as reading time. Both
-are now deferred through `lib/prerender.ts`. Analytics rows are kept forever, so that bug
-would not have been self-correcting.
+The unplanned find was in the third item: **a prerendered page runs its JavaScript at
+speculation time.** Shipping the rules alone would have made `Track` record a pageview
+every time a reader hovered a link, and `ScrollDepth` count the speculation wait as dwell.
+Both now defer through `lib/prerender.ts` until `prerenderingchange`. Analytics rows are
+kept forever, so that bug would not have been self-correcting.
 
-**Lesson for the rest of this plan:** the Go documents' measurements were taken once and
-reused as fact. Re-measure before acting on any number quoted from them, including the
-182 KB JavaScript figure in the Goal section above.
+**Two lessons that apply to the rest of this plan:**
+
+1. **Verify a claim before acting on it, but verify it against production.** The CSS item
+   was already done and would have been wasted work. Separately, a local build reported the
+   font preset as Inter with `lang="en"`, which briefly produced a confident and wrong
+   "the plan's premise is false" correction; `.env.local` points at a dev database whose
+   `settings` row differs from the live one. Anything settings-dependent must be read off
+   the box.
+2. The Go documents' numbers were measured once and reused as fact. The Literata figure
+   held up; **re-measure the others before acting**, including the 182 KB JavaScript figure
+   in the Goal section above.
 
 ### M0.5: Feature inventory (half a day, before any v2 code)
 

@@ -48,29 +48,33 @@ lazy.
 Conventions from `docs/conventions.md` carry over unchanged and are now easier to hold:
 theme tokens only, one typeface, no hardcoded sizes, one divider style, no all-caps.
 
-## Fonts: measured 2026-07-27, and the Go plan's premise was wrong
+## Fonts: DONE 2026-07-27, 51 KB off the critical path
 
-The Go plan asserted "the LCP bottleneck on `manhhung.me` is Literata at 107 KB". That was
-carried into an earlier draft of this document without checking. **It is false.** The live
-site's reading font is **Inter**, `lang="en"`, so the preloaded LCP face is
-`inter-latin.woff2` at **36 KB**, and Inter has no optical-size axis.
+The Go plan called Literata a ~107 KB LCP bottleneck. Measured against production it is
+**97,588 B** (`literata-latin` 80,660 + `literata-vietnamese` 16,928, because the site runs
+Literata with `language: vi`), so the claim was substantially right.
 
-What the measurement actually found, and what was done about it:
+Two of the three sub-items were already implemented before this plan existed:
 
-| Claim | Reality |
+| Sub-item | State |
 |---|---|
-| Subset per script needed | **Already done.** `-latin` / `-latin-ext` / `-vietnamese` since before this plan |
-| Preload only the LCP face | **Already done.** `fontPreloadHrefs` implements exactly this rule |
-| 107 KB on the critical path | **36 KB.** Inter, already wght-clamped to 400-700 |
-| Room left in the current config | **Almost none.** Inter's GSUB is already trimmed; the remaining bulk is 38 KB of GPOS kerning, which is not removable without visibly damaging the text |
+| Subset per script | **Already done**, `-latin` / `-latin-ext` / `-vietnamese` |
+| Preload only the LCP face | **Already done**, `fontPreloadHrefs` implements exactly this rule |
+| Make the file smaller | **This is where the work was** |
 
-The one real finding was the `opsz` axis on the two book serifs, which doubled their size
-(Literata: 300 glyphs but 80 KB, against Inter's 518 glyphs at 36 KB). Pinning it at 18 cut
-Literata 80,660 to 37,560 and Source Serif 83,240 to 36,160, 180 KB across the font
-directory. That is **conditional value**: it pays off the moment the owner selects either
-serif in Admin, and does nothing while Inter is the preset.
+The find was the `opsz` axis, which doubles the two book serifs: Literata carries 300
+glyphs to Inter's 518 yet was 80 KB to Inter's 36 KB, all of it `gvar` deltas across the
+optical range. Pinning it at 18 gives:
 
-Full reasoning, the size table, and why 18 was chosen over 14/16/24 live in
+| | Before | After |
+|---|---|---|
+| `literata-latin` | 80,660 | **37,560** |
+| `literata-vietnamese` | 16,928 | **8,652** |
+| **Preload set** | **97,588** | **46,212** (−53%) |
+
+Also 180 KB off the font directory overall, since Source Serif 4 gets the same treatment.
+
+Reasoning, the rejected alternatives, and why 18 was chosen over 14/16/24 live in
 `docs/performance.md` and `scripts/subset-font-axes.py`.
 
 **Standing rules**, unchanged and already honoured:
