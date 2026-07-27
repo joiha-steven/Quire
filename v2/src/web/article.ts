@@ -103,11 +103,14 @@ export async function renderArticle(slug: string): Promise<string | null> {
   // heading — a contents list with one entry is furniture, not navigation.
   const headings = post && settings.features.toc ? extractHeadings(post.content) : []
   const toc = headings.length > 1
-    ? `<nav class="toc" aria-label="${escapeAttr(s.tocTitle)}">
+    ? `<nav class="toc rail" aria-label="${escapeAttr(s.tocTitle)}">
+<div class="rail-inner">
 <p class="toc-title">${escapeHtml(s.tocTitle)}</p>
 <ol>${headings.map((h) =>
-        `<li class="toc-l${h.level}"><a href="#${escapeAttr(h.id)}">${escapeHtml(h.text)}</a></li>`,
+        `<li class="toc-l${h.level}"><a class="rail-row" href="#${escapeAttr(h.id)}">${
+          escapeHtml(h.text)}</a></li>`,
       ).join('')}</ol>
+</div>
 </nav>`
     : ''
 

@@ -21,9 +21,12 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Next
 
-- [ ] **M2 — public renderer.** 13 server components to Hono JSX, 23 islands to vanilla,
-      hand-written CSS ([ADR 0008](../docs/decisions/0008-hand-written-css-no-tailwind-public.md)).
-      Gate: article bodies byte-identical, 0 KB JS.
+- [x] **M2 — public renderer. DONE 2026-07-27.** Every public route, feed and machine
+      surface; 21 of 23 islands ported, 2 deleted in favour of CSS (`ReadingProgress`,
+      `RevealFallback`), `RailToggle` made unnecessary by the rail layout, `Turnstile`
+      deferred to M3 with the comment form's configuration. 685 tests.
+      core.js 5,186 b and post.js 7,860 b, both enforced by `scripts/build-assets.ts`.
+      NOT visually verified: no browser could be launched in the build environment.
 - [ ] **M3 — admin, API and the rest.** Admin SPA embedded, 61 API routes moved, auth
       rebuilt per `v2/docs/06-auth.md`. Gate includes a 30-flow headless tour.
 - [ ] **M4 — cutover**, then keep the frozen tree runnable for 3 to 6 months against a

@@ -200,7 +200,7 @@ describe('the table of contents', () => {
     const html = await get('/long').then((r) => r.text())
     // The list is real markup and its links are real anchors. The bundle only adds the
     // active-section highlight, which is the part that genuinely needs a script.
-    expect(html).toContain('<nav class="toc"')
+    expect(html).toContain('<nav class="toc rail"')
     expect(html).toContain('href="#first-section"')
     expect(html).toContain('href="#a-sub-heading"')
     expect(html).toContain('class="toc-l3"') // nesting survives
@@ -209,18 +209,32 @@ describe('the table of contents', () => {
 
   it('leaves it out of a post with one heading, which is furniture not navigation', async () => {
     await savePost({ title: 'Short', content: '## Only one\n\nText.', status: 'published', date: PAST })
-    expect(await get('/short').then((r) => r.text())).not.toContain('<nav class="toc"')
+    expect(await get('/short').then((r) => r.text())).not.toContain('<nav class="toc rail"')
   })
 
   it('leaves it out when the owner turns it off', async () => {
     const { features } = await getSettings()
     await saveSettings({ features: { ...features, toc: false } })
     await savePost({ title: 'Notoc', content: LONG, status: 'published', date: PAST })
-    expect(await get('/notoc').then((r) => r.text())).not.toContain('<nav class="toc"')
+    expect(await get('/notoc').then((r) => r.text())).not.toContain('<nav class="toc rail"')
+  })
+
+  it('is a rail, with the breakpoint computed from the reading column', async () => {
+    // A media query cannot read a CSS variable, so the width at which the contents list
+    // moves into the left gutter is COMPUTED from the owner's column width: 250 + 40 + 10
+    // of rail on each side. Change the column and the breakpoint follows, which is the
+    // whole reason this CSS is generated rather than written by hand.
+    await saveSettings({ contentWidth: 700 })
+    await savePost({ title: 'Railed', content: LONG, status: 'published', date: PAST })
+    expect(await get('/railed').then((r) => r.text())).toContain('@media (min-width:1300px)')
+
+    clearCache()
+    await saveSettings({ contentWidth: 800 })
+    expect(await get('/railed').then((r) => r.text())).toContain('@media (min-width:1400px)')
   })
 
   it('leaves it off a static page, which has no post structure', async () => {
     await savePage({ title: 'About', content: LONG, status: 'published' })
-    expect(await get('/about').then((r) => r.text())).not.toContain('<nav class="toc"')
+    expect(await get('/about').then((r) => r.text())).not.toContain('<nav class="toc rail"')
   })
 })

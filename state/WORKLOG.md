@@ -3,6 +3,26 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2 closes: the left rail
+
+**685 tests, `check:all` green.** The contents list moves into the left gutter above a
+breakpoint COMPUTED from the owner's column width, because a media query cannot read a CSS
+variable. A test changes `contentWidth` from 700 to 800 and watches the emitted media query
+move from 1300px to 1400px.
+
+`RailToggle` is not ported: below the breakpoint the list sits above the article in normal
+flow, which needs no drawer, no scrim and no script.
+
+**A verification gap, stated rather than papered over.** Layout is the one thing markup
+inspection cannot confirm, so I added a screenshot script pointed at the installed Edge. It
+never produced an image — the run hung twice and then failed — and the script and its
+dependency were removed rather than left in the tree unexercised. Proven: the generated
+media query, its computed breakpoint, the rendered markup. Not proven: how it looks.
+
+**M2 is complete.** 21 of the frozen tree's 23 `'use client'` components are ported, two
+were deleted in favour of CSS, and `RailToggle` is made unnecessary by the layout above.
+`Turnstile` lands with the comment form's configuration in M3.
+
 ## 2026-07-27 — M2: book mode, and a guard for a mistake made three times
 
 **684 tests, `check:all` green.** post.js 7,860 b of 8,000.

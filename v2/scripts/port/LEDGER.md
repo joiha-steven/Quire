@@ -592,3 +592,41 @@ lines, so the listing and book suites moved to `shell.test.ts`.
 **M2 is complete apart from the left rail.** The table of contents currently sits above the
 article rather than in the left gutter; `render/rail-css.ts` is ported and unused. That is a
 layout decision rather than a port, and it is the one thing left.
+
+## M2: the left rail, and M2 closes (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/render/rail-css.ts` | already ported, unused until now | `singleRailCss(colWidth)`, called from `pageStyles` |
+
+The contents list carries `class="toc rail"` and a `.rail-inner`, which is all the ported
+generator needs. Above the breakpoint it moves into the left gutter; below, it stays in
+normal flow above the article, exactly as it already did.
+
+**The breakpoint is COMPUTED, not written.** A media query cannot read a CSS variable, so
+the width at which the rail moves into the gutter is derived from the owner's column width:
+250 of rail, 40 of gap and 10 of breathing room on each side. Change the column in settings
+and the breakpoint follows. That is the whole reason this CSS is generated at runtime rather
+than sitting in the sheet, and there is a test that changes `contentWidth` from 700 to 800
+and watches the emitted media query move from 1300px to 1400px.
+
+**`RailToggle` is NOT ported.** The frozen tree had a slide-out drawer and a toggle island
+for narrow screens. Below the breakpoint here the list simply sits above the article, in
+flow, which needs no drawer, no scrim and no script. One island fewer, and the narrow-screen
+experience is a normal document rather than a panel.
+
+**A verification gap, stated rather than papered over.** Layout is the one thing markup
+inspection cannot confirm, so I added a `playwright-core` screenshot script pointed at the
+Edge already installed on the machine. It never produced an image — the browser launched and
+the run hung twice, then failed. The script and the dependency were removed rather than left
+in the tree unexercised. **What IS proven: the generated media query, its computed
+breakpoint, and the rendered markup. What is NOT: how it looks.**
+
+`check:css` was written this session after the same backtick mistake for the third time, and
+it caught nothing new — which is the point of it existing.
+
+**M2 is complete.** Every route, every feed, every island: 21 of the frozen tree's 23
+`'use client'` components are ported, two were deleted in favour of CSS
+(`ReadingProgress`, `RevealFallback`), and `RailToggle` and `Turnstile` remain — the first
+made unnecessary by the layout above, the second landing with the comment form's
+configuration in M3.

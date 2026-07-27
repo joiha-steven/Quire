@@ -7,12 +7,14 @@
 //     the public sheet is small precisely because it is hand-written.
 //   * Reading-font subsets are PRELOADED, chosen by language, because the font is the LCP
 //     resource and the browser cannot discover it until the CSS has parsed.
-//   * There is NO script tag on an article page. Islands are opt-in per route, so 0 KB of
-//     JavaScript is the default rather than an achievement.
+//   * Scripts are opt-in per route and their sizes are a BUDGET the build enforces
+//     (`scripts/build-assets.ts`), so a listing pays for the beacon and the header alone
+//     and an article adds one more file. Nothing is inlined, and there is no framework.
 
 import type { SiteSettings } from '@/types'
 import { fontPreloadHrefs, fontPresetCss, chromeFontCss, themesToCss } from '@/content/themes'
 import { typographyToCss, fontToCss } from '@/content/settings'
+import { singleRailCss } from '@/render/rail-css'
 
 export type Head = {
   title: string
@@ -56,6 +58,10 @@ const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
 export function pageStyles(settings: SiteSettings, base: string): string {
   return [
     base,
+    // Injected at runtime, not written by hand, because a media query cannot read a CSS
+    // variable and the breakpoint is COMPUTED from the reading column: the rail only moves
+    // into the gutter when there is room for it on BOTH sides, so the column stays centred.
+    singleRailCss(settings.contentWidth),
     fontPresetCss(settings.fontPreset),
     chromeFontCss(settings.chromeFont),
     themesToCss(settings.themes, settings.themePreset),
