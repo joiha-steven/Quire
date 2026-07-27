@@ -162,6 +162,26 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 /* Comments and sign-up. The FORM is server-rendered markup, so these rules apply with or
    without JavaScript; the comment thread is built by the island, so its rules only ever
    match once the script has run. */
+/* Grid view. The attribute is set by the island; with no script the list stays a list,
+   which is the shape every reader gets by default anyway. */
+[data-list="grid"] .listing{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))}
+[data-list="grid"] .card{border-bottom:0;padding:0;margin:0}
+[data-list="grid"] .card h2{font-size:var(--fs-h3);line-height:var(--lh-h3)}
+[data-list="grid"] .card .excerpt{display:none}
+.listing-sentinel{height:1px}
+
+/* Cards ease in as they enter the viewport, in CSS. The frozen tree shipped an
+   IntersectionObserver fallback for engines without scroll-driven animations; 04-frontend.md
+   called for deleting it, and this is that deletion. An engine without support simply shows
+   the cards, which is the correct end state anyway. Motion is skipped entirely when the
+   reader has asked for less of it. */
+@supports (animation-timeline:view()){
+  @media (prefers-reduced-motion:no-preference){
+    .card{animation:card-in linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
+  }
+}
+@keyframes card-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
 .site-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .site-actions{display:flex;gap:.25rem}
 .icon-btn{display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;

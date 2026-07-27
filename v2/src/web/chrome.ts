@@ -21,6 +21,10 @@ const ICON = {
   search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
     + ' stroke-width="1.7" stroke-linecap="round" aria-hidden="true">'
     + '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  grid: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">'
+    + '<rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/>'
+    + '<rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>',
   mail: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
     + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
     + '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
@@ -40,6 +44,13 @@ export function siteHeader(settings: SiteSettings, opts: ChromeOptions): string 
     // the same results server-side. The island turns it into an overlay.
     actions.push(`<a class="icon-btn" href="/search" data-search-open
  aria-label="${escapeAttr(s.search)}" title="${escapeAttr(s.search)}">${ICON.search}</a>`)
+  }
+  if (settings.features.gridView) {
+    // A BUTTON, not a link: there is no server-side URL for "the same list as a grid", and
+    // inventing one would be a second URL for the same content. It hides itself on a page
+    // that has no list.
+    actions.push(`<button type="button" class="icon-btn" data-grid-toggle
+ aria-pressed="false" aria-label="${escapeAttr(s.gridView)}">${ICON.grid}</button>`)
   }
   if (opts.mailConfigured) {
     // Points at the footer form, so it does something on a page with no script.
@@ -94,6 +105,8 @@ export function chromeLabels(settings: SiteSettings): Record<string, string> {
     searchHint: s.searchHint,
     searchEmpty: s.searchEmpty,
     lightboxClose: s.lightboxClose,
+    gridView: s.gridView,
+    listView: s.listView,
     nlSuccess: s.nlSuccess,
     nlNoMail: s.nlNoMail,
     nlInvalid: s.nlInvalid,

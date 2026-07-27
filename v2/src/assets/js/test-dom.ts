@@ -15,7 +15,13 @@ export function useDom(): void {
 /** Rebuild the page. Every test starts from a document the server could have sent. */
 export function page(body: string, data: Record<string, string> = {}): void {
   document.body.innerHTML = body
-  for (const key of Object.keys(document.body.dataset)) delete document.body.dataset[key]
+  // Attributes, not `delete document.body.dataset[key]`. Deleting through the dataset proxy
+  // did not always clear the underlying attribute, so a `data-infinite` set by one test
+  // survived into the next and made it pass for the wrong reason. Removing the attribute
+  // is the thing that actually happens.
+  for (const attr of [...document.body.attributes]) {
+    if (attr.name.startsWith('data-')) document.body.removeAttribute(attr.name)
+  }
   for (const [k, v] of Object.entries(data)) document.body.dataset[k] = v
 }
 

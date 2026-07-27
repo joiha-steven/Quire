@@ -694,3 +694,45 @@ mail server is configured — a trigger with nothing behind it is worse than no 
 
 Still to come in M2: the left rail and its table of contents, book mode, and the listing
 islands (grid toggle, infinite scroll).
+
+## M2: the listing controls, and one more island deleted (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/assets/js/listing.ts` | `GridToggle` + `InfiniteListing` | Both, self-guarding |
+| — | `RevealFallback` | **Deleted.** `animation-timeline: view()` in the sheet |
+
+**core.js 5,186 b against a budget raised from 5,000 to 6,500.** The guard caught it at
+5,186 and refused to build, which is the first time the budget has actually stopped
+something. The number moved in this diff, deliberately.
+
+**`RevealFallback` is gone, as 04-frontend.md called for.** It existed to ease cards in on
+engines without scroll-driven animations. Those animations are what the reading-progress bar
+already uses, so the fallback was the last consumer of a shim for a feature this codebase
+now depends on. Cards ease in with `animation-timeline: view()`, wrapped in `@supports` and
+in `prefers-reduced-motion: no-preference`. An engine without it shows the cards, which is
+the correct end state anyway.
+
+**Infinite scroll adds no endpoint.** It fetches the next page's HTML and moves its cards
+across. That page has to exist and be crawlable regardless, so this reuses it rather than
+adding a second representation of the same list that could drift from the first. On a failed
+fetch the island disconnects and leaves the pager alone — the reader still has a working
+link, which is the reason the pager was never replaced.
+
+**A cost I am taking rather than hiding.** The frozen tree applied the saved grid/list
+choice with a PRE-PAINT INLINE SCRIPT, so a reader who chose grid never saw the list. 2.0
+has no inline script anywhere and that property is tested, so the attribute is applied when
+`core.js` runs and a grid reader may see one frame of list first. The two alternatives were
+worse: an inline script would be the only one on the site, and a cookie would let the server
+render it but the page cache is keyed by URL alone (Invariant 1), so a cached page would
+carry whichever mode the first visitor happened to have.
+
+**A test bug that made a test pass for the wrong reason.** `delete document.body.dataset[key]`
+did not always clear the underlying attribute in happy-dom, so a `data-infinite` set by one
+test survived into the next. The harness removes the ATTRIBUTES now. Found because the
+"does nothing when infinite scroll is off" case fetched anyway — the one assertion in the
+file that could only fail if state leaked.
+
+Measured on the running server: the grid toggle is in the header, the grid and reveal rules
+are in the inlined sheet, `data-infinite` is correctly absent (the owner has it off), and
+the home page still costs one script.

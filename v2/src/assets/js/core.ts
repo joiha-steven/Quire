@@ -8,6 +8,7 @@
 // Nothing else belongs here unless it is genuinely needed everywhere. This file is the only
 // JavaScript a reader of a listing pays for, and its size is the budget.
 
+import { listing } from './listing'
 import { search } from './search'
 import { subscribe } from './subscribe'
 import { track } from './track'
@@ -15,3 +16,4 @@ import { track } from './track'
 track()
 search()
 subscribe()
+listing()

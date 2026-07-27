@@ -3,6 +3,33 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the listing controls, and one more island deleted
+
+Grid toggle and infinite scroll, plus `RevealFallback` deleted in favour of CSS. **673
+tests, `check:all` green.**
+
+**The JavaScript budget stopped a build for the first time.** core.js came out at 5,186 b
+against 5,000. The number moved to 6,500 in the same diff, which is exactly what the guard
+is for: a budget that can only be raised in a diff someone reads.
+
+`RevealFallback` existed to ease cards in on engines without scroll-driven animations —
+the same feature the reading-progress bar already depends on, so it was a shim for
+something this codebase now requires. Cards ease in with `animation-timeline: view()`,
+inside `@supports` and `prefers-reduced-motion: no-preference`.
+
+Infinite scroll adds no endpoint: it fetches the next page's HTML and moves its cards
+across. That page has to exist and be crawlable anyway. A failed fetch leaves the pager
+alone, because the reader still has a working link.
+
+**A cost I am taking rather than hiding.** The frozen tree applied the saved grid/list
+choice with a pre-paint inline script. 2.0 has no inline script anywhere and that property
+is tested, so a grid reader may see one frame of list first. A cookie would fix it but the
+page cache is keyed by URL alone, so a cached page would carry the first visitor's mode.
+
+A test bug worth recording: `delete document.body.dataset[key]` did not always clear the
+attribute in happy-dom, so state leaked between tests. Found because the one case that
+could only fail on leaked state did.
+
 ## 2026-07-27 — M2: the site chrome, and search without a page load
 
 One header and one footer, shared by both renderers, plus the search overlay. **667 tests,
