@@ -19,7 +19,8 @@
     "import-v1": "bun scripts/import-v1.ts",
     "check:css": "bun scripts/checks/css-literal.ts",
     "check:routes": "bun scripts/checks/routes-guarded.ts",
-    "user": "bun scripts/user.ts"
+    "user": "bun scripts/user.ts",
+    "shot": "bun scripts/shot.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.11.1",
