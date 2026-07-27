@@ -175,6 +175,24 @@ full day out and the fall-back day came back 23 hours long instead of 25. Fixed 
 zeros would be a better chart and the boundaries are right there to do it, but it changes
 what the admin receives, so it belongs next to the component that renders it.
 
+## Rewritten, not moved (M1 MCP store, 2026-07-27)
+
+| Destination | From | Query changes |
+|---|---|---|
+| `mcp/tokens.ts` | `mcp/tokens.ts` | `insert ... returning`; the SHA-256 hex hash format is UNCHANGED, which is what keeps every connector the owner already holds working across cutover |
+| `mcp/clients.ts` | `mcp/clients.ts` | `redirect_uris` was a `text[]`, now a JSON array; an unparseable list fails CLOSED |
+| `mcp/used-codes.ts` | `mcp/used-codes.ts` | PostgREST returned a unique violation as an error object, `bun:sqlite` throws it. Same decision, and the catch stays broad because letting a code through on a transient error is the one outcome that matters |
+| `mcp/result.ts` | `mcp/result.ts` | **none.** Pure |
+
+Both mocked tests are replaced by real rows. They guard real attacks (open redirect to
+owner-account takeover, and authorization-code replay), so a fake that models the primary
+key by hand was the wrong thing to trust: 21 tests now, including two fail-closed cases the
+mocks could not express.
+
+`mcp/auth.ts`, `mcp/consent.ts`, `mcp/tools.ts`, `mcp/tools-library.ts` and `well-known.ts`
+stay for M3: they need the MCP SDK, zod, and the router, and `consent.ts` is built on
+`next-auth/jwt`, which ADR 0007 removes.
+
 ## Moved, then pulled back out
 
 | File | Why |
@@ -190,4 +208,4 @@ what the admin receives, so it belongs next to the component that renders it.
 | `gdrive`, `backup`, `backup-state` | Google Drive replaced by litestream (parity exception 1) |
 | `image`, `highlight`, `wordpress-import`, `well-known` | Need npm dependencies (`sharp`, `shiki`, `turndown`, MCP SDK). Land with their module |
 | `upload-client` | Browser-side; belongs to the admin SPA |
-| `og`(db parts), `mcp/*` | The last `db()` call sites |
+| `mcp/auth`, `mcp/consent`, `mcp/tools`, `mcp/tools-library`, `well-known` | Route-shaped, not data-layer: they need the MCP SDK, zod and the router. M3. (`og.ts` turned out to touch no `db()` at all and moved verbatim in the first slice.) |
