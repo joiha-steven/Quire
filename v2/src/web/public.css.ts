@@ -156,5 +156,8 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 .lightbox-next{right:.5rem}
 .lightbox-count{position:absolute;bottom:1rem;font-size:.75rem;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
 
+.preview-note{border:1px solid var(--c-rule);background:var(--c-rule);color:var(--c-meta);
+  border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);margin:0 0 1.5rem}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `.trim()

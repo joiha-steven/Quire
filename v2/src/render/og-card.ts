@@ -8,7 +8,6 @@
 // The layout is a straight port of `app/og/route.tsx`, down to the type sizes.
 
 import satori, { type SatoriOptions } from 'satori'
-import sharp from 'sharp'
 import interLatin from '@/render/fonts/inter-latin.woff' with { type: 'file' }
 import interLatinExt from '@/render/fonts/inter-latin-ext.woff' with { type: 'file' }
 import interVietnamese from '@/render/fonts/inter-vietnamese.woff' with { type: 'file' }
@@ -120,5 +119,15 @@ export async function renderOgCard(card: OgCard): Promise<Uint8Array> {
   const family = (card.customFont ? 'Site, ' : '') + 'Inter, InterExt, InterVN'
 
   const svg = await satori(tree(card, family) as never, { ...OG_SIZE, fonts: all })
+
+  // sharp is loaded HERE, not at the top of the file, and the reason is measured rather
+  // than stylistic: `bun build --compile` bundles sharp's JavaScript but not its native
+  // module, so a compiled binary throws "Could not load the sharp module". As a top-level
+  // import that happens during boot and the server never starts — a blog that serves
+  // nothing because it cannot draw a social card. Deferred, the same broken install serves
+  // every page and fails only `/og`, which the caller turns into a 500 for that one URL.
+  // The packaging decision itself (ship the .node beside the binary, or run from source)
+  // is M4's; this is about which failure the owner gets in the meantime.
+  const { default: sharp } = await import('sharp')
   return new Uint8Array(await sharp(Buffer.from(svg)).png().toBuffer())
 }

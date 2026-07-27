@@ -530,3 +530,61 @@ Also corrected: a `site ? ... : undefined` guard around the card URL was dead co
 `resolveSiteUrl` falls back to `SITE_URL` and then to localhost. The comment claiming
 otherwise was worse than no comment. The test that asserted the dead branch now asserts
 what actually happens.
+
+## M2: the machine surfaces, and the files nobody was serving (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/web/markdown.ts` | `api/md/[slug]/route.ts` | The post as its authored Markdown |
+| `src/web/manifest.ts` | `app/manifest.ts` | The PWA manifest, from live settings |
+| `src/web/preview.ts` | `(blog)/preview/[slug]/page.tsx` | Tokened draft preview |
+| `src/web/search-api.ts` | `api/search/route.ts` | `GET /api/search`, metadata only |
+| `src/web/static.ts` | `public/` | Fonts, favicon, app icon, embedded in the binary |
+| `src/web/api.ts` | `lib/api.ts` (partly) | `json` / `fail`, and the request logger |
+
+**Content negotiation moved out of `next.config.ts` and into the router.** The frozen tree
+rewrote `/:slug` to `/api/md/:slug` when the request carried `Accept: text/markdown`, in a
+config file three directories away from the route it affected. It is now four lines in the
+`/:slug` handler, next to the thing it changes. Both URLs still work.
+
+**Request logging is middleware, not a call in every handler.** The frozen tree ended each
+handler with `logRequest(req, status, start)`, including inside every early return, so the
+rule was kept by remembering it and the failure mode was a route that silently logged
+nothing. Now a request is logged because it went through the router. Same reasoning as
+Invariant 4 gating writes by router-group membership rather than by a per-handler check.
+
+**`public/` was never served, and that was worse than it sounds.** Every page emits
+`<link rel="preload" href="/fonts/inter-latin.woff2">` and nothing answered it: the site's
+reading font never loaded, so the entire typography system was decorative. Same for
+`/app-icon.png` and `/favicon.ico`. Found by requesting the URLs after the manifest landed,
+not by any test. 21 fonts, the favicon and the app icon are now imported with
+`with { type: 'file' }` and listed BY NAME, because there is no glob import the compiler
+can follow and a font missing from that list works in development and 404s in production.
+Next's scaffolding SVGs were deliberately left behind.
+
+**The sharp risk escalated from "images fail" to "the server will not start", and is now
+back to "one route fails".** `bun build --compile` bundles sharp's JavaScript but not its
+native module. That was recorded in M1 as a first-image-call failure. Adding the OG card
+put sharp on the boot path, and the compiled binary died at startup — a blog that serves
+nothing because it cannot draw a social card. Two static imports were the cause, and the
+second was not obvious: `content/settings.ts` imports `renderLogo` from `media/files.ts`,
+and settings is on every request. Both are now `await import('sharp')` at the point of use.
+
+Measured on the COMPILED binary, run from a directory containing nothing but the exe:
+
+```
+/                                  200  12,224 b
+/fonts/inter-latin.woff2           200  36,116 b
+/fonts/literata-vietnamese.woff2   200   8,652 b
+/app-icon.png  /favicon.ico        200
+/manifest.webmanifest              200     418 b
+/robots.txt                        200
+/og?title=Test                     500   (logged; the packaging decision is M4's)
+```
+
+That is the failure shape worth having: the blog works, one route does not, and the log
+says why.
+
+**Ported as-is, and wrong:** the preview banner is a hardcoded Vietnamese string in the
+frozen tree, which breaks 2.0's rule that UI strings live in `src/i18n` in all six
+languages. Moved verbatim here per the porting rule; fixed in the next commit.

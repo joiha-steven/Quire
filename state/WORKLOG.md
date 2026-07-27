@@ -3,6 +3,31 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the machine surfaces, and the files nobody was serving
+
+Markdown for agents, the PWA manifest, `/api/search`, the tokened draft preview, and the
+static files. **627 tests, `check:all` green.**
+
+**`public/` was never served, and that mattered more than it sounds.** Every page preloads
+`/fonts/inter-latin.woff2` and nothing answered it, so the site's reading font never loaded
+and the whole typography system was decorative. Found by requesting the URL after the
+manifest landed, not by a test. The 21 fonts and both icons are now embedded in the binary
+and listed by name, because there is no glob import a compiler can follow and a font
+missing from that list works in development and 404s in production.
+
+**The sharp risk escalated to "the server will not start", and is now back to "one route
+fails".** Adding the OG card put sharp on the boot path, and the compiled binary died at
+startup. The second cause was not obvious: `content/settings.ts` imports `renderLogo`, and
+settings is on every request. Both imports are deferred to the point of use now.
+
+Measured on the compiled binary in a directory containing nothing but the exe: the blog,
+every font, both icons, the manifest and robots all serve; `/og` returns a logged 500. That
+is the right failure shape, and the packaging decision stays M4's.
+
+Content negotiation moved out of `next.config.ts` into the router, four lines next to the
+route it affects. Request logging became middleware rather than a call every handler had to
+remember at the end of each early return.
+
 ## 2026-07-27 — M2: OG cards, and the route that serves every image
 
 `GET /og` renders the 1200x630 card with satori and sharp, and the shell finally emits

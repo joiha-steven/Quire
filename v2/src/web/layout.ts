@@ -101,6 +101,9 @@ export function renderDocument(
     `<meta name="twitter:card" content="${head.image ? 'summary_large_image' : 'summary'}">`,
   ].filter(Boolean).join('')
   const icon = settings.faviconUrl ? `<link rel="icon" href="${escapeAttr(settings.faviconUrl)}">` : ''
+  // Without this link the manifest route exists and nothing ever asks for it, so the site
+  // is not installable no matter what the route returns.
+  const manifest = '<link rel="manifest" href="/manifest.webmanifest">'
 
   return `<!DOCTYPE html>
 <html lang="${escapeAttr(settings.language)}">
@@ -108,7 +111,7 @@ export function renderDocument(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(head.title)}</title>
-${description}${canonical}${icon}${og}${preloads}
+${description}${canonical}${icon}${manifest}${og}${preloads}
 <style>${styles}</style>
 ${head.extra ?? ''}
 </head>

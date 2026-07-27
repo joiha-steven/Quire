@@ -3,7 +3,6 @@
 // Only the Files library has rows (`files` table); icons/font are blobs only, so they
 // never show in the Files tab.
 
-import sharp from 'sharp'
 import type { FileItem } from '@/types'
 import {
   uploadFile, expandBlob, collapseBlob, deleteByPathname, listBlobs,
@@ -70,6 +69,12 @@ export async function renderLogo(
   const isRaster = LOGO_RASTER.test(contentType) || (!contentType && LOGO_EXT_RASTER.test(sourceUrl))
   if (!isRaster) return null // svg / gif / unknown: serve original untouched
   const src = Buffer.from(await res.arrayBuffer())
+  // PORT NOTE: sharp is imported here rather than at the top of the file. It is the only
+  // sharp user reachable from `content/settings.ts`, which every request touches, so a
+  // top-level import put it on the BOOT path — and `bun build --compile` bundles sharp's
+  // JavaScript but not its native module, so the compiled binary refused to start at all.
+  // Deferred, the same install serves every page and fails only when a logo is rendered.
+  const { default: sharp } = await import('sharp')
   try {
     // @2x for retina; withoutEnlargement never upscales past the source.
     const out = await sharp(src, { failOn: 'none' })

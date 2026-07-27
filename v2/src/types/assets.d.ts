@@ -13,3 +13,14 @@ declare module '@/render/fonts/*.woff' {
   const path: string
   export default path
 }
+
+// The reader-facing static files: fonts, favicon, app icon. Same `type: 'file'` mechanism.
+declare module '@/assets/static/*' {
+  const path: string
+  export default path
+}
+
+declare module '@/assets/static/fonts/*.woff2' {
+  const path: string
+  export default path
+}

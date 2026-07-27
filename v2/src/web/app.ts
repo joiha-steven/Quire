@@ -27,6 +27,12 @@ import { ogCardUrl, siteDomain } from '@/render/og'
 import { handleOg } from '@/web/og'
 import { handleTrack } from '@/web/track'
 import { handleUpload } from '@/web/uploads'
+import { handleMarkdown, wantsMarkdown } from '@/web/markdown'
+import { handleManifest } from '@/web/manifest'
+import { handlePreview } from '@/web/preview'
+import { handleSearch } from '@/web/search-api'
+import { requestLogger } from '@/web/api'
+import { staticFile, staticPaths } from '@/web/static'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -72,6 +78,10 @@ function pageNumber(raw: string): number | null {
 
 export function createApp(): Hono {
   const app = new Hono()
+
+  // Every request is timed and logged here rather than at the end of each handler. A rule
+  // kept by remembering it is a rule that a route eventually forgets.
+  app.use('*', requestLogger())
 
   // Cached HTML routes go through here so the cache rule lives in ONE place.
   const cached = (key: string, render: () => Promise<string | null>) => async () => {
@@ -196,6 +206,18 @@ export function createApp(): Hono {
 
   app.post('/api/track', handleTrack)
 
+  // ----- the JSON and machine surfaces ----------------------------------------
+
+  app.get('/api/search', handleSearch)
+  app.get('/api/md/:slug', handleMarkdown)
+  app.get('/manifest.webmanifest', handleManifest)
+
+  // ----- drafts ---------------------------------------------------------------
+  // Registered before `/:slug` so a post that happens to be called "preview" cannot
+  // shadow it, and kept off that route so the public page has no token branch at all.
+
+  app.get('/preview/:slug', handlePreview)
+
   // ----- the Open Graph card --------------------------------------------------
   // Everything it needs is in the query string, so it reads no settings and no database.
 
@@ -206,6 +228,13 @@ export function createApp(): Hono {
   // cached forever, because upload names are content-stable.
 
   app.get('/uploads/*', handleUpload)
+
+  // Fonts, favicon and app icon. Registered path by path rather than under a prefix, so
+  // this route can only ever serve files that are compiled in. The reading font is the LCP
+  // resource on an article page, which is why the head preloads it.
+  for (const path of staticPaths()) {
+    app.get(path, async () => (await staticFile(path)) ?? new Response('Not found', { status: 404 }))
+  }
 
   // ----- browser bundles ------------------------------------------------------
   // The URL carries a content hash, so the answer is cacheable forever and a deploy that
@@ -260,6 +289,9 @@ export function createApp(): Hono {
 
   app.get('/:slug', async (c) => {
     const slug = c.req.param('slug')
+    // An agent that asks for Markdown gets the source it was written in rather than HTML
+    // it would have to parse back into prose. Same URL, same visibility rules.
+    if (wantsMarkdown(c.req.header('accept'))) return handleMarkdown(c)
     return cached(`/${slug}`, () => renderArticle(slug))()
   })
 
