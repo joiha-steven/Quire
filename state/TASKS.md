@@ -4,15 +4,15 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Now
 
-- [ ] **M1 — foundations and data layer** (`v2/docs/00-plan.md`). Done: SQLite schema,
-      ~6,500 lines of pure logic and its tests moved unchanged, and the whole content core
-      on `bun:sqlite` (`posts` + `post-terms`, `pages`, `revisions`, `comments`, `media` +
-      `finalize`, `files`, `image`, `settings`, `slugs`, `redirects`, `integration-keys`,
-      plus `store/query.ts` and `server/cache.ts`), and the newsletter cluster
-      (`subscribers`, `newsletter-log`, `mail`, `broadcast`, `comment-notify`) with
-      `activity`, `series`, `scheduled` and `media-refs`. Left: `analytics` and its six
-      SQL functions, the `og` database parts, `mcp/*`, and the importer with its four
-      verification tiers.
+- [x] **M1 — foundations and data layer** (`v2/docs/00-plan.md`). **Done 2026-07-27.**
+      SQLite schema; ~6,500 lines of pure logic and its tests moved unchanged; every
+      `db()` call site on `bun:sqlite`; all six plpgsql functions reimplemented; and
+      `import-v1` with its four verification tiers. 473 tests, `check:all` green.
+- [ ] **Run `import-v1` end to end against a live v1.** Every part is tested in isolation
+      (51 tests) but the two sides have never met. It needs the dev Postgres stack up
+      (`docker compose -f docker-compose.dev.yml up -d` in the repo root) and a copy of
+      the uploads tree. Production is not a test environment; do this against dev first,
+      then once more at cutover.
 - [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
       2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
       `@img/sharp-<platform>` native module, so the compiled binary throws on the first

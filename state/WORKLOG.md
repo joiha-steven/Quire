@@ -3,6 +3,36 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1 complete: the MCP store and `import-v1`
+
+`mcp/tokens`, `mcp/clients` and `mcp/used-codes` moved, then `import-v1` built.
+**473 tests, `check:all` green.** M1 is done: every `db()` call site is on `bun:sqlite`,
+all six plpgsql functions are reimplemented, and the importer exists with its four tiers.
+
+Both frozen MCP tests mocked the query builder, and they guard real attacks: open redirect
+leading to owner-account takeover, and authorization-code replay. A hand-written fake
+modelling a PRIMARY KEY was the wrong thing to trust there, so both now run against real
+rows, plus two fail-closed cases the mocks could not express. The token hash format is
+unchanged, which is what keeps the connectors the owner already holds working.
+
+The importer is deliberately split: transforms, checksum, verification and the writers are
+pure and live in `src/import/` with 51 tests; only the PostgREST reader and the CLI are in
+`scripts/`. A verifier wired straight into two live databases can only be tested by having
+two live databases, which in practice means it is tested once, by hand, on the day it is
+written. Every tier here is tested against the corruption it claims to catch.
+
+Two things it does that matter more than they look. The checksum canonicalises timestamps
+to epoch milliseconds **on both sides**, because Postgres sends
+`2026-07-27T10:00:00+00:00` and SQLite holds an integer; without that every dated table
+reports a permanent false mismatch, and a verifier that cries wolf gets ignored on the one
+run that mattered. And `ts()`/`bool()` throw rather than defaulting: a date silently
+becoming 1970, or a flag silently becoming false, is a post that never publishes and
+nobody can explain.
+
+**Not yet done, and it is the honest gap: the two sides have never met.** Every part is
+tested in isolation; an end-to-end run needs the dev Postgres stack up. Tracked in
+`TASKS.md`, and production is not where it gets tried first.
+
 ## 2026-07-27 — M1: analytics, and the six SQL functions are gone
 
 All six plpgsql functions reimplemented in TypeScript. **401 tests pass, 0 fail.**

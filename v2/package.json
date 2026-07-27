@@ -14,9 +14,11 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "check:filesize": "bun scripts/checks/file-size.ts",
-    "check:all": "bun run typecheck && bun run check:filesize && bun test"
+    "check:all": "bun run typecheck && bun run check:filesize && bun test",
+    "import-v1": "bun scripts/import-v1.ts"
   },
   "devDependencies": {
+    "@supabase/postgrest-js": "^2.110.8",
     "@types/bun": "latest",
     "@types/nodemailer": "^8.0.1",
     "typescript": "^5.9.0"

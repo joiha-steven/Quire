@@ -193,6 +193,42 @@ mocks could not express.
 stay for M3: they need the MCP SDK, zod, and the router, and `consent.ts` is built on
 `next-auth/jwt`, which ADR 0007 removes.
 
+## Built, not ported (M1 importer, 2026-07-27)
+
+`import-v1` has no v1 counterpart: it exists to move one instance across, once.
+
+| File | Role |
+|---|---|
+| `src/import/transform.ts` | Column transforms. Pure |
+| `src/import/checksum.ts` | Tier 2 canonical checksum, run on BOTH sides by the same code |
+| `src/import/verify.ts` | All four tiers, over two row sets. Pure |
+| `src/import/write.ts` | One INSERT literal per table, plus `sqlite_sequence` advance and FTS rebuild |
+| `scripts/import/source.ts` | The v1 reader over PostgREST. The only place the dev-only `@supabase/postgrest-js` appears |
+| `scripts/import-v1.ts` | CLI, transaction boundary, binary verification |
+
+Everything except the PostgREST reader and the CLI is pure, and 51 tests cover it. That
+split matters: a verifier wired directly into two live databases can only be tested by
+having two live databases, which means in practice it is tested once, by hand, on the day
+it is written. Each tier is tested against the corruption it claims to catch, not only
+against good data.
+
+Two decisions worth recording:
+
+- **The checksum canonicalises timestamps to epoch milliseconds on both sides.** Postgres
+  sends `2026-07-27T10:00:00+00:00` and SQLite holds an integer; without this every dated
+  table reports a permanent false mismatch, and a verifier that cries wolf gets ignored on
+  the one run that mattered.
+- **`ts()` and `bool()` throw rather than defaulting.** An unparseable date silently
+  becoming 1970, or an unrecognised flag silently becoming false, is a post that never
+  publishes and nobody can explain.
+
+Not yet done: an end-to-end run against a live v1. It needs the dev Postgres stack up, and
+production is not a test environment.
+
+`--analytics-out` from the spec is not implemented; `analytics.db` is written beside
+`--out`, because `openDatabases` owns both filenames and the server and the importer must
+not disagree about where they are. The spec now says so.
+
 ## Moved, then pulled back out
 
 | File | Why |

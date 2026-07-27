@@ -12,6 +12,10 @@ bun run import-v1 \
   [--dry-run] [--skip-analytics] [--verify-only] [--force]
 ```
 
+`analytics.db` is written beside `--out` rather than taking its own path: `openDatabases`
+owns both filenames, so the running server and the importer cannot disagree about where
+they are. `--seed` fixes the Tier 3 sample; the seed used is printed on every run.
+
 Source access goes through PostgREST with the existing `service_role` token, reusing the
 same `@supabase/postgrest-js` client the frozen tree uses. That keeps the importer a
 dev-only dependency and avoids adding a Postgres driver to the production tree, which
