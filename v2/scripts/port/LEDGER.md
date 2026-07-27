@@ -588,3 +588,62 @@ says why.
 **Ported as-is, and wrong:** the preview banner is a hardcoded Vietnamese string in the
 frozen tree, which breaks 2.0's rule that UI strings live in `src/i18n` in all six
 languages. Moved verbatim here per the porting rule; fixed in the next commit.
+
+## M2: the two things a reader can write to (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/web/comments.ts` | `api/comments/route.ts` | Read the tree, post a comment |
+| `src/web/newsletter.ts` | `api/subscribe` + `api/newsletter/{confirm,unsubscribe,open}` | The whole sign-up path |
+| `src/assets/js/comments.ts` | `Comments` + `CommentForm` + `CommentsLazy` | One island instead of three |
+| `src/assets/js/subscribe.ts` | `SubscribeForm` | Enhancement, not the only path |
+
+**core.js 1,162 b; post.js 6,700 b** against a budget raised from 4,000 to 8,000. The
+budget moving is the point: it moved in a diff.
+
+**PARITY EXCEPTION: Google sign-in is gone, so the trusted-commenter path is gone.** The
+frozen tree had two identities. A commenter signed in with Google was trusted — name and
+email came from the session and Turnstile was skipped — and everyone else filled in a form.
+ADR 0007 removes Google sign-in, so only the manual path survives. A reader who never
+signed in loses nothing; one who did now fills in two fields. Recorded in
+`docs/07-parity.md`.
+
+**Comments stay client-fetched, and that is not laziness.** The article page is cached HTML
+(Invariant 1) and a comment is not a post. Rendering the thread into the page would force a
+choice between flushing the entire page cache whenever a stranger types something and
+serving a stale thread. Fetching sidesteps both, which is why the frozen tree did it too.
+The fetch is held behind an `IntersectionObserver`: a reader who never reaches the bottom
+of the article never makes the request.
+
+**DELIBERATE DEVIATION, stated because it is one.** The frozen tree built its sign-up form
+in JavaScript, so a reader without it saw no form and lost nothing. 2.0 renders the form
+server-side — to keep it out of the JavaScript budget and out of the layout shift — which
+means a reader without JavaScript now *can* submit it. Answering that submit with a page of
+JSON would be a defect this port created rather than one it carried. So `/api/subscribe`
+takes a form post as well as JSON and replies in kind, with the same status code either
+way: **400 stays 400**, because the status describes the request, not the presentation.
+
+**PLACEMENT DEVIATION:** the frozen tree put a subscribe TRIGGER in the site header, opening
+an overlay. The overlay is still to be ported, and a trigger with nothing behind it is worse
+than no trigger, so the form sits at the end of the article for now.
+
+**The XSS boundary is one line either way.** A comment's `contentHtml` goes through
+`innerHTML`, which is safe for exactly one reason: the server rendered it through the
+limited-markdown sanitiser in `comment-md.ts`. The author NAME goes through `textContent`.
+Reversing those two turns a comment section into an XSS on every reader of the post, so
+there is a test that puts `<img src=x onerror=…>` in a name and asserts no element appears.
+
+**Three near-misses of my own, all caught by the type checker or a test:**
+
+- I added 15 locale keys that mostly already existed (`commentsHeading`, `commentEmailNote`
+  and the rest of the family were there). Duplicate keys in one object literal are a
+  compile error, which is the only reason this was not a second, drifting set of strings.
+- The two that *were* new got named `subThanks`/`subPending`, ignoring the `nl*` family
+  beside them. Renamed `nlInvalid` / `nlNoMail`; `nlPending` was rejected because the admin
+  strings already use that name for a subscriber status.
+- The test seeded subscribers with `db().run(sql, a, b)`, which types its rest parameter as
+  an array OF binding arrays. Same trap `store/query.ts` documents.
+
+Still to come in M2: the search / subscribe / comments OVERLAYS and the header that triggers
+them, book mode, the left rail and its table of contents, and the listing islands (grid
+toggle, infinite scroll).

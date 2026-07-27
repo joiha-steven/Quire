@@ -12,8 +12,12 @@
 
 import { backToTop } from './back-to-top'
 import { codeCopy } from './code-copy'
+import { comments } from './comments'
 import { lightbox } from './lightbox'
+import { subscribe } from './subscribe'
 
 backToTop()
 codeCopy()
 lightbox()
+subscribe()
+comments()

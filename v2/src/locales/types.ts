@@ -40,6 +40,8 @@ export type Dict = {
   seriesPartPrefix: string
   emptySeries: string
   previewNotice: string
+  nlInvalid: string
+  nlNoMail: string
   copyCode: string
   copiedCode: string
   nlHeading: string

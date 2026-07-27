@@ -39,6 +39,8 @@ const de = {
   seriesPartPrefix: 'Teil',
   emptySeries: 'Noch keine Beiträge in dieser Serie.',
   previewNotice: 'Vorschau: Diese Seite ist nicht öffentlich und wird nicht indexiert.',
+  nlInvalid: 'Das sieht nicht nach einer E-Mail-Adresse aus.',
+  nlNoMail: 'Angemeldet. E-Mail ist nicht konfiguriert, daher wurde keine Bestaetigung gesendet.',
   copyCode: 'Kopieren',
   copiedCode: 'Kopiert',
   nlHeading: 'Newsletter abonnieren',

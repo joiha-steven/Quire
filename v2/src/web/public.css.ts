@@ -159,5 +159,39 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 .preview-note{border:1px solid var(--c-rule);background:var(--c-rule);color:var(--c-meta);
   border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);margin:0 0 1.5rem}
 
+/* Comments and sign-up. The FORM is server-rendered markup, so these rules apply with or
+   without JavaScript; the comment thread is built by the island, so its rules only ever
+   match once the script has run. */
+form.subscribe{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem;font-size:var(--fs-small)}
+form.subscribe label{display:block;color:var(--c-heading);font-weight:600;margin-bottom:.5rem}
+.subscribe-row{display:flex;gap:.5rem}
+.subscribe-row input{flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  background:var(--c-bg);color:var(--c-text);font:inherit}
+.subscribe-row button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
+.subscribe-status:empty{display:none}
+.subscribe-status{color:var(--c-meta);margin:.5rem 0 0}
+
+#comments{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem}
+#comments h2{font-size:var(--fs-h2);color:var(--c-heading);font-weight:600;margin:0 0 1.5rem}
+.comment-list,.comment-replies{list-style:none;padding:0;margin:0}
+.comment-replies{margin-left:1.25rem;padding-left:1rem;border-left:1px solid var(--c-rule)}
+.comment{margin:0 0 1.5rem}
+.comment-meta{color:var(--c-meta);font-size:var(--fs-small);margin:0 0 .35rem}
+.comment-name{color:var(--c-heading);font-weight:600}
+.comment-body p:last-child{margin-bottom:0}
+.comment-reply{border:0;background:none;padding:0;margin-top:.35rem;color:var(--c-meta);
+  font:inherit;font-size:var(--fs-small);cursor:pointer;text-decoration:underline}
+.comment-reply:hover{color:var(--c-heading)}
+.comment-form{margin-top:1.5rem;font-size:var(--fs-small)}
+.comment-field{margin:0 0 .75rem}
+.comment-field label{display:block;color:var(--c-meta);margin-bottom:.25rem}
+.comment-form input,.comment-form textarea{width:100%;padding:.5rem .75rem;border:1px solid var(--c-rule);
+  border-radius:.35rem;background:var(--c-bg);color:var(--c-text);font:inherit}
+.comment-form button{margin-top:.75rem;padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
+.comment-status:empty{display:none}
+.comment-status{color:var(--c-meta);margin:.5rem 0 0}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `.trim()

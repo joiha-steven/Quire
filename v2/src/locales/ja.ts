@@ -39,6 +39,8 @@ const ja = {
   seriesPartPrefix: 'パート',
   emptySeries: 'このシリーズにはまだ記事がありません。',
   previewNotice: 'プレビュー: このページは公開されておらず、インデックスもされません。',
+  nlInvalid: 'メールアドレスの形式が正しくありません。',
+  nlNoMail: '登録しました。メールが未設定のため確認メールは送信されていません。',
   copyCode: 'コピー',
   copiedCode: 'コピーしました',
   nlHeading: 'ニュースレターを購読',

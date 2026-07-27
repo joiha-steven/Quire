@@ -47,7 +47,7 @@ if (!result.success) {
  */
 const BUDGET: Record<string, number> = {
   'core.js': 2_000, // every public page: the analytics beacon
-  'post.js': 4_000, // /{slug}: back to top, code copy, lightbox
+  'post.js': 8_000, // /{slug}: back to top, code copy, lightbox, subscribe, comments
 }
 
 let over = false

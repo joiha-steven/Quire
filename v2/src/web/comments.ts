@@ -1,0 +1,115 @@
+// The public comments API.
+//
+//   GET  /api/comments?post=<slug>  the rendered tree, without email addresses
+//   POST /api/comments              leave a comment
+//
+// Both are public and unauthenticated, because a reader is. The post page itself is
+// cached HTML (Invariant 1); comments are fetched separately so a new one appears without
+// anything having to invalidate the page it is on.
+//
+// PARITY EXCEPTION, deliberate: the frozen tree had two identity paths. A commenter signed
+// in with Google was TRUSTED — name and email came from the session and Turnstile was
+// skipped. ADR 0007 removes Google sign-in from 2.0, so only the manual path survives:
+// name, a valid email, and Turnstile when the owner has it on. Nothing is lost for a
+// reader who never signed in, which was almost all of them; a reader who did now fills in
+// two fields. Recorded in docs/07-parity.md.
+
+import type { Context } from 'hono'
+import { addComment, getCommentTree, CommentInputError, MAX_COMMENT_LEN } from '@/comments/comments'
+import { notifyReply } from '@/comments/comment-notify'
+import { getCommentEnv } from '@/comments/comment-env'
+import { verifyTurnstile } from '@/auth/turnstile'
+import { getPost } from '@/content/posts'
+import { getSettings } from '@/content/settings'
+import { logActivity } from '@/server/activity'
+import { isPublicallyVisible } from '@/utils'
+import { clientIp, rateLimited } from '@/server/rate-limit'
+import { fail, json } from '@/web/api'
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Tight. Turnstile is the real defence; this blunts a trivial flood before it starts. */
+const PER_MINUTE = 6
+
+/** Keep an http(s) URL, drop everything else. `javascript:` in a website field is an XSS. */
+function cleanWebsite(raw: unknown): string {
+  if (typeof raw !== 'string' || !raw.trim()) return ''
+  try {
+    const u = new URL(raw.trim())
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : ''
+  } catch {
+    return ''
+  }
+}
+
+export async function handleCommentsGet(c: Context): Promise<Response> {
+  const slug = c.req.query('post')?.trim()
+  const { comments } = await getSettings()
+  // An empty list rather than an error: the island renders nothing and the page is fine.
+  if (!comments.enabled || !slug) return json({ comments: [] })
+  return json({ comments: await getCommentTree(slug) })
+}
+
+export async function handleCommentsPost(c: Context): Promise<Response> {
+  const { comments } = await getSettings()
+  if (!comments.enabled) return fail(c, 'Comments are disabled', 403)
+
+  const ip = clientIp(c.req.raw)
+  // Best-effort, from the CDN edge. Absent without one.
+  const country = (c.req.header('cf-ipcountry') ?? '').trim()
+  if (rateLimited(`comment:${ip}`, PER_MINUTE)) {
+    return fail(c, 'Too many comments — slow down a moment', 429)
+  }
+
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>
+  const postSlug = typeof body.postSlug === 'string' ? body.postSlug.trim() : ''
+  const content = typeof body.content === 'string' ? body.content.trim() : ''
+  const parentId = typeof body.parentId === 'number' ? body.parentId : null
+  const turnstileToken = typeof body.turnstileToken === 'string' ? body.turnstileToken : ''
+
+  if (!content) return fail(c, 'Comment cannot be empty', 400)
+  if (content.length > MAX_COMMENT_LEN) {
+    return fail(c, `Comment must be under ${MAX_COMMENT_LEN} characters`, 400)
+  }
+
+  // Only on a post that is actually published and visible. Without this, a draft's slug is
+  // a place to store text on someone else's server.
+  const post = await getPost(postSlug)
+  if (!post || !isPublicallyVisible(post.status, post.date)) return fail(c, 'Post not found', 404)
+
+  const name = typeof body.name === 'string' ? body.name.trim() : ''
+  const email = typeof body.email === 'string' ? body.email.trim() : ''
+  const website = cleanWebsite(body.website)
+  if (!name || name.length > 80) return fail(c, 'A name (under 80 chars) is required', 400)
+  if (!EMAIL_RE.test(email) || email.length > 120) return fail(c, 'A valid email is required', 400)
+
+  const { turnstileConfigured } = await getCommentEnv()
+  if (comments.turnstile && turnstileConfigured) {
+    if (!(await verifyTurnstile(turnstileToken, ip))) {
+      return fail(c, 'Verification failed — please try again', 400)
+    }
+  }
+
+  let created
+  try {
+    created = await addComment({
+      postSlug, parentId, name, email, website, provider: 'manual',
+      content, ip: ip === 'unknown' ? '' : ip, country,
+    })
+  } catch (error) {
+    // Bad input (missing parent, reply too deep) is a 400, not a 500.
+    if (error instanceof CommentInputError) return fail(c, error.message, 400)
+    throw error
+  }
+
+  await logActivity('comment.create', postSlug)
+  // A reply emails the parent commenter. Best-effort and awaited: without SMTP it is a
+  // no-op, and with it the send is fast enough not to be worth deferring past a response
+  // that is already writing to the database.
+  if (parentId !== null) {
+    await notifyReply({
+      parentId, postSlug, replierName: name, replierEmail: email, contentHtml: created.contentHtml,
+    })
+  }
+  return json({ comment: created })
+}

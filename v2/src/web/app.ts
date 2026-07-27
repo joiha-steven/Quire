@@ -33,6 +33,10 @@ import { handlePreview } from '@/web/preview'
 import { handleSearch } from '@/web/search-api'
 import { requestLogger } from '@/web/api'
 import { staticFile, staticPaths } from '@/web/static'
+import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
+import {
+  handleConfirm, handleOpenPixel, handleSubscribe, handleUnsubscribeGet, handleUnsubscribePost,
+} from '@/web/newsletter'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -209,6 +213,16 @@ export function createApp(): Hono {
   // ----- the JSON and machine surfaces ----------------------------------------
 
   app.get('/api/search', handleSearch)
+  app.get('/api/comments', handleCommentsGet)
+  app.post('/api/comments', handleCommentsPost)
+  app.post('/api/subscribe', handleSubscribe)
+  app.get('/api/newsletter/confirm', handleConfirm)
+  // GET asks for a click, POST does it. Link scanners and mail-client prefetchers issue
+  // GETs, so unsubscribing on GET means an appliance that merely looked at an inbox can
+  // remove the reader from the list.
+  app.get('/api/newsletter/unsubscribe', handleUnsubscribeGet)
+  app.post('/api/newsletter/unsubscribe', handleUnsubscribePost)
+  app.get('/api/newsletter/open', handleOpenPixel)
   app.get('/api/md/:slug', handleMarkdown)
   app.get('/manifest.webmanifest', handleManifest)
 

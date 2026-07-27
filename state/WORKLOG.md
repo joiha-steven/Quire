@@ -3,6 +3,34 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the two things a reader can write to
+
+Comments and newsletter sign-up, both ends: the endpoints and the islands. **656 tests,
+`check:all` green.** post.js is 6,700 b against a budget raised from 4,000 to 8,000 — the
+budget moving is the point, it moved in a diff someone reads.
+
+**Google sign-in is gone, so the trusted-commenter path is gone with it** (ADR 0007). The
+frozen tree skipped Turnstile and took name and email from the session for a signed-in
+commenter. Only the manual path survives. Recorded in `07-parity.md` §7a as removed rather
+than pending, because it is not coming back.
+
+**One deliberate deviation, stated as one.** The frozen tree built its sign-up form in
+JavaScript, so a reader without it saw no form. 2.0 renders the form server-side, which
+means that reader can now submit it — and answering them with a page of JSON would be a
+defect this port created rather than one it carried. `/api/subscribe` takes a form post as
+well as JSON and replies in kind, with the same status either way: 400 stays 400, because
+the status describes the request and not the presentation.
+
+The XSS boundary in the comment island is one line either way: the body goes through
+`innerHTML` because the server sanitised it, the author name through `textContent` because
+nobody did. There is a test that puts an `onerror` payload in a name.
+
+Three near-misses of my own, all caught before they shipped: 15 locale keys that mostly
+already existed (duplicate keys in one object literal are a compile error, which is the only
+reason this was not a second drifting set of strings), two new keys named outside the `nl*`
+family beside them, and a test seeding rows through `db().run(sql, a, b)` — the same
+binding trap `store/query.ts` documents.
+
 ## 2026-07-27 — M2: the machine surfaces, and the files nobody was serving
 
 Markdown for agents, the PWA manifest, `/api/search`, the tokened draft preview, and the

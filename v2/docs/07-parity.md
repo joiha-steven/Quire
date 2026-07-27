@@ -241,6 +241,14 @@ Count when written: 214 items.
 - [ ] `⚠` SMTP TLS is derived from the port (465 implicit, 587/25 STARTTLS); the wrong pair fails
       with an opaque OpenSSL error
 
+## 7a. Comments identity (2026-07-27)
+
+- [x] Manual comments: name, valid email, optional website, Turnstile when configured
+- [ ] `⚠` **REMOVED, not pending.** The frozen tree also accepted a Google-signed-in
+      commenter as trusted: name and email from the session, Turnstile skipped. ADR 0007
+      removes Google sign-in from 2.0, so that path does not exist. A reader who never
+      signed in is unaffected; one who did now fills in two fields
+
 ## 8. Analytics
 
 - [x] Cookieless. A visitor is a salted hash of IP + UA; the raw UA is never stored
