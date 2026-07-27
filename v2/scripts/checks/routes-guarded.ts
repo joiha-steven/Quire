@@ -31,6 +31,9 @@ const PUBLIC_WRITES = new Map<string, string>([
   ['/api/auth/enrol/done', 'acknowledging the recovery codes, which is where the first session is issued. Requires a ticket whose enrolment actually completed.'],
   ['/api/auth/logout', 'ending a session. Refusing this to an expired session would be perverse.'],
   ['/api/cron', 'called by an external scheduler that has no session. Authorised by CRON_SECRET as a bearer token when one is set.'],
+  ['/api/mcp/register', 'RFC 7591 dynamic client registration, which happens BEFORE any auth by definition. Rate limited per IP, refused while MCP is off, and registering a client grants nothing on its own - the owner still has to approve it at /api/mcp/authorize.'],
+  ['/api/mcp/token', 'the OAuth token exchange. Authorised by a signed, single-use, PKCE-bound code rather than a session.'],
+  ['/api/mcp/authorize', 'the consent form POST. Requires an owner session AND a session-bound CSRF token; it is listed here only because the GET half must be reachable to sign in from.'],
 ])
 
 type Finding = { file: string; line: number; method: string; path: string }

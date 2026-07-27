@@ -15,7 +15,7 @@ import { one, run } from '@/store/query'
  * A distinct salt per purpose. Sharing one across the analytics token and the session IP
  * hash would let a match in one table confirm a guess in the other.
  */
-export type SecretName = 'analytics-visitor' | 'session-ip'
+export type SecretName = 'analytics-visitor' | 'session-ip' | 'mcp-oauth'
 
 // Memoised: these are read on the analytics path, which runs on every public request, and
 // the value cannot change during a process's life.

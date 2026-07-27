@@ -40,6 +40,7 @@ import { siteRoutes } from '@/web/admin/site'
 import { uploadRoutes } from '@/web/admin/uploads'
 import { newsRoutes } from '@/web/admin/news'
 import { opsRoutes, publicOpsRoutes } from '@/web/admin/ops'
+import { mcpAdminRoutes, mcpOAuthRoutes } from '@/web/admin/mcp'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
@@ -289,6 +290,8 @@ export function createApp(): Hono {
   app.route('/', newsRoutes().routes)
   app.route('/', opsRoutes().routes)
   app.route('/', publicOpsRoutes())
+  app.route('/', mcpAdminRoutes().routes)
+  app.route('/', mcpOAuthRoutes())
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot
