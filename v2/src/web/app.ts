@@ -35,6 +35,7 @@ import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
 import { getMailStatus } from '@/news/mail'
 import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
+import { siteRoutes } from '@/web/admin/site'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
@@ -263,6 +264,7 @@ export function createApp(): Hono {
   // it (Invariant 4), and `check:routes` fails the build if one escapes.
 
   app.route('/', contentRoutes().routes)
+  app.route('/', siteRoutes().routes)
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot
