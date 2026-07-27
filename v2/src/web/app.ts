@@ -16,6 +16,7 @@ import { resolveSeries } from '@/content/series'
 import { resolveTerm } from '@/content/taxonomy'
 import { paginate } from '@/content/paginate'
 import { t } from '@/i18n/i18n'
+import { foldAccents } from '@/utils'
 import { pageCache } from '@/server/cache'
 import { renderDocument, pageStyles } from '@/web/layout'
 import { PUBLIC_CSS } from '@/web/public.css'
@@ -37,6 +38,7 @@ import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
 import { siteRoutes } from '@/web/admin/site'
 import { uploadRoutes } from '@/web/admin/uploads'
+import { newsRoutes } from '@/web/admin/news'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
@@ -232,6 +234,22 @@ export function createApp(): Hono {
   // ----- the JSON and machine surfaces ----------------------------------------
 
   app.get('/api/search', handleSearch)
+
+  // The client-side search index: slug, title, date and accent-folded terms for every
+  // public post. PUBLIC, and it carries nothing a reader could not read by browsing the
+  // site — no drafts, no bodies. 404 when search is switched off, so a disabled feature
+  // does not leave an endpoint quietly answering.
+  app.get('/api/search/index', async (c) => {
+    const { features } = await getSettings()
+    if (!features.search) return c.json({ error: 'Search disabled' }, 404)
+    const posts = await getPublicPosts()
+    return c.json(posts.map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      date: p.date,
+      terms: foldAccents([p.title, p.tags.join(' '), p.categories.join(' ')].join(' ')),
+    })))
+  })
   app.get('/api/comments', handleCommentsGet)
   app.post('/api/comments', handleCommentsPost)
   app.post('/api/subscribe', handleSubscribe)
@@ -267,6 +285,7 @@ export function createApp(): Hono {
   app.route('/', contentRoutes().routes)
   app.route('/', siteRoutes().routes)
   app.route('/', uploadRoutes().routes)
+  app.route('/', newsRoutes().routes)
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot

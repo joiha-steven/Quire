@@ -62,6 +62,19 @@ export function requireOwner(): MiddlewareHandler<OwnerEnv> {
 type Handler = (c: Context) => Response | Promise<Response>
 
 /**
+ * The signed-in owner, inside a gated handler.
+ *
+ * Throws rather than returning null: every route that can reach this is behind
+ * `requireOwner()`, so an absent owner is a routing mistake, not a case to handle. It
+ * becomes a logged 500, which is what a routing mistake deserves.
+ */
+export function owner(c: Context): Owner {
+  const found = (c as Context<OwnerEnv>).get('owner')
+  if (found === undefined) throw new Error('owner() called outside an owner-gated route')
+  return found
+}
+
+/**
  * A path parameter, as a string.
  *
  * Hono infers `:slug` from the literal path when a handler is typed against it. These
