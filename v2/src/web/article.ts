@@ -12,7 +12,8 @@ import { getSeriesForPost } from '@/content/series'
 import { collapseBlob } from '@/media/blob'
 import { renderPostContent, type ImageDims } from '@/render/post-content'
 import { termSlug } from '@/content/taxonomy'
-import { formatDate } from '@/i18n/i18n'
+import { formatDate, t } from '@/i18n/i18n'
+import { scriptTag } from '@/web/assets'
 import { isPublicallyVisible, clampExcerpt, toPlainText } from '@/utils'
 import { renderDocument, pageStyles } from '@/web/layout'
 import { PUBLIC_CSS } from '@/web/public.css'
@@ -90,6 +91,30 @@ export async function renderArticle(slug: string): Promise<string | null> {
     || post?.excerpt
     || clampExcerpt(toPlainText(item.content).slice(0, 300))
 
+  // The reading-progress bar is markup plus a scroll-driven CSS animation, with no script
+  // behind it: it therefore works with JavaScript switched off, and costs nothing on the
+  // main thread. `@supports` in the sheet hides it on an engine without scroll timelines,
+  // so the failure mode is absence rather than a bar stuck at zero.
+  const progress = settings.features.progressBar
+    ? '<div class="progress" aria-hidden="true"><div class="progress-fill"></div></div>'
+    : ''
+
+  // The one bundle a reader loads, and the strings it will show them. Each island inside
+  // it checks for its own markup first, so a post with no code blocks and no images runs
+  // two cheap queries that find nothing rather than downloading two different files.
+  const s = t(settings.language)
+  const shell = {
+    bodyData: {
+      copyCode: s.copyCode,
+      copiedCode: s.copiedCode,
+      backToTop: s.backToTop,
+      lightboxPrev: s.lightboxPrev,
+      lightboxNext: s.lightboxNext,
+      lightboxClose: s.lightboxClose,
+    },
+    scripts: scriptTag('post'),
+  }
+
   const site = resolveSiteUrl(settings)
   return renderDocument(
     settings,
@@ -99,7 +124,7 @@ export async function renderArticle(slug: string): Promise<string | null> {
       canonical: site ? `${site}/${item.slug}` : undefined,
     },
     pageStyles(settings, PUBLIC_CSS),
-    `<div class="wrap">
+    `${progress}<div class="wrap">
 <header class="site"><a class="title" href="/">${escapeHtml(settings.title)}</a></header>
 <article>
 <h1>${escapeHtml(item.title)}</h1>
@@ -108,5 +133,6 @@ ${meta}
 ${footer}
 </article>
 </div>`,
+    shell,
   )
 }

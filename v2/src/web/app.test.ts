@@ -9,7 +9,7 @@ import { freshDatabase, dropDatabase } from '@/test/db'
 import { db } from '@/store/db'
 import { savePost } from '@/content/posts'
 import { savePage } from '@/content/pages'
-import { saveSettings } from '@/content/settings'
+import { getSettings, saveSettings } from '@/content/settings'
 import { clearCache, pageCache } from '@/server/cache'
 import { createApp } from '@/web/app'
 
@@ -46,12 +46,61 @@ describe('article page', () => {
     expect(html).toContain('My Blog')
   })
 
-  it('ships ZERO JavaScript, which is the whole point', async () => {
+  it('ships ONE deferred script and no inline JavaScript at all', async () => {
     await savePost({ title: 'Quiet', content: 'body', status: 'published', date: PAST })
     const html = await get('/quiet').then((r) => r.text())
-    expect(html).not.toContain('<script')
+    // One tag, external, deferred. The budget is a number, not a vibe: the moment a
+    // second bundle or an inline block appears on an article page, this fails.
+    const tags = html.match(/<script/g) ?? []
+    expect(tags.length).toBe(1)
+    expect(html).toMatch(/<script src="\/assets\/post\.[a-z0-9]+\.js" defer><\/script>/)
+    expect(html).not.toMatch(/<script(?![^>]*\bsrc=)/) // no inline block
     expect(html).not.toContain('onload=')
     expect(html).not.toContain('onclick=')
+  })
+
+  it('serves the bundle immutably, and 404s a hash it does not have', async () => {
+    await savePost({ title: 'Quiet', content: 'body', status: 'published', date: PAST })
+    const html = await get('/quiet').then((r) => r.text())
+    const src = /<script src="([^"]+)"/.exec(html)?.[1] ?? ''
+    const res = await get(src)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/javascript')
+    expect(res.headers.get('cache-control')).toContain('immutable')
+    // An unknown hash is a 404, never a stale body under a name that promises otherwise.
+    expect((await get('/assets/post.deadbeef.js')).status).toBe(404)
+  })
+
+  it('hands the islands their labels, translated, rather than shipping a locale table', async () => {
+    // `features` is saved whole, so the other flags have to be carried across: passing a
+    // partial object would silently switch twelve of them off.
+    const { features } = await getSettings()
+    await saveSettings({ language: 'vi', features: { ...features, progressBar: true } })
+    await savePost({ title: 'Nhan', content: 'body', status: 'published', date: PAST })
+    const html = await get('/nhan').then((r) => r.text())
+    expect(html).toContain('data-back-to-top="')
+    expect(html).toContain('data-copy-code="')
+    // Vietnamese, not the English fallback: the label crossed the language boundary.
+    expect(html).not.toContain('data-back-to-top="Back to top"')
+  })
+
+  it('renders the progress bar as markup, with no script behind it', async () => {
+    const { features } = await getSettings()
+    await saveSettings({ features: { ...features, progressBar: true } })
+    await savePost({ title: 'Long', content: 'body', status: 'published', date: PAST })
+    const html = await get('/long').then((r) => r.text())
+    // Server-rendered and driven by a scroll-driven CSS animation, so it works with
+    // JavaScript off. If it ever moves back into the bundle, this fails.
+    expect(html).toContain('<div class="progress" aria-hidden="true">')
+    expect(html).toContain('animation-timeline:scroll(root block)')
+  })
+
+  it('leaves the progress bar out when the owner has it off', async () => {
+    const { features } = await getSettings()
+    await saveSettings({ features: { ...features, progressBar: false } })
+    await savePost({ title: 'Plain', content: 'body', status: 'published', date: PAST })
+    const html = await get('/plain').then((r) => r.text())
+    expect(html).not.toContain('class="progress"')
   })
 
   it('inlines the stylesheet instead of requesting one', async () => {

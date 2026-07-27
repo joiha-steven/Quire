@@ -1,0 +1,24 @@
+{
+  // Browser code, and the ONLY directory that gets DOM types.
+  //
+  // The root tsconfig excludes this folder and does not include "DOM" in `lib`, so a
+  // server module that reaches for `document` or `window` fails to compile rather than
+  // failing at runtime on the first request. The boundary is enforced by the type
+  // checker instead of by reviewer attention.
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    // `bun` for the test files that live beside the islands. It adds no DOM globals of its
+    // own, so the boundary this file exists to enforce is unaffected.
+    "types": ["bun"],
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["."]
+}

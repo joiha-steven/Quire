@@ -352,3 +352,79 @@ A series page is not paginated: it is read front to back.
 | `image`, `highlight`, `wordpress-import`, `well-known` | Need npm dependencies (`sharp`, `shiki`, `turndown`, MCP SDK). Land with their module |
 | `upload-client` | Browser-side; belongs to the admin SPA |
 | `mcp/auth`, `mcp/consent`, `mcp/tools`, `mcp/tools-library`, `well-known` | Route-shaped, not data-layer: they need the MCP SDK, zod and the router. M3. (`og.ts` turned out to touch no `db()` at all and moved verbatim in the first slice.) |
+
+
+## M2: the first islands, hand-written (2026-07-27)
+
+| File | Role |
+|---|---|
+| `src/assets/js/core.ts` | `whenActivated`, `label`, `el`, `onScrollFrame`. Bundled in, never served alone |
+| `src/assets/js/{back-to-top,code-copy,lightbox}.ts` | Three islands, one file each |
+| `src/assets/js/post.ts` | The `/{slug}` bundle: imports the three and calls them |
+| `scripts/build-assets.ts` | Bundles `js/` into `dist/`, ahead of time |
+| `src/web/assets.ts` | Imports the bundle as TEXT, hashes it, serves it |
+
+**2,966 bytes, minified, for the whole article page.** One request, `defer`, cached
+`immutable` for a year under a content-hashed URL. The listing, taxonomy, series, search
+and feed routes still contain zero `<script`.
+
+**Why the bundle is built ahead of time.** `bun build --compile` produces one binary with
+no source tree beside it, so a runtime `Bun.build` would work in development and fail in
+production. The server imports the finished bundle with `with { type: 'text' }`, which the
+compiler embeds.
+
+**Two of the four were deleted rather than ported**, which is what 04-frontend.md called
+for and I nearly missed:
+
+- **`ReadingProgress` is now CSS.** `animation-timeline: scroll(root block)` on a
+  server-rendered bar. No script, no scroll listener, no main-thread work, and it works
+  with JavaScript switched off. An `@supports` guard removes the element entirely on an
+  engine without scroll timelines, so the failure mode is absence rather than a hairline
+  stuck at zero. `features.progressBar` still decides whether the markup exists at all.
+- **`Lightbox` is a `<dialog>`.** Escape, focus trapping, the inert background and the
+  backdrop are the browser's job now, not this file's. What is left is the picture and the
+  arrows. Navigating swaps the image inside the dialog rather than rebuilding it, because
+  rebuilding drops focus and re-runs `showModal` on every arrow press.
+
+I wrote both as JavaScript first, as a straight port of the React components, and caught it
+only on re-reading the spec. Worth recording: the porting rule says move it, do not improve
+it, but the spec had already decided these two were to be **deleted**. Applying the porting
+rule past the plan is not discipline.
+
+**The rest became one bundle, deliberately.** The frozen tree mounted each behind a
+server-side condition (`content.includes('```')`, `imageUrls.length > 0`). Here each part
+guards itself on the markup it needs, so a post with no code and no images downloads the
+same file and runs two queries that find nothing. A transport change, not a behaviour
+change: the frozen tree split them because React's per-island cost was real, and this whole
+bundle is smaller than one of those islands was.
+
+**No locale table crosses the wire.** Every string an island shows is translated on the
+server and handed over as a `data-` attribute on `<body>`. The bundle has no language of
+its own and cannot disagree with the page it is running on.
+
+**The DOM boundary is now type-checked, not remembered.** `src/assets/js/` has its own
+tsconfig with `lib: ["DOM"]`, and the root project excludes it and has no DOM lib. A server
+module that reaches for `document` fails to compile. `check:all` runs both projects.
+
+**The islands have tests, which is new.** Browser code is the one part `bun test` cannot
+reach by making a request, so until now the only evidence any of it ran was that the
+bundler accepted the syntax. 14 tests drive them against happy-dom: the copy button is
+idempotent and reverts its label, the lightbox wraps at both ends, tears down on `close`
+however it was closed, and reopens cleanly. happy-dom is registered for that ONE file and
+unregistered in `afterAll` — registering globally would hand the router tests happy-dom's
+`fetch` and `Response` instead of Bun's.
+
+Measured on the running server: article page one script, body carrying six `data-` labels,
+unknown asset hash 404s, home page zero scripts.
+
+*Caveat worth stating: happy-dom is not Chromium. These tests prove the logic, not that
+`showModal` and scroll-driven animations behave identically in a real engine.*
+
+**Two Windows traps, both fatal, both silent about the real cause.**
+`new URL('..', import.meta.url).pathname` yields `/C:/dev/...`, and every filesystem call
+against it fails with `EFAULT: bad address`. `fileURLToPath` is the fix. And for the second
+time, **a backtick inside a comment in `public.css.ts` ended the template literal** and the
+server refused to boot. The file now carries a note saying so.
+
+Still to come in M2: the analytics beacon (`core.js` + `POST /api/track`), OG images,
+search/subscribe/comments overlays, book mode, and the listing islands.

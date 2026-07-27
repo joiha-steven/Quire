@@ -22,6 +22,22 @@ export type Head = {
   extra?: string
 }
 
+/** The parts of the document outside `<head>` that a route can vary. */
+export type Shell = {
+  /**
+   * `data-*` attributes on `<body>`. Every string an island shows a reader is translated
+   * on the server and handed over here, so a bundle carries no locale table and cannot
+   * disagree with the page it is running on. A key of `backToTop` becomes
+   * `data-back-to-top`, which the browser reads back as `dataset.backToTop`.
+   */
+  bodyData?: Record<string, string>
+  /** Script tags, rendered last so nothing blocks the parse. */
+  scripts?: string
+}
+
+/** `backToTop` -> `data-back-to-top`. The inverse of the browser's `dataset` mapping. */
+const dataAttr = (key: string) => `data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`
+
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
@@ -50,7 +66,11 @@ export function renderDocument(
   head: Head,
   styles: string,
   body: string,
+  shell: Shell = {},
 ): string {
+  const bodyAttrs = Object.entries(shell.bodyData ?? {})
+    .map(([k, v]) => ` ${dataAttr(k)}="${escapeAttr(v)}"`)
+    .join('')
   const preloads = fontPreloadHrefs(settings.fontPreset, settings.language, !!settings.customFont.family)
     .map((href) => `<link rel="preload" href="${escapeAttr(href)}" as="font" type="font/woff2" crossorigin>`)
     .join('')
@@ -70,9 +90,9 @@ ${description}${canonical}${icon}${preloads}
 <style>${styles}</style>
 ${head.extra ?? ''}
 </head>
-<body>
+<body${bodyAttrs}>
 ${body}
-</body>
+${shell.scripts ?? ''}</body>
 </html>
 `
 }

@@ -22,6 +22,7 @@ import { PUBLIC_CSS } from '@/web/public.css'
 import { renderListing } from '@/web/listing'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
 import { renderArticle } from '@/web/article'
+import { assetBody } from '@/web/assets'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -172,6 +173,22 @@ export function createApp(): Hono {
 <button type="submit">${escapeHtml(t(settings.language).search)}</button>
 </form>`
     return c.html(await listingPage(`${t(settings.language).search} · ${settings.title}`, form + body))
+  })
+
+  // ----- browser bundles ------------------------------------------------------
+  // The URL carries a content hash, so the answer is cacheable forever and a deploy that
+  // changes the code changes the URL. A miss is a 404, never a stale body: an unknown
+  // hash means the reader is asking for a version this server does not have.
+
+  app.get('/assets/:file', (c) => {
+    const body = assetBody(`/assets/${c.req.param('file')}`)
+    if (body === null) return c.text('Not found', 404)
+    return new Response(body, {
+      headers: {
+        'content-type': 'text/javascript; charset=utf-8',
+        'cache-control': 'public, max-age=31536000, immutable',
+      },
+    })
   })
 
   // ----- machine-readable -----------------------------------------------------

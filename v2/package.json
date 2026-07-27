@@ -8,16 +8,18 @@
     "bun": ">=1.3"
   },
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "bun run build:assets && bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "build": "bun build --compile --minify --outfile dist/quire src/index.ts",
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "build": "bun run build:assets && bun build --compile --minify --outfile dist/quire src/index.ts",
+    "build:assets": "bun scripts/build-assets.ts",
+    "test": "bun run build:assets && bun test",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p src/assets/js",
     "check:filesize": "bun scripts/checks/file-size.ts",
-    "check:all": "bun run typecheck && bun run check:filesize && bun test",
+    "check:all": "bun run build:assets && bun run typecheck && bun run check:filesize && bun test",
     "import-v1": "bun scripts/import-v1.ts"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^20.11.1",
     "@supabase/postgrest-js": "^2.110.8",
     "@types/bun": "latest",
     "@types/nodemailer": "^8.0.1",

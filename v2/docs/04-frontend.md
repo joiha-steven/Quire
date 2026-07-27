@@ -125,15 +125,19 @@ turnstile     third party, only when a comment form is opened
 
 | Component | Does | Replacement | Bundle |
 |---|---|---|---|
+**Shipped so far (2026-07-27):** `BackToTop`, `CodeCopy` and `Lightbox` as `post.js`
+(2,966 b minified, one deferred request). `ReadingProgress` was deleted as planned and is
+now CSS. The bundle names below are the plan; `core.js` arrives with the analytics beacon.
+
 | `Track` | Pageview beacon | `navigator.sendBeacon` on load | core |
 | `ScrollDepth` | Max depth + dwell on leave | scroll listener + `visibilitychange` beacon | core |
 | `RailToggle` | Sidebar rail open/closed | click handler + `localStorage` | core |
-| `BackToTop` | Scroll-to-top button | ~15 lines | core |
+| `BackToTop` | Scroll-to-top button | ~15 lines | post ✅ (moved out of core: nothing else in core exists yet) |
 | `RevealFallback` | Reveal on scroll | **CSS `animation-timeline: view()`. Delete the JS** | none |
-| `CodeCopy` | Copy button per code block | delegated click + `navigator.clipboard`, ~20 lines | core |
+| `CodeCopy` | Copy button per code block | per-`<pre>` button + `navigator.clipboard`, ~20 lines | post ✅ |
 | `Toc` | Highlights the active heading | `IntersectionObserver`, or CSS scroll-driven if it measures clean | post |
-| `Lightbox` | Click an image to zoom | `<dialog>`, native backdrop and Esc | post |
-| `ReadingProgress` | Progress bar | **CSS `animation-timeline: scroll()`. Delete the JS** | none |
+| `Lightbox` | Click an image to zoom | `<dialog>`, native backdrop and Esc | post ✅ |
+| `ReadingProgress` | Progress bar | **CSS `animation-timeline: scroll()`. Delete the JS** | none ✅ |
 | `BookMode` | Toggle into book mode | click handler that imports `reader.js` | core |
 | `BookReader` | Fullscreen 2-column overlay | the heavy one, stays lazy, rewritten vanilla | lazy |
 | `GridToggle` | List vs grid | class toggle + `localStorage` | listing |

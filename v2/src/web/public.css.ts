@@ -106,5 +106,55 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 /* Shiki emits a light colour inline and a --shiki-dark var; the dark palette swaps them. */
 .dark .shiki,.dark .shiki span{color:var(--shiki-dark)!important;background-color:var(--shiki-dark-bg)!important}
 
+/* --- islands -------------------------------------------------------------------
+   Every rule below styles an element the browser bundle CREATES. None of it applies
+   to the server-rendered page, so a reader with JavaScript off sees no gaps: the
+   elements simply never exist. */
+
+.code-copy{position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;font-size:.75rem;
+  border:1px solid var(--c-rule);background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;transition:opacity .15s}
+.prose pre{position:relative}
+.prose pre:hover .code-copy,.code-copy:focus-visible{opacity:1}
+
+/* The reading-progress bar has NO script behind it: a scroll-driven animation reads the
+   document's own scroll position. It therefore works with JavaScript off, and runs off the
+   main thread. On an engine without scroll timelines the bar would sit at zero forever, so
+   the @supports rule removes it entirely rather than leaving a dead hairline on the page.
+   NOTE: no backticks anywhere in this file. It is one template literal, and a backtick in
+   a comment ends the string. That has now cost two debugging sessions. */
+.progress{display:none;position:fixed;inset-inline:0;top:0;height:2px;z-index:50}
+.progress-fill{height:100%;background:var(--c-heading);transform:scaleX(0);transform-origin:0 50%}
+@supports (animation-timeline:scroll()){
+  .progress{display:block}
+  .progress-fill{animation:read-progress linear both;animation-timeline:scroll(root block)}
+}
+@keyframes read-progress{to{transform:scaleX(1)}}
+
+.to-top{position:fixed;bottom:1.25rem;right:1.25rem;z-index:40;display:flex;width:2.5rem;height:2.5rem;
+  align-items:center;justify-content:center;border:1px solid var(--c-rule);border-radius:999px;
+  background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,color .2s}
+.to-top.shown{opacity:1;pointer-events:auto}
+.to-top:hover{color:var(--c-heading)}
+
+/* A <dialog>, so Escape, focus trapping and the inert background come from the browser.
+   The viewer is deliberately NOT themed: a light backdrop behind a photograph is a worse
+   reading of the photograph, and readers expect a lightbox to be dark. */
+.lightbox[open]{display:flex}
+.lightbox{width:100%;max-width:100%;height:100%;max-height:100%;border:0;overflow:hidden;
+  flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:1rem;
+  background:rgba(0,0,0,.9);color:#fff}
+.lightbox::backdrop{background:rgba(0,0,0,.9)}
+.lightbox-caption:empty{display:none}
+.lightbox-img{max-height:85vh;max-width:100%;object-fit:contain}
+.lightbox-caption{max-width:42rem;text-align:center;font-size:.875rem;color:rgba(255,255,255,.7);margin:0}
+.lightbox button{position:absolute;display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.8);cursor:pointer;line-height:1}
+.lightbox button:hover{background:rgba(255,255,255,.1);color:#fff}
+.lightbox-close{top:.75rem;right:.75rem;width:2.5rem;height:2.5rem;font-size:1.5rem}
+.lightbox-prev,.lightbox-next{top:50%;transform:translateY(-50%);width:3rem;height:3rem;font-size:1.875rem}
+.lightbox-prev{left:.5rem}
+.lightbox-next{right:.5rem}
+.lightbox-count{position:absolute;bottom:1rem;font-size:.75rem;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `.trim()

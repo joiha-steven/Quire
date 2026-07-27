@@ -3,6 +3,34 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the first islands, hand-written
+
+Back-to-top, code copy and the image lightbox, ported from React to vanilla. **583 tests,
+`check:all` green.** The whole article page now costs **2,966 bytes of minified
+JavaScript**, in one deferred request, cached `immutable` under a content-hashed URL.
+Listings, taxonomy, series, search and the feeds still ship zero.
+
+**Two of the four were deleted rather than ported**, as `04-frontend.md` had already
+decided. The reading-progress bar is now server-rendered markup driven by
+`animation-timeline: scroll()`, so it costs no script and works with JavaScript off. The
+lightbox is a `<dialog>`, so Escape, focus trapping and the inert background come from the
+browser. I wrote both as JavaScript first, in a straight port, and caught it only on
+re-reading the spec: applying the porting rule past the plan is not discipline.
+
+Every string an island shows is translated server-side and passed as a `data-` attribute,
+so the bundle carries no locale table and cannot disagree with the page it is on.
+
+Two things are structurally better than the frozen tree, not just moved. **The DOM
+boundary is type-checked**: `src/assets/js/` has its own tsconfig with DOM types and the
+root project excludes it, so a server module that reaches for `document` fails to compile.
+And **the islands have tests at all** — 14 of them, against happy-dom, covering what was
+previously only inspectable by eye: the copy button is idempotent, the lightbox wraps at
+both ends, tears down however it was closed, and reopens cleanly.
+
+The bundle is built ahead of time rather than on first request, because `bun build
+--compile` leaves no source tree beside the binary: a runtime build would have worked in
+development and failed in production.
+
 ## 2026-07-27 — M2: every public route is live
 
 Home and pagination, category, tag, series, search, RSS, sitemap, robots and llms.txt.
