@@ -36,6 +36,7 @@ import { getMailStatus } from '@/news/mail'
 import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
 import { siteRoutes } from '@/web/admin/site'
+import { uploadRoutes } from '@/web/admin/uploads'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
@@ -265,6 +266,7 @@ export function createApp(): Hono {
 
   app.route('/', contentRoutes().routes)
   app.route('/', siteRoutes().routes)
+  app.route('/', uploadRoutes().routes)
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot
