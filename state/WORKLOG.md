@@ -3,6 +3,23 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the table of contents
+
+**680 tests, `check:all` green.** The list is server-rendered markup with real anchors, so
+a reader without JavaScript gets a working index of the article — the frozen tree built the
+whole thing in React and gave them nothing. The bundle adds only the active-section
+highlight.
+
+The active row is the LAST heading past the reading line, not the one crossing the
+viewport, and that is the whole reason it is not an `IntersectionObserver`: in the middle of
+a long section the heading has already scrolled away, nothing intersects, and the list goes
+blank. The test places headings at explicit offsets and asserts a row stays marked while its
+heading is 600px above the viewport.
+
+Two file-size splits, both caught by the guards rather than by me: `LEDGER.md` passed its
+700-line cap and `app.test.ts` passed 400. `check:docs` caught the first one commit late,
+because it ran in a shell chain whose exit status came from `tail` rather than from npm.
+
 ## 2026-07-27 — M2: the listing controls, and one more island deleted
 
 Grid toggle and infinite scroll, plus `RevealFallback` deleted in favour of CSS. **673

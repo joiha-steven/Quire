@@ -13,6 +13,7 @@ import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
 import { getSeriesForPost } from '@/content/series'
 import { collapseBlob } from '@/media/blob'
 import { renderPostContent, type ImageDims } from '@/render/post-content'
+import { extractHeadings } from '@/utils'
 import { termSlug } from '@/content/taxonomy'
 import { formatDate, t } from '@/i18n/i18n'
 import { scriptTag } from '@/web/assets'
@@ -91,6 +92,20 @@ export async function renderArticle(slug: string): Promise<string | null> {
     footer = seriesBox + tagLine
   }
 
+  // The table of contents is server-rendered markup, so a reader without JavaScript still
+  // gets a working index of the article. The bundle only adds the active-section highlight.
+  // Only on posts, only when the owner has it on, and only when there is more than one
+  // heading — a contents list with one entry is furniture, not navigation.
+  const headings = post && settings.features.toc ? extractHeadings(post.content) : []
+  const toc = headings.length > 1
+    ? `<nav class="toc" aria-label="${escapeAttr(s.tocTitle)}">
+<p class="toc-title">${escapeHtml(s.tocTitle)}</p>
+<ol>${headings.map((h) =>
+        `<li class="toc-l${h.level}"><a href="#${escapeAttr(h.id)}">${escapeHtml(h.text)}</a></li>`,
+      ).join('')}</ol>
+</nav>`
+    : ''
+
   // The comment thread is a MOUNT POINT, not markup: the island fetches it. The article
   // page is cached HTML (Invariant 1) and a comment is not a post, so rendering the thread
   // here would force a choice between flushing the whole page cache whenever a stranger
@@ -162,6 +177,7 @@ export async function renderArticle(slug: string): Promise<string | null> {
 ${siteHeader(settings, { mailConfigured })}
 <article>
 <h1>${escapeHtml(item.title)}</h1>
+${toc}
 ${meta}
 <div class="prose">${body}</div>
 ${footer}

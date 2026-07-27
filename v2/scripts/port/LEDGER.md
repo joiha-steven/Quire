@@ -518,3 +518,35 @@ file that could only fail if state leaked.
 Measured on the running server: the grid toggle is in the header, the grid and reveal rules
 are in the inlined sheet, `data-infinite` is correctly absent (the owner has it off), and
 the home page still costs one script.
+
+## M2: the table of contents (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/assets/js/toc.ts` | `Toc.tsx` | The active-section highlight, and nothing else |
+
+**The list itself is server-rendered.** The frozen tree built the whole thing in React, so
+a reader without JavaScript had no index of the article at all. Here the `<nav class="toc">`
+is markup with real anchors, and the bundle adds only the `aria-current` highlight — the one
+part that genuinely needs a script. post.js 6,458 b / 8,000.
+
+**The active row is the LAST heading past the reading line, not the one crossing the
+viewport.** That distinction is the whole reason this is not an `IntersectionObserver`: in
+the middle of a long section the heading has already scrolled away, nothing intersects, and
+the list goes blank. The test places headings at explicit offsets and asserts a row stays
+marked while its heading is 600 px above the viewport.
+
+**Not rendered when there is one heading**, because a contents list with a single entry is
+furniture rather than navigation. Not rendered on a static page either.
+
+**Two file-size splits this session, both caught by the guard rather than by me.**
+`LEDGER.md` passed its 700-line cap (M1 moved to `LEDGER-M1.md`) and `app.test.ts` passed
+400 (listings, search, feeds, chrome and the contents list moved to `pages.test.ts`, with
+its own database directory — `openDatabases` holds one connection pair per process).
+
+`check:docs` caught the ledger one commit late: it ran in a shell chain whose exit status
+came from `tail` rather than from npm, so the violation shipped and was fixed immediately
+after. Worth remembering when chaining a check behind a pipe.
+
+Still to come in M2: the left rail (the contents list currently sits above the article
+rather than in the gutter) and book mode.

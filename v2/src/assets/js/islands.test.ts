@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it } from 'bun:test'
 import { backToTop } from './back-to-top'
 import { codeCopy } from './code-copy'
 import { lightbox } from './lightbox'
+import { toc } from './toc'
 import { page, useDom } from './test-dom'
 
 // The island modules touch `document` when CALLED, never at import time, so importing
@@ -188,5 +189,58 @@ describe('lightbox', () => {
     page('<div class="prose"><p>words</p></div>', LABELS)
     lightbox()
     expect(document.querySelector('.lightbox')).toBeNull()
+  })
+})
+
+describe('table of contents', () => {
+  const nav = `<nav class="toc"><ol>
+    <li><a href="#one">One</a></li>
+    <li><a href="#two">Two</a></li>
+  </ol></nav>
+  <h2 id="one">One</h2><h2 id="two">Two</h2>`
+
+  /** Put a heading's top edge at `top` px from the top of the viewport. */
+  const place = (id: string, top: number) => {
+    document.getElementById(id)!.getBoundingClientRect = () => ({ top }) as DOMRect
+  }
+
+  const current = () => document.querySelector('.toc a[aria-current]')?.textContent ?? null
+
+  it('marks the LAST heading past the reading line, not the one on screen', async () => {
+    page(nav, LABELS)
+    toc()
+
+    // Both still below the line: nothing is current yet.
+    place('one', 400); place('two', 900)
+    scrolledTo(0, 4000)
+    await frame()
+    expect(current()).toBeNull()
+
+    // "One" has passed the line and scrolled well away; "Two" has not arrived. An
+    // IntersectionObserver on the headings would mark nothing here, which is the blank
+    // middle-of-a-long-section this approach exists to avoid.
+    place('one', -600); place('two', 900)
+    scrolledTo(1000, 4000)
+    await frame()
+    expect(current()).toBe('One')
+
+    place('one', -1400); place('two', -100)
+    scrolledTo(1800, 4000)
+    await frame()
+    expect(current()).toBe('Two')
+  })
+
+  it('marks exactly one row', async () => {
+    page(nav, LABELS)
+    toc()
+    place('one', -600); place('two', -100)
+    scrolledTo(1800, 4000)
+    await frame()
+    expect(document.querySelectorAll('.toc a[aria-current]').length).toBe(1)
+  })
+
+  it('does nothing on a page with no contents list', () => {
+    page('<article>x</article>', LABELS)
+    expect(() => toc()).not.toThrow()
   })
 })

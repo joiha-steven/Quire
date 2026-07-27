@@ -159,6 +159,19 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 .preview-note{border:1px solid var(--c-rule);background:var(--c-rule);color:var(--c-meta);
   border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);margin:0 0 1.5rem}
 
+/* The table of contents. Server-rendered markup, so these rules apply with or without
+   JavaScript; only the aria-current highlight comes from the bundle. Set in the chrome
+   font and kept quiet, because it sits above the article and must not compete with it. */
+.toc{font-family:var(--font-chrome);font-size:var(--fs-small);border-left:2px solid var(--c-rule);
+  padding:.25rem 0 .25rem 1rem;margin:0 0 2.5rem}
+.toc-title{color:var(--c-heading);font-weight:600;margin:0 0 .5rem}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc li{margin:.3rem 0}
+.toc .toc-l3{padding-left:1rem}
+.toc a{color:var(--c-meta);text-decoration:none}
+.toc a:hover{color:var(--c-heading)}
+.toc a[aria-current]{color:var(--c-heading);font-weight:500}
+
 /* Comments and sign-up. The FORM is server-rendered markup, so these rules apply with or
    without JavaScript; the comment thread is built by the island, so its rules only ever
    match once the script has run. */
