@@ -1,11 +1,17 @@
-// Shareable draft-preview tokens. A token is an HMAC of the slug keyed by
-// AUTH_SECRET, so anyone with the link can view that one draft (and only it)
-// without signing in, and the link can't be guessed or reused for other slugs.
+// Shareable draft-preview tokens. A token is an HMAC of the slug, so anyone holding the
+// link can view that ONE draft without signing in, and the link cannot be guessed or
+// reused for another slug.
+//
+// The key was `process.env.AUTH_SECRET ?? ''`. `AUTH_SECRET` left with next-auth
+// (06-auth.md), which silently made the key the EMPTY STRING — every preview token then
+// signed with a key an attacker also has, so any draft slug's token is computable and
+// every unpublished post is readable by anyone who guesses the slug. Found by auditing
+// which environment variables the server still needs, not by a test.
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { serverSecret } from '@/auth/secret'
 
 export function previewToken(slug: string): string {
-  const secret = process.env.AUTH_SECRET ?? ''
-  return createHmac('sha256', secret).update(slug).digest('base64url').slice(0, 24)
+  return createHmac('sha256', serverSecret('preview-link')).update(slug).digest('base64url').slice(0, 24)
 }
 
 export function verifyPreview(slug: string, token: string | undefined): boolean {
