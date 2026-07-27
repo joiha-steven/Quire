@@ -1,10 +1,17 @@
 // The bundle every public page loads.
 //
-// It exists for one reason: analytics. A pageview that only fires on posts would undercount
-// every listing, every taxonomy page and the home page, which is most of a blog's traffic.
-// Nothing else belongs here unless it is genuinely needed on every page — this file is the
-// only JavaScript a reader of a listing pays for, and its size is the budget.
+// It carries the analytics beacon and the two things the header can open. Analytics has to
+// be here because a pageview that only fired on posts would undercount the home page and
+// every listing, which between them are most of a blog's traffic; the overlays have to be
+// here because the header is on every page.
+//
+// Nothing else belongs here unless it is genuinely needed everywhere. This file is the only
+// JavaScript a reader of a listing pays for, and its size is the budget.
 
+import { search } from './search'
+import { subscribe } from './subscribe'
 import { track } from './track'
 
 track()
+search()
+subscribe()

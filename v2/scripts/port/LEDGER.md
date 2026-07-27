@@ -647,3 +647,50 @@ there is a test that puts `<img src=x onerror=…>` in a name and asserts no ele
 Still to come in M2: the search / subscribe / comments OVERLAYS and the header that triggers
 them, book mode, the left rail and its table of contents, and the listing islands (grid
 toggle, infinite scroll).
+
+## M2: the site chrome, and search without a page load (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/web/chrome.ts` | `(blog)/layout.tsx` | The header and footer, shared by both renderers |
+| `src/assets/js/search.ts` | `SearchTrigger` + `SearchOverlay` + `SearchClient` | One island instead of three |
+| `src/assets/js/test-dom.ts` | new | The happy-dom harness the island tests share |
+
+**core.js 3,849 b / 5,000; post.js 5,999 b / 8,000.** `subscribe` moved from `post` to
+`core`, because the sign-up form now lives in the footer of every page rather than at the
+end of an article.
+
+**The header and footer were duplicated and had already drifted.** `article.ts` and the
+listing renderer each built their own `<header class="site">`, and only one of them rendered
+the tagline. One function each now, called from both. That is the duplication the listing
+renderer was extracted to avoid, reappearing one level up.
+
+**Every control in the chrome works without JavaScript.** The search trigger is
+`<a href="/search">`, which renders the same results server-side; the island calls
+`preventDefault` and opens a `<dialog>` instead. The subscribe trigger is `<a href="#subscribe">`
+pointing at the footer form. Neither is a `<button>` with a script behind it, which is what
+makes "enhancement" true rather than a word.
+
+**Two bugs the search island would have had, both written as tests:**
+
+- **Out-of-order responses.** A slow answer for `ti` can land after a fast one for
+  `timezone` and replace the right results with stale ones. Every request carries a sequence
+  number and only the newest may write. The test delays the first response by 300 ms.
+- **One request per keystroke.** Debounced to one per 200 ms pause. The test types five
+  characters in a burst and asserts exactly one request.
+
+**`lightboxClose` is reused for the overlay's close button** rather than adding a `close`
+key. It already says exactly this in six languages, and a second key with the same meaning
+is how a locale table starts to drift — which this port has now nearly done twice.
+
+**The island test file hit 469 lines** and the file-size guard caught it. Split by concern:
+`islands.test.ts` keeps the article islands, `interactive.test.ts` takes sign-up, comments
+and search, and the happy-dom harness moved to `test-dom.ts` so it is registered per file in
+one place rather than copied.
+
+Measured on the running server: the home page has one script, an article has two, the
+header carries `data-search-open`, and the subscribe trigger is correctly ABSENT because no
+mail server is configured — a trigger with nothing behind it is worse than no trigger.
+
+Still to come in M2: the left rail and its table of contents, book mode, and the listing
+islands (grid toggle, infinite scroll).

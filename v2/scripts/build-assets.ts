@@ -46,7 +46,7 @@ if (!result.success) {
  * framework is what that looks like after two years.
  */
 const BUDGET: Record<string, number> = {
-  'core.js': 2_000, // every public page: the analytics beacon
+  'core.js': 5_000, // every public page: the beacon, plus the header's overlays
   'post.js': 8_000, // /{slug}: back to top, code copy, lightbox, subscribe, comments
 }
 

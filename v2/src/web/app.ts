@@ -31,6 +31,8 @@ import { handleMarkdown, wantsMarkdown } from '@/web/markdown'
 import { handleManifest } from '@/web/manifest'
 import { handlePreview } from '@/web/preview'
 import { handleSearch } from '@/web/search-api'
+import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
+import { getMailStatus } from '@/news/mail'
 import { requestLogger } from '@/web/api'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
@@ -47,6 +49,7 @@ async function listingPage(
 ): Promise<string> {
   const settings = await getSettings()
   const site = resolveSiteUrl(settings)
+  const { configured: mailConfigured } = await getMailStatus()
   return renderDocument(
     settings,
     {
@@ -61,16 +64,14 @@ async function listingPage(
     },
     pageStyles(settings, PUBLIC_CSS),
     `<div class="wrap">
-<header class="site"><a class="title" href="/">${escapeHtml(settings.title)}</a>${
-      settings.showDescription && settings.description
-        ? `<p class="tagline">${escapeHtml(settings.description)}</p>` : ''
-    }</header>
+${siteHeader(settings, { mailConfigured })}
 <main>${body}</main>
+${siteFooter(settings, { mailConfigured })}
 </div>`,
-    // `core` is on every public page because analytics is: a pageview that only fired on
-    // posts would undercount the home page, every listing and every taxonomy page, which
-    // between them are most of a blog's traffic.
-    { scripts: scriptTag('core') },
+    // `core` carries the analytics beacon AND the header's overlays, both of which are on
+    // every public page. A pageview that only fired on posts would undercount the home
+    // page and every listing, which between them are most of a blog's traffic.
+    { bodyData: chromeLabels(settings), scripts: scriptTag('core') },
   )
 }
 

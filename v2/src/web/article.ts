@@ -9,6 +9,7 @@ import { getPage } from '@/content/pages'
 import { getMediaRefs } from '@/media/media-refs'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { getMailStatus } from '@/news/mail'
+import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
 import { getSeriesForPost } from '@/content/series'
 import { collapseBlob } from '@/media/blob'
 import { renderPostContent, type ImageDims } from '@/render/post-content'
@@ -98,23 +99,7 @@ export async function renderArticle(slug: string): Promise<string | null> {
     ? `<section id="comments" data-post="${escapeAttr(post.slug)}"></section>`
     : ''
 
-  // The sign-up form, by contrast, IS real markup with a method and an action, and
-  // `/api/subscribe` answers a form post with a page. Rendering a form whose only submit
-  // path is JavaScript would be a form that silently does nothing for a reader without it.
-  //
-  // PLACEMENT DEVIATION, recorded: the frozen tree put a subscribe TRIGGER in the site
-  // header, opening an overlay. The overlay is one of the islands still to be ported, and
-  // a trigger with nothing behind it is worse than no trigger, so the form sits at the end
-  // of the article until the header lands.
   const { configured: mailConfigured } = await getMailStatus()
-  const subscribeForm = mailConfigured
-    ? `<form class="subscribe" method="post" action="/api/subscribe">
-<label for="sub-email">${escapeHtml(s.nlHeading)}</label>
-<span class="subscribe-row"><input id="sub-email" type="email" name="email" required
- placeholder="${escapeAttr(s.nlPlaceholder)}"><button type="submit">${escapeHtml(s.nlButton)}</button></span>
-<p class="subscribe-status" role="status"></p>
-</form>`
-    : ''
 
   const description = post?.metaDescription
     || post?.excerpt
@@ -133,16 +118,13 @@ export async function renderArticle(slug: string): Promise<string | null> {
   // a few cheap queries that find nothing rather than downloading a file each.
   const shell = {
     bodyData: {
+      ...chromeLabels(settings),
       copyCode: s.copyCode,
       copiedCode: s.copiedCode,
       backToTop: s.backToTop,
       lightboxPrev: s.lightboxPrev,
       lightboxNext: s.lightboxNext,
       lightboxClose: s.lightboxClose,
-      nlSuccess: s.nlSuccess,
-      nlNoMail: s.nlNoMail,
-      nlInvalid: s.nlInvalid,
-      nlError: s.nlError,
       commentsHeading: s.commentsHeading,
       commentsEmpty: s.commentsEmpty,
       commentReply: s.commentReply,
@@ -177,14 +159,15 @@ export async function renderArticle(slug: string): Promise<string | null> {
     },
     pageStyles(settings, PUBLIC_CSS),
     `${progress}<div class="wrap">
-<header class="site"><a class="title" href="/">${escapeHtml(settings.title)}</a></header>
+${siteHeader(settings, { mailConfigured })}
 <article>
 <h1>${escapeHtml(item.title)}</h1>
 ${meta}
 <div class="prose">${body}</div>
 ${footer}
 </article>
-${subscribeForm}${commentsMount}
+${commentsMount}
+${siteFooter(settings, { mailConfigured })}
 </div>`,
     shell,
   )

@@ -3,6 +3,28 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the site chrome, and search without a page load
+
+One header and one footer, shared by both renderers, plus the search overlay. **667 tests,
+`check:all` green.** core.js 3,849 b, post.js 5,999 b.
+
+The header and footer had been duplicated across the article and listing renderers and had
+already drifted: only one of them rendered the tagline. That is exactly the duplication the
+listing renderer was extracted to avoid, reappearing one level up.
+
+**Every control in the chrome works without JavaScript.** The search trigger is a link to
+`/search`, which renders the same results server-side; the island intercepts the click and
+opens a dialog. The subscribe trigger points at the footer form. Neither is a button with a
+script behind it, which is what makes "enhancement" true rather than a word.
+
+Two bugs the search island would have had are now tests: a slow response for "ti" landing
+after a fast one for "timezone" and replacing the right results (every request carries a
+sequence number), and one request per keystroke (debounced, with a five-character burst
+asserting exactly one request).
+
+The island test file hit 469 lines and the file-size guard caught it; split by concern,
+with the happy-dom harness extracted so it is registered per file in one place.
+
 ## 2026-07-27 — M2: the two things a reader can write to
 
 Comments and newsletter sign-up, both ends: the endpoints and the islands. **656 tests,

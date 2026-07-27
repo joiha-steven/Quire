@@ -331,3 +331,42 @@ describe('machine-readable surfaces', () => {
     expect(xml).not.toContain('<fight>')
   })
 })
+
+describe('the site chrome', () => {
+  it('gives every page the same header, and both triggers work without JavaScript', async () => {
+    await saveSettings({ title: 'My Blog', description: 'A tagline' })
+    await savePost({ title: 'Chromed', content: 'body', status: 'published', date: PAST })
+
+    for (const path of ['/', '/chromed']) {
+      const html = await get(path).then((r) => r.text())
+      // A LINK, not a button: without JavaScript it goes to the search page, which renders
+      // the same results server-side. The island turns it into an overlay.
+      expect(html).toContain('href="/search"')
+      expect(html).toContain('data-search-open')
+      expect(html).toContain('<footer class="site">')
+    }
+  })
+
+  it('hides the search trigger when the owner turns search off', async () => {
+    const { features } = await getSettings()
+    await saveSettings({ features: { ...features, search: false } })
+    await savePost({ title: 'Quiet', content: 'body', status: 'published', date: PAST })
+    expect(await get('/quiet').then((r) => r.text())).not.toContain('data-search-open')
+  })
+
+  it('leaves the subscribe trigger out when there is no mail server', async () => {
+    // A trigger with nothing behind it is worse than no trigger.
+    await savePost({ title: 'Mailless', content: 'body', status: 'published', date: PAST })
+    const html = await get('/mailless').then((r) => r.text())
+    expect(html).not.toContain('data-subscribe-open')
+    expect(html).not.toContain('form class="subscribe"')
+  })
+
+  it('renders the owner footer through the markdown sanitiser, not raw', async () => {
+    await saveSettings({ title: 'My Blog', footer: '**Bold** and <script>alert(1)</script>' })
+    await savePost({ title: 'Footed', content: 'body', status: 'published', date: PAST })
+    const html = await get('/footed').then((r) => r.text())
+    expect(html).toContain('<strong>Bold</strong>')
+    expect(html).not.toContain('<script>alert(1)</script>')
+  })
+})

@@ -162,6 +162,27 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
 /* Comments and sign-up. The FORM is server-rendered markup, so these rules apply with or
    without JavaScript; the comment thread is built by the island, so its rules only ever
    match once the script has run. */
+.site-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.site-actions{display:flex;gap:.25rem}
+.icon-btn{display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;
+  border:0;border-radius:.35rem;background:none;color:var(--c-meta);cursor:pointer;text-decoration:none}
+.icon-btn:hover{color:var(--c-heading);background:var(--c-rule)}
+.footer-text{margin:1.5rem 0 0}
+
+/* The overlays. Both are dialogs, so Escape and the inert background are the browser's. */
+.overlay[open]{display:flex}
+.overlay{flex-direction:column;border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem;
+  width:min(36rem,92vw);max-height:70vh;background:var(--c-bg);color:var(--c-text);margin-top:8vh}
+.overlay::backdrop{background:rgba(0,0,0,.4)}
+.search-close{position:absolute;top:.5rem;right:.5rem;border:0;background:none;color:var(--c-meta);
+  font-size:1.25rem;line-height:1;cursor:pointer}
+.search-input{padding:.6rem .75rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  background:var(--c-bg);color:var(--c-text);font:inherit;margin-right:2rem}
+.search-results{list-style:none;padding:0;margin:1rem 0 0;overflow-y:auto}
+.search-results li{margin:0 0 .6rem}
+.search-results a{color:var(--c-heading);text-decoration:none}
+.search-results a:hover{text-decoration:underline}
+
 form.subscribe{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem;font-size:var(--fs-small)}
 form.subscribe label{display:block;color:var(--c-heading);font-weight:600;margin-bottom:.5rem}
 .subscribe-row{display:flex;gap:.5rem}
