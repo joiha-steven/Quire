@@ -306,6 +306,36 @@ trashed post all 404 rather than leaking.
 Still to come in M2: listings, taxonomy, series, search, feeds, OG images, and the 23
 islands as vanilla JS.
 
+## M2: every public route (2026-07-27)
+
+| File | Role |
+|---|---|
+| `src/web/article.ts` | The `/{slug}` page, split out of the router so the router stays a routing table |
+| `src/web/listing.ts` | ONE renderer for home, pagination, category, tag, series and search |
+| `src/web/feeds.ts` | RSS, sitemap, robots, llms.txt |
+
+Routes live: `/`, `/page/:n`, `/category/:slug(/page/:n)`, `/tag/:slug(/page/:n)`,
+`/series/:slug`, `/search`, `/feed.xml`, `/sitemap.xml`, `/robots.txt`, `/llms.txt`,
+`/{slug}`. Measured on the running server, and **every HTML route contains zero
+`<script`**.
+
+**A bug the test found, and it was an SEO one.** `paginate` CLAMPS an out-of-range page, so
+checking "did this page come back empty?" never fired: `/page/9` of a two-page blog served
+page two, under a ninth URL, and so would every number a crawler tried. Duplicate content
+at unbounded URLs. The check compares against `totalPages` now.
+
+Three deliberate decisions:
+
+- **Search is not cached.** Its key would be the query string, which is unbounded, so a
+  cache any anonymous visitor can fill is a memory leak with a nicer name. FTS5 makes the
+  read cheap enough not to need one.
+- **A disabled feed 404s** rather than serving an empty document. An empty feed looks like
+  a broken site to an aggregator; a 404 looks like what it is.
+- **Pagination is prev/next, not numbered.** Deep page numbers are navigation nobody uses
+  and every one is a URL a crawler walks. A simplification, recorded rather than silent.
+
+A series page is not paginated: it is read front to back.
+
 ## Moved, then pulled back out
 
 | File | Why |

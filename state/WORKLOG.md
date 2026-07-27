@@ -3,6 +3,37 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: every public route is live
+
+Home and pagination, category, tag, series, search, RSS, sitemap, robots and llms.txt.
+**567 tests, `check:all` green.** Exercised against the running server: every route
+answers, and **every HTML route contains zero `<script`**.
+
+```
+/                        200   9,407 b
+/category/engineering    200   9,158 b
+/search?q=timezone       200   8,936 b
+/feed.xml                200   1,608 b
+/sitemap.xml  /robots.txt  /llms.txt   200
+/series/x  /nope         404
+```
+
+**The test found an SEO bug.** `paginate` clamps an out-of-range page, so checking "did
+this page come back empty?" never fired: `/page/9` of a two-page blog served page two,
+under a ninth URL, and so would every number a crawler tried. Duplicate content at
+unbounded URLs. It compares against `totalPages` now.
+
+Three decisions worth naming. Search is **not** cached, because its key is the query
+string and a cache any anonymous visitor can fill is a memory leak with a nicer name. A
+feed the owner turned off **404s** instead of serving an empty document, because an empty
+feed looks like a broken site to an aggregator. And pagination is prev/next rather than
+numbered: deep page numbers are navigation nobody uses and every one is a URL a crawler
+walks.
+
+One renderer serves home, taxonomy, series and search. The frozen tree had a component per
+surface, and the differences turned out to be the heading and the empty-state line, which
+is exactly the duplication that drifts.
+
 ## 2026-07-27 — M2: Quire 2.0 serves a page
 
 `env`, `index.ts`, the Hono router, the HTML shell and the hand-written public sheet.
