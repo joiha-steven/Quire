@@ -6,3 +6,4 @@ data/
 *.db-wal
 *.db-shm
 .tmp-run/
+uploads/

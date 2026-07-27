@@ -472,3 +472,61 @@ Driven against the running server, not just `app.request`: one view with
 `referrer_host=news.ycombinator.com`, `device=desktop`, `browser=Chrome`, `os=Windows`; one
 scroll row at `depth=83`, `dwell_ms=45000`; a Googlebot beacon dropped; and the visitor
 column holding a hash with neither the IP nor the user-agent anywhere in the row.
+
+## M2: OG cards, and the route that serves every image (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/render/og-card.ts` | `app/og/route.tsx` | The 1200x630 card, satori + sharp |
+| `src/render/fonts/*.woff` | `app/og/*.woff` | Three Inter subsets, embedded in the binary |
+| `src/web/og.ts` | same route's handler half | `GET /og`: query parsing, the SSRF guard, caching |
+| `src/web/uploads.ts` | `app/uploads/[...path]/route.ts` | `GET /uploads/*`: streamed, range-capable |
+
+**`next/og` was satori plus a WASM rasteriser; this is satori plus sharp**, which was
+already a dependency and already rasterises SVG. One new package (`satori`) rather than
+two. The element tree is built as plain objects instead of JSX, so this file does not need
+a different JSX pragma from the rest of the codebase.
+
+**A background image has to be INLINED as a data URI.** satori emits `<image href="...">`
+and hands the SVG to sharp, which does not fetch remote references. Passing the URL
+through produces a card with the gradient and no picture: a valid PNG, a silent failure,
+and the sort of thing that is discovered on Twitter.
+
+**The bug that only a screenshot could find.** satori ignores `inset: 0`, so the dark
+overlay collapsed to zero height and the first working card was white text on bright orange
+at 55% opacity: unreadable. It returned 200, it was a valid 1200x630 PNG, and every
+structural assertion passed. Both layers now carry explicit `top`/`left`/`width`/`height`,
+and a test compares the brightness of the top and bottom strips so the wash cannot vanish
+again.
+
+**Two ways to measure a picture wrongly, both of which return a confident number.**
+`sharp(...).extract(...).stats()` computes on the INPUT image and ignores the pipeline, so
+every strip of the card reported the same value. And the fourth channel is alpha, a flat
+255, which drags every average toward white. Both are written down in the test helper.
+
+A third: "the card is not blank" first compared two strips of ONE card, which measures the
+diagonal base gradient rather than the type. It compares the same strip across a titled and
+an untitled card now.
+
+**`GET /uploads/*` was missing entirely**, which meant every image in a rendered post, every
+featured image and every OG background resolved to a 404. Found while wiring the card's
+background, not by a test. Ported near-verbatim, including single byte-range support: video
+seeking needs 206 responses and iOS Safari will not play a video at all without them.
+
+**A security test that passed without testing anything.** `/uploads/../../package.json` is
+normalised by the URL parser before the router sees it, so the handler never ran. The
+traversal cases are percent-encoded now, so they arrive intact and `resolveSafe` is what
+has to reject them.
+
+**`blob-local` resolves its root once, at module load.** Setting `STORAGE_LOCAL_DIR` from a
+test is too late, because the import is hoisted. The upload test asks the driver where the
+store is via `resolveSafe` and creates one directory inside it.
+
+Open Graph and Twitter tags now exist at all: the shell had none. `summary_large_image`
+only when there is an image, because with that card type and no image X stretches the site
+favicon across it.
+
+Also corrected: a `site ? ... : undefined` guard around the card URL was dead code, since
+`resolveSiteUrl` falls back to `SITE_URL` and then to localhost. The comment claiming
+otherwise was worse than no comment. The test that asserted the dead branch now asserts
+what actually happens.

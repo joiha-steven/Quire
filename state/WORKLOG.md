@@ -3,6 +3,29 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: OG cards, and the route that serves every image
+
+`GET /og` renders the 1200x630 card with satori and sharp, and the shell finally emits
+Open Graph and Twitter tags at all. **610 tests, `check:all` green.** Cards were rendered
+and looked at: a post card, a Vietnamese title (one crossbar on đ, which is what the three
+distinct font subsets are for), and a card over a real cover image.
+
+**One bug in this slice was invisible to every structural test.** satori ignores
+`inset: 0`, so the dark overlay collapsed to zero height and the card came back as white
+text on bright orange: a valid 1200x630 PNG that nobody could read. Status 200, correct
+dimensions, correct content type. Opening the picture is what found it.
+
+**`GET /uploads/*` did not exist**, so every image in a rendered post, every featured image
+and every OG background was a 404. Found while wiring the card's background rather than by
+a test. Ported with its byte-range support intact, because video seeking needs 206 and iOS
+Safari will not play a video without it.
+
+Two of my own tests were measuring nothing and said so confidently: `sharp.stats()` reads
+the input image and ignores the pipeline, so every crop of the card returned the same
+number, and the fourth channel is alpha at a flat 255. A third compared two strips of one
+card, which measures the background gradient rather than the type. And a traversal test
+passed without the handler ever running, because the URL was normalised before routing.
+
 ## 2026-07-27 — M2: the analytics beacon
 
 `POST /api/track` and the browser half of it. **592 tests, `check:all` green.** Driven

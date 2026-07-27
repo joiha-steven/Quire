@@ -18,6 +18,10 @@ export type Head = {
   title: string
   description?: string
   canonical?: string
+  /** Absolute URL of the Open Graph image. Undefined means no card. */
+  image?: string
+  /** `article` for a post, `website` for everything else. */
+  ogType?: 'article' | 'website'
   /** Rendered verbatim into <head>. Callers pass already-escaped markup. */
   extra?: string
 }
@@ -78,6 +82,24 @@ export function renderDocument(
     ? `<meta name="description" content="${escapeAttr(head.description)}">`
     : ''
   const canonical = head.canonical ? `<link rel="canonical" href="${escapeAttr(head.canonical)}">` : ''
+
+  // Open Graph and Twitter. Written out rather than generated from a map: there are seven
+  // of them, they are not going to become a hundred, and a loop here would be harder to
+  // read than the tags themselves.
+  //
+  // `summary_large_image` ONLY when there is an image. With `summary_large_image` and no
+  // image, X renders a bare card with the site's favicon stretched across it.
+  const meta = (property: string, content: string) =>
+    `<meta property="${property}" content="${escapeAttr(content)}">`
+  const og = [
+    meta('og:title', head.title),
+    meta('og:type', head.ogType ?? 'website'),
+    head.description ? meta('og:description', head.description) : '',
+    head.canonical ? meta('og:url', head.canonical) : '',
+    meta('og:site_name', settings.title),
+    head.image ? meta('og:image', head.image) : '',
+    `<meta name="twitter:card" content="${head.image ? 'summary_large_image' : 'summary'}">`,
+  ].filter(Boolean).join('')
   const icon = settings.faviconUrl ? `<link rel="icon" href="${escapeAttr(settings.faviconUrl)}">` : ''
 
   return `<!DOCTYPE html>
@@ -86,7 +108,7 @@ export function renderDocument(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(head.title)}</title>
-${description}${canonical}${icon}${preloads}
+${description}${canonical}${icon}${og}${preloads}
 <style>${styles}</style>
 ${head.extra ?? ''}
 </head>

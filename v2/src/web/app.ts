@@ -23,14 +23,17 @@ import { renderListing } from '@/web/listing'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
 import { renderArticle } from '@/web/article'
 import { assetBody, scriptTag } from '@/web/assets'
+import { ogCardUrl, siteDomain } from '@/render/og'
+import { handleOg } from '@/web/og'
 import { handleTrack } from '@/web/track'
+import { handleUpload } from '@/web/uploads'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** Wrap listing markup in the site shell. Shared by home, taxonomy, series and search. */
 async function listingPage(
-  title: string, body: string, canonicalPath?: string,
+  title: string, body: string, canonicalPath?: string, cardTitle?: string,
 ): Promise<string> {
   const settings = await getSettings()
   const site = resolveSiteUrl(settings)
@@ -40,6 +43,11 @@ async function listingPage(
       title,
       description: settings.description,
       canonical: site && canonicalPath !== undefined ? `${site}${canonicalPath}` : undefined,
+      // A listing card is two explicit lines rather than a post's title/excerpt/date.
+      // Home reads as domain over description; a term page as its name over the domain.
+      image: ogCardUrl(settings, site, cardTitle === undefined
+        ? { title: siteDomain(site), site: settings.description }
+        : { title: cardTitle, site: siteDomain(site) }),
     },
     pageStyles(settings, PUBLIC_CSS),
     `<div class="wrap">
@@ -121,6 +129,7 @@ export function createApp(): Hono {
           empty: kind === 'category' ? t(settings.language).emptyCategory : t(settings.language).emptyTag,
         }, settings),
         `/${kind}/${slug}`,
+        name,
       )
     }
 
@@ -153,6 +162,7 @@ export function createApp(): Hono {
           basePath: `/series/${slug}`, empty: t(settings.language).emptySeries,
         }, settings),
         `/series/${slug}`,
+        name,
       )
     })()
   })
@@ -185,6 +195,17 @@ export function createApp(): Hono {
   // is rate-limited per IP, drops bots and admin paths, and stores no PII.
 
   app.post('/api/track', handleTrack)
+
+  // ----- the Open Graph card --------------------------------------------------
+  // Everything it needs is in the query string, so it reads no settings and no database.
+
+  app.get('/og', handleOg)
+
+  // ----- media ----------------------------------------------------------------
+  // Every image and video in a rendered page resolves here. Streamed, range-capable, and
+  // cached forever, because upload names are content-stable.
+
+  app.get('/uploads/*', handleUpload)
 
   // ----- browser bundles ------------------------------------------------------
   // The URL carries a content hash, so the answer is cacheable forever and a deploy that

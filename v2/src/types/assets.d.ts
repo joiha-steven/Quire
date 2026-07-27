@@ -6,3 +6,10 @@ declare module '@/assets/dist/*.js' {
   const source: string
   export default source
 }
+
+// A `with { type: 'file' }` import yields a PATH, which `Bun.file` reads and
+// `bun build --compile` embeds. Used for the OG card's font subsets.
+declare module '@/render/fonts/*.woff' {
+  const path: string
+  export default path
+}

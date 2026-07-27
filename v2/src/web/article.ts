@@ -14,6 +14,7 @@ import { renderPostContent, type ImageDims } from '@/render/post-content'
 import { termSlug } from '@/content/taxonomy'
 import { formatDate, t } from '@/i18n/i18n'
 import { scriptTag } from '@/web/assets'
+import { ogImageUrl } from '@/render/og'
 import { isPublicallyVisible, clampExcerpt, toPlainText } from '@/utils'
 import { renderDocument, pageStyles } from '@/web/layout'
 import { PUBLIC_CSS } from '@/web/public.css'
@@ -122,6 +123,15 @@ export async function renderArticle(slug: string): Promise<string | null> {
       title: `${post?.metaTitle || item.title} · ${settings.title}`,
       description,
       canonical: site ? `${site}/${item.slug}` : undefined,
+      // Absolute, always: `resolveSiteUrl` falls back to SITE_URL and then to localhost,
+      // and a relative og:image is ignored by every scraper.
+      image: ogImageUrl(settings, site, {
+        title: post?.metaTitle || item.title,
+        featuredImage: post?.featuredImage,
+        desc: post ? description : undefined,
+        date: post ? formatDate(post.date, settings.language) : undefined,
+      }),
+      ogType: post ? 'article' : 'website',
     },
     pageStyles(settings, PUBLIC_CSS),
     `${progress}<div class="wrap">
