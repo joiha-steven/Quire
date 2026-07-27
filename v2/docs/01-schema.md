@@ -44,6 +44,21 @@ Postgres RLS exists here purely to make the anon key useless, an artifact of the
 Supabase origin. SQLite is in-process; there is no second client and no network
 listener. Nothing replaces it.
 
+### Confirmed against the runtime, 2026-07-27
+
+Checked on `bun:sqlite` (Bun 1.3.14, SQLite 3.53.0) before any code was written:
+
+| Assumption | Result |
+|---|---|
+| FTS5 `remove_diacritics 2` folds Vietnamese | ✅ `"lap trinh"` matches `Lập trình` |
+| `Bun.password` is argon2id | ✅ hash + verify round-trip |
+| `generate_series` is available | ❌ **not compiled in.** Do not reach for it |
+
+The missing `generate_series` costs nothing, because the design already avoids it: bucket
+boundaries are computed in TypeScript and inserted into a temp table (see "The six SQL
+functions" below). It is recorded here so nobody tries the shorter path and discovers this
+halfway through the analytics port.
+
 ### PRAGMAs (set on every connection)
 
 ```

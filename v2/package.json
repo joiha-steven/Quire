@@ -1,0 +1,21 @@
+{
+  "name": "quire",
+  "version": "2.0.0-dev",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": { "bun": ">=1.3" },
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build --compile --minify --outfile dist/quire src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check:filesize": "bun scripts/checks/file-size.ts",
+    "check:all": "bun run typecheck && bun run check:filesize && bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  }
+}

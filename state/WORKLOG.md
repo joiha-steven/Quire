@@ -3,6 +3,24 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1 started: Bun installed, SQLite schema live and tested
+
+Bun 1.3.14 installed via winget. Three assumptions checked against the real runtime before
+writing code: FTS5 `remove_diacritics 2` folds Vietnamese (`"lap trinh"` matches
+`Lập trình`), `Bun.password` is argon2id, and `generate_series` is **not** compiled in.
+The last one costs nothing because the analytics design already computes bucket boundaries
+in TypeScript, but it is now recorded in `v2/docs/01-schema.md` rather than waiting to be
+discovered halfway through.
+
+`v2/` scaffolded. The Postgres schema (612 lines) translated to two SQLite files and
+applied at boot inside a transaction. Eight tests green, covering the parts SQLite is picky
+about: the FTS index follows insert, update and delete; `AUTOINCREMENT` stops a purged
+comment id being reissued under live replies; `post_terms` cascades.
+
+One real bug found by the test that calls `openDatabases` twice: the second call leaked the
+first pair of file handles. Windows surfaced it immediately as EBUSY; on Linux it would
+have leaked descriptors silently.
+
 ## 2026-07-27 — Documentation layout rebuilt to the four-homes standard
 
 Four homes adopted ([ADR 0010](../docs/decisions/0010-four-homes-doc-layout.md)). `ROADMAP`
