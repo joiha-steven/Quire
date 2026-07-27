@@ -8,7 +8,7 @@
 
 import type { Post } from '@/types'
 import type { SiteSettings } from '@/types'
-import { formatDate } from '@/i18n/i18n'
+import { formatDate, t } from '@/i18n/i18n'
 import { termSlug } from '@/content/taxonomy'
 import type { Paged } from '@/content/paginate'
 
@@ -16,16 +16,36 @@ const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
 
-/** One card. Metadata only: a listing never loads a body. */
-function card(post: Post, settings: SiteSettings): string {
-  const terms = post.categories
-    .map((c) => `<a href="/category/${escapeAttr(termSlug(c))}">${escapeHtml(c)}</a>`)
-    .join(', ')
-  const minutes = post.readingMinutes ? ` · ${post.readingMinutes} min` : ''
-  return `<article class="card">
-<h2><a href="/${escapeAttr(post.slug)}">${escapeHtml(post.title)}</a></h2>
-<p class="meta"><time datetime="${escapeAttr(post.date)}">${escapeHtml(formatDate(post.date, settings.language))}</time>${minutes}${terms ? ` · ${terms}` : ''}</p>
-${post.excerpt ? `<p class="excerpt">${escapeHtml(post.excerpt)}</p>` : ''}
+/**
+ * One card. Metadata only: a listing never loads a body.
+ *
+ * The ORDER is load-bearing and was wrong: the meta line sits ABOVE the title, not below.
+ * That is the frozen tree's `PostCard` and it is what the owner reads first — the date and
+ * the reading time frame the headline rather than trailing it.
+ *
+ * `showCategory` is off for the main feed, matching the frozen tree: the categories are
+ * already in the sidebar, and repeating them under every headline was noise I added.
+ */
+function card(post: Post, settings: SiteSettings, opts: { showCategory?: boolean; lead?: boolean } = {}): string {
+  const tx = t(settings.language)
+  const category = opts.showCategory ? post.categories[0] : undefined
+  const categoryLink = category
+    ? `<a href="/category/${escapeAttr(termSlug(category))}">${escapeHtml(category)}</a> · `
+    : ''
+  // The suffix comes from the locale table. It read a hardcoded " min" here, so a
+  // Vietnamese blog said "38 min" where every other surface said "38 phút đọc".
+  const minutes = post.readingMinutes
+    ? ` · ${post.readingMinutes} ${escapeHtml(tx.readingSuffix)}`
+    : ''
+  const Title = opts.lead ? 'h1' : 'h2'
+  const size = opts.lead ? 'fs-h1' : 'fs-h2'
+
+  // `reveal` eases the card in as it scrolls into view, and is fully visible when motion
+  // is off or unsupported (pure CSS, `animation-timeline: view()`).
+  return `<article class="reveal">
+<p class="t-small text-meta">${categoryLink}<time datetime="${escapeAttr(post.date)}">${escapeHtml(formatDate(post.date, settings.language))}</time>${minutes}</p>
+<${Title} class="reading-font mt-2 ${size} font-semibold"><a class="link-accent" href="/${escapeAttr(post.slug)}">${escapeHtml(post.title)}</a></${Title}>
+${post.excerpt ? `<p class="reading-font mt-3 t-body text-text">${escapeHtml(post.excerpt)}</p>` : ''}
 </article>`
 }
 
@@ -67,5 +87,5 @@ export function renderListing(view: ListingView, settings: SiteSettings): string
   const body = view.paged.items.length === 0
     ? `<p class="empty">${escapeHtml(view.empty)}</p>`
     : view.paged.items.map((p) => card(p, settings)).join('\n')
-  return `${head}<div class="listing">${body}</div>${pager(view.paged, view.basePath)}`
+  return `${head}<div class="post-list">${body}</div>${pager(view.paged, view.basePath)}`
 }

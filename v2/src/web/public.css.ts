@@ -50,14 +50,31 @@ article .meta a{color:inherit}
 
 .listing-head h1{font-size:var(--fs-h1);color:var(--c-heading);margin:0 0 .25rem;font-weight:600}
 .listing-head{margin:0 0 2rem}
-.card{padding:0 0 1.75rem;margin:0 0 1.75rem;border-bottom:1px solid var(--c-rule)}
-.card:last-child{border-bottom:0}
-.card h2{font-size:var(--fs-h2);line-height:var(--lh-h2);margin:0 0 .35rem;font-weight:600}
-.card h2 a{color:var(--c-heading);text-decoration:none}
-.card h2 a:hover{color:var(--c-link)}
-.card .meta{color:var(--c-meta);font-size:var(--fs-small);margin:0 0 .5rem}
-.card .meta a{color:inherit}
-.card .excerpt{margin:0;color:var(--c-text)}
+/* Type ROLES, ported from the frozen tree. A card composes these rather than declaring
+   its own sizes, which is why the listing and the article agree without anyone keeping
+   two numbers in step. Every size is the owner's --fs-* setting times --type-scale, so
+   nothing here is a literal. */
+.fs-h1{font-size:calc(var(--fs-h1) * var(--type-scale, 1));line-height:var(--lh-h1);letter-spacing:var(--ls-h1)}
+.fs-h2{font-size:calc(var(--fs-h2) * var(--type-scale, 1));line-height:var(--lh-h2);letter-spacing:var(--ls-h2)}
+.fs-h3{font-size:calc(var(--fs-h3) * var(--type-scale, 1));line-height:var(--lh-h3);letter-spacing:var(--ls-h3)}
+.t-small{font-size:calc(var(--fs-small) * var(--type-scale, 1));line-height:var(--lh-small);letter-spacing:var(--ls-small)}
+.t-body{font-size:calc(var(--fs-body) * var(--type-scale, 1));line-height:var(--lh-body);letter-spacing:var(--ls-body)}
+.text-meta{color:var(--c-meta)}
+.text-text{color:var(--c-text)}
+.reading-font{font-family:var(--font-reading)}
+.font-semibold{font-weight:600}
+.mt-2{margin-top:.5rem}
+.mt-3{margin-top:.75rem}
+/* ONE hover signature for every link outside the body copy: an accent underline. */
+.link-accent{color:var(--c-heading);text-decoration:none}
+.link-accent:hover{text-decoration:underline;text-decoration-color:var(--c-accent);
+  text-decoration-thickness:1px;text-underline-offset:4px}
+
+/* Cards are separated by SPACE, not by a rule. The border-bottom here was mine, not the
+   frozen tree's, and it turned a quiet feed into a table. */
+.post-list > article{margin:0 0 3.25rem}
+.post-list > article:last-child{margin-bottom:0}
+.post-list > article > p:first-child{margin:0}
 .empty{color:var(--c-meta)}
 .pager{display:flex;justify-content:space-between;align-items:center;gap:1rem;
   border-top:1px solid var(--c-rule);padding-top:1rem;margin-top:1rem;font-size:var(--fs-small)}
@@ -210,10 +227,10 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
    match once the script has run. */
 /* Grid view. The attribute is set by the island; with no script the list stays a list,
    which is the shape every reader gets by default anyway. */
-[data-list="grid"] .listing{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))}
-[data-list="grid"] .card{border-bottom:0;padding:0;margin:0}
-[data-list="grid"] .card h2{font-size:var(--fs-h3);line-height:var(--lh-h3)}
-[data-list="grid"] .card .excerpt{display:none}
+[data-list="grid"] .post-list{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))}
+[data-list="grid"] .post-list > article{margin:0}
+[data-list="grid"] .post-list h2{font-size:var(--fs-h3);line-height:var(--lh-h3)}
+[data-list="grid"] .post-list .t-body{display:none}
 .listing-sentinel{height:1px}
 
 /* Cards ease in as they enter the viewport, in CSS. The frozen tree shipped an
@@ -223,7 +240,7 @@ footer.site{border-top:1px solid var(--c-rule);margin-top:4rem;padding:1.5rem 0 
    reader has asked for less of it. */
 @supports (animation-timeline:view()){
   @media (prefers-reduced-motion:no-preference){
-    .card{animation:card-in linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
+    .post-list > article{animation:card-in linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
   }
 }
 @keyframes card-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
