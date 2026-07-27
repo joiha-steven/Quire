@@ -38,6 +38,7 @@ const vi = {
   seriesLabel: 'Loạt bài',
   seriesPartPrefix: 'Phần',
   emptySeries: 'Chưa có bài nào trong loạt này.',
+  previewNotice: 'Bản xem trước: trang này không công khai và không được lập chỉ mục.',
   copyCode: 'Sao chép',
   copiedCode: 'Đã chép',
   nlHeading: 'Đăng ký nhận bản tin',

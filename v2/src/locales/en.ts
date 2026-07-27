@@ -38,6 +38,7 @@ const en = {
   seriesLabel: 'Series',
   seriesPartPrefix: 'Part',
   emptySeries: 'No posts in this series yet.',
+  previewNotice: 'Preview: this page is not public and is not indexed.',
   copyCode: 'Copy',
   copiedCode: 'Copied',
   nlHeading: 'Subscribe to the newsletter',

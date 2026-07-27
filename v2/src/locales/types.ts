@@ -39,6 +39,7 @@ export type Dict = {
   seriesLabel: string
   seriesPartPrefix: string
   emptySeries: string
+  previewNotice: string
   copyCode: string
   copiedCode: string
   nlHeading: string

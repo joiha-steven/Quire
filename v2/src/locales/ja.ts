@@ -38,6 +38,7 @@ const ja = {
   seriesLabel: 'シリーズ',
   seriesPartPrefix: 'パート',
   emptySeries: 'このシリーズにはまだ記事がありません。',
+  previewNotice: 'プレビュー: このページは公開されておらず、インデックスもされません。',
   copyCode: 'コピー',
   copiedCode: 'コピーしました',
   nlHeading: 'ニュースレターを購読',

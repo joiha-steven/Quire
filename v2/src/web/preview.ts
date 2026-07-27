@@ -12,7 +12,7 @@ import { getPost } from '@/content/posts'
 import { getPage } from '@/content/pages'
 import { getSettings } from '@/content/settings'
 import { verifyPreview } from '@/content/preview'
-import { formatDate } from '@/i18n/i18n'
+import { formatDate, t } from '@/i18n/i18n'
 import { renderPostContent } from '@/render/post-content'
 import { renderDocument, pageStyles } from '@/web/layout'
 import { PUBLIC_CSS } from '@/web/public.css'
@@ -41,7 +41,7 @@ export async function handlePreview(c: Context): Promise<Response> {
     pageStyles(settings, PUBLIC_CSS),
     `<div class="wrap">
 <article>
-<p class="preview-note">Bản xem trước · trang này không công khai và không được lập chỉ mục.</p>
+<p class="preview-note">${escapeHtml(t(settings.language).previewNotice)}</p>
 <h1>${escapeHtml(entry.title)}</h1>
 ${meta}
 <div class="prose">${body}</div>

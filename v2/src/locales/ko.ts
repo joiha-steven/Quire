@@ -38,6 +38,7 @@ const ko = {
   seriesLabel: '시리즈',
   seriesPartPrefix: '파트',
   emptySeries: '이 시리즈에는 아직 글이 없습니다.',
+  previewNotice: '미리보기: 이 페이지는 공개되지 않으며 색인되지 않습니다.',
   copyCode: '복사',
   copiedCode: '복사됨',
   nlHeading: '뉴스레터 구독',

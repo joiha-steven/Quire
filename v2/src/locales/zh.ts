@@ -38,6 +38,7 @@ const zh = {
   seriesLabel: '系列',
   seriesPartPrefix: '第',
   emptySeries: '该系列还没有文章。',
+  previewNotice: '预览：此页面未公开，也不会被索引。',
   copyCode: '复制',
   copiedCode: '已复制',
   nlHeading: '订阅邮件通讯',

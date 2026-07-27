@@ -38,6 +38,7 @@ const de = {
   seriesLabel: 'Serie',
   seriesPartPrefix: 'Teil',
   emptySeries: 'Noch keine Beiträge in dieser Serie.',
+  previewNotice: 'Vorschau: Diese Seite ist nicht öffentlich und wird nicht indexiert.',
   copyCode: 'Kopieren',
   copiedCode: 'Kopiert',
   nlHeading: 'Newsletter abonnieren',

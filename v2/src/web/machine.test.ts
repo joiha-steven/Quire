@@ -153,6 +153,19 @@ describe('GET /preview/:slug', () => {
     expect(res.headers.get('cache-control')).toBe('no-store')
   })
 
+  it('says it is a preview, in the site language', async () => {
+    // The frozen tree hardcoded this banner in Vietnamese, in a component. It is a locale
+    // key now, in all six languages, which is the rule everything else in 2.0 follows.
+    await savePost({ title: 'Unfinished', content: 'x', status: 'draft', date: PAST })
+    const url = `/preview/unfinished?key=${previewToken('unfinished')}`
+
+    await saveSettings({ language: 'en' })
+    expect(await get(url).then((r) => r.text())).toContain('Preview: this page is not public')
+
+    await saveSettings({ language: 'vi' })
+    expect(await get(url).then((r) => r.text())).toContain('Bản xem trước')
+  })
+
   it('leaves the public route unaffected: the draft is still a 404 there', async () => {
     await savePost({ title: 'Unfinished', content: 'x', status: 'draft', date: PAST })
     expect((await get('/unfinished')).status).toBe(404)
