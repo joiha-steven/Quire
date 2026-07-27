@@ -179,7 +179,7 @@ the same commit as this plan.)
 Every milestone must produce something deployed and reachable over the internet. A
 milestone that only runs on localhost does not count as done.
 
-### M0: Quick wins on the frozen tree — DONE 2026-07-27
+### M0: Quick wins on the frozen tree, DONE 2026-07-27
 
 An explicit exception to the freeze, agreed because the changes are contained and needed
 no matter what happens to the rest of this plan.

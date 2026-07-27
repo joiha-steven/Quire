@@ -34,7 +34,7 @@ the file(s) that paint it, and nothing else.
 ### Variation axes are trimmed, not shipped whole
 
 `scripts/subset-font-axes.py` (needs `pip install fonttools brotli`) rewrites the bundled
-files: `wght` clamped to 400–700, **`opsz` pinned to 18**. Run it after replacing any font
+files: `wght` clamped to 400-700, **`opsz` pinned to 18**. Run it after replacing any font
 file, and keep the `@font-face` `font-weight` range in `globals.css` truthful.
 
 The `opsz` axis doubled the two book serifs. Literata carries 42% fewer glyphs than Inter
@@ -53,12 +53,12 @@ preload is `literata-latin` **plus** `literata-vietnamese`, and this change take
 off the critical path.
 
 > ⚠️ **Measure production, not a local build.** `.env.local` points at a dev database whose
-> `settings` row differs from the live one — during this work a local build reported the
+> `settings` row differs from the live one. During this work a local build reported the
 > preset as Inter with `lang="en"`, which is not what the site serves. Anything that depends
 > on `settings` (font preset, language, palette, enabled features) must be read off the box:
 > `curl -s http://127.0.0.1:3000/ | grep -o -- '--font-reading:[^;}]*'`.
 
-Narrowing the range instead was measured and is not competitive (`12–24` still costs
+Narrowing the range instead was measured and is not competitive (`12-24` still costs
 58 KB). 18 was chosen by rendering 14/18/24 side by side: body copy is 18px, so pinning at
 18 leaves the body **identical** to what `font-optical-sizing: auto` produced, and body is
 where reading time goes. The cost is a 36px title rendering in the 18pt design, slightly
@@ -116,7 +116,7 @@ list (or the class won't emit). NEVER put an admin-only utility/chrome rule in `
    payload are the floor; don't chase Lighthouse "legacy/unused JS" inside those vendor
    chunks — Turbopack doesn't strip them via `browserslist`, and they're not on the LCP path.
 
-## Navigation — prerender on hover, zero runtime JS
+## Navigation: prerender on hover, zero runtime JS
 
 The root layout ships a `<script type="speculationrules">` (`SPECULATION_RULES` in
 `app/layout.tsx`) with `eagerness: "moderate"`, so Chrome prerenders a same-origin link
@@ -126,7 +126,7 @@ largest perceived-speed win available on a reading site and it costs no runtime 
 Excluded from prerendering: `/admin/*`, `/api/*`, `/uploads/*`, `/preview/*`, `/og*`, plus
 `[rel~=nofollow]` and `[download]` links.
 
-> **RULE — a prerendered page runs its JavaScript at speculation time.** Any island that
+> **RULE: a prerendered page runs its JavaScript at speculation time.** Any island that
 > writes, measures time, or beacons **on mount** must be wrapped in `whenActivated()`
 > (`lib/prerender.ts`), which defers it to the `prerenderingchange` event. A discarded
 > prerender never activates, so the work never happens.
