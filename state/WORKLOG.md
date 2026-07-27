@@ -3,6 +3,33 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — M3 begins: auth, and the gate that enforces Invariant 4
+
+**791 tests, `check:all` green.** Two commits: the auth core (`614f4c3`) and the sign-in
+flow (`64c6164`). Authentication is the one part of 2.0 that is not a port — `next-auth`
+and Google go, password + TOTP is new code — so the protection a pure-motion diff normally
+buys is absent and everything is covered by tests written alongside it.
+
+**Two security bugs, both found by RUNNING the flow, neither visible in the code.** The
+TOTP code used to *enrol* could be replayed to sign in, because storing the new secret
+resets the replay floor. And `/api/auth/enrol/done` issued a session from the pending
+ticket alone, so anyone with the right password could POST straight to it and skip
+two-factor entirely. The second surfaced because a test about open redirects was passing
+*through that path by accident* — green, and proving nothing.
+
+**Invariant 4 is now enforceable, not just stated.** `ownerRouter()` applies the gate at
+construction, and `check:routes` fails the build on any write route outside it unless the
+path carries a written reason. Proved it fires before trusting it; it then caught a real
+forgotten route.
+
+**Three documented deviations from `06-auth.md`.** The lockout counts failures rather than
+attempts (the spec's version locks the owner out on their sixth successful sign-in in
+fifteen minutes); auth events bypass the activity-log toggle; and `AUTH_SECRET`, which was
+also salting the analytics visitor hash with a fallback of the literal `'quire'`, is
+replaced by a generated per-purpose secret.
+
+`LEDGER.md` split again: M2 moved to `LEDGER-M2.md` BEFORE the cap was hit this time.
+
 ## 2026-07-27 — M2 closes: the left rail
 
 **685 tests, `check:all` green.** The contents list moves into the left gutter above a

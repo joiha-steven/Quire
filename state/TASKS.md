@@ -29,6 +29,10 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       NOT visually verified: no browser could be launched in the build environment.
 - [ ] **M3 — admin, API and the rest.** Admin SPA embedded, 61 API routes moved, auth
       rebuilt per `v2/docs/06-auth.md`. Gate includes a 30-flow headless tour.
+      **Auth is done (2026-07-28):** password + TOTP + recovery codes, the sign-in and
+      first-run enrolment screens, `bun run user` for the bootstrap, and `check:routes`
+      enforcing Invariant 4. Left: the 61 API routes, the admin SPA, `mcp/*`, `well-known`,
+      and `Turnstile` with the comment form's configuration.
 - [ ] **M4 — cutover**, then keep the frozen tree runnable for 3 to 6 months against a
       read-only copy so "did we lose something?" is answerable by comparison.
 
