@@ -243,11 +243,14 @@ Count when written: 214 items.
 
 ## 8. Analytics
 
-- [ ] Cookieless. A visitor is a salted hash of IP + UA; the raw UA is never stored
-- [ ] Coarse device / browser / OS buckets parsed at insert
-- [ ] Bots, admin, api and the owner's own visits are skipped
-- [ ] Kept forever, no rolling window
-- [ ] Pageview beacon; scroll depth; dwell sampled on leave
+- [x] Cookieless. A visitor is a salted hash of IP + UA; the raw UA is never stored
+- [x] Coarse device / browser / OS buckets parsed at insert
+- [ ] Bots, admin and api are skipped **(done)**. The OWNER'S OWN visits are not yet:
+      the frozen tree's handler opens with `if (await requireOwner()) return 204`, and 2.0
+      has no session to ask until M3. Until then an owner reading their own blog is counted
+      as a reader. Recorded here rather than left to be noticed later; it lands with auth
+- [x] Kept forever, no rolling window
+- [x] Pageview beacon; scroll depth; dwell sampled on leave
 - [ ] `⚠` Both beacons are deferred until the document is actually viewed (prerender guard,
       shipped in M0). Any new on-mount side effect needs the same treatment
 - [ ] Overview: views, visitors with period-over-period trend and a new-vs-returning split, avg

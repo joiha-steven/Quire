@@ -1,6 +1,6 @@
 // A "scroll to top" button that fades in once the reader is past the first viewport.
 
-import { el, label, onScrollFrame } from './core'
+import { el, label, onScrollFrame } from './dom'
 
 export function backToTop(): void {
   const text = label('backToTop')

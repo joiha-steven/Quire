@@ -3,7 +3,7 @@
 //
 // Guarded per `<pre>`: running twice attaches nothing twice.
 
-import { el, label } from './core'
+import { el, label } from './dom'
 
 export function codeCopy(): void {
   const copy = label('copyCode')

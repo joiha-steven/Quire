@@ -11,7 +11,7 @@
 //
 // Clicks are DELEGATED from `.prose`, so an image that loads late is still covered.
 
-import { el, label } from './core'
+import { el, label } from './dom'
 
 export function lightbox(): void {
   const root = document.querySelector<HTMLElement>('.prose')

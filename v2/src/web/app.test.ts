@@ -46,17 +46,27 @@ describe('article page', () => {
     expect(html).toContain('My Blog')
   })
 
-  it('ships ONE deferred script and no inline JavaScript at all', async () => {
+  it('ships TWO deferred scripts and no inline JavaScript at all', async () => {
     await savePost({ title: 'Quiet', content: 'body', status: 'published', date: PAST })
     const html = await get('/quiet').then((r) => r.text())
-    // One tag, external, deferred. The budget is a number, not a vibe: the moment a
-    // second bundle or an inline block appears on an article page, this fails.
+    // The budget is a number, not a vibe: the moment a third bundle or an inline block
+    // appears on an article page, this fails. `core` is the analytics beacon, which every
+    // public page carries; `post` is the islands.
     const tags = html.match(/<script/g) ?? []
-    expect(tags.length).toBe(1)
+    expect(tags.length).toBe(2)
+    expect(html).toMatch(/<script src="\/assets\/core\.[a-z0-9]+\.js" defer><\/script>/)
     expect(html).toMatch(/<script src="\/assets\/post\.[a-z0-9]+\.js" defer><\/script>/)
     expect(html).not.toMatch(/<script(?![^>]*\bsrc=)/) // no inline block
     expect(html).not.toContain('onload=')
     expect(html).not.toContain('onclick=')
+  })
+
+  it('gives a listing the beacon and nothing else', async () => {
+    await savePost({ title: 'Listed', content: 'body', status: 'published', date: PAST })
+    const html = await get('/').then((r) => r.text())
+    expect((html.match(/<script/g) ?? []).length).toBe(1)
+    expect(html).toMatch(/<script src="\/assets\/core\./)
+    expect(html).not.toContain('/assets/post.') // no island code where there are no islands
   })
 
   it('serves the bundle immutably, and 404s a hash it does not have', async () => {
@@ -213,7 +223,6 @@ describe('listings', () => {
     expect(html.indexOf('Newer')).toBeLessThan(html.indexOf('Older'))
     expect(html).toContain('href="/newer"')
     expect(html).toContain('A tagline')
-    expect(html).not.toContain('<script')
   })
 
   it('paginates, and 404s a page past the end', async () => {

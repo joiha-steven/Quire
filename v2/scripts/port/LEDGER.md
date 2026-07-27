@@ -428,3 +428,47 @@ server refused to boot. The file now carries a note saying so.
 
 Still to come in M2: the analytics beacon (`core.js` + `POST /api/track`), OG images,
 search/subscribe/comments overlays, book mode, and the listing islands.
+
+## M2: the analytics beacon (2026-07-27)
+
+| File | From | Role |
+|---|---|---|
+| `src/web/track.ts` | `app/api/track/route.ts` | `POST /api/track`, always 204 |
+| `src/assets/js/track.ts` | `Track.tsx` + `ScrollDepth.tsx` | The beacon, both halves in one file |
+| `src/assets/js/activation.ts` | `lib/prerender.ts` | `whenActivated`, alone in its own module |
+| `src/assets/js/core.ts` | new | The bundle every public page loads |
+
+**core.js is 1,162 b; post.js is 2,966 b.** A listing pays for the first only; an article
+pays for both. Both numbers are now enforced: `build-assets.ts` fails the build over
+budget, so adding a feature either fits or moves a number in a diff someone reads. A
+JavaScript budget nobody defends is not a budget, and the frozen tree's 143 KB of framework
+is what that looks like after two years.
+
+**Every public page carries the beacon**, which is why `core.js` exists at all. A pageview
+that only fired on posts would undercount the home page, every listing and every taxonomy
+page, which between them are most of a blog's traffic. Listings had zero `<script` before
+this commit and now have one; the router test was changed to say so rather than deleted.
+
+**`whenActivated` got its own module because the bundler shakes per module, not per
+export.** Sitting beside the DOM helpers it rode into `post.js`, where nothing calls it —
+182 bytes for a prerender guard on a page that has no beacon. Splitting it also took
+`core.js` from 1,602 b to 1,162 b, since the beacon does not need `el` or `onScrollFrame`.
+Found by grepping the built bundle for `prerendering`, not by reading the source.
+
+**`Track` and `ScrollDepth` merged into one file.** They were two React components because
+they mounted at different points in the tree; as plain functions they share a path, a
+beacon helper and an activation guard, and splitting them would duplicate all three.
+
+**One behaviour is deliberately NOT ported yet, and is written down rather than left to be
+noticed.** The frozen handler opens with `if (await requireOwner()) return 204`, so an
+owner reading their own blog is never counted. 2.0 has no session to ask until M3. Recorded
+in `docs/07-parity.md` §8 and in a comment at the top of `track.ts`.
+
+**A test assertion that was wrong about its own subject.** The flood test counted the
+buffer and expected 240; it got 40, because the buffer flushes itself at `MAX_ROWS` (that
+is Invariant 7 working). It counts the table now.
+
+Driven against the running server, not just `app.request`: one view with
+`referrer_host=news.ycombinator.com`, `device=desktop`, `browser=Chrome`, `os=Windows`; one
+scroll row at `depth=83`, `dwell_ms=45000`; a Googlebot beacon dropped; and the visitor
+column holding a hash with neither the IP nor the user-agent anywhere in the row.

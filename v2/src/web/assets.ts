@@ -5,10 +5,11 @@
 // response is `immutable` for a year and a deploy that changes the code changes the URL:
 // no cache busting to remember, and no reader stuck on a stale script.
 
+import coreJs from '@/assets/dist/core.js' with { type: 'text' }
 import postJs from '@/assets/dist/post.js' with { type: 'text' }
 
 /** Bundles by logical name. Adding one is an import and a line. */
-const BUNDLES: Record<string, string> = { post: postJs }
+const BUNDLES: Record<string, string> = { core: coreJs, post: postJs }
 
 /**
  * Short content hash. Not a security boundary, so speed matters more than collision

@@ -22,7 +22,8 @@ import { PUBLIC_CSS } from '@/web/public.css'
 import { renderListing } from '@/web/listing'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
 import { renderArticle } from '@/web/article'
-import { assetBody } from '@/web/assets'
+import { assetBody, scriptTag } from '@/web/assets'
+import { handleTrack } from '@/web/track'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -48,6 +49,10 @@ async function listingPage(
     }</header>
 <main>${body}</main>
 </div>`,
+    // `core` is on every public page because analytics is: a pageview that only fired on
+    // posts would undercount the home page, every listing and every taxonomy page, which
+    // between them are most of a blog's traffic.
+    { scripts: scriptTag('core') },
   )
 }
 
@@ -174,6 +179,12 @@ export function createApp(): Hono {
 </form>`
     return c.html(await listingPage(`${t(settings.language).search} · ${settings.title}`, form + body))
   })
+
+  // ----- the analytics beacon -------------------------------------------------
+  // Public and unauthenticated by necessity: it is called by every reader's browser. It
+  // is rate-limited per IP, drops bots and admin paths, and stores no PII.
+
+  app.post('/api/track', handleTrack)
 
   // ----- browser bundles ------------------------------------------------------
   // The URL carries a content hash, so the answer is cacheable forever and a deploy that

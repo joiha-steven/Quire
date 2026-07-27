@@ -18,7 +18,10 @@ await rm(OUT, { recursive: true, force: true })
 await mkdir(OUT, { recursive: true })
 
 const result = await Bun.build({
-  entrypoints: [`${ROOT}src/assets/js/post.ts`],
+  entrypoints: [
+    `${ROOT}src/assets/js/core.ts`,
+    `${ROOT}src/assets/js/post.ts`,
+  ],
   outdir: OUT,
   target: 'browser',
   format: 'esm',
@@ -36,7 +39,26 @@ if (!result.success) {
   process.exit(1)
 }
 
-for (const output of result.outputs) {
-  const size = (await output.text()).length
-  console.log(`${output.path.slice(ROOT.length)}  ${size} b`)
+/**
+ * A budget, in bytes, per bundle. Set just above what each currently costs, so adding a
+ * feature is a deliberate act: either it fits, or the number moves in a diff someone reads.
+ * A JavaScript budget nobody defends is not a budget, and the frozen tree's 143 KB of
+ * framework is what that looks like after two years.
+ */
+const BUDGET: Record<string, number> = {
+  'core.js': 2_000, // every public page: the analytics beacon
+  'post.js': 4_000, // /{slug}: back to top, code copy, lightbox
 }
+
+let over = false
+for (const output of result.outputs) {
+  const name = output.path.split(/[\\/]/).pop() ?? ''
+  const size = (await output.text()).length
+  const budget = BUDGET[name]
+  console.log(`${output.path.slice(ROOT.length)}  ${size} b${budget ? ` / ${budget} b` : ''}`)
+  if (budget && size > budget) {
+    console.error(`  over budget by ${size - budget} b. Make it smaller, or move the number.`)
+    over = true
+  }
+}
+if (over) process.exit(1)

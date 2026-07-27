@@ -112,7 +112,7 @@ export async function renderArticle(slug: string): Promise<string | null> {
       lightboxNext: s.lightboxNext,
       lightboxClose: s.lightboxClose,
     },
-    scripts: scriptTag('post'),
+    scripts: scriptTag('core') + scriptTag('post'),
   }
 
   const site = resolveSiteUrl(settings)

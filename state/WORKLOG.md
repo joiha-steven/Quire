@@ -3,6 +3,25 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: the analytics beacon
+
+`POST /api/track` and the browser half of it. **592 tests, `check:all` green.** Driven
+against the running server: a view lands with its referrer host, device, browser and OS; a
+depth sample lands at 83% and 45 s of dwell; a Googlebot beacon is dropped; and the stored
+row contains neither the IP nor the user-agent, only a hash.
+
+**core.js is 1,162 b, post.js is 2,966 b, and both numbers now fail the build if
+exceeded.** A listing pays for the first, an article for both. Adding a feature either fits
+or moves a number in a diff someone reads.
+
+`whenActivated` moved into its own module, because the bundler shakes per module and it was
+riding into `post.js` where nothing calls it. Found by grepping the built bundle, not by
+reading the source; it took core.js down 440 b as well.
+
+**One behaviour is deliberately not ported yet and is written down rather than left to be
+noticed.** The frozen handler skips the owner's own visits via `requireOwner()`, and 2.0
+has no session to ask until M3. Recorded in `07-parity.md` §8 and at the top of `track.ts`.
+
 ## 2026-07-27 — M2: the first islands, hand-written
 
 Back-to-top, code copy and the image lightbox, ported from React to vanilla. **583 tests,
