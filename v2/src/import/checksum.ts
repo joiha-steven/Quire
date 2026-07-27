@@ -35,8 +35,12 @@ function canonical(value: unknown): string {
   if (value === null || value === undefined) return 'n:'
   if (typeof value === 'boolean') return `i:${value ? 1 : 0}`
   if (typeof value === 'number') return Number.isInteger(value) ? `i:${value}` : `f:${value}`
-  if (typeof value === 'object') return `j:${JSON.stringify(value)}`
-  const s = String(value)
+  // An object collapses to its JSON TEXT and then falls through to the string branch, so
+  // it lands on `s:<len>:<json>` — exactly what the same value arrives as from the other
+  // side. It used to get its own `j:` prefix, which meant `post_revisions.data` could
+  // never match: Postgres serves `jsonb` already parsed, SQLite holds it as TEXT, so one
+  // side hashed `j:{...}` and the other `s:54099:{...}` on byte-identical content.
+  const s = typeof value === 'object' ? JSON.stringify(value) : String(value)
   // A timestamp is normalised to epoch milliseconds so the two sides' renderings of the
   // same instant agree: Postgres sends `2026-07-27T10:00:00+00:00`, SQLite holds
   // 1785...  Without this every dated table would report a permanent false mismatch.

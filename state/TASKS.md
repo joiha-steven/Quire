@@ -8,11 +8,13 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       SQLite schema; ~6,500 lines of pure logic and its tests moved unchanged; every
       `db()` call site on `bun:sqlite`; all six plpgsql functions reimplemented; and
       `import-v1` with its four verification tiers. 473 tests, `check:all` green.
-- [ ] **Run `import-v1` end to end against a live v1.** Every part is tested in isolation
-      (51 tests) but the two sides have never met. It needs the dev Postgres stack up
-      (`docker compose -f docker-compose.dev.yml up -d` in the repo root) and a copy of
-      the uploads tree. Production is not a test environment; do this against dev first,
-      then once more at cutover.
+- [x] **Run `import-v1` end to end against a live v1. DONE 2026-07-28.** Read-only against
+      the live PostgREST on the web box, writing a fresh SQLite for the staging install:
+      74 posts, 4 pages, 68 media, 246 term rows, 481 activity rows, 504 analytics events.
+      All four verification tiers pass. **It found two real bugs that 51 unit tests could
+      not**, both the same root cause in two different normalisers — a `jsonb` column
+      arrives PARSED from PostgREST and is held as TEXT in SQLite, and neither
+      `verify.ts` nor `checksum.ts` reconciled the two. Re-run once more at cutover.
 - [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
       2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
       `@img/sharp-<platform>` native module, so the compiled binary throws on the first

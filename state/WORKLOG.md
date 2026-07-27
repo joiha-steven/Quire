@@ -3,6 +3,34 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — Staging is live, and `import-v1` finally met a real v1
+
+**<https://next.manhhung.me>** runs Quire 2.0 beside the live v1 on the same box: own user
+(`quire2`), own port (3100), own data dir, its own copy of the 92 MB uploads tree. v1 on
+:3000 is untouched. One `systemd` unit, `ProtectSystem=strict`, nginx vhost under the
+existing `*.manhhung.me` origin cert.
+
+**Bun installed per-user, and `bun install` run ON the server** — which is the whole point:
+it fetched `@img/sharp-linux-x64` by itself. Copying `node_modules` from a dev machine
+would have shipped the Windows build. 90 MB of dependencies, not the 60 MB estimated,
+because sharp carries both glibc and musl variants.
+
+**`import-v1` ran end to end for the first time and found two real bugs.** Same root cause,
+two different functions: PostgREST returns a `jsonb` column already PARSED, SQLite holds it
+as TEXT, and neither normaliser reconciled that. `verify.ts` compared `[object Object]`
+against a JSON string (tier 3 fatal); `checksum.ts` hashed `j:{…}` against `s:54099:{…}`
+(tier 2 fatal). Green tier 2 in the first run is what made the tier-3 failure look like a
+data problem rather than a comparison one. Both fixed, both now tested.
+
+Third fix: a content reference to a file missing from BOTH v1's media table and its uploads
+tree was FATAL. That is a break the source blog already had, which the import can neither
+lose nor repair — now a warning. Three of them exist on the real blog.
+
+**Two Cloudflare lessons re-learned.** The staging record was DNS-only at first, so UFW
+(CF IPs only) blocked it. And CF cached the home page from before the import, so the site
+looked empty while the origin was correct all along — purged via v2's own
+`/api/cron?purge=1`, using the CF token the import carried over.
+
 ## 2026-07-28 — M3: 55 of 61 API routes
 
 **900 tests, `check:all` green.** Four more commits: `605d00e` (media and files),

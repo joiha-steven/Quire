@@ -100,11 +100,23 @@ export function verifySpot(
   return out
 }
 
-/** Same collapsing rules as the checksum, but readable, because this output is for a human. */
+/**
+ * Same collapsing rules as the checksum, but readable, because this output is for a human.
+ *
+ * The object branch is NOT decoration. `post_revisions.data` is `jsonb` in Postgres, and
+ * PostgREST hands it back already parsed, while the imported side holds the same value as
+ * TEXT. Without this, every sampled revision compared `[object Object]` against a JSON
+ * string and tier 3 failed the whole import on rows that were byte-identical.
+ *
+ * Tier 2 was green throughout, because `canonical()` in `checksum.ts` HAS this branch —
+ * which is the tell: two normalisers that must agree, and only one of them was complete.
+ * Found the first time the importer was run end to end against a real v1, on 2026-07-28.
+ * Fifty-one unit tests missed it because they never fed an object in.
+ */
 function normalise(value: unknown): string {
   if (value === null || value === undefined) return 'NULL'
   if (typeof value === 'boolean') return value ? '1' : '0'
-  const s = String(value)
+  const s = typeof value === 'object' ? JSON.stringify(value) : String(value)
   const ms = /^\d{4}-\d{2}-\d{2}[T ]/.test(s) ? Date.parse(s) : NaN
   if (!Number.isNaN(ms)) return String(ms)
   return s.length > 120 ? `${s.slice(0, 120)}… (${s.length} chars)` : s

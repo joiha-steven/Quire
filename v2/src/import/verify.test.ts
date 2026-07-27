@@ -136,6 +136,22 @@ describe('tier 2: checksums', () => {
   it('is FATAL on a dropped row', () => {
     expect(verifyChecksums('posts', src, [])).toHaveLength(1)
   })
+
+  /**
+   * The tier-2 half of the same bug tier 3 had. `canonical()` gave a parsed object its own
+   * `j:` prefix while the identical value as TEXT got `s:<len>:`, so `post_revisions`
+   * could never checksum equal: Postgres serves `jsonb` parsed, SQLite holds it as text.
+   *
+   * Both normalisers had to be fixed, and BOTH need a test, because green tier 2 was
+   * exactly what made the tier-3 failure look like a data problem rather than a
+   * comparison one.
+   */
+  it('checksums a parsed object equal to its JSON text form', () => {
+    const payload = { title: 'A revision', tags: ['x', 'y'] }
+    const source = [{ id: 1, slug: 'a', saved_at: 0, data: payload }]
+    const imported = [{ id: 1, slug: 'a', saved_at: 0, data: JSON.stringify(payload) }]
+    expect(verifyChecksums('post_revisions', source, imported)).toEqual([])
+  })
 })
 
 describe('tier 3: spot comparison', () => {
@@ -157,6 +173,36 @@ describe('tier 3: spot comparison', () => {
   it('reports a row that did not arrive at all', () => {
     const f = verifySpot('posts', src, good.slice(1), 42)
     expect(f.some((x) => x.detail.includes('missing after import'))).toBe(true)
+  })
+
+  /**
+   * `post_revisions.data` is `jsonb`: PostgREST returns it PARSED, the imported side holds
+   * it as TEXT. Comparing them with `String()` yields `[object Object]` against a JSON
+   * string, so every sampled revision looked like a mismatch and tier 3 failed an import
+   * whose rows were byte-identical.
+   *
+   * Tier 2 stayed green the whole time, because its normaliser handles objects — two
+   * functions that must agree, and only one was complete. Found the first time the
+   * importer met a real v1 (2026-07-28); the existing tests never fed an object in.
+   */
+  it('compares a parsed object against its JSON text form as equal', () => {
+    const payload = { title: 'A revision', tags: ['x', 'y'] }
+    const source = [{ id: 1, slug: 'a', saved_at: '2026-07-27T10:00:00+00:00', data: payload }]
+    const imported = [{
+      id: 1, slug: 'a',
+      saved_at: Date.parse('2026-07-27T10:00:00+00:00'),
+      // What SQLite actually holds.
+      data: JSON.stringify(payload),
+    }]
+    expect(verifySpot('post_revisions', source, imported, 42)).toEqual([])
+  })
+
+  it('still catches a revision whose payload genuinely differs', () => {
+    const source = [{ id: 1, slug: 'a', saved_at: 0, data: { title: 'Right' } }]
+    const imported = [{ id: 1, slug: 'a', saved_at: 0, data: JSON.stringify({ title: 'Wrong' }) }]
+    const f = verifySpot('post_revisions', source, imported, 42)
+    expect(f).toHaveLength(1)
+    expect(f[0]!.detail).toContain('column data')
   })
 
   it('is reproducible from its seed', () => {

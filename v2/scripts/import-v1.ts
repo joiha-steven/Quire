@@ -90,9 +90,18 @@ function verifyBinaries(uploads: string): Finding[] {
   const known = new Set(db().query<{ p: string }, []>(`select path as p from media`).all().map((r) => r.p))
   for (const r of db().query<{ slug: string; content: string }, []>(
     `select slug, content from posts union all select slug, content from pages`).all()) {
-    for (const ref of r.content.matchAll(/\bmedia\/[^\s")'#]+/g)) {
+    // `&` terminates the match: a link written `<…/file.pdf>` is escaped to `…pdf&gt;` in
+    // the stored markdown, and without this the entity is captured as part of the path and
+    // reported as a missing file that was never named.
+    for (const ref of r.content.matchAll(/\bmedia\/[^\s")'#&]+/g)) {
       if (!known.has(ref[0]) && !existsSync(join(uploads, ref[0]))) {
-        out.push({ tier: 4, table: 'content', fatal: true, detail: `/${r.slug} references missing ${ref[0]}` })
+        // NOT fatal. This says the SOURCE blog already had a broken image reference — the
+        // file is in neither v1's media table nor its uploads tree, so there was nothing
+        // for the import to lose and nothing it can repair. Refusing to migrate a blog
+        // because one old post links a file deleted years ago is the wrong call; the
+        // owner still gets told. The genuinely fatal binary check is the one above, where
+        // a media ROW exists and its bytes do not.
+        out.push({ tier: 4, table: 'content', fatal: false, detail: `/${r.slug} references missing ${ref[0]} (already broken in v1)` })
       }
     }
   }
