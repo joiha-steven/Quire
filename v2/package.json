@@ -18,9 +18,11 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/nodemailer": "^8.0.1",
     "typescript": "^5.9.0"
   },
   "dependencies": {
+    "nodemailer": "^9.0.3",
     "sharp": "^0.35.3"
   }
 }

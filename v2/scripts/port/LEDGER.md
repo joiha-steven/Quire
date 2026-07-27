@@ -107,6 +107,39 @@ string building, which this codebase does not do.
 native module, so the compiled binary throws on first image call from any directory. The
 risk register predicted this; it is now confirmed, and the plan records what it costs.
 
+## Rewritten, not moved (M1 newsletter and the small modules, 2026-07-27)
+
+`nodemailer` joins `sharp` as the second runtime dependency.
+
+| Destination | From | Query changes |
+|---|---|---|
+| `server/activity.ts` | `activity.ts` | `at` is milliseconds; `.neq('id',0)` becomes a plain `delete` |
+| `content/series.ts` | `series.ts` | Update counts come from `changes` instead of a `RETURNING` array length |
+| `server/scheduled.ts` | `scheduled.ts` | Window query on integer dates; `purgeAndWarm` collapses (see below) |
+| `media/media-refs.ts` | `media-refs.ts` | `variants` is a 0/1 column |
+| `news/newsletter-log.ts` | `newsletter-log.ts` | `ok` is 0/1; folds unchanged |
+| `news/subscribers.ts` | `subscribers.ts` | `upsert` becomes `on conflict(email) do update`, `created_at` deliberately not in the update list |
+| `news/mail.ts` | `mail.ts` | Read-merge-write, same reason as `integration-keys` |
+| `news/broadcast.ts` | `broadcast.ts` | `.in()` becomes `json_each` |
+| `comments/comment-notify.ts` | `comment-notify.ts` | Two `maybeSingle` reads become two `select` |
+
+**`purgeAndWarm` loses its second half.** The frozen tree re-warmed the origin after a
+purge because Next's ISR cache was on disk and a cold render cost a visitor real time.
+There is nothing to warm in 2.0: the cache is an in-process Map and a miss is a
+sub-millisecond SQLite read plus a render. `sweepScheduled` now clears the cache and purges
+Cloudflare, and `newlyLive` stays exactly as it was, with its 6 tests moved verbatim, so
+the definition of "went live" is untouched.
+
+### A schema bug the port caught
+
+`integration_keys.smtp_secure` had been translated as `integer not null default 1`. The
+Postgres column was nullable, and `mail.ts` reads it as `row?.smtp_secure ?? (port === 465)`
+— NULL means "not chosen". With NOT NULL DEFAULT 1, any install that had ever saved an
+unrelated key on that shared row (a Turnstile site key is enough) would come back with
+`secure = true`, so a port-587 STARTTLS server would stop accepting mail with no setting
+having been touched, and nothing in the UI would explain why. The column is nullable again
+and `news/mail.test.ts` has the regression case, named after the bug.
+
 ## Moved, then pulled back out
 
 | File | Why |
@@ -122,4 +155,4 @@ risk register predicted this; it is now confirmed, and the plan records what it 
 | `gdrive`, `backup`, `backup-state` | Google Drive replaced by litestream (parity exception 1) |
 | `image`, `highlight`, `wordpress-import`, `well-known` | Need npm dependencies (`sharp`, `shiki`, `turndown`, MCP SDK). Land with their module |
 | `upload-client` | Browser-side; belongs to the admin SPA |
-| `subscribers`, `analytics`, `activity`, `series`, `scheduled`, `broadcast`, `mail`, `newsletter-log`, `comment-notify`, `media-refs`, `og`(db parts), `mcp/*` | The remaining `db()` call sites. Next slice of M1 |
+| `analytics`, `og`(db parts), `mcp/*` | The last `db()` call sites. `analytics` carries the six SQL functions (01-schema.md section 3) and is the largest remaining piece of M1 |

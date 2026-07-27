@@ -228,7 +228,12 @@ create table if not exists integration_keys (
   smtp_user            text,
   smtp_pass            text,
   smtp_from            text,
-  smtp_secure          integer not null default 1 check (smtp_secure in (0,1))
+  -- NULLABLE on purpose. NULL means "not chosen", and the caller falls back to
+  -- `port === 465`, which is how the frozen tree behaved. A NOT NULL DEFAULT 1 here would
+  -- silently force implicit TLS on any install that had ever saved an unrelated key on
+  -- this row, and a port-587 STARTTLS server would stop accepting mail with no setting
+  -- having been touched. Found while porting mail.ts.
+  smtp_secure          integer check (smtp_secure in (0,1))
 );
 
 -- ----- newsletter -------------------------------------------------------------

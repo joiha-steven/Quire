@@ -3,6 +3,33 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1: newsletter and the small modules. Only analytics left
+
+`nodemailer` joins `sharp` as the second runtime dependency, then `activity`, `series`,
+`scheduled`, `media-refs`, `newsletter-log`, `subscribers`, `mail`, `broadcast` and
+`comment-notify`. **361 tests pass, 0 fail**, typecheck and file-size clean.
+
+**The port found a schema bug, which is the point of doing it this way.**
+`integration_keys.smtp_secure` had been translated as `integer not null default 1`, but the
+Postgres column was nullable and `mail.ts` reads NULL as "not chosen, infer from the port".
+With NOT NULL DEFAULT 1, any install that had ever saved an unrelated key on that shared
+row (one Turnstile site key is enough) would resolve `secure = true`, so a port-587
+STARTTLS server would quietly stop accepting mail with nothing in the UI to explain it.
+Column is nullable again, with the regression case named after the bug.
+
+`purgeAndWarm` loses its second half. The frozen tree re-warmed the origin after a purge
+because Next's ISR cache was on disk and a cold render cost a visitor real time; there is
+nothing to warm when the cache is an in-process Map and a miss is a sub-millisecond SQLite
+read. `newlyLive` itself is untouched and its 6 tests moved verbatim, so the definition of
+"went live" did not move with the plumbing.
+
+Two more pure test files moved unchanged (`scheduled`, `series-order`). The frozen
+`newsletter-log.test.ts` did not: it mocked the query builder, and the replacement runs the
+same folds against real rows.
+
+Left in M1: `analytics` (with the six SQL functions), the `og` database parts, `mcp/*`,
+and the importer.
+
 ## 2026-07-27 — M1: the content core on SQLite. Posts, terms, comments, media, settings
 
 `sharp` added as 2.0's first runtime dependency, then `image` (moved verbatim, 6 tests),

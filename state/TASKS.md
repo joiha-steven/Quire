@@ -8,10 +8,11 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       ~6,500 lines of pure logic and its tests moved unchanged, and the whole content core
       on `bun:sqlite` (`posts` + `post-terms`, `pages`, `revisions`, `comments`, `media` +
       `finalize`, `files`, `image`, `settings`, `slugs`, `redirects`, `integration-keys`,
-      plus `store/query.ts` and `server/cache.ts`). Left: `subscribers`, `analytics`,
-      `activity`, `series`, `scheduled`, `broadcast`, `mail`, `newsletter-log`,
-      `comment-notify`, `media-refs`, `mcp/*`; the six plpgsql functions reimplemented;
-      the importer with its four verification tiers.
+      plus `store/query.ts` and `server/cache.ts`), and the newsletter cluster
+      (`subscribers`, `newsletter-log`, `mail`, `broadcast`, `comment-notify`) with
+      `activity`, `series`, `scheduled` and `media-refs`. Left: `analytics` and its six
+      SQL functions, the `og` database parts, `mcp/*`, and the importer with its four
+      verification tiers.
 - [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
       2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
       `@img/sharp-<platform>` native module, so the compiled binary throws on the first

@@ -1,0 +1,93 @@
+// Activity log — a transparent, owner-only record of admin mutations (post/page
+// saves + deletes, media/file uploads + deletes, settings, taxonomy, cache clear).
+// Stored in the `activity_log` table. Logging is gated by
+// `settings.features.activityLog` (Admin → Settings) so the owner can turn it off.
+//
+// Never throws: a logging failure must not break the action being logged.
+
+import { getSettings } from '@/content/settings'
+import { all, run } from '@/store/query'
+import { nowMs, toIso } from '@/store/db'
+
+export type ActivityAction =
+  | 'post.create' | 'post.update' | 'post.delete'
+  | 'page.create' | 'page.update' | 'page.delete'
+  | 'media.upload' | 'media.delete'
+  | 'file.add' | 'file.delete' | 'icon.upload' | 'font.upload'
+  | 'settings.save' | 'taxonomy.update' | 'series.update' | 'cache.clear'
+  // Trash (soft delete): restore / permanent purge per kind, plus empty-trash.
+  | 'post.restore' | 'post.purge' | 'page.restore' | 'page.purge'
+  | 'media.restore' | 'media.purge' | 'file.restore' | 'file.purge'
+  | 'trash.empty'
+  // MCP access tokens (Admin → Settings → Advanced).
+  | 'mcp.token.create' | 'mcp.token.delete'
+  // Content import (Admin → Settings → Integrations).
+  | 'import.wordpress'
+  // URL redirects (Admin → Settings → SEO).
+  | 'redirect.save' | 'redirect.delete'
+  // Newsletter (Admin → Settings → Integrations).
+  | 'subscriber.delete' | 'mail.config' | 'mail.test' | 'newsletter.send'
+  // Backups (Admin → Settings → Advanced).
+  | 'backup.connect' | 'backup.disconnect' | 'backup.run' | 'backup.delete' | 'backup.restore'
+  // Reader comments (create is public; restore/purge from the admin Trash).
+  | 'comment.create' | 'comment.delete' | 'comment.restore' | 'comment.purge'
+  // Server errors (unexpected failures from route handlers) — the error log.
+  | 'error'
+
+export type ActivityEntry = {
+  id: number
+  at: string
+  action: ActivityAction
+  detail: string
+}
+
+function insert(action: ActivityAction, detail: string): void {
+  run(
+    `insert into activity_log (at, action, detail) values (?, ?, ?)`,
+    nowMs(), action, detail.slice(0, 500),
+  )
+}
+
+// Record one action. No-op (silently) when the toggle is off or on any error.
+export async function logActivity(action: ActivityAction, detail = ''): Promise<void> {
+  try {
+    const { features } = await getSettings()
+    if (!features.activityLog) return
+    insert(action, detail)
+  } catch (error) {
+    console.error(`[ERROR] activity.logActivity(${action}): ${(error as Error).message}`)
+  }
+}
+
+// Record an unexpected server error as an `error` entry (the error log). Gated by
+// the same toggle; never throws. `context` is e.g. "POST /api/posts/foo".
+export async function logActivityError(context: string, message: string): Promise<void> {
+  try {
+    const { features } = await getSettings()
+    if (!features.activityLog) return
+    insert('error', `${context} — ${message}`)
+  } catch (error) {
+    console.error(`[ERROR] activity.logActivityError: ${(error as Error).message}`)
+  }
+}
+
+// Most-recent entries first (default 200). Empty on error.
+export async function getActivity(limit = 200): Promise<ActivityEntry[]> {
+  try {
+    // `id desc` matters more than it did: `at` is milliseconds where Postgres had
+    // microseconds, and a burst of writes inside one action would otherwise order
+    // arbitrarily in the owner's log.
+    return all<{ id: number; at: number; action: ActivityAction; detail: string }>(
+      `select id, at, action, detail from activity_log order by at desc, id desc limit ?`,
+      limit,
+    ).map((r) => ({ ...r, at: toIso(r.at) }))
+  } catch (error) {
+    console.error(`[ERROR] activity.getActivity: ${(error as Error).message}`)
+    return []
+  }
+}
+
+// Wipe the whole log (owner action from the Log page).
+export async function clearActivity(): Promise<void> {
+  run(`delete from activity_log`)
+}
