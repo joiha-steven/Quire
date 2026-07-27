@@ -6,7 +6,7 @@
 import type { EmailBrand, EmailLogo } from '@/news/newsletter-email'
 import type { SiteSettings } from '@/types'
 import { getDefaultTheme } from '@/content/themes'
-import { resolveSiteUrl } from '@/lib/settings'
+import { resolveSiteUrl } from '@/content/settings'
 
 // Formats every mail client renders. Deliberately NOT webp: Outlook on Windows uses
 // the Word engine and shows nothing for it, and SVG is stripped almost everywhere —

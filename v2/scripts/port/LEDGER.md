@@ -36,12 +36,6 @@ code that compiles cleanly at source, i.e. it converted a pure-motion diff into 
 motion-plus-rewrite diff. Reverted to match the source exactly; tightening is a separate
 pass after the port, tracked in `state/TASKS.md`.
 
-## Waiting on a dependency
-
-| File | Blocked by | Why |
-|---|---|---|
-| `news/email-brand.test.ts` | `settings.ts` | Imports `DEFAULT_SETTINGS`. `settings.ts` is a MIXED module: `DEFAULT_SETTINGS`, `typographyToCss`, `fontToCss` and `resolveAppIcon` are pure, but `getSettings`/`saveSettings` touch the database. Splitting it now would violate the porting rule (move first, improve separately), so the test moves when settings does. |
-
 ## Rewritten, not moved (M1 data layer, 2026-07-27)
 
 The first six `db()` modules. Signatures and semantics are unchanged; only the query
@@ -76,6 +70,43 @@ fails because SQLite really does return the trashed row. 39 tests, and they foun
 behaviours worth naming: an overwrite must pass `previousSlug` or it collides with itself,
 and saving a trashed row must not untrash it.
 
+## Rewritten, not moved (M1 content core, 2026-07-27)
+
+The rest of the content modules. `sharp` is added as 2.0's first runtime dependency; it is
+what `renderLogo` and every image variant need, and Bun has no built-in image resize.
+
+| Destination | From | Query changes |
+|---|---|---|
+| `media/image.ts` | `image.ts` | **none.** Pure sharp, moved verbatim with its 6 tests |
+| `media/files.ts` | `files.ts` | `.in()` becomes `in (select value from json_each(?))` |
+| `media/media.ts` + `media/finalize.ts` | `media.ts` | Split at 406 lines to hold the 400-line rule; `finalize.ts` is the deferred variant/thumb work, the only part with no request on the other end |
+| `content/settings.ts` | `settings.ts` | `data` is JSON text. A malformed blob now throws into the existing catch, which already returned defaults |
+| `comments/comments.ts` | `comments.ts` | `insert ... returning`, `count(*)` + `limit/offset` for the admin page. `buildCommentTree` untouched |
+| `content/posts.ts` + `content/post-terms.ts` | `posts.ts` | The biggest change: `categories`/`tags` move from two `text[]` columns to the `post_terms` junction |
+
+Three things here are not pure motion:
+
+1. **`updateTerm` is no longer a read-modify-write.** The frozen tree read every post's
+   array, edited it in JS and wrote it back, and documented that as an accepted
+   last-write-wins risk. It is now `update or ignore` + `delete` against one table, and the
+   collision-merge falls out of the primary key instead of an array de-dupe.
+2. **Search input is escaped into quoted FTS5 phrases.** PostgREST's `websearch` parsed
+   user text; a raw `match ?` throws a syntax error on `C++`, a stray quote or a bare `OR`,
+   which would have turned a search into a silent empty result. Space-joined phrases keep
+   the implicit AND. Ordering stays date-desc: BM25 relevance is an *allowed* parity
+   exception that has deliberately NOT been taken during the port, so a ranking change
+   cannot be mistaken for a port bug.
+3. **Term order within a post is not preserved.** `post_terms` has no ordering column, so
+   terms come back alphabetically where the frozen tree kept the author's array order.
+   Cosmetic, and adding an ordering column is a schema decision rather than a port.
+
+`json_each` carries every key list. The alternative, generating `in (?, ?, ?)`, is SQL
+string building, which this codebase does not do.
+
+**Measured, not assumed:** `bun build --compile` bundles sharp's JavaScript but not its
+native module, so the compiled binary throws on first image call from any directory. The
+risk register predicted this; it is now confirmed, and the plan records what it costs.
+
 ## Moved, then pulled back out
 
 | File | Why |
@@ -91,5 +122,4 @@ and saving a trashed row must not untrash it.
 | `gdrive`, `backup`, `backup-state` | Google Drive replaced by litestream (parity exception 1) |
 | `image`, `highlight`, `wordpress-import`, `well-known` | Need npm dependencies (`sharp`, `shiki`, `turndown`, MCP SDK). Land with their module |
 | `upload-client` | Browser-side; belongs to the admin SPA |
-| `settings` | Needs `files.renderLogo`, which needs `sharp`. `sharp` would be 2.0's first runtime dependency, so it lands as its own decision with `files`/`media` |
-| `posts`, `media`, `files`, `comments`, `subscribers`, `analytics`, `activity`, `series`, `scheduled`, `broadcast`, `mail`, `newsletter-log`, `og`(db parts), `mcp/*` | The rest of the `db()` call sites. Remaining slices of M1 |
+| `subscribers`, `analytics`, `activity`, `series`, `scheduled`, `broadcast`, `mail`, `newsletter-log`, `comment-notify`, `media-refs`, `og`(db parts), `mcp/*` | The remaining `db()` call sites. Next slice of M1 |

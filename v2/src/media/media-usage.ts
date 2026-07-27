@@ -7,11 +7,11 @@
 // an old revision is still NOT unused, because restoring that revision needs it.
 // That is exactly the case the old destructive sweeper missed.
 
-import { getIndex, getPost } from '@/lib/posts'
+import { getIndex, getPost } from '@/content/posts'
 import { getPageIndex, getPage } from '@/content/pages'
 import { getRevisions } from '@/content/revisions'
-import { getSettings } from '@/lib/settings'
-import { getMedia } from '@/lib/media'
+import { getSettings } from '@/content/settings'
+import { getMedia } from '@/media/media'
 import { collapseBlob } from '@/media/blob'
 
 const MEDIA_RE = /media\/[^\s")'#]+/gi

@@ -3,6 +3,37 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M1: the content core on SQLite. Posts, terms, comments, media, settings
+
+`sharp` added as 2.0's first runtime dependency, then `image` (moved verbatim, 6 tests),
+`files`, `media` + `finalize`, `settings`, `comments` and `posts` + `post-terms`.
+**`bun run check:all` is green: typecheck clean, 298 tests pass, 0 fail.** Every `@/lib/*`
+import in the moved tree now resolves inside 2.0.
+
+The largest shape change is taxonomy: `categories`/`tags` were two Postgres `text[]`
+columns and are now the `post_terms` junction. That deletes the one read-modify-write the
+frozen tree documented as an accepted last-write-wins risk; a site-wide rename is two
+statements, and the collision-merge falls out of the primary key instead of an array
+de-dupe. 13 tests cover it, including the merge.
+
+Search needed a guard the old stack gave for free: PostgREST's `websearch` parsed user
+text, while a raw FTS5 `match ?` throws a syntax error on `C++`, a stray quote or a bare
+`OR` — which would have shown up as a search that silently returns nothing. Every word is
+now a quoted phrase. Ordering deliberately stays date-desc: BM25 is an allowed parity
+exception that was NOT taken during the port, so a ranking change cannot be mistaken for a
+port bug.
+
+`soft-delete.test.ts`, the mock that hand-wrote a filter engine to prove Invariant 6, is
+replaced by real rows in a real table. The comment tests keep `buildCommentTree` verbatim
+and rebuild only the `addComment` guards, which now prove depth comes from the STORED
+parent rather than the caller.
+
+**Measured while here, and it contradicts a headline claim:** `bun build --compile` bundles
+sharp's JavaScript but not its native module, so the compiled binary throws
+"Could not load the sharp module" on the first image call, from any working directory.
+"One executable" is really "one executable plus a native module directory". The risk
+register predicted it; it now says so with evidence, and M4 has to pick a shape.
+
 ## 2026-07-27 — M1: the first six `db()` modules on SQLite, and the query-builder mocks deleted
 
 `store/query.ts` (`one`/`all`/`run`/`tx`, deliberately not a query builder), `server/cache.ts`

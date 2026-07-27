@@ -5,13 +5,18 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 ## Now
 
 - [ ] **M1 — foundations and data layer** (`v2/docs/00-plan.md`). Done: SQLite schema,
-      ~6,500 lines of pure logic and its tests moved unchanged, and the first six `db()`
-      modules (`integration-keys`, `slugs`, `redirects`, `revisions`, `pages`, plus
-      `store/query.ts` and `server/cache.ts`). Left: the remaining `db()` call sites, the
-      six plpgsql functions reimplemented, the importer with its four verification tiers.
-- [ ] **Decide on `sharp`** before porting `settings` / `files` / `media`. It would be
-      2.0's first runtime dependency and it is what `renderLogo` and every image variant
-      need. `settings` is blocked on it, and so is `news/email-brand.test.ts`.
+      ~6,500 lines of pure logic and its tests moved unchanged, and the whole content core
+      on `bun:sqlite` (`posts` + `post-terms`, `pages`, `revisions`, `comments`, `media` +
+      `finalize`, `files`, `image`, `settings`, `slugs`, `redirects`, `integration-keys`,
+      plus `store/query.ts` and `server/cache.ts`). Left: `subscribers`, `analytics`,
+      `activity`, `series`, `scheduled`, `broadcast`, `mail`, `newsletter-log`,
+      `comment-notify`, `media-refs`, `mcp/*`; the six plpgsql functions reimplemented;
+      the importer with its four verification tiers.
+- [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
+      2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
+      `@img/sharp-<platform>` native module, so the compiled binary throws on the first
+      image call from any working directory. Options: ship `node_modules/@img/*` beside the
+      binary, or run from source with `bun src/index.ts`. Needed by M4, not before.
 
 ## Next
 
