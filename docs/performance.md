@@ -31,6 +31,36 @@ the file(s) that paint it, and nothing else.
 | **Uploaded custom font** (`settings.customFont`) | **nothing** — the face is unsubsetted (whole charset, often large); a high-priority preload would contend with the render-blocking CSS and hurt LCP. It still wins `--font-reading` via `fontToCss`; `swap` covers the paint |
 | **Chrome font** (Inter default, IBM Plex Mono, "reading") | **NEVER** — not the LCP element; loads at normal priority via its `@font-face` and swaps in |
 
+### Variation axes are trimmed, not shipped whole
+
+`scripts/subset-font-axes.py` (needs `pip install fonttools brotli`) rewrites the bundled
+files: `wght` clamped to 400–700, **`opsz` pinned to 18**. Run it after replacing any font
+file, and keep the `@font-face` `font-weight` range in `globals.css` truthful.
+
+The `opsz` axis doubled the two book serifs. Literata carries 42% fewer glyphs than Inter
+yet was 2.2× its size, entirely because `gvar` must store deltas for every glyph across
+the optical range:
+
+| File | Before | After | |
+|---|---|---|---|
+| `literata-latin` | 80,660 | **37,560** | −53% |
+| `literata-vietnamese` | 16,928 | **8,652** | −49% |
+| `sourceserif-latin` | 83,240 | **36,160** | −56% |
+| Preload set, `vi` + Literata | **95 KB** | **45 KB** | −53% |
+
+This is **conditional**: the site's current preset is Inter, which has no `opsz` axis, so
+today's critical path (`inter-latin.woff2`, 36 KB) is unchanged. The saving lands the
+moment the owner picks Literata or Source Serif 4 in Admin → Appearance. Inter itself has
+no headroom left worth taking: its GSUB is already trimmed and the remaining bulk is
+38 KB of GPOS kerning, which cannot go without visibly damaging the text.
+
+Narrowing the range instead was measured and is not competitive (`12–24` still costs
+58 KB). 18 was chosen by rendering 14/18/24 side by side: body copy is 18px, so pinning at
+18 leaves the body **identical** to what `font-optical-sizing: auto` produced, and body is
+where reading time goes. The cost is a 36px title rendering in the 18pt design, slightly
+heavier than before. `font-optical-sizing: auto` stays in `globals.css` because an
+uploaded custom font can still have the axis.
+
 Hard invariants (also in [`conventions.md`](./conventions.md) typography):
 - **Self-hosted only.** No `next/font/google`, no build/runtime fetch to Google (broke
   offline/CI). Files in `public/fonts/`, subset `-latin` / `-latin-ext` / `-vietnamese`.
@@ -81,6 +111,26 @@ list (or the class won't emit). NEVER put an admin-only utility/chrome rule in `
 6. **The framework baseline** (react-dom + Next App Router, ~130 KB gzip) and the RSC flight
    payload are the floor; don't chase Lighthouse "legacy/unused JS" inside those vendor
    chunks — Turbopack doesn't strip them via `browserslist`, and they're not on the LCP path.
+
+## Navigation — prerender on hover, zero runtime JS
+
+The root layout ships a `<script type="speculationrules">` (`SPECULATION_RULES` in
+`app/layout.tsx`) with `eagerness: "moderate"`, so Chrome prerenders a same-origin link
+when the reader hovers it. A click then paints an already-rendered document. This is the
+largest perceived-speed win available on a reading site and it costs no runtime JS.
+
+Excluded from prerendering: `/admin/*`, `/api/*`, `/uploads/*`, `/preview/*`, `/og*`, plus
+`[rel~=nofollow]` and `[download]` links.
+
+> **RULE — a prerendered page runs its JavaScript at speculation time.** Any island that
+> writes, measures time, or beacons **on mount** must be wrapped in `whenActivated()`
+> (`lib/prerender.ts`), which defers it to the `prerenderingchange` event. A discarded
+> prerender never activates, so the work never happens.
+>
+> `Track` and `ScrollDepth` are already wrapped: without it, one hover would record a
+> pageview for a page nobody opened, and `ScrollDepth`'s dwell timer would count the
+> speculation wait as reading time. Analytics rows are kept forever, so this class of bug
+> is not self-correcting. Adding a new on-mount side effect? Wrap it.
 
 ## Verify (no browser needed)
 

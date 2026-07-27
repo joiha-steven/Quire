@@ -16,6 +16,33 @@ function noFouc(enabled: string[], gridView: boolean, motion: boolean): string {
 }
 
 
+// Speculation Rules: Chrome prerenders a same-origin link on hover ("moderate"), so a
+// click paints an already-rendered document. Zero runtime JS, and the biggest single
+// win available for perceived navigation speed on a reading site.
+//
+// A prerendered page RUNS its JavaScript at speculation time, which is why `Track` and
+// `ScrollDepth` are held back by `lib/prerender.ts` — without that guard a hover would
+// record a view for a page nobody opened. Anything added here that writes on mount
+// needs the same treatment.
+//
+// The exclusions are paths where a speculative GET is wasted or wrong: the admin, the
+// API, raw uploads, one-shot preview links, and the OG renderer.
+const SPECULATION_RULES = JSON.stringify({
+  prerender: [
+    {
+      where: {
+        and: [
+          { href_matches: '/*' },
+          { not: { href_matches: ['/admin/*', '/api/*', '/uploads/*', '/preview/*', '/og*'] } },
+          { not: { selector_matches: '[rel~=nofollow]' } },
+          { not: { selector_matches: '[download]' } },
+        ],
+      },
+      eagerness: 'moderate',
+    },
+  ],
+})
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
   const { title, description } = settings
@@ -78,6 +105,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           typographyToCss(typography) + fontPresetCss(fontPreset) + fontToCss(customFont) +
           chromeFontCss(chromeFont) }} />
         <script dangerouslySetInnerHTML={{ __html: noFouc(enabledPalettes, features.gridView, motion.enabled) }} />
+        <script type="speculationrules" dangerouslySetInnerHTML={{ __html: SPECULATION_RULES }} />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

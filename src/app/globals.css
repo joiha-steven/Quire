@@ -157,8 +157,10 @@
 /* The site font handle. `fontToCss` (custom-font upload) falls back to this, and
    `--font-sans` in @theme inline points at it — so Inter is the universal base.
    A `fontPreset` (Admin → Appearance) overrides --font-sans after this file; an
-   uploaded custom font overrides it in turn. Optical sizing is on globally — a
-   no-op for fonts without an opsz axis. */
+   uploaded custom font overrides it in turn. Optical sizing stays on, but it is now
+   a no-op for every BUNDLED face: `scripts/subset-font-axes.py` pins opsz at 18 on
+   Literata and Source Serif 4, which halved them (see docs/performance.md). It still
+   applies to an uploaded custom font, which is why the declaration stays. */
 :root { --font-inter: 'Inter'; }
 body { font-optical-sizing: auto; }
 

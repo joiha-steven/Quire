@@ -6,6 +6,7 @@
 // /api/track. Mounted only on post pages.
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { whenActivated } from '@/lib/prerender'
 
 function currentDepth(): number {
   const doc = document.documentElement
@@ -18,36 +19,47 @@ export function ScrollDepth() {
   const pathname = usePathname()
   useEffect(() => {
     if (!pathname) return
-    let max = currentDepth()
-    let sent = false
-    const start = performance.now() // for the dwell (time-on-page) sample
+    // Nothing is measured or armed until the document is actually viewed: in a
+    // prerendered page `performance.now()` would start ticking at speculation time,
+    // inflating dwell, and `pagehide` on a discarded prerender would post a phantom
+    // sample for a page nobody opened.
+    let teardown: (() => void) | null = null
+    const cancel = whenActivated(() => {
+      let max = currentDepth()
+      let sent = false
+      const start = performance.now() // for the dwell (time-on-page) sample
 
-    const onScroll = () => {
-      const d = currentDepth()
-      if (d > max) max = d
-    }
-    const send = () => {
-      if (sent || max <= 0) return
-      sent = true
-      const dwell = Math.round(performance.now() - start)
-      const body = JSON.stringify({ path: pathname, depth: max, dwell })
-      try {
-        if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
-        else fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true })
-      } catch {
-        /* ignore */
+      const onScroll = () => {
+        const d = currentDepth()
+        if (d > max) max = d
       }
-    }
-    const onHide = () => document.visibilityState === 'hidden' && send()
+      const send = () => {
+        if (sent || max <= 0) return
+        sent = true
+        const dwell = Math.round(performance.now() - start)
+        const body = JSON.stringify({ path: pathname, depth: max, dwell })
+        try {
+          if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
+          else fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true })
+        } catch {
+          /* ignore */
+        }
+      }
+      const onHide = () => document.visibilityState === 'hidden' && send()
 
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('pagehide', send)
-    document.addEventListener('visibilitychange', onHide)
+      window.addEventListener('scroll', onScroll, { passive: true })
+      window.addEventListener('pagehide', send)
+      document.addEventListener('visibilitychange', onHide)
+      teardown = () => {
+        window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('pagehide', send)
+        document.removeEventListener('visibilitychange', onHide)
+        send() // client-side navigation away from this post
+      }
+    })
     return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('pagehide', send)
-      document.removeEventListener('visibilitychange', onHide)
-      send() // client-side navigation away from this post
+      cancel()
+      teardown?.()
     }
   }, [pathname])
   return null
