@@ -1,0 +1,153 @@
+// The public router, driven through real HTTP requests against a real database.
+//
+// The two assertions that matter most are not about markup. One: an article page ships
+// ZERO JavaScript, which is the M2 gate and is trivially lost the first time someone
+// reaches for a script tag. Two: a draft and a future-dated post are not reachable, which
+// is a content leak rather than a bug.
+import { describe, expect, it, beforeEach, afterAll } from 'bun:test'
+import { freshDatabase, dropDatabase } from '@/test/db'
+import { db } from '@/store/db'
+import { savePost } from '@/content/posts'
+import { savePage } from '@/content/pages'
+import { saveSettings } from '@/content/settings'
+import { clearCache, pageCache } from '@/server/cache'
+import { createApp } from '@/web/app'
+
+const DIR = './.tmp-test-web'
+freshDatabase(DIR)
+afterAll(() => dropDatabase(DIR))
+
+const app = createApp()
+// `app.request` is typed `Response | Promise<Response>`; awaiting it once here keeps
+// every call site a plain promise.
+const get = async (path: string): Promise<Response> => app.request(path)
+
+const PAST = '2020-01-01T00:00:00.000Z'
+const FUTURE = '2099-01-01T00:00:00.000Z'
+
+beforeEach(() => {
+  clearCache()
+  for (const t of ['posts', 'pages', 'post_terms', 'post_revisions', 'settings', 'media', 'redirects']) {
+    db().run(`delete from ${t}`)
+  }
+})
+
+describe('article page', () => {
+  it('renders a published post: title, body, and the site name', async () => {
+    await saveSettings({ title: 'My Blog' })
+    await savePost({ title: 'Hello World', content: '## A section\n\nSome **prose**.', status: 'published', date: PAST })
+    const res = await get('/hello-world')
+    const html = await res.text()
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/html')
+    expect(html).toContain('<h1>Hello World</h1>')
+    expect(html).toContain('<h2 id="a-section">A section</h2>')
+    expect(html).toContain('<strong>prose</strong>')
+    expect(html).toContain('My Blog')
+  })
+
+  it('ships ZERO JavaScript, which is the whole point', async () => {
+    await savePost({ title: 'Quiet', content: 'body', status: 'published', date: PAST })
+    const html = await get('/quiet').then((r) => r.text())
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('onload=')
+    expect(html).not.toContain('onclick=')
+  })
+
+  it('inlines the stylesheet instead of requesting one', async () => {
+    await savePost({ title: 'Styled', content: 'body', status: 'published', date: PAST })
+    const html = await get('/styled').then((r) => r.text())
+    expect(html).toContain('<style>')
+    expect(html).not.toContain('rel="stylesheet"')
+    expect(html).toContain('--c-bg:') // theme tokens really reached the page
+    expect(html).toContain('--fs-body:') // and so did the typography settings
+  })
+
+  it('preloads the reading font, since it is the LCP resource', async () => {
+    await savePost({ title: 'Fonted', content: 'body', status: 'published', date: PAST })
+    const html = await get('/fonted').then((r) => r.text())
+    expect(html).toContain('rel="preload"')
+    expect(html).toContain('as="font"')
+    expect(html).toContain('crossorigin')
+  })
+
+  it('serves a published page from the same /{slug} namespace', async () => {
+    await savePage({ title: 'About', content: 'Who I am.', status: 'published' })
+    const html = await get('/about').then((r) => r.text())
+    expect(html).toContain('<h1>About</h1>')
+    expect(html).toContain('Who I am.')
+  })
+
+  it('escapes a title rather than letting it reach the page as markup', async () => {
+    await savePost({ title: '<script>alert(1)</script>', content: 'body', status: 'published', date: PAST })
+    const res = await get('/scriptalert1script')
+    const html = await res.text()
+    expect(res.status).toBe(200)
+    expect(html).not.toContain('<script>alert(1)</script>')
+    expect(html).toContain('&lt;script&gt;')
+  })
+
+  it('sets the language and the canonical URL from settings', async () => {
+    await saveSettings({ language: 'vi', siteUrl: 'https://example.com' })
+    await savePost({ title: 'Xin chao', content: 'body', status: 'published', date: PAST })
+    const html = await get('/xin-chao').then((r) => r.text())
+    expect(html).toContain('<html lang="vi">')
+    expect(html).toContain('<link rel="canonical" href="https://example.com/xin-chao">')
+  })
+})
+
+describe('what must NOT be reachable', () => {
+  it('404s a draft', async () => {
+    await savePost({ title: 'Secret', content: 'unpublished', status: 'draft', date: PAST })
+    const res = await get('/secret')
+    expect(res.status).toBe(404)
+    expect(await res.text()).not.toContain('unpublished')
+  })
+
+  it('404s a scheduled post until its date arrives', async () => {
+    await savePost({ title: 'Later', content: 'embargoed', status: 'published', date: FUTURE })
+    expect((await get('/later')).status).toBe(404)
+  })
+
+  it('404s a trashed post', async () => {
+    await savePost({ title: 'Gone', content: 'body', status: 'published', date: PAST })
+    db().run(`update posts set deleted_at = 1 where slug = 'gone'`)
+    expect((await get('/gone')).status).toBe(404)
+  })
+
+  it('404s an unknown slug and a draft page', async () => {
+    await savePage({ title: 'Hidden', content: 'body', status: 'draft' })
+    expect((await get('/nothing-here')).status).toBe(404)
+    expect((await get('/hidden')).status).toBe(404)
+  })
+})
+
+describe('the page cache (Invariant 1)', () => {
+  it('serves the second request from memory', async () => {
+    await savePost({ title: 'Cached', content: 'v1', status: 'published', date: PAST })
+    await get('/cached')
+    expect(pageCache.has('/cached')).toBe(true)
+    // Change the row behind the cache's back: a cache hit must return the OLD html.
+    db().run(`update posts set content = 'v2' where slug = 'cached'`)
+    expect(await get('/cached').then((r) => r.text())).toContain('v1')
+  })
+
+  it('is emptied COMPLETELY by clearCache, so no write can under-purge', async () => {
+    await savePost({ title: 'One', content: 'a', status: 'published', date: PAST })
+    await savePost({ title: 'Two', content: 'b', status: 'published', date: PAST })
+    await get('/one')
+    await get('/two')
+    expect(pageCache.size).toBe(2)
+    clearCache()
+    expect(pageCache.size).toBe(0)
+    db().run(`update posts set content = 'c' where slug = 'one'`)
+    expect(await get('/one').then((r) => r.text())).toContain('c')
+  })
+
+  it('does not cache a 404, so publishing makes the page appear', async () => {
+    await savePost({ title: 'Pending', content: 'body', status: 'draft', date: PAST })
+    expect((await get('/pending')).status).toBe(404)
+    await savePost({ title: 'Pending', content: 'body', status: 'published', date: PAST }, 'pending')
+    expect((await get('/pending')).status).toBe(200)
+  })
+})

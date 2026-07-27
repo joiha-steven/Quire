@@ -3,6 +3,34 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-27 — M2: Quire 2.0 serves a page
+
+`env`, `index.ts`, the Hono router, the HTML shell and the hand-written public sheet.
+**555 tests, `check:all` green.** The server boots, reads a post out of SQLite and returns
+a complete article page.
+
+Measured on the running server rather than reasoned about:
+
+```
+cold request   256 ms   (Shiki's one-time WASM init)
+warm requests  2-4 ms   (page cache hit)
+page weight    9,042 bytes, ZERO script tags, ZERO stylesheet requests
+```
+
+**Opening the page in a browser found a bug that reading the markup would not.**
+`applyFootnotes` already emits `<hr class="fn-rule">`, and the new sheet also put a
+`border-top` on `.footnotes`, drawing two rules above the notes. The frozen tree styles
+`.fn-rule` and leaves `.footnotes` borderless; the sheet now matches. Then the comment
+explaining the fix used backticks inside a template literal and stopped the server
+booting, which is the right way to find out.
+
+14 router tests over real HTTP. The two that matter are not about markup: an article page
+contains no `<script`, and a draft, a future-dated post and a trashed post all 404 rather
+than leaking.
+
+Still to come in M2: listings, taxonomy, series, search, feeds, OG images, and the 23
+islands as vanilla JavaScript.
+
 ## 2026-07-27 — M2 started: the renderer, and the byte-identical gate HELD
 
 `highlight` and `PostContent` ported. **541 tests, `check:all` green.** The article-body

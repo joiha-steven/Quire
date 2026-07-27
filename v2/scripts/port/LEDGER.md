@@ -272,6 +272,40 @@ it edited the FROZEN tree's `package.json` and bumped `marked` 18.0.5 to 18.0.7 
 frozen tree pins older versions than `bun add` would pick, and matching them exactly is a
 precondition for the gate.
 
+## M2: the server exists and serves an article (2026-07-27)
+
+| File | Role |
+|---|---|
+| `src/env.ts` | PORT / DATA_DIR / SITE_URL, validated at boot |
+| `src/index.ts` | Boot: open databases, serve, flush analytics on SIGINT/SIGTERM |
+| `src/web/app.ts` | The public router. Article route + the page cache |
+| `src/web/layout.ts` | The HTML shell. Inline CSS, language-chosen font preloads, no script tag |
+| `src/web/public.css.ts` | The hand-written public sheet (ADR 0008) |
+
+Measured on a real server, not reasoned about:
+
+```
+cold request   256 ms   (includes Shiki's one-time WASM init)
+warm requests  2-4 ms   (page cache hit)
+page weight    9,042 bytes, ZERO script tags, ZERO stylesheet requests
+```
+
+**A CSS bug the browser found and reading could not.** `applyFootnotes` already emits
+`<hr class="fn-rule">`, and the new sheet also put a `border-top` on `.footnotes`, so two
+rules were drawn above the notes. Invisible in the markup, obvious in a screenshot. The
+frozen tree styles `.fn-rule` and leaves `.footnotes` borderless; the sheet now matches.
+
+**A second one the runtime found.** The comment fixing it used backticks around
+`applyFootnotes`, inside a template literal, which terminated the string. The server
+refused to boot, which is the right failure. Comments inside `PUBLIC_CSS` use no backticks.
+
+14 router tests run over real HTTP against a real database. Two of them are the ones worth
+having: an article page contains no `<script`, and a draft, a future-dated post and a
+trashed post all 404 rather than leaking.
+
+Still to come in M2: listings, taxonomy, series, search, feeds, OG images, and the 23
+islands as vanilla JS.
+
 ## Moved, then pulled back out
 
 | File | Why |
