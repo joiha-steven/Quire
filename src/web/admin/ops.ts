@@ -18,6 +18,7 @@ import { purgeExpiredSessions } from '@/auth/sessions'
 import {
   sweepScheduled, PUBLISH_TICK_LOOKBACK_MS, HOURLY_LOOKBACK_MS,
 } from '@/server/scheduled'
+import { maybeRunBackup } from '@/server/backup'
 import { purgeCloudflare } from '@/server/cdn'
 import { clearCache } from '@/server/cache'
 import { logActivity } from '@/server/activity'
@@ -178,12 +179,18 @@ export function publicOpsRoutes(): Hono {
       console.error(`[ERROR] cron session purge: ${(error as Error).message}`)
     }
 
-    // The backup step lands with the backup module; `backup` stays in the response shape
-    // so the admin's cron panel does not have to change twice.
-    return json({
-      alive: true, purged: doPurge, finalized, thumbs, published, sessions,
-      backup: { ran: false, error: 'not yet ported' },
-    })
+    // Last, and isolated like the rest: a snapshot is the slowest thing in the tick (it
+    // reads both databases and the whole uploads tree), and nothing above it should be
+    // waiting on that or skipped by its failure.
+    let backup: { ran: boolean; name?: string; error?: string } = { ran: false }
+    try {
+      backup = await maybeRunBackup()
+    } catch (error) {
+      backup = { ran: false, error: (error as Error).message }
+      console.error(`[ERROR] cron backup: ${(error as Error).message}`)
+    }
+
+    return json({ alive: true, purged: doPurge, finalized, thumbs, published, sessions, backup })
   })
 
   // ----- the health probe -----------------------------------------------------

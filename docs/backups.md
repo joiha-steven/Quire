@@ -1,8 +1,16 @@
 # Backups
 
-Off-box, on a schedule, and **verified by restoring** — not by the fact that the script
-exited 0. Source: [`scripts/ops/quire2-backup.sh`](../scripts/ops/quire2-backup.sh),
-installed to `/usr/local/bin/` and driven by cron.
+There are **three**, and they answer different questions. Losing track of which is which is
+how an install ends up with two copies of the same protection and none of another.
+
+| | Where | Answers | Source |
+|:--|:--|:--|:--|
+| **Export** | the owner's own machine | "give me a copy I hold" | `GET /api/backup/export` |
+| **Snapshots** | this server, on a schedule | "I broke something an hour ago" | [`src/server/backup.ts`](../src/server/backup.ts) |
+| **Off-box** | R2, hourly + daily | "the machine is gone" | [`scripts/ops/quire2-backup.sh`](../scripts/ops/quire2-backup.sh) |
+
+All three take the same `VACUUM INTO` snapshot of both databases plus the uploads tree. They
+differ only in where the file ends up and who decides when.
 
 The frozen tree backed up to the owner's Google Drive from inside the application, with an
 OAuth flow, a `backup_state` table and a destructive in-app restore. 2.0 dropped all of it
@@ -10,10 +18,36 @@ OAuth flow, a `backup_state` table and a destructive in-app restore. 2.0 dropped
 concern, it should keep working when the application does not, and an application that can
 overwrite every table in itself is a bigger risk than the one it removes.
 
-What the exception promised in exchange is still in the admin: **Settings → Advanced →
-Export** (`GET /api/backup/export`, owner-only) streams a `tar.gz` of both databases and the
-uploads tree to the owner's machine. Same `VACUUM INTO` snapshot, no third party in the
-path, no shell access needed. That is a copy you take; what follows is the copy that happens
+## Export, and snapshots
+
+Both live in **Settings → System → Backups**, and both are owner-only.
+
+**Export** builds an archive into a temp directory and streams it to the browser. It is
+deliberately not kept on the server, so taking a copy never pushes a scheduled snapshot out
+of the retention window.
+
+**Snapshots** are written to `BACKUP_DIR` (default `<DATA_DIR>/backups`) by the cron tick,
+every `intervalDays`, keeping the newest `keep`. Those two fields have been in Settings
+since the port and drove nothing until 2026-07-29; they pointed at the Google Drive
+destination that had already been removed.
+
+- **Due-ness is measured from the newest file on disk**, not from a recorded run time. There
+  is no state table, so nothing can go stale, deleting every snapshot asks for a fresh one,
+  and a machine restored from a copy does not believe it already has today's.
+- **A snapshot cannot be restored from the admin**, and that is the design. Restoring means
+  replacing the database files the running process holds open; doing it correctly means
+  stopping the service, which is the shell procedure below. An application that can
+  overwrite itself is the risk parity exception 1 removed, and it is not coming back through
+  this door.
+- Retention prunes **after** the new archive is written. Pruning first would use less peak
+  disk and would delete a good backup to make room for one that then failed.
+- **These are on the same disk as the thing they copy.** They survive a bad edit, a bad
+  import and a bad delete. They do not survive the disk, which is what the off-box copy is
+  for. The admin says so, in `exportReplicationNote`.
+
+## Off-box
+
+Everything below is the cron script beside the process, and it is the one that happens
 whether or not anyone remembers.
 
 ## What it copies
@@ -38,15 +72,16 @@ password; a copy of it off the box is a second place to lose them from.
 
 ## Restoring
 
+The same procedure for all three, because all three produce the same archive. The service
+has to stop: copying a database under a running process is the torn-state problem the
+backup itself avoids, in the other direction. That is also why there is no restore button.
+
 ```sh
 tar -xzf quire2-<tag>.tar.gz -C /tmp/restore
 sqlite3 /tmp/restore/quire.db 'pragma integrity_check;'   # expect: ok
 sqlite3 /tmp/restore/quire.db 'select count(*) from posts;'
 systemctl stop quire2 && cp /tmp/restore/*.db /var/lib/quire2/data/ && systemctl start quire2
 ```
-
-Stop the service first. Copying a database under a running process is the same torn-state
-problem the backup itself avoids, in the other direction.
 
 **Do this on a schedule, not only when something is on fire.** The restore was exercised
 end to end when the script was installed — `integrity_check: ok`, 74 posts, 4 pages — and

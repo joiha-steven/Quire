@@ -666,11 +666,6 @@ export type AdminStrings = {
   exportNow: string
   exportBusy: string
   exportReplicationNote: string
-  backupHint: string
-  backupConnect: string
-  backupDisconnect: string
-  backupDisconnectConfirm: string
-  backupConnected: string
   backupAuto: string
   backupAutoDesc: string
   backupIntervalLabel: string
@@ -681,8 +676,6 @@ export type AdminStrings = {
   backupNever: string
   backupColDate: string
   backupColSize: string
-  backupRestore: string
-  backupRestoreConfirm: string
   backupDeleteConfirm: string
   backupToastOk: string
   backupToastFail: string

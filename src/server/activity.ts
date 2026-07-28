@@ -28,9 +28,10 @@ export type ActivityAction =
   // Newsletter (Admin → Settings → Integrations).
   | 'subscriber.delete' | 'mail.config' | 'mail.test' | 'newsletter.send'
   // Backups (Admin → Settings → System). The connect/disconnect pair belonged to the
-  // Google Drive integration, which 2.0 does not have (parity exception 1): replication is
-  // litestream's job outside the process, and what the admin offers is a manual archive.
-  | 'backup.export'
+  // Google Drive integration, which 2.0 does not have (parity exception 1). `export` is the
+  // copy the owner takes away; `run` and `delete` are the snapshots kept on the server, by
+  // hand or by the cron tick.
+  | 'backup.export' | 'backup.run' | 'backup.delete'
   // Reader comments (create is public; restore/purge from the admin Trash).
   | 'comment.create' | 'comment.delete' | 'comment.restore' | 'comment.purge'
   // Server errors (unexpected failures from route handlers) — the error log.

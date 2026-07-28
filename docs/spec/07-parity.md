@@ -388,8 +388,10 @@ Count when written: 214 items.
 - [ ] `⚠` Cache invalidation is a **superset**, never an under-purge (becomes a total flush in
       v2, parity exception 3)
 - [ ] Cloudflare purge on content writes, using the token from the admin
-- [ ] `✂` Google Drive backup replaced by litestream to R2 (parity exception 1). A manual
-      export/import archive is still provided
+- [x] `✂` Google Drive backup removed (parity exception 1). Three things replace it and none
+      of them is an OAuth flow: an off-box cron to R2, scheduled snapshots kept on the server
+      (the `intervalDays`/`keep` fields drive these, as of 2026-07-29), and the manual export
+      archive. See [`../backups.md`](../backups.md)
 - [ ] Backup restore into an empty instance, verified end to end
 - [ ] WordPress import: WXR upload, HTML to Markdown, figcaption folded into alt, categories and
       tags split, `Uncategorized` dropped, status mapping, slug collision gets a numeric suffix,

@@ -4,6 +4,7 @@
 // session, so the secret is the only thing between an external caller and a maintenance
 // run.
 import { describe, it, expect, beforeEach, afterAll } from 'bun:test'
+import { rmSync } from 'node:fs'
 import { freshDatabase, dropDatabase } from '@/test/db'
 import { db } from '@/store/db'
 import { createApp } from '@/web/app'
@@ -15,11 +16,26 @@ import { verifyPreview } from '@/content/preview'
 import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-ops'
+const SNAPSHOTS = `${DIR}-snapshots`
 freshDatabase(DIR)
+// Its own directory, so a snapshot taken here is never the real one on a dev machine.
+process.env.BACKUP_DIR = SNAPSHOTS
+
 afterAll(() => {
   dropDatabase(DIR)
   delete process.env.CRON_SECRET
+  delete process.env.BACKUP_DIR
+  try { rmSync(SNAPSHOTS, { recursive: true, force: true }) } catch { /* ignore */ }
 })
+
+/** What the backup routes answer with. Narrow, because only these fields are read here. */
+type ApiShape = {
+  data: {
+    snapshots: { name: string; size: number; createdAt: string }[]
+    lastRunAt: string | null
+    snapshot?: { name: string }
+  }
+}
 
 const app = createApp()
 let cookie = ''
@@ -29,6 +45,7 @@ beforeEach(async () => {
     db().run(`delete from ${t}`)
   }
   delete process.env.CRON_SECRET
+  rmSync(SNAPSHOTS, { recursive: true, force: true })
   resetSecretCache()
   resetLimits()
   const user = await createUser({ username: 'hung', email: 'h@example.com', password: 'wandering violet cassette' })
@@ -218,14 +235,15 @@ describe('the WordPress import', () => {
 })
 
 describe('the manual archive', () => {
-  // The one backup 2.0 has. Google Drive is gone (parity exception 1) and litestream runs
-  // outside the process, so this is the copy the owner can actually hold — which makes it
-  // worth proving it is a real archive with the real files in it, not an empty tarball.
+  // The copy the owner takes away, as opposed to the snapshots the server keeps (those are
+  // covered in server/backup.test.ts). Worth proving it is a real archive with the real
+  // files in it, not an empty tarball.
   it('builds a gzip archive holding both databases', async () => {
     const res = await asOwner('/api/backup/export')
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('application/gzip')
-    expect(res.headers.get('content-disposition')).toMatch(/attachment; filename="quire-\d{4}-\d{2}-\d{2}\.tar\.gz"/)
+    expect(res.headers.get('content-disposition'))
+      .toMatch(/attachment; filename="quire-\d{4}-\d{2}-\d{2}T\d{4}\.tar\.gz"/)
 
     const bytes = new Uint8Array(await res.arrayBuffer())
     // The gzip magic number. A zero-length or error body would not carry it.
@@ -239,7 +257,71 @@ describe('the manual archive', () => {
     expect(names).toContain('analytics.db')
   })
 
-  it('is owner-gated like every other admin route', async () => {
-    expect((await app.request('/api/backup/export')).status).toBe(401)
+  // It is built into a temp directory on purpose: leaving it in the snapshots directory
+  // would make every download the owner takes count towards the retention limit and push a
+  // scheduled snapshot out.
+  it('does not leave itself among the kept snapshots', async () => {
+    expect((await (await asOwner('/api/backup/list')).json() as ApiShape).data.snapshots)
+      .toHaveLength(0)
+    await asOwner('/api/backup/export')
+    expect((await (await asOwner('/api/backup/list')).json() as ApiShape).data.snapshots)
+      .toHaveLength(0)
+  })
+
+  it('every backup route is owner-gated', async () => {
+    for (const path of ['/api/backup/export', '/api/backup/list', '/api/backup/download?name=x']) {
+      expect((await app.request(path)).status).toBe(401)
+    }
+    // 403 rather than 401 on the writes: the gate checks the origin BEFORE the session, so
+    // a request that can prove neither is refused as cross-site. Signing in would not help.
+    for (const path of ['/api/backup/run', '/api/backup/delete']) {
+      expect((await app.request(path, { method: 'POST' })).status).toBe(403)
+    }
+  })
+})
+
+describe('snapshots kept on the server', () => {
+  it('takes one, lists it, downloads it, then deletes it', async () => {
+    const run = await (await asOwner('/api/backup/run', { method: 'POST' })).json() as ApiShape
+    const name = run.data.snapshot!.name
+
+    const listed = await (await asOwner('/api/backup/list')).json() as ApiShape
+    expect(listed.data.snapshots.map((s) => s.name)).toEqual([name])
+    expect(listed.data.lastRunAt).not.toBeNull()
+
+    const file = await asOwner(`/api/backup/download?name=${encodeURIComponent(name)}`)
+    expect(file.status).toBe(200)
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    expect(bytes[0]).toBe(0x1f) // gzip, so it is the archive and not an error page
+    expect(bytes[1]).toBe(0x8b)
+
+    const gone = await asOwner('/api/backup/delete', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    expect(gone.status).toBe(200)
+    expect((await (await asOwner('/api/backup/list')).json() as ApiShape).data.snapshots)
+      .toHaveLength(0)
+  })
+
+  // The name arrives in a query string and in a JSON body. Both are a path if nothing
+  // stops them being one.
+  it('refuses a name that is a path, on download and on delete', async () => {
+    for (const bad of ['../../package.json', '/etc/passwd', 'notes.txt', '']) {
+      const read = await asOwner(`/api/backup/download?name=${encodeURIComponent(bad)}`)
+      expect(read.status).toBe(400)
+      const remove = await asOwner('/api/backup/delete', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: bad }),
+      })
+      expect(remove.status).toBe(400)
+    }
+    // The file the traversal was aiming at is still there.
+    expect(await Bun.file('package.json').exists()).toBe(true)
+  })
+
+  it('404s a well-formed name that is not on disk', async () => {
+    expect((await asOwner('/api/backup/download?name=quire-2020-01-01T0000.tar.gz')).status)
+      .toBe(404)
   })
 })

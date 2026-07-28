@@ -5,6 +5,7 @@
 // and because that file is at the 400-line limit without it.
 
 import { getActivity } from '@/server/activity'
+import { lastRunAt } from '@/server/backup'
 import { getAnalytics, getViewTotals } from '@/analytics/summary'
 import { countsByPosts } from '@/comments/comments'
 import { getIndex } from '@/content/posts'
@@ -47,10 +48,10 @@ async function systemInfo(): Promise<Record<string, unknown>> {
   const settings = await getSettings()
   return {
     mcpEnabled: settings.mcp.enabled,
-    // Continuous replication is litestream's job now, outside this process, so the
-    // dashboard cannot claim it is on. It reports what it can see: the manual archive.
+    // What this process can actually see: the snapshots it keeps on this machine. The
+    // off-box copy is a cron script beside the process and is not ours to report on.
     backupOn: settings.backups.enabled,
-    backupLastRun: null,
+    backupLastRun: await lastRunAt(),
     hosting: 'Self-hosted',
     site: siteHost || '—',
     siteHref: siteHost ? `https://${siteHost}` : undefined,
