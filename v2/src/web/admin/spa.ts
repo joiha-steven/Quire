@@ -13,6 +13,10 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Context } from 'hono'
+import type { SiteSettings } from '@/types'
+import { fontFaceCss, MONO_TRACKING } from '@/render/font-faces'
+import { fontPresetCss, chromeFontCss, themesToCss } from '@/content/themes'
+import { typographyToCss, fontToCss } from '@/content/settings'
 
 const DIR = join(import.meta.dir, '../../admin/dist')
 
@@ -46,28 +50,60 @@ const ENTRY = '/admin/assets/main.js'
 const STYLES = '/admin/assets/admin.css'
 
 /**
- * The shell. Deliberately empty: there is no server rendering of the admin, because a
- * second rendering path for a tool only one person opens is a second set of bugs for no
- * reader's benefit.
+ * The owner's live type and colour settings, for the admin document.
  *
- * `data-admin` on <html> is what the stylesheet's dark-mode rules hang off, and the inline
- * class on <body> is the neutral canvas — the one paint the bundle must not be responsible
- * for, or the admin flashes white before React mounts.
+ * The frozen tree got these for free: the admin sat inside the root layout, so it inherited
+ * `globals.css` (the @font-face declarations and `body{font-family:var(--font-sans)}`) plus
+ * the runtime style block the layout injected from settings. There is no root layout here,
+ * and `admin.css` hard-coded Inter as a stand-in — which meant the admin ignored the owner's
+ * chrome font entirely and stayed Inter on a site set to JetBrains Mono.
+ *
+ * The order mirrors the frozen layout exactly: palettes first, then the type scale, then the
+ * reading preset, then any uploaded face, and the chrome font LAST so it has the final word
+ * on `--font-sans`. The owner's custom CSS is deliberately absent, as it was there: it is
+ * written against the public page and has no business restyling the tool.
  */
-export function adminShell(): string {
+function adminStyles(settings: SiteSettings): string {
+  return [
+    fontFaceCss(settings.fontPreset, settings.chromeFont),
+    `:root{--font-sans:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;`
+    + `--font-reading:var(--font-sans)}`,
+    `body{font-family:var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif}`,
+    themesToCss(settings.themes, settings.themePreset),
+    typographyToCss(settings.typography),
+    fontPresetCss(settings.fontPreset),
+    fontToCss(settings.customFont),
+    chromeFontCss(settings.chromeFont),
+    MONO_TRACKING,
+  ].filter(Boolean).join('\n')
+}
+
+/**
+ * The shell. Deliberately empty of CONTENT: there is no server rendering of the admin,
+ * because a second rendering path for a tool only one person opens is a second set of bugs
+ * for no reader's benefit. It is not empty of settings, which is a different thing — the
+ * language, the typeface and the palette have to be right in the first paint.
+ *
+ * The class on <body> is the neutral canvas: the one paint the bundle must not be
+ * responsible for, or the admin flashes white before React mounts.
+ */
+export function adminShell(settings: SiteSettings): string {
   if (ASSETS.size === 0) {
     return '<!DOCTYPE html><meta charset="utf-8"><title>Quire</title>'
       + '<p style="font:14px system-ui;padding:2rem">The admin bundle has not been built. '
       + 'Run <code>bun run build:admin</code>.</p>'
   }
+  const esc = (s: string) => s.replace(/[<>"&]/g, (c) =>
+    ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', '&': '&amp;' })[c] ?? c)
   return `<!DOCTYPE html>
-<html lang="en" class="admin">
+<html lang="${esc(settings.language)}" class="admin" data-motion="${settings.motion.enabled ? 'on' : 'off'}" data-chrome-font="${esc(settings.chromeFont)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quire</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="${STYLES}">
+<style>${adminStyles(settings)}</style>
 </head>
 <body class="bg-neutral-100 dark:bg-neutral-950">
 <div id="admin"></div>

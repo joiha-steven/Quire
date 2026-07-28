@@ -52,15 +52,20 @@ function Route(): ReactNode {
   return <NotFound />
 }
 
-/** The editor takes the whole width; every other page sits in the padded canvas. */
+/**
+ * The padded canvas, right of the sidebar.
+ *
+ * EVERY page sits in it, the editor included. An earlier version of this file made the
+ * editor an exception and let it run edge to edge, which is not what the frozen tree does —
+ * its admin layout wraps `children` in this div unconditionally. The sidebar already gets
+ * out of the editor's way by publishing `--admin-nav-w: 0px`, so the editor is wide without
+ * needing the padding removed as well, and removing it was the whole of "the editor page
+ * looks wrong". Ported behaviour, not improved behaviour.
+ */
 function Canvas({ children }: { children: ReactNode }) {
-  const path = usePathname()
-  const editing = path.startsWith('/admin/editor') || path.startsWith('/admin/page-editor')
   return (
     <main className="admin-canvas min-w-0 flex-1">
-      {editing
-        ? children
-        : <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-7 lg:px-10 lg:py-9 xl:px-12">{children}</div>}
+      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-7 lg:px-10 lg:py-9 xl:px-12">{children}</div>
     </main>
   )
 }

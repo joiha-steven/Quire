@@ -11,6 +11,7 @@ import { COOKIE_NAME, createSession } from '@/auth/sessions'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
 import { payload } from '@/test/api'
+import { saveSettings } from '@/content/settings'
 
 const DIR = './.tmp-test-admin'
 freshDatabase(DIR)
@@ -228,5 +229,33 @@ describe('the error handler', () => {
     const res = await probe.request('/boom')
     expect(res.status).toBe(500)
     expect(await res.json()).toEqual({ error: 'Internal error' })
+  })
+})
+
+describe('the admin shell carries the owner settings', () => {
+  // The frozen tree's admin sat inside the root layout and inherited the language, the
+  // fonts and the palette from it. There is no root layout here, and for a while the shell
+  // was a static document that hard-coded English and Inter — so a site set to JetBrains
+  // Mono had an admin in Inter, which is what the owner reported.
+  it('renders in the site language, not English', async () => {
+    await saveSettings({ language: 'vi' })
+    const html = await (await app.request('/admin', { headers: { cookie } })).text()
+    expect(html).toContain('<html lang="vi"')
+  })
+
+  it('points --font-sans at the chosen chrome font and declares its face', async () => {
+    await saveSettings({ chromeFont: 'jetbrains-mono' })
+    const html = await (await app.request('/admin', { headers: { cookie } })).text()
+    expect(html).toContain('data-chrome-font="jetbrains-mono"')
+    expect(html).toContain("font-family:'JetBrains Mono'")
+    expect(html).toContain("--font-sans:'JetBrains Mono'")
+    // The tracking correction that goes with a mono chrome, missing from 2.0 until now.
+    expect(html).toContain('html[data-chrome-font="jetbrains-mono"] body')
+  })
+
+  it('publishes the motion switch the owner set', async () => {
+    await saveSettings({ motion: { enabled: false, typewriter: false } })
+    const html = await (await app.request('/admin', { headers: { cookie } })).text()
+    expect(html).toContain('data-motion="off"')
   })
 })

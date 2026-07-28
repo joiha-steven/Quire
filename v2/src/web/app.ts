@@ -60,12 +60,14 @@ const escapeHtml = (s: string) =>
  * The redirect carries where they were going, so signing in lands them on the page they
  * asked for rather than dumping them at the dashboard.
  */
-function adminPage(c: Context): Response {
+async function adminPage(c: Context): Promise<Response> {
   if (currentOwner(c) === null) {
     const next = encodeURIComponent(c.req.path + (new URL(c.req.url).search || ''))
     return c.redirect(`/login?next=${next}`, 302)
   }
-  return c.html(adminShell(), 200, { 'x-robots-tag': 'noindex, nofollow' })
+  // The shell carries the owner's language, typeface and palette, so the first paint is
+  // already correct. The frozen tree got them from the root layout the admin sat inside.
+  return c.html(adminShell(await getSettings()), 200, { 'x-robots-tag': 'noindex, nofollow' })
 }
 
 /** A page number from the URL. Anything that is not a positive integer is a 404, not a 1. */
@@ -289,8 +291,8 @@ export function createApp(): Hono {
   // Everything the bundle then asks for is gated.
   app.get('/admin/assets/*', handleAdminAsset)
 
-  app.get('/admin', (c) => adminPage(c))
-  app.get('/admin/*', (c) => adminPage(c))
+  app.get('/admin', async (c) => await adminPage(c))
+  app.get('/admin/*', async (c) => await adminPage(c))
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot

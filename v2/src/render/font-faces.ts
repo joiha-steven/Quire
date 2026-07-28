@@ -88,3 +88,22 @@ export function fontFaceCss(fontPreset: string, chromeFont: string): string {
   if (getChromeFont(chromeFont).sans && chromeFont !== 'reading') wanted.add(chromeFont)
   return [...wanted].flatMap((id) => FACES[id] ?? []).map(declare).join('')
 }
+
+/**
+ * Tracking correction for the two mono chrome faces, keyed on `data-chrome-font`.
+ *
+ * IBM Plex Mono and JetBrains Mono are wide monospaces, so chrome text set in them (the
+ * rail, the menu, meta lines, and the whole admin) reads too airy at zero tracking. Pull it
+ * in a touch, and ONLY there: the reader's own words carry their own letter-spacing and are
+ * left alone. JetBrains runs wider than Plex, so it gets a little more.
+ *
+ * Ported late. It was missing from 2.0 entirely — public and admin — which is why a site set
+ * to a mono chrome looked loose next to the frozen tree.
+ */
+export const MONO_TRACKING =
+  `html[data-chrome-font="plex-mono"] body,`
+  + `html[data-chrome-font="plex-mono"] .t-small:not(.reading-font),`
+  + `html[data-chrome-font="plex-mono"] .t-body:not(.reading-font){letter-spacing:-0.04em}`
+  + `html[data-chrome-font="jetbrains-mono"] body,`
+  + `html[data-chrome-font="jetbrains-mono"] .t-small:not(.reading-font),`
+  + `html[data-chrome-font="jetbrains-mono"] .t-body:not(.reading-font){letter-spacing:-0.05em}`

@@ -3,6 +3,37 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — the admin was wearing the wrong typeface, and the editor the wrong width
+
+Two reports from the owner, both real, and a third and fourth found while confirming them.
+
+**The admin ignored the chrome font.** The frozen tree's admin sat inside the root layout,
+so it inherited `globals.css` (the @font-face block and `body{font-family:var(--font-sans)}`)
+and the runtime style block the layout injected from settings. 2.0 serves the admin as its
+own document, and that document had no settings in it at all: `admin.css` hard-coded Inter
+as a stand-in and `<html lang>` was the literal string `en`. On a site set to JetBrains Mono
+the admin stayed Inter, in English, on one frozen palette. The shell now carries the same
+five style layers the frozen layout did, in the same order, and the language with them.
+
+**The editor ran edge to edge.** The frozen admin layout wraps `children` in one padded
+`max-w-[1480px]` div, with no exception for anything. The port added one for the editor. The
+sidebar already clears the way by publishing `--admin-nav-w: 0px`, so the exception bought
+nothing and cost the whole page its margins. Removed. This is exactly what the porting rule
+is for, and it was broken by someone who had read the rule.
+
+**`data-chrome-font` was never emitted anywhere**, public or admin, so the tracking
+correction the two mono faces need had no selector to match and was simply absent from 2.0.
+**`data-motion` was never emitted either**, which means the owner's Motion switch in
+Settings has done nothing since it was ported. Both are one attribute and a few lines of
+CSS, and neither would have been found by reading: they are attributes that were not there.
+
+Also verified in the same pass, by driving the editor rather than reading it: Tiptap mounts
+outside Next, typing reaches the document, `##`/`-`/`>` still become heading, list and
+quote, the toolbar's 27 buttons command the document, the table button inserts a table, and
+the Markdown view round-trips losslessly. Three earlier FAILs in that run were all faults in
+the check, not the editor - the last one inserted a table over the paragraph it had just
+bolded and then reported that bold had not serialised.
+
 ## 2026-07-28 — the sign-in page, rebuilt around the Quire mark
 
 The owner opened `/login` and called it ugly. It was, and the reason was structural rather

@@ -15,7 +15,7 @@ import type { SiteSettings } from '@/types'
 import { fontPreloadHrefs, fontPresetCss, chromeFontCss, themesToCss } from '@/content/themes'
 import { typographyToCss, fontToCss } from '@/content/settings'
 import { singleRailCss } from '@/render/rail-css'
-import { fontFaceCss } from '@/render/font-faces'
+import { fontFaceCss, MONO_TRACKING } from '@/render/font-faces'
 
 export type Head = {
   title: string
@@ -80,6 +80,9 @@ export function pageStyles(settings: SiteSettings, base: string, extra = ''): st
     themesToCss(settings.themes, settings.themePreset),
     typographyToCss(settings.typography),
     fontToCss(settings.customFont),
+    // Keyed on `data-chrome-font`, which `renderDocument` puts on <html>. It has to come
+    // after the chrome font is resolved and before the owner's own CSS can override it.
+    MONO_TRACKING,
     settings.customCss,
   ].filter(Boolean).join('\n')
 }
@@ -124,8 +127,13 @@ export function renderDocument(
   // is not installable no matter what the route returns.
   const manifest = '<link rel="manifest" href="/manifest.webmanifest">'
 
+  // `data-motion` and `data-chrome-font` are both read by CSS, not by script: the motion
+  // switch zeroes every duration in one rule, and the chrome font selects the tracking
+  // correction for the two mono faces. Both were missed in the port, so the owner's Motion
+  // toggle did nothing and a mono chrome rendered untracked.
+  const motion = settings.motion.enabled ? 'on' : 'off'
   return `<!DOCTYPE html>
-<html lang="${escapeAttr(settings.language)}">
+<html lang="${escapeAttr(settings.language)}" data-motion="${motion}" data-chrome-font="${escapeAttr(settings.chromeFont)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

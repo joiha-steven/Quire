@@ -228,5 +228,8 @@ form.subscribe button:disabled{opacity:.5}
 .comment-status:empty{display:none}
 .comment-status{color:var(--c-meta);margin:.5rem 0 0}
 
+/* Two ways to the same place: the reader's system preference, and the owner's Motion
+   switch in Settings. The switch had no effect at all until this rule existed. */
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+html[data-motion=off] *{animation:none!important;transition:none!important}
 `.trim()

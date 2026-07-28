@@ -152,7 +152,7 @@ describe('article page', () => {
     await saveSettings({ language: 'vi', siteUrl: 'https://example.com' })
     await savePost({ title: 'Xin chao', content: 'body', status: 'published', date: PAST })
     const html = await get('/xin-chao').then((r) => r.text())
-    expect(html).toContain('<html lang="vi">')
+    expect(html).toContain('<html lang="vi"')
     expect(html).toContain('<link rel="canonical" href="https://example.com/xin-chao">')
   })
 })
