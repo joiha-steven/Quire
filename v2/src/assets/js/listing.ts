@@ -60,6 +60,67 @@ function gridToggle(): void {
   })
 }
 
+/**
+ * Hand the feed back a chunk at a time, and ease each card in.
+ *
+ * The frozen tree kept the tail of the archive in React state and revealed `postsPerPage`
+ * at a time as a sentinel neared the viewport. The server here renders every card, so the
+ * archive survives with no JavaScript and a crawler sees all of it — this hides what is
+ * past the first page and gives it back on the same trigger. `rootMargin` is the frozen
+ * tree's 600px, so the next chunk is already there when the reader arrives.
+ *
+ * The reveal ANIMATION is CSS (`animation-timeline: view()`). This only arms the fallback
+ * for an engine that has no view() timelines, and only for cards that are not already on
+ * screen — hiding something above the fold to fade it in is a flash, not an effect.
+ */
+function chunked(): void {
+  const feed = document.querySelector<HTMLElement>('.post-list')
+  if (!feed) return
+  const html = document.documentElement
+
+  // The reveal ANIMATION is CSS. This arms the fallback only where view() timelines do not
+  // exist, and marks whatever is already on screen as arrived first: hiding something above
+  // the fold in order to fade it in is a flash, not an effect.
+  if (CSS.supports?.('animation-timeline', 'view()') !== true && html.dataset.motion !== 'off') {
+    for (const c of feed.querySelectorAll<HTMLElement>('.reveal')) {
+      if (c.getBoundingClientRect().top < innerHeight) c.classList.add('is-in')
+    }
+    html.dataset.revealJs = 'on'
+    const seen = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) e.target.classList.add('is-in')
+    }, { rootMargin: '0px 0px -10% 0px' })
+    for (const c of feed.querySelectorAll('.reveal:not(.is-in)')) seen.observe(c)
+  }
+
+  // The tail of the archive, handed back a page at a time as the reader reaches it. The
+  // step is what the server withheld, read off the markup so there is one source for it.
+  const more = [...feed.querySelectorAll<HTMLElement>('article[data-more]')]
+  if (!more.length) return
+  html.dataset.chunked = 'on'
+  const step = Math.max(1, feed.querySelectorAll('article').length - more.length)
+
+  // 600px of rootMargin, as the frozen tree used: the next chunk is already in place by the
+  // time the reader gets there, so the feed never visibly stops.
+  //
+  // The sentinel is the LAST VISIBLE card, not the first hidden one. A hidden card is
+  // display:none, so it has no box, so it never intersects anything - observing it meant
+  // the feed stopped dead at twenty posts and no amount of scrolling moved it.
+  const io = new IntersectionObserver((es) => {
+    if (!es.some((e) => e.isIntersecting)) return
+    io.disconnect()
+    for (const c of more.splice(0, step)) c.removeAttribute('data-more')
+    if (!more.length) delete html.dataset.chunked
+    else arm()
+  }, { rootMargin: '600px 0px' })
+  const arm = () => {
+    const shown = feed.querySelectorAll<HTMLElement>('article:not([data-more])')
+    const last = shown[shown.length - 1]
+    if (last) io.observe(last)
+  }
+  arm()
+}
+
 export function listing(): void {
   gridToggle()
+  chunked()
 }

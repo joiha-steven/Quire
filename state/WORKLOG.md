@@ -3,6 +3,59 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — the header controls, the feed, and a margin the browser was supplying
+
+The owner went through the public site control by control. Everything reported was real,
+and each one had the same shape: something that had never been opened after it was written.
+
+**Search and the comment thread were both broken by the API envelope.** When the envelope
+was introduced for the admin, its 68 components were checked and the six public islands
+were not. Search read an object where an array belonged and reported nothing found; the
+comment thread destructured `comments` off the wrapper, got undefined and threw, so no
+thread rendered at all. One `payload()` helper, three call sites. Their fetch stubs were
+updated in the same commit - the stubs had been agreeing with the islands rather than with
+the server, which is the second time that exact pattern has hidden a real break.
+
+**The theme menu had no CSS whatsoever.** The island builds `.theme-wrap` and `.theme-menu`
+and nothing in either sheet matched them, so the four rows rendered as blocks that pushed
+the header apart. Ported from the frozen tree's Tailwind, tick included.
+
+**The header's mail button opened nothing.** Its `href` is an anchor that only exists at
+the foot of an article, so on every listing it scrolled nowhere. It now opens a modal
+carrying its own copy of the form. Finding that also turned up the in-page card never being
+enhanced at all: the handler looked for the status line inside the form rather than beside
+it, returned early, and every sign-up did a full page POST. Its test asserted the same
+wrong markup.
+
+**Book mode drifted one column gap per page turn.** It turned with a relative
+`scrollBy(viewport.clientWidth)`, but the viewport is `2*col + gap` and the next spread
+starts at `2*(col + gap)`, so by the third page the reader was looking at two half columns.
+The spread INDEX is the state now and the step is measured. The crossfade the frozen tree
+had between spreads is back, at 130ms rather than 200.
+
+**The three columns were not level, and the cause was a margin nobody wrote.** The frozen
+tree gets a block-margin reset from Tailwind's preflight and its layout is built on top of
+it: the listing card sets its own `.mt-2` / `.mt-3` and expects nothing from the browser.
+2.0 has no preflight, so the card's first paragraph carried the browser's default 1em, it
+collapsed out through the card, and the whole feed sat 14px below the rail beside it.
+Measured after the reset: rail, feed and timeline all start at 165.
+
+**The feed had no scroll reveal and no chunking.** The `.reveal` class has been on every
+card since M2 and no rule ever matched it, so nothing eased in - which is what "the fade at
+the bottom is gone" meant. And all 68 posts rendered at once. Both are now the frozen
+tree's behaviour: the CSS reveal (guarded on view() timelines, motion on, and no
+reduced-motion preference), a JS fallback for engines without scroll timelines, and the
+archive handed back a page at a time on a 600px `rootMargin`. Every card is still rendered,
+so a crawler and a reader with no JavaScript get the whole archive; a `<noscript>` undoes
+the hiding where no island can run.
+
+Two things worth writing down beyond the fixes. **`data-chrome-font` and `data-motion` were
+never emitted anywhere**, so the mono tracking correction was absent from 2.0 entirely and
+the owner's Motion switch had done nothing since it was ported. And **Cloudflare is caching
+the staging HTML**: a post page came back `cf-cache-status: HIT` pointing at a bundle two
+deploys old, which cost an hour of chasing a bug that had already been fixed. Verify
+against the origin, not through the edge, until auto-purge is set up.
+
 ## 2026-07-28 — the admin was wearing the wrong typeface, and the editor the wrong width
 
 Two reports from the owner, both real, and a third and fourth found while confirming them.

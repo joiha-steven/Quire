@@ -212,3 +212,35 @@ describe('the page cache (Invariant 1)', () => {
     expect((await get('/pending')).status).toBe(200)
   })
 })
+
+describe('the feed hands itself back a chunk at a time', () => {
+  // The frozen tree kept the tail of the archive in React state and revealed one page at a
+  // time as the reader scrolled. 2.0 rendered all 68 posts at once, which is what the owner
+  // meant by "it feels like everything loads in one go". The cards are all rendered — so a
+  // crawler and a reader with no JavaScript still get the whole archive — and the ones past
+  // the first page are MARKED, for the island to hide and give back.
+  it('marks every card past the first page, and guards the hiding with noscript', async () => {
+    await saveSettings({ postsPerPage: 2, features: { ...(await getSettings()).features, infiniteScroll: true } })
+    for (let i = 0; i < 5; i++) {
+      await savePost({ title: `Post ${i}`, content: 'x', status: 'published', date: PAST })
+    }
+    const html = await (await get('/')).text()
+    // Count the ARTICLES, not the string: it also appears in the sheet and in the noscript
+    // guard, which is how the first version of this test read five where three were meant.
+    const marked = html.match(/<article[^>]*data-more/g)?.length ?? 0
+    expect(marked).toBe(3)
+    // Hiding content is only safe when the thing that undoes it is guaranteed to exist.
+    expect(html).toContain('<noscript>')
+    expect(html).toContain('html[data-chunked] .post-list article[data-more]{display:block}')
+  })
+
+  it('eases each card in, which nothing in the sheet used to do', async () => {
+    await savePost({ title: 'Solo', content: 'x', status: 'published', date: PAST })
+    const html = await (await get('/')).text()
+    // The class has been on every card since M2; the rule that matches it had not been
+    // written, so the cards simply appeared.
+    expect(html).toContain('class="reveal"')
+    expect(html).toContain('@keyframes reveal-in')
+    expect(html).toContain('animation-timeline:view()')
+  })
+})

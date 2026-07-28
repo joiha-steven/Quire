@@ -24,6 +24,8 @@ type CardOptions = {
   lead?: boolean
   /** First card of a month: its marker goes out in the gutter, level with the card. */
   month?: string
+  /** Past the first page: hidden by the island until the reader scrolls that far. */
+  more?: boolean
 }
 
 /**
@@ -58,7 +60,9 @@ function card(post: Post, settings: SiteSettings, opts: CardOptions = {}): strin
 
   // `reveal` eases the card in as it scrolls into view, and is fully visible when motion
   // is off or unsupported (pure CSS, `animation-timeline: view()`).
-  return `<article class="reveal"${opts.lead ? ' data-lead' : ''}>${mark}
+  // `data-more` marks a card past the first page. The island hides those and reveals them
+  // a chunk at a time; with no JavaScript nothing hides them and the whole archive renders.
+  return `<article class="reveal"${opts.lead ? ' data-lead' : ''}${opts.more ? ' data-more' : ''}>${mark}
 <p class="t-small text-meta">${categoryLink}<time datetime="${escapeAttr(post.date)}">${escapeHtml(formatDate(post.date, settings.language))}</time>${minutes}</p>
 <${Title} class="reading-font mt-2 ${size} font-semibold"><a class="link-accent" href="/${escapeAttr(post.slug)}">${escapeHtml(post.title)}</a></${Title}>
 ${post.excerpt ? `<p class="reading-font mt-3 t-body text-text">${escapeHtml(post.excerpt)}</p>` : ''}
@@ -91,6 +95,10 @@ function pager(paged: Paged<Post>, basePath: string): string {
  * years stay level with their posts with no JavaScript and no measurement.
  */
 function timeline(posts: Post[], settings: SiteSettings, lead: boolean): string {
+  // Everything past the first page is a chunk the island reveals on scroll. The frozen tree
+  // held the tail in React state and revealed `postsPerPage` at a time; this renders it and
+  // hides it instead, which reaches the same feed without giving up the no-script archive.
+  const chunk = Math.max(1, settings.postsPerPage)
   const groups: { year: string; items: { post: Post; i: number }[] }[] = []
   posts.forEach((post, i) => {
     const year = yearOf(post.date)
@@ -109,6 +117,7 @@ function timeline(posts: Post[], settings: SiteSettings, lead: boolean): string 
       return card(post, settings, {
         lead: lead && i === 0,
         month: firstOfMonth && !firstOfYear ? formatMonth(post.date, settings.language) : undefined,
+        more: i >= chunk,
       })
     }).join('\n')
     return `<div class="tl-yr"><div class="tl-year" aria-hidden="true">`
@@ -150,7 +159,12 @@ export function renderListing(view: ListingView, settings: SiteSettings): string
   // for it. A category archive has no lead post.
   const lead = settings.features.leadPost && view.basePath === '' && view.paged.page === 1
   if (view.timeline) {
-    return `${head}<div class="post-list tl-feed">${timeline(view.paged.items, settings, lead)}</div>`
+    // The <noscript> is the safety catch on the chunking: the island sets `data-chunked` on
+    // <html>, which hides the tail, and this undoes it where no island can ever run. Hiding
+    // content is only ever safe when the thing that undoes it is guaranteed to exist.
+    const guard = '<noscript><style>html[data-chunked] .post-list article[data-more]'
+      + '{display:block}</style></noscript>'
+    return `${head}<div class="post-list tl-feed">${timeline(view.paged.items, settings, lead)}</div>${guard}`
   }
   const body = view.paged.items
     .map((p, i) => card(p, settings, { lead: lead && i === 0 }))

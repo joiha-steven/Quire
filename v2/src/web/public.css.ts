@@ -27,6 +27,14 @@ body{
   font-family:var(--font-sans);font-size:var(--fs-body);line-height:var(--lh-body);
   letter-spacing:var(--ls-body);font-optical-sizing:auto;
 }
+/* Block margins to zero, and let the components state their own spacing.
+   The frozen tree got this from Tailwind's preflight and its layout is built on top of it:
+   the listing card sets .mt-2 / .mt-3 and expects nothing from the browser. Without the
+   reset the card's first paragraph carried a 1em default margin, it collapsed out through
+   the card, and the whole feed sat 14px lower than the rail beside it - which is the
+   three-columns-not-level the owner spotted. Rhythm INSIDE the body copy is restored by
+   .prose > * + * in prose.css.ts, exactly as the frozen tree restores it. */
+h1,h2,h3,h4,h5,h6,p,figure,blockquote,ol,ul,dl,dd,pre{margin:0}
 img,video,iframe{max-width:100%;height:auto}
 a{color:var(--c-link);text-decoration:underline;text-underline-offset:.15em}
 a:hover{color:var(--c-heading)}

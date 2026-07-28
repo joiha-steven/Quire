@@ -56,6 +56,36 @@ export const ISLANDS_CSS = `
 .lightbox-next{right:.5rem}
 .lightbox-count{position:absolute;bottom:1rem;font-size:.75rem;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
 
+/* Scroll reveal: a card eases in as it enters the viewport. This is what the owner meant
+   by the fade at the foot of the feed going missing - the markup has carried a .reveal
+   class since M2 and NO rule ever matched it, so the cards simply appeared.
+
+   GUARDED three ways, exactly as the frozen tree guards it: it may only ever HIDE content
+   where it can also reveal it. Needs view() timelines, motion on, and no reduced-motion
+   preference; anything else leaves .reveal a normal, fully visible element. There is no
+   blank-page failure mode. */
+@supports (animation-timeline:view()){
+  @media (prefers-reduced-motion:no-preference){
+    html[data-motion=on] .reveal{animation:reveal-in linear both;animation-timeline:view();
+      /* Finishes in the lower third, where the eye is - not at the very bottom edge. */
+      animation-range:entry 0% cover 20%}
+  }
+}
+@keyframes reveal-in{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+/* The same reveal for engines with no view() timeline (Firefox today). Armed by the island
+   ONLY on those engines, and only for cards that are not already on screen, so nothing
+   above the fold can flash. */
+@media (prefers-reduced-motion:no-preference){
+  html[data-reveal-js=on] .reveal:not(.is-in){opacity:0;transform:translateY(24px)}
+  html[data-reveal-js=on] .reveal{transition:opacity .5s ease,transform .5s ease}
+}
+
+/* Chunked feed. The server renders every card, so a reader with no JavaScript gets the
+   whole archive and a crawler sees all of it; the island hides what is past the first page
+   and hands it back a chunk at a time on scroll. The <noscript> counterpart is emitted with
+   the list, so the hiding only ever applies where something can undo it. */
+html[data-chunked] .post-list article[data-more]{display:none}
+
 .preview-note{border:1px solid var(--c-rule);background:var(--c-rule);color:var(--c-meta);
   border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);margin:0 0 1.5rem}
 

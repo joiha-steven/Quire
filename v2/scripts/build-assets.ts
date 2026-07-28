@@ -57,7 +57,11 @@ const BUDGET: Record<string, number> = {
   // nowhere; the frozen tree opens a modal with its own copy of the form, and now so does
   // this. The same change fixed the in-page card, which was never enhanced at all because
   // the handler looked for the status line inside the form instead of beside it.
-  'core.js': 8_000,
+  // Raised to 8,800 for the chunked feed and the scroll-reveal fallback. The feed rendered
+  // all 68 posts at once with no easing at all: the .reveal class had been in the markup
+  // since M2 and no rule ever matched it, and there was nothing to hand the archive back a
+  // page at a time. Both are what the frozen tree does.
+  'core.js': 8_800,
   // /{slug}: back to top, code copy, lightbox, subscribe, comments, the ToC highlight and
   // book mode. Raised from 8,000 when book mode grew its real chrome — a title bar, a page
   // count and side arrows over a clipped viewport, and a spread measured to exactly two
