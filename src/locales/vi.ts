@@ -97,6 +97,7 @@ const vi = {
   commentSignInGoogle: 'Đăng nhập Google',
   commentAs: 'Bình luận với tên',
   commentSignOut: 'Đăng xuất',
+  commentSignInError: 'Không đăng nhập được. Vui lòng thử lại, hoặc bình luận bằng tên và email.',
 } satisfies Dict
 
 export default vi

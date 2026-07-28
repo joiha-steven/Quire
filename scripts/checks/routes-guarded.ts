@@ -23,6 +23,7 @@ const WRITE_METHODS = ['post', 'put', 'patch', 'delete'] as const
 const PUBLIC_WRITES = new Map<string, string>([
   ['/api/track', 'the analytics beacon; every reader\'s browser calls it. Rate limited, bots dropped, no PII stored.'],
   ['/api/comments', 'a reader leaving a comment. Rate limited and Turnstile-gated.'],
+  ['/comment-auth/signout', 'a reader dropping their commenter cookie. It clears unconditionally, so a forged call signs someone out and can do nothing else.'],
   ['/api/subscribe', 'a reader joining the newsletter. Double opt-in, so a forged call sends one confirmation mail and nothing else.'],
   ['/api/newsletter/unsubscribe', 'the POST half of unsubscribe. The token in the link is the authorisation.'],
   ['/api/auth/login', 'the sign-in form. Cannot require a session to create one.'],

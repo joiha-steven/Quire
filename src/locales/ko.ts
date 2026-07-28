@@ -97,6 +97,7 @@ const ko = {
   commentSignInGoogle: 'Google로 로그인',
   commentAs: '댓글 작성자',
   commentSignOut: '로그아웃',
+  commentSignInError: '로그인하지 못했습니다. 다시 시도하거나 이름과 이메일로 댓글을 남겨 주세요.',
 } satisfies Dict
 
 export default ko

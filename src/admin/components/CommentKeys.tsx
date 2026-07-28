@@ -1,4 +1,4 @@
-// Key entry for the optional comment integrations (Turnstile). These
+// Key entry for the optional comment integrations (Turnstile, Google sign-in). These
 // are SECRETS, so they have their OWN API (`/api/comments/keys` → server-only
 // `integration_keys` table), NOT the settings form. Inputs are write-to-set: a
 // blank field leaves the stored key untouched (only non-empty fields are sent).
@@ -16,11 +16,18 @@ const INPUT =
 // External setup links (where the owner gets each integration's keys / settings).
 const LINKS = {
   turnstile: 'https://dash.cloudflare.com/?to=/:account/turnstile',
-  google: 'https://console.cloud.google.com/apis/credentials/consent',
+  google: 'https://console.cloud.google.com/apis/credentials',
 }
 
-type Keys = { turnstileSiteKey: string; turnstileSecretKey: string }
-const EMPTY: Keys = { turnstileSiteKey: '', turnstileSecretKey: '' }
+type Keys = {
+  turnstileSiteKey: string
+  turnstileSecretKey: string
+  googleClientId: string
+  googleClientSecret: string
+}
+const EMPTY: Keys = {
+  turnstileSiteKey: '', turnstileSecretKey: '', googleClientId: '', googleClientSecret: '',
+}
 
 // One integration's title + help line with an "Open ↗" link to its setup page.
 function Help({ title, text, href, open }: { title: string; text: string; href: string; open: string }) {
@@ -82,18 +89,29 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
         </div>
       )}
       {showGoogle && (
-        <Help title={t.commentsGoogleAuth} text={t.commentsGoogleHelp} href={LINKS.google} open={t.commentsHelpOpen} />
+        <div className="space-y-2">
+          <Help title={t.commentsGoogleAuth} text={t.commentsGoogleHelp} href={LINKS.google} open={t.commentsHelpOpen} />
+          {/* The exact string Google demands, built from the browser's own origin rather
+              than from a setting: a typo here fails the flow AFTER the reader has left,
+              with an error page on Google's side that names no cause. */}
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            {t.commentsGoogleRedirect}
+            <code className="ml-2 select-all rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+              {`${location.origin}/comment-auth/google/callback`}
+            </code>
+          </p>
+          <input className={INPUT} placeholder={ph(env.googleConfigured, t.commentsKeyGoogleId)} value={keys.googleClientId} onChange={(e) => set('googleClientId', e.target.value)} />
+          <input className={INPUT} type="password" placeholder={ph(env.googleConfigured, t.commentsKeyGoogleSecret)} value={keys.googleClientSecret} onChange={(e) => set('googleClientSecret', e.target.value)} />
+        </div>
       )}
-      {showTurnstile && (
-        <button
-          type="button"
-          onClick={save}
-          disabled={busy}
-          className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-        >
-          {t.commentsKeySave}
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={save}
+        disabled={busy}
+        className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+      >
+        {t.commentsKeySave}
+      </button>
     </div>
   )
 }

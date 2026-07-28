@@ -24,6 +24,7 @@ describe('getIntegrationKeys', () => {
   it('returns empty strings when nothing is stored and no env var is set', async () => {
     expect(await getIntegrationKeys()).toEqual({
       turnstileSiteKey: '', turnstileSecretKey: '', cloudflareApiToken: '', cloudflareZoneId: '',
+      googleClientId: '', googleClientSecret: '',
     })
   })
 
@@ -67,6 +68,7 @@ describe('getIntegrationStatus', () => {
     expect(status).toEqual({
       turnstileConfigured: true, turnstileSiteKey: 'site',
       cloudflareConfigured: true, cloudflareZoneId: 'zone',
+      googleConfigured: false,
     })
     expect(JSON.stringify(status)).not.toContain('secret')
     expect(JSON.stringify(status)).not.toContain('token')
@@ -77,5 +79,16 @@ describe('getIntegrationStatus', () => {
     expect((await getIntegrationStatus()).cloudflareConfigured).toBe(false)
     await saveIntegrationKeys({ cloudflareZoneId: 'zone' })
     expect((await getIntegrationStatus()).cloudflareConfigured).toBe(true)
+  })
+
+  // Same reason as Cloudflare, different consequence: a client id with no secret gets the
+  // reader all the way to Google's consent screen before failing on the way back.
+  it('Google needs BOTH halves, and the status never carries the secret', async () => {
+    await saveIntegrationKeys({ googleClientId: 'client-id.apps.googleusercontent.com' })
+    expect((await getIntegrationStatus()).googleConfigured).toBe(false)
+    await saveIntegrationKeys({ googleClientSecret: 'GOCSPX-not-a-real-one' })
+    const status = await getIntegrationStatus()
+    expect(status.googleConfigured).toBe(true)
+    expect(JSON.stringify(status)).not.toContain('GOCSPX')
   })
 })

@@ -168,8 +168,13 @@ export async function renderArticle(slug: string): Promise<string | null> {
   const turnstile = settings.comments.turnstile && commentEnv?.turnstileConfigured
     ? ` data-turnstile="${escapeAttr(commentEnv.turnstileSiteKey)}"`
     : ''
+  // A flag, not a key: the island only needs to know whether to draw the Google button and
+  // ask who the reader is. The client id lives on the server and travels in the redirect.
+  const googleAuth = settings.comments.googleAuth && commentEnv?.googleConfigured
+    ? ' data-google="1"'
+    : ''
   const commentsMount = post && settings.comments.enabled
-    ? `<section id="comments" data-post="${escapeAttr(post.slug)}"${turnstile}></section>`
+    ? `<section id="comments" data-post="${escapeAttr(post.slug)}"${turnstile}${googleAuth}></section>`
     : ''
 
   const { configured: mailConfigured } = await getMailStatus()
@@ -209,6 +214,10 @@ export async function renderArticle(slug: string): Promise<string | null> {
       commentBody: s.commentBody,
       commentSubmit: s.commentSubmit,
       commentError: s.commentError,
+      commentSignInGoogle: s.commentSignInGoogle,
+      commentAs: s.commentAs,
+      commentSignOut: s.commentSignOut,
+      commentSignInError: s.commentSignInError,
       bookModePrev: s.bookModePrev,
       bookModeNext: s.bookModeNext,
       bookModeClose: s.bookModeClose,

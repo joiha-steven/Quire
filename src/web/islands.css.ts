@@ -286,6 +286,18 @@ form.subscribe button:disabled{opacity:.5}
   background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
 .comment-status:empty{display:none}
 .comment-status{color:var(--c-meta);margin:.5rem 0 0}
+/* The identity strip. The sign-in control is an anchor and the sign-out control a button,
+   so both are given the surrounding type explicitly rather than a UA default. */
+.comment-identity{margin:0 0 .75rem;color:var(--c-meta)}
+.comment-identity strong{color:var(--c-heading);font-weight:600}
+.comment-google{display:inline-block;padding:.5rem 1rem;border:1px solid var(--c-rule);
+  border-radius:.35rem;color:var(--c-heading);font:inherit;text-decoration:none}
+.comment-google:hover{border-color:var(--c-heading)}
+/* Two classes deep on purpose: the comment-form button rule above is more specific than a
+   lone class, so a one-class rule here loses and sign-out renders as a second Post button. */
+.comment-form .comment-signout{margin:0;border:0;background:none;padding:0;
+  color:var(--c-meta);font:inherit;cursor:pointer;text-decoration:underline}
+.comment-form .comment-signout:hover{color:var(--c-heading)}
 
 /* Two ways to the same place: the reader's system preference, and the owner's Motion
    switch in Settings. The switch had no effect at all until this rule existed. */

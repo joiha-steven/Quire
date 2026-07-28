@@ -85,6 +85,8 @@ describe('comments', () => {
     commentDeleted: '[removed]', commentName: 'Name', commentEmail: 'Email',
     commentEmailNote: 'Not published', commentWebsite: 'Website', commentBody: 'Comment',
     commentSubmit: 'Post', commentError: 'Could not post.',
+    commentSignInGoogle: 'Sign in with Google', commentAs: 'Commenting as',
+    commentSignOut: 'Sign out', commentSignInError: 'Could not sign you in.',
   }
 
   const tree = [{
@@ -96,18 +98,27 @@ describe('comments', () => {
     }],
   }]
 
-  function stubFetch(comments: unknown[]): void {
-    globalThis.fetch = ((() =>
+  /**
+   * Routed by URL, because the island makes TWO requests and they carry different shapes.
+   * A stub that answered both with the thread would let an island that reads the identity
+   * out of the wrong response pass.
+   */
+  function stubFetch(comments: unknown[], commenter: { name: string } | null = null): void {
+    globalThis.fetch = (((url: string) => {
       // The envelope the server actually sends. This stub used to return the bare payload,
       // so it agreed with an island that read the bare payload and the pair of them stayed
       // wrong together: on the real site the thread threw on undefined and never rendered.
-      Promise.resolve(new Response(JSON.stringify({ success: true, data: { comments } })))) as unknown) as typeof fetch
+      const data = String(url).startsWith('/api/comments/me') ? { commenter } : { comments }
+      return Promise.resolve(new Response(JSON.stringify({ success: true, data })))
+    }) as unknown) as typeof fetch
   }
 
   /** The island waits for an intersection; drive it directly instead of faking a scroll. */
-  async function mountAndLoad(comments: unknown[]): Promise<void> {
-    page(mount, LABELS)
-    stubFetch(comments)
+  async function mountAndLoad(
+    comments: unknown[], html = mount, commenter: { name: string } | null = null,
+  ): Promise<void> {
+    page(html, LABELS)
+    stubFetch(comments, commenter)
     let fire: (() => void) | null = null
     globalThis.IntersectionObserver = class {
       constructor(cb: (entries: { isIntersecting: boolean }[]) => void) {
@@ -118,6 +129,9 @@ describe('comments', () => {
     } as unknown as typeof IntersectionObserver
     mountComments()
     fire!()
+    // Two awaits, not one: the thread and the identity are fetched together, so the form
+    // is not built until both microtask chains have run.
+    await new Promise((r) => setTimeout(r, 0))
     await new Promise((r) => setTimeout(r, 0))
   }
 
@@ -173,6 +187,49 @@ describe('comments', () => {
   it('does nothing on a page with no thread', () => {
     page('<article>x</article>', LABELS)
     expect(() => mountComments()).not.toThrow()
+  })
+
+  // ----- Google sign-in -------------------------------------------------------
+
+  describe('the identity strip', () => {
+    const googleMount = '<section id="comments" data-post="a-post" data-google="1"></section>'
+
+    it('is absent entirely when the owner has not turned sign-in on', async () => {
+      await mountAndLoad([])
+      expect(document.querySelector('.comment-identity')).toBeNull()
+      // And the manual fields are still there, which is the whole of the common case.
+      expect(document.querySelector('input[name=name]')).not.toBeNull()
+    })
+
+    it('offers a link to sign in, carrying the current path back', async () => {
+      await mountAndLoad([], googleMount)
+      const link = document.querySelector<HTMLAnchorElement>('.comment-google')!
+      expect(link.textContent).toBe('Sign in with Google')
+      expect(link.getAttribute('href')).toContain('/comment-auth/google?return=')
+      // A signed-out reader still gets the manual form. Sign-in is an offer, not a gate.
+      expect(document.querySelector('input[name=email]')).not.toBeNull()
+    })
+
+    it('greets a signed-in reader and drops the fields Google already answered', async () => {
+      await mountAndLoad([], googleMount, { name: 'A Reader' })
+      const strip = document.querySelector('.comment-identity')!
+      expect(strip.textContent).toContain('A Reader')
+      expect(document.querySelector('.comment-signout')).not.toBeNull()
+      for (const field of ['name', 'email', 'website']) {
+        expect(document.querySelector(`input[name=${field}]`)).toBeNull()
+      }
+      // The comment box itself obviously stays.
+      expect(document.querySelector('.comment-form textarea')).not.toBeNull()
+    })
+
+    // A name goes through textContent for the same reason a comment author's does: it is a
+    // string from an external identity provider, not something this codebase wrote.
+    it('puts the signed-in name through textContent', async () => {
+      await mountAndLoad([], googleMount, { name: '<img src=x onerror=alert(1)>' })
+      const strip = document.querySelector('.comment-identity')!
+      expect(strip.querySelector('img')).toBeNull()
+      expect(strip.textContent).toContain('onerror')
+    })
   })
 })
 

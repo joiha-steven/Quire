@@ -97,6 +97,7 @@ const ja = {
   commentSignInGoogle: 'Googleでログイン',
   commentAs: 'コメント投稿者',
   commentSignOut: 'ログアウト',
+  commentSignInError: 'ログインできませんでした。もう一度お試しになるか、名前とメールアドレスでコメントしてください。',
 } satisfies Dict
 
 export default ja

@@ -100,6 +100,7 @@ export type Dict = {
   commentSignInGoogle: string
   commentAs: string
   commentSignOut: string
+  commentSignInError: string
 }
 
 export type AdminStrings = {
@@ -473,6 +474,9 @@ export type AdminStrings = {
   commentsKeySet: string
   commentsTurnstileHelp: string
   commentsGoogleHelp: string
+  commentsKeyGoogleId: string
+  commentsKeyGoogleSecret: string
+  commentsGoogleRedirect: string
   commentsHelpOpen: string
   commentsNavTitle: string
   commentsCount: string

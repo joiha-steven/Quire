@@ -74,6 +74,47 @@ function render(comment: Comment): HTMLElement {
   return item
 }
 
+/** Who the server says this reader is. Read once per island load, alongside the thread. */
+let signedInAs: string | null = null
+
+/**
+ * The identity strip above the form: a Google button, or who you are and a way to stop
+ * being them.
+ *
+ * Absent entirely when the owner has not turned Google sign-in on, which is the common
+ * case: a reader who will never use it should not have to look at it.
+ */
+function identityRow(root: HTMLElement, parentId: number | null): HTMLElement | null {
+  if (!root.dataset.google) return null
+
+  if (signedInAs === null) {
+    const link = el('a', {
+      class: 'comment-google',
+      // A link, not a fetch: the reader is LEAVING for Google, and a navigation is what
+      // that is. It also means the flow still works with the island's JS half-loaded.
+      href: `/comment-auth/google?return=${encodeURIComponent(location.pathname)}`,
+      rel: 'nofollow',
+    })
+    link.textContent = label('commentSignInGoogle')
+    return el('p', { class: 'comment-identity' }, link)
+  }
+
+  const who = el('strong')
+  who.textContent = signedInAs
+  const out = el('button', { type: 'button', class: 'comment-signout' })
+  out.textContent = label('commentSignOut')
+  out.addEventListener('click', () => { void signOut() })
+  return el('p',
+    { class: 'comment-identity', id: `c-identity-${parentId ?? 'root'}` },
+    `${label('commentAs')} `, who, ' · ', out)
+}
+
+async function signOut(): Promise<void> {
+  await fetch('/comment-auth/signout', { method: 'POST' }).catch(() => {})
+  signedInAs = null
+  await load()
+}
+
 /** The form, built once per place it is opened. `parentId` null means a top-level comment. */
 function buildForm(postSlug: string, parentId: number | null): HTMLFormElement {
   const field = (name: string, type: string, labelKey: string, required: boolean) => {
@@ -95,10 +136,22 @@ function buildForm(postSlug: string, parentId: number | null): HTMLFormElement {
   const button = el('button', { type: 'submit' })
   button.textContent = label('commentSubmit')
 
+  const root = document.querySelector<HTMLElement>('#comments')
+  const identity = root ? identityRow(root, parentId) : null
+  // A signed-in reader is not asked for the three things Google already answered. The
+  // server ignores them for that reader anyway, so leaving them on screen would be asking
+  // for input that goes nowhere.
+  const details = signedInAs === null
+    ? [
+        field('name', 'text', 'commentName', true),
+        field('email', 'email', 'commentEmail', true),
+        field('website', 'url', 'commentWebsite', false),
+      ]
+    : []
+
   const form = el('form', { class: 'comment-form' },
-    field('name', 'text', 'commentName', true),
-    field('email', 'email', 'commentEmail', true),
-    field('website', 'url', 'commentWebsite', false),
+    ...(identity ? [identity] : []),
+    ...details,
     area,
     button,
     el('p', { class: 'comment-status', role: 'status' }),
@@ -107,8 +160,9 @@ function buildForm(postSlug: string, parentId: number | null): HTMLFormElement {
   // The server refuses a comment whose Turnstile token does not verify whenever the owner
   // has it on, so the widget has to be here or the form cannot be completed at all. The
   // site key is server-rendered onto the mount point; absent means Turnstile is off.
-  const siteKey = document.querySelector<HTMLElement>('#comments')?.dataset.turnstile
-  if (siteKey) mountTurnstile(form, siteKey)
+  // A signed-in reader skips it, exactly as the server does.
+  const siteKey = root?.dataset.turnstile
+  if (siteKey && signedInAs === null) mountTurnstile(form, siteKey)
 
   form.addEventListener('submit', (e) => {
     e.preventDefault()
@@ -162,6 +216,26 @@ async function submit(
   }
 }
 
+/**
+ * Who the server says the reader is.
+ *
+ * Its own request, and never a cached one: this is the only public response on the site
+ * whose body differs per reader, so it cannot ride along in the thread (which a shared
+ * cache is free to hold) without handing one reader another's name.
+ */
+async function loadIdentity(root: HTMLElement): Promise<void> {
+  if (!root.dataset.google) return
+  try {
+    const res = await fetch('/api/comments/me')
+    const { commenter } = await payload<{ commenter: { name: string } | null }>(res)
+    signedInAs = commenter?.name ?? null
+  } catch {
+    // The manual form is the fallback and it works. A reader who was signed in sees the
+    // fields again, which is wrong but usable; a hard failure here would be neither.
+    signedInAs = null
+  }
+}
+
 async function load(): Promise<void> {
   const root = document.querySelector<HTMLElement>('#comments')
   const slug = root?.dataset.post
@@ -169,7 +243,12 @@ async function load(): Promise<void> {
 
   let comments: Comment[] = []
   try {
-    const res = await fetch(`/api/comments?post=${encodeURIComponent(slug)}`)
+    // Both at once. The identity request is small and uncached, and serialising it behind
+    // the thread would delay the form for no reason.
+    const [res] = await Promise.all([
+      fetch(`/api/comments?post=${encodeURIComponent(slug)}`),
+      loadIdentity(root),
+    ])
     ;({ comments } = await payload<{ comments: Comment[] }>(res))
   } catch {
     root.textContent = label('commentError')
@@ -190,12 +269,30 @@ async function load(): Promise<void> {
     empty.textContent = label('commentsEmpty')
     root.appendChild(empty)
   }
-  root.appendChild(buildForm(slug, null))
+  const form = buildForm(slug, null)
+  root.appendChild(form)
+
+  // A sign-in that did not complete comes back as a fragment, because a query string would
+  // become a second cache entry for the same page and anyone could mint thousands of them.
+  if (location.hash === '#comment-auth-error') {
+    const status = form.querySelector<HTMLElement>('.comment-status')
+    if (status) status.textContent = label('commentSignInError')
+    // Cleared so a reload, or a reader who scrolls back later, does not see it again.
+    history.replaceState(null, '', location.pathname + location.search)
+  }
 }
 
 export function comments(): void {
   const root = document.querySelector<HTMLElement>('#comments')
   if (!root?.dataset.post) return
+
+  // A reader coming back from a failed sign-in lands at the TOP of the post, which is
+  // nowhere near the thread — so the observer below would never fire and the message would
+  // never be read. Load immediately and take them to it instead.
+  if (location.hash === '#comment-auth-error') {
+    void load().then(() => root.scrollIntoView({ block: 'start' }))
+    return
+  }
 
   // Nothing is fetched until the thread is near the viewport. Most readers never reach it,
   // and a request they never see is a request not worth making.

@@ -16,6 +16,7 @@ import { join } from 'node:path'
 // binary cannot find is a boot failure on a machine that has no repository checkout.
 import contentSchema from './schema.sql' with { type: 'text' }
 import analyticsSchema from './schema-analytics.sql' with { type: 'text' }
+import contentMigrations from './migrations.sql' with { type: 'text' }
 
 export type Db = Database
 
@@ -32,14 +33,71 @@ const PRAGMAS = [
 let content: Database | null = null
 let analytics: Database | null = null
 
-function open(path: string, schema: string, synchronous: 'FULL' | 'NORMAL'): Database {
+function open(
+  path: string, schema: string, synchronous: 'FULL' | 'NORMAL',
+): { db: Database; fresh: boolean } {
   const db = new Database(path, { create: true, strict: true })
   for (const p of PRAGMAS) db.run(`pragma ${p};`)
   // Content is worth an fsync per commit; analytics is not. Losing a day of pageviews is
   // an annoyance, losing a day of posts is a disaster.
   db.run(`pragma synchronous = ${synchronous};`)
+  // Whether this file already held tables decides what migrations mean for it, and the
+  // only moment that is knowable is BEFORE the schema is applied.
+  const fresh = isEmpty(db)
   db.transaction(() => db.run(schema))()
-  return db
+  return { db, fresh }
+}
+
+/** No tables at all — a database this process is about to create rather than open. */
+function isEmpty(db: Database): boolean {
+  const row = db.query<{ n: number }, []>(
+    `select count(*) as n from sqlite_master where type = 'table' and name not like 'sqlite_%'`,
+  ).get()
+  return (row?.n ?? 0) === 0
+}
+
+type Migration = { name: string; sql: string }
+
+/**
+ * Split `migrations.sql` on its `-- migration: <name>` headers.
+ *
+ * Exported for the test, which is the only way to prove the parser agrees with the file:
+ * a step whose header is malformed would otherwise be silently folded into the one before
+ * it and never run on its own.
+ */
+export function parseMigrations(source: string): Migration[] {
+  const steps: Migration[] = []
+  for (const line of source.split('\n')) {
+    const header = /^--\s*migration:\s*(\S+)\s*$/.exec(line)
+    if (header) steps.push({ name: header[1]!, sql: '' })
+    else if (steps.length) steps[steps.length - 1]!.sql += `${line}\n`
+  }
+  return steps.filter((s) => s.sql.trim().length > 0)
+}
+
+/**
+ * Bring an existing database up to the shape `schema.sql` already states.
+ *
+ * `fresh` is the whole subtlety. A database built from `schema.sql` a moment ago is ALREADY
+ * at the final shape, so its migrations are recorded as applied without being run — running
+ * them would fail on a duplicate column. An existing database runs the ones it has not seen.
+ * Each step is its own transaction, so a failure leaves the steps before it applied and the
+ * ledger honest about where it stopped.
+ */
+function applyMigrations(db: Database, source: string, fresh: boolean): void {
+  const applied = new Set(
+    db.query<{ name: string }, []>(`select name from schema_migrations`).all().map((r) => r.name),
+  )
+  const record = db.query<never, [string, number]>(
+    `insert or ignore into schema_migrations (name, applied_at) values (?, ?)`,
+  )
+  for (const step of parseMigrations(source)) {
+    if (applied.has(step.name)) continue
+    db.transaction(() => {
+      if (!fresh) db.run(step.sql)
+      record.run(step.name, Date.now())
+    })()
+  }
 }
 
 /**
@@ -54,8 +112,10 @@ export function openDatabases(dir: string): { db: Database; analyticsDb: Databas
   // purpose to prove the schema is idempotent.
   closeDatabases()
   mkdirSync(dir, { recursive: true })
-  content = open(join(dir, 'quire.db'), contentSchema, 'FULL')
-  analytics = open(join(dir, 'analytics.db'), analyticsSchema, 'NORMAL')
+  const opened = open(join(dir, 'quire.db'), contentSchema, 'FULL')
+  content = opened.db
+  applyMigrations(content, contentMigrations, opened.fresh)
+  analytics = open(join(dir, 'analytics.db'), analyticsSchema, 'NORMAL').db
   // Only `analytics_totals` (the Views column on the admin content tables) needs to join
   // across the two files. ATTACH once here rather than per query.
   content.run(`attach database ? as analytics;`, [join(dir, 'analytics.db')])

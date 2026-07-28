@@ -97,6 +97,7 @@ const de = {
   commentSignInGoogle: 'Mit Google anmelden',
   commentAs: 'Kommentieren als',
   commentSignOut: 'Abmelden',
+  commentSignInError: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen oder mit Name und E-Mail kommentieren.',
 } satisfies Dict
 
 export default de

@@ -552,8 +552,16 @@ Google account.
   `parent.depth < 2`); display nesting is rebuilt from the actual ancestry. `buildCommentTree`
   (pure, tested) re-roots orphans (parent purged) and renders a deleted-but-still-replied node as a
   blanked **tombstone**; a deleted leaf is pruned.
+- **Sign-in, in 2.0** (`src/web/comment-auth.ts`, `src/comments/{commenter,google-oauth}.ts`,
+  [ADR 0013](decisions/0013-google-sign-in-for-commenters.md)): `next-auth` is gone, so a
+  commenter is a signed `__Host-` cookie rather than a session row — 30 days, HMAC over name +
+  address + expiry, no table. The client id and secret are entered in **Settings → Comments**.
+  A signed-in comment takes its identity from the cookie and IGNORES the request body, records
+  `provider = 'google'` and skips Turnstile. Turning the toggle off stops trusting cookies
+  already issued, rather than waiting for them to lapse.
 - **Privacy:** email is stored but NEVER sent to the public client (separate `PUBLIC_COLS` vs
-  `ADMIN_COLS`); website gets `rel="nofollow ugc noopener"`.
+  `ADMIN_COLS`); website gets `rel="nofollow ugc noopener"`. `/api/comments/me` returns the
+  signed-in NAME only, and is the one public response on the site marked `no-store`.
 - **Post rename / purge:** `renameComments` moves comments with the slug; `deleteCommentsForPost`
   clears them when a post is purged (both wired in `posts.ts`).
 - **Admin:** `/admin/comments` lists live comments (content/post/time/name/IP/delete); the content

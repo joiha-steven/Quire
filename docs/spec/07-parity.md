@@ -244,10 +244,11 @@ Count when written: 214 items.
 ## 7a. Comments identity (2026-07-27)
 
 - [x] Manual comments: name, valid email, optional website, Turnstile when configured
-- [ ] `⚠` **REMOVED, not pending.** The frozen tree also accepted a Google-signed-in
-      commenter as trusted: name and email from the session, Turnstile skipped. ADR 0007
-      removes Google sign-in from 2.0, so that path does not exist. A reader who never
-      signed in is unaffected; one who did now fills in two fields
+- [x] A Google-signed-in commenter is trusted: name and email from the cookie, Turnstile
+      skipped. **Restored 2026-07-29 by [ADR 0013](../decisions/0013-google-sign-in-for-commenters.md).**
+      This entry previously read "REMOVED, not pending" and cited ADR 0007, which is about
+      the OWNER'S sign-in and says nothing about readers. The toggle stayed in Settings the
+      whole time and controlled nothing
 
 ## 8. Analytics
 

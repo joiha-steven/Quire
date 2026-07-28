@@ -9,8 +9,15 @@
 import type { Context, MiddlewareHandler } from 'hono'
 import { logActivityError } from '@/server/activity'
 
-/** A successful JSON body. */
-export function json(data: unknown, status = 200): Response {
+/**
+ * A successful JSON body.
+ *
+ * `extra` exists for the one response whose body differs per reader (`/api/comments/me`),
+ * which has to say `no-store` or a shared cache will greet strangers by someone else's
+ * name. Building that response by hand instead would put a second copy of the envelope
+ * below in the codebase, and the point of the envelope is that there is only one.
+ */
+export function json(data: unknown, status = 200, extra?: Record<string, string>): Response {
   // The ENVELOPE is load-bearing, and it went missing in the port. Every admin component
   // reads `json.success` and `json.data` — that is the frozen tree's contract and 68
   // components were written against it. Returning the bare payload type-checked, passed
@@ -20,7 +27,7 @@ export function json(data: unknown, status = 200): Response {
   // an integration test catches and a unit test cannot.
   return new Response(JSON.stringify({ success: true, data }), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
+    headers: { 'content-type': 'application/json; charset=utf-8', ...extra },
   })
 }
 

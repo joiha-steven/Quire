@@ -208,8 +208,11 @@ export function newsRoutes() {
     await saveIntegrationKeys({
       turnstileSiteKey: str(input.turnstileSiteKey),
       turnstileSecretKey: str(input.turnstileSecretKey),
+      googleClientId: str(input.googleClientId),
+      googleClientSecret: str(input.googleClientSecret),
     })
     // The site key is rendered into the comment form, so a cached page carries the old one.
+    // So does the flag that draws the Google button, for the same reason.
     clearCache()
     return json({ saved: true })
   })

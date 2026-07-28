@@ -97,6 +97,7 @@ const zh = {
   commentSignInGoogle: '用 Google 登录',
   commentAs: '评论身份',
   commentSignOut: '退出登录',
+  commentSignInError: '登录失败。请重试，或使用姓名和邮箱发表评论。',
 } satisfies Dict
 
 export default zh

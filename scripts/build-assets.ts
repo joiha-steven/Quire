@@ -79,8 +79,11 @@ const BUDGET: Record<string, number> = {
   // no way to produce a token, so on a site with Turnstile on the form simply did not work.
   // Raised to 10,000 for the book-mode fix: a spread INDEX and a measured step, in place
   // of a relative scrollBy that drifted a column gap per page turn, plus the crossfade the
-  // frozen tree had between spreads.
-  'post.js': 10_000,
+  // frozen tree had between spreads. Raised to 11,000 for comment sign-in: an identity
+  // strip, the second fetch that fills it, and a sign-out. That cost is paid by every
+  // reader of every post, including the ones who will never sign in, which is why it is
+  // written down here rather than absorbed.
+  'post.js': 11_000,
   // /login only, and NOT loaded with core.js: the sign-in page carries no beacon, no
   // search overlay and no listing controls, so it pays for the reveal toggle, the caps-lock
   // warning and the one-time-code paste, and nothing else.

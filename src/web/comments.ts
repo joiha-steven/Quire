@@ -7,15 +7,15 @@
 // cached HTML (Invariant 1); comments are fetched separately so a new one appears without
 // anything having to invalidate the page it is on.
 //
-// PARITY EXCEPTION, deliberate: the frozen tree had two identity paths. A commenter signed
-// in with Google was TRUSTED — name and email came from the session and Turnstile was
-// skipped. ADR 0007 removes Google sign-in from 2.0, so only the manual path survives:
-// name, a valid email, and Turnstile when the owner has it on. Nothing is lost for a
-// reader who never signed in, which was almost all of them; a reader who did now fills in
-// two fields. Recorded in docs/07-parity.md.
+// Two identity paths, as the frozen tree had (ADR 0013 restores the second one). A reader
+// signed in with Google is TRUSTED: name and address come from the cookie, and Turnstile is
+// skipped because Google already established there is a person there. Everyone else fills
+// in a name and a valid address, and passes Turnstile when the owner has it on.
 
 import type { Context } from 'hono'
+import { getCookie } from 'hono/cookie'
 import { addComment, getCommentTree, CommentInputError, MAX_COMMENT_LEN } from '@/comments/comments'
+import { COMMENTER_COOKIE, readCommenter } from '@/comments/commenter'
 import { notifyReply } from '@/comments/comment-notify'
 import { getCommentEnv } from '@/comments/comment-env'
 import { verifyTurnstile } from '@/auth/turnstile'
@@ -77,23 +77,37 @@ export async function handleCommentsPost(c: Context): Promise<Response> {
   const post = await getPost(postSlug)
   if (!post || !isPublicallyVisible(post.status, post.date)) return fail(c, 'Post not found', 404)
 
-  const name = typeof body.name === 'string' ? body.name.trim() : ''
-  const email = typeof body.email === 'string' ? body.email.trim() : ''
-  const website = cleanWebsite(body.website)
-  if (!name || name.length > 80) return fail(c, 'A name (under 80 chars) is required', 400)
-  if (!EMAIL_RE.test(email) || email.length > 120) return fail(c, 'A valid email is required', 400)
+  // The cookie is only an identity while the owner still offers the feature. Turning
+  // `googleAuth` off has to stop trusting the cookies already issued under it, or the
+  // switch means nothing until each one expires.
+  const signedIn = comments.googleAuth ? readCommenter(getCookie(c, COMMENTER_COOKIE)) : null
 
-  const { turnstileConfigured } = await getCommentEnv()
-  if (comments.turnstile && turnstileConfigured) {
-    if (!(await verifyTurnstile(turnstileToken, ip))) {
-      return fail(c, 'Verification failed — please try again', 400)
+  let name: string
+  let email: string
+  let website = ''
+  if (signedIn) {
+    // Nothing from the body. The point of signing in is that the identity is Google's
+    // answer, not the poster's claim, and reading either field here would hand it back.
+    ;({ name, email } = signedIn)
+  } else {
+    name = typeof body.name === 'string' ? body.name.trim() : ''
+    email = typeof body.email === 'string' ? body.email.trim() : ''
+    website = cleanWebsite(body.website)
+    if (!name || name.length > 80) return fail(c, 'A name (under 80 chars) is required', 400)
+    if (!EMAIL_RE.test(email) || email.length > 120) return fail(c, 'A valid email is required', 400)
+
+    const { turnstileConfigured } = await getCommentEnv()
+    if (comments.turnstile && turnstileConfigured) {
+      if (!(await verifyTurnstile(turnstileToken, ip))) {
+        return fail(c, 'Verification failed — please try again', 400)
+      }
     }
   }
 
   let created
   try {
     created = await addComment({
-      postSlug, parentId, name, email, website, provider: 'manual',
+      postSlug, parentId, name, email, website, provider: signedIn ? 'google' : 'manual',
       content, ip: ip === 'unknown' ? '' : ip, country,
     })
   } catch (error) {

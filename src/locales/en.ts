@@ -97,6 +97,7 @@ const en = {
   commentSignInGoogle: 'Sign in with Google',
   commentAs: 'Commenting as',
   commentSignOut: 'Sign out',
+  commentSignInError: 'Could not sign you in. Please try again, or comment with your name and email.',
 } satisfies Dict
 
 export default en

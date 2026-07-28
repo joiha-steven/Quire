@@ -18,8 +18,10 @@
 -- queues behind a post save and the precious file stays small.
 
 -- ----- migration ledger ------------------------------------------------------
--- Starts EMPTY. The Postgres migrations are not reused: every instance arrives through
--- `import-v1`, which targets this schema directly. There is no Quire 2.0 in the wild.
+-- The Postgres migrations are not reused; this ledger started empty because every instance
+-- arrived through `import-v1`, which targets this schema directly. There IS a Quire 2.0 in
+-- the wild now, so steps that move an existing database to the shape below live in
+-- `migrations.sql` and are named here as they are applied.
 create table if not exists schema_migrations (
   name       text primary key,
   applied_at integer not null
@@ -223,6 +225,8 @@ create table if not exists integration_keys (
   turnstile_secret_key text,
   cloudflare_api_token text,
   cloudflare_zone_id   text,
+  google_client_id     text,   -- comment sign-in; public half, still pasted by the owner
+  google_client_secret text,
   smtp_host            text,
   smtp_port            integer,
   smtp_user            text,
