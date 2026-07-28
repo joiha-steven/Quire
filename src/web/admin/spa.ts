@@ -105,7 +105,14 @@ export function adminShell(settings: SiteSettings): string {
 <link rel="stylesheet" href="${STYLES}">
 <style>${adminStyles(settings)}</style>
 </head>
-<body class="bg-neutral-100 dark:bg-neutral-950">
+<!-- The base text colour belongs HERE, with the background it has to be legible on.
+     Without it every element that does not name its own \`text-neutral-*\` inherits the
+     browser default, which is pure black: fine on a light page, invisible on a dark one.
+     That was the whole of "the logo and the post titles are pitch black in dark mode" -
+     the sidebar wordmark and the title links in the tables set no colour, and there was
+     no floor for them to fall back to. A default at the root fixes the class, not the
+     three places that happened to be noticed. -->
+<body class="bg-neutral-100 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
 <div id="admin"></div>
 <script type="module" src="${ENTRY}"></script>
 </body>
