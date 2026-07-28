@@ -1,5 +1,71 @@
 # CHANGELOG
 
+## 2026-07-29 — Quire 2.0 beta (v2.0.0-beta.1)
+
+The first tagged 2.0. The rewrite has been serving `manhhung.me` since 2026-07-28; this is
+the point at which the two features it shipped WITHOUT are in, the last of the port's quiet
+losses are found, and the version stops being `2.0.0-dev`.
+
+**Beta and not 2.0.0**, for one honest reason: it has run one site for one owner for a
+little over a day. Nothing is known to be broken. Nothing has been proven by anyone else
+either.
+
+### The two dead controls are alive
+
+- **Google sign-in for commenters** ([ADR 0013](docs/decisions/0013-google-sign-in-for-commenters.md)).
+  The toggle sat in Settings controlling nothing, and the parity note recorded the removal
+  citing ADR 0007 — which is about the OWNER'S sign-in and says nothing about readers. A
+  commenter is now a signed `__Host-` cookie rather than a session row; the identity comes
+  from the id_token's claims (`aud`, `iss`, `exp`, `email_verified`) and the request body is
+  ignored. Client id and secret are entered in the admin.
+- **Scheduled backups** now write snapshots to `BACKUP_DIR` from the cron tick, listed,
+  downloadable and deletable in the admin, retention by count. Due-ness is read from the
+  newest file on disk, so there is no state to go stale. There is deliberately no restore
+  button: restoring replaces database files the process holds open.
+
+### Found by measuring, not by reading
+
+Each of these looked correct in the source.
+
+- **Prerender on hover.** `docs/performance.md` described Speculation Rules as shipping and
+  the spec asked for them; neither was true. What the port DID carry over was
+  `whenActivated`, the guard that exists only because a prerendered page runs its JS early.
+  Now shipped as a `Speculation-Rules` header rather than an inline script, so the public
+  site still ships none and the CSP keeps refusing `unsafe-inline`.
+- **Typography.** A related-post title had no size rule at all and fell back to the body
+  size. `--type-scale` was spelled per rule, so book mode enlarged the prose and left
+  figcaptions, tags and the comment thread behind. The comment thread had lost
+  `font-family: var(--font-reading)` and was rendering in the chrome font. Nine literal
+  sizes sat in a sheet whose own header forbids them — `bun run check:type` now fails the
+  build on any of it.
+- **The series card** had lost the link to its own `/series/<slug>` page (which nothing on
+  the site reached), the "part N of M" line, and its position above the article. All three
+  were restored from data the port was already carrying.
+- **The admin dashboard** reported `PostgreSQL · online` on a SQLite install, and its
+  version named no build. It now shows the commit and links to it.
+
+### Also
+
+- Series in the sidebar, under the categories, with counts. `features.sidebarSeries`.
+- Turnstile and Google sign-in moved to **Settings → Connections**, toggle and keys
+  together. The split is what let `googleAuth` stay on for weeks with nothing behind it.
+- A dark-mode logo can be uploaded; both marks ship and CSS picks, because the page cache is
+  keyed by URL alone.
+- The admin's dark mode works: `@custom-variant dark` was missing, and under it a `<body>`
+  with a background and no text colour.
+- First schema migration mechanism. `schema.sql` states the final shape; `migrations.sql`
+  gets an existing database there.
+- `scripts/ops/quire2-backup.sh` no longer names one machine's paths, bucket and webhook.
+
+### Known gaps
+
+- Numbered pagination is prev/next only; the palette switcher and grid-view thumbnails were
+  not ported. Full list in `state/TASKS.md`.
+- CI is red: the workflow still runs `npm ci` against a repository that has had no
+  `package-lock.json` since the cutover. The fix is written and needs a token with
+  `workflow` scope to land.
+- No in-app restore, by design. See `docs/backups.md`.
+
 ## 2026-07-29 — Quire 2.0: one process, two SQLite files, no infrastructure
 
 **The whole thing was rewritten and `manhhung.me` has been serving it since 2026-07-28.**
