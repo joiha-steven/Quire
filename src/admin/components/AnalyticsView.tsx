@@ -116,27 +116,33 @@ export function AnalyticsView({ data, range, titles }: { data: AnalyticsSummary;
           {/* Top pages — by title where known, the bare path otherwise. Each row
               links to that page's drill-down. */}
           <TableFrame>
+            {/* `w-full` on the title column and `w-px` on the four numbers, which is how an
+                auto-layout table is told where the slack goes. Without it the numbers took
+                a quarter of the table each to hold three characters and the titles were
+                truncated at 206px: measured 1294px wide, 8 of 10 titles cut, 214-229px of
+                nothing in every numeric column. `max-w-0` alone collapses the column it is
+                on, so it needs `w-full` beside it to mean "take the rest, then truncate". */}
             <thead className={THEAD}>
               <tr>
-                <th className="px-4 py-2.5 font-medium">{t.analyticsColPage}</th>
-                <th className="px-4 py-2.5 text-right font-medium">{t.analyticsViews}</th>
-                <th className="px-4 py-2.5 text-right font-medium">{t.analyticsVisitors}</th>
-                <th className="px-4 py-2.5 text-right font-medium">{t.analyticsColTime}</th>
-                <th className="px-4 py-2.5 text-right font-medium">{t.analyticsColDepth}</th>
+                <th className="w-full px-4 py-2.5 font-medium">{t.analyticsColPage}</th>
+                <th className="w-px px-4 py-2.5 text-right font-medium">{t.analyticsViews}</th>
+                <th className="w-px px-4 py-2.5 text-right font-medium">{t.analyticsVisitors}</th>
+                <th className="w-px px-4 py-2.5 text-right font-medium">{t.analyticsColTime}</th>
+                <th className="w-px px-4 py-2.5 text-right font-medium">{t.analyticsColDepth}</th>
               </tr>
             </thead>
             <tbody>
               {data.topPages.map((p) => (
                 <tr key={p.path} className={TROW}>
-                  <td className="max-w-0 px-4 py-2.5">
+                  <td className="w-full max-w-0 px-4 py-2.5">
                     <Link href={`/admin/analytics?path=${encodeURIComponent(p.path)}&range=${range}`} className="block truncate text-neutral-700 hover:underline dark:text-neutral-200" title={p.path}>
                       {titles[p.path] ?? p.path}
                     </Link>
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-neutral-600 dark:text-neutral-300">{p.views.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-neutral-600 dark:text-neutral-300">{p.visitors.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-neutral-500 dark:text-neutral-400">{formatDuration(p.avgDwellMs)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-neutral-500 dark:text-neutral-400">{p.avgDepth}%</td>
+                  <td className="w-px px-4 py-2.5 text-right tabular-nums whitespace-nowrap text-neutral-600 dark:text-neutral-300">{p.views.toLocaleString()}</td>
+                  <td className="w-px px-4 py-2.5 text-right tabular-nums whitespace-nowrap text-neutral-600 dark:text-neutral-300">{p.visitors.toLocaleString()}</td>
+                  <td className="w-px px-4 py-2.5 text-right tabular-nums whitespace-nowrap text-neutral-500 dark:text-neutral-400">{formatDuration(p.avgDwellMs)}</td>
+                  <td className="w-px px-4 py-2.5 text-right tabular-nums whitespace-nowrap text-neutral-500 dark:text-neutral-400">{p.avgDepth}%</td>
                 </tr>
               ))}
             </tbody>

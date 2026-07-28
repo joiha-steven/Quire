@@ -8,6 +8,15 @@
 @import "tailwindcss" source(none);
 @source "../../src/admin";
 
+/* Tailwind v4 compiles `dark:` to `@media (prefers-color-scheme: dark)` unless told
+   otherwise. This admin does NOT follow the OS: `ThemeProvider` toggles a `.dark` CLASS on
+   <html> and offers light / dark / system / by-time, exactly as the public site does. With
+   the default variant those 668 `dark:` utilities all landed in one media block, so
+   choosing "Dark" repainted the canvas and precisely three other things while every card,
+   border, input and label stayed light, and an owner whose OS was dark got the dark admin
+   no matter which setting they picked. The class has to be the switch. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* The tokens the admin borrows from the public sheet. The editor renders `.prose`, so it
    needs the same reading face and the same meta colour the article page uses; everything
    else in the admin is on the neutral scale by design. */
