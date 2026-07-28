@@ -614,6 +614,8 @@ const vi = {
   navCollapse: 'Thu gọn thanh bên',
   navExpand: 'Mở rộng thanh bên',
   authSignIn: 'Đăng nhập',
+  authSignInLede: 'Trang quản trị của {site}.',
+  authBackTo: 'Về {site}',
   authUsername: 'Tên đăng nhập',
   authPassword: 'Mật khẩu',
   authShowPassword: 'Hiện mật khẩu',

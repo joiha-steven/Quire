@@ -614,6 +614,8 @@ const de = {
   navCollapse: 'Seitenleiste einklappen',
   navExpand: 'Seitenleiste ausklappen',
   authSignIn: 'Anmelden',
+  authSignInLede: 'Die Verwaltung für {site}.',
+  authBackTo: 'Zurück zu {site}',
   authUsername: 'Benutzername',
   authPassword: 'Passwort',
   authShowPassword: 'Passwort anzeigen',

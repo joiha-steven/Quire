@@ -5,15 +5,24 @@
 // one island (`login.js`) adds the password visibility toggle and the caps-lock warning,
 // which are conveniences, not the mechanism.
 //
-// "Looks trustworthy" is the brief (06-auth.md), and the details are the point: the site's
-// own masthead, correct `autocomplete` attributes so a password manager fills it, and an
-// error that never says which half was wrong.
+// "Looks trustworthy" is the brief (06-auth.md), and the details are the point: correct
+// `autocomplete` attributes so a password manager fills it, and an error that never says
+// which half was wrong.
+//
+// The masthead is the QUIRE mark, not the blog's logo — the owner's call after seeing the
+// page, and the reasoning is in `web/brand.ts`. The site is still named, in the sentence
+// under the heading and in the way back at the bottom, which is where it belongs: this
+// page is the software, and the blog is what it lets you in to.
+//
+// It does NOT load the public stylesheet. That sheet is written for articles, and one of
+// its rules (`main{flex:1}`) reached the card and stretched it to the height of the
+// viewport. See `login.css.ts`.
 
 import type { SiteSettings } from '@/types'
 import { adminT } from '@/i18n/admin-i18n'
 import { renderDocument, pageStyles } from '@/web/layout'
-import { PUBLIC_CSS } from '@/web/public.css'
 import { LOGIN_CSS } from '@/web/login.css'
+import { quireLockup } from '@/web/brand'
 import { scriptTag } from '@/web/assets'
 
 const escapeHtml = (s: string) =>
@@ -25,26 +34,33 @@ const fill = (template: string, values: Record<string, string | number>): string
   template.replace(/\{(\w+)\}/g, (whole, key: string) =>
     key in values ? String(values[key]) : whole)
 
-/** The masthead. A sign-in page that does not look like its site is what phishing gets wrong. */
-function masthead(settings: SiteSettings): string {
-  const logo = settings.logoUrl
-    ? `<img src="${escapeAttr(settings.logoUrl)}" alt="" width="40" height="40">`
-    : ''
-  return `<a class="login-brand" href="/">${logo}<span>${escapeHtml(settings.title)}</span></a>`
-}
-
 function shell(settings: SiteSettings, title: string, body: string): string {
+  const s = adminT(settings.language)
+  const back = `<a class="login-back" href="/">${escapeHtml(fill(s.authBackTo, { site: settings.title }))}</a>`
   return renderDocument(
     settings,
     // `noindex`: a sign-in page in search results is a phishing target and useless to a
     // reader. The public pages want the opposite, which is why this is set here and not
     // in the shared layout.
     { title: `${title} · ${settings.title}`, extra: '<meta name="robots" content="noindex">' },
-    `${pageStyles(settings, PUBLIC_CSS)}\n${LOGIN_CSS}`,
-    `<div class="login-wrap">${masthead(settings)}<main class="login-card">${body}</main></div>`,
+    // An empty base sheet: `pageStyles` still supplies the palette, so the door matches the
+    // house, and LOGIN_CSS supplies everything else.
+    `${pageStyles(settings, '')}\n${LOGIN_CSS}`,
+    `<div class="login-wrap">${quireLockup()}<main class="login-card">${body}</main>${back}</div>`,
     { scripts: scriptTag('login') },
   )
 }
+
+/** Lucide's eye / eye-off, drawn in the same idiom as the mark. */
+const EYE = '<svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+  + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  + '<path d="M2.1 12S5.7 5.5 12 5.5 21.9 12 21.9 12 18.3 18.5 12 18.5 2.1 12 2.1 12Z"/>'
+  + '<circle cx="12" cy="12" r="3"/></svg>'
+  + '<svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+  + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  + '<path d="M10.7 6.2A9.9 9.9 0 0 1 12 6.1c6.3 0 9.9 6.5 9.9 6.5a17.7 17.7 0 0 1-3 3.9"/>'
+  + '<path d="M6.6 7.6A17.6 17.6 0 0 0 2.1 12.6S5.7 19.1 12 19.1a9.6 9.6 0 0 0 4.1-.9"/>'
+  + '<path d="M10 10.6a2.9 2.9 0 0 0 4.1 4.1"/><path d="M3 3l18 18"/></svg>'
 
 /** An inline error, next to the field it belongs to rather than floating at the top. */
 const errorBox = (message: string | undefined): string =>
@@ -58,6 +74,7 @@ export function passwordScreen(
   const next = opts.next === undefined ? '' : `<input type="hidden" name="next" value="${escapeAttr(opts.next)}">`
   return shell(settings, s.authSignIn, `
 <h1>${escapeHtml(s.authSignIn)}</h1>
+<p class="login-lede">${escapeHtml(fill(s.authSignInLede, { site: settings.title }))}</p>
 ${errorBox(opts.error)}
 <form method="post" action="/api/auth/login" class="login-form">
 ${next}
@@ -71,7 +88,7 @@ ${next}
   <button type="button" data-reveal
           data-show="${escapeAttr(s.authShowPassword)}"
           data-hide="${escapeAttr(s.authHidePassword)}"
-          aria-label="${escapeAttr(s.authShowPassword)}">👁</button>
+          aria-label="${escapeAttr(s.authShowPassword)}">${EYE}</button>
 </div>
 <p class="login-caps" data-caps hidden>${escapeHtml(s.authCapsLock)}</p>
 

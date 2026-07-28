@@ -16,6 +16,8 @@ function reveal(): void {
     input.type = nowVisible ? 'text' : 'password'
     // The label describes the ACTION, so it is the opposite of the current state.
     button.setAttribute('aria-label', nowVisible ? button.dataset.hide ?? '' : button.dataset.show ?? '')
+    // The icon follows the same rule; the sheet decides which glyph that means.
+    button.toggleAttribute('data-shown', nowVisible)
     // Focus returns to the field with the caret where it was. Without this the button
     // keeps focus and the next keystroke goes nowhere.
     const at = input.value.length

@@ -614,6 +614,8 @@ const en = {
   navCollapse: 'Collapse sidebar',
   navExpand: 'Expand sidebar',
   authSignIn: 'Sign in',
+  authSignInLede: 'The admin for {site}.',
+  authBackTo: 'Back to {site}',
   authUsername: 'Username',
   authPassword: 'Password',
   authShowPassword: 'Show password',

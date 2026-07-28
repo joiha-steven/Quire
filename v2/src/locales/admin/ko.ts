@@ -614,6 +614,8 @@ const ko = {
   navCollapse: '사이드바 접기',
   navExpand: '사이드바 펼치기',
   authSignIn: '로그인',
+  authSignInLede: '{site} 관리자 페이지입니다.',
+  authBackTo: '{site}(으)로 돌아가기',
   authUsername: '사용자 이름',
   authPassword: '비밀번호',
   authShowPassword: '비밀번호 표시',

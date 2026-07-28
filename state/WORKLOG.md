@@ -3,6 +3,34 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — the sign-in page, rebuilt around the Quire mark
+
+The owner opened `/login` and called it ugly. It was, and the reason was structural rather
+than aesthetic: the page loaded the whole public stylesheet, and `main{flex:1}` in that
+sheet applies to any main element. The card is a main. It stretched to the full viewport
+and a four-field form sat in a 780px-tall empty box. Nobody had looked at this page since
+it was written, which is the same failure the screenshot script was added to prevent — it
+was only ever pointed at the pages someone thought to check.
+
+The fix is that the login document no longer loads the public sheet at all. It keeps the
+`--c-*` palette, so it follows the blog's colours and dark mode, and states everything else
+itself in absolute units: the reading typography is tuned for long-form text by a reader
+who can enlarge it, and a form inheriting a 22px reading size is how this one came to look
+like a terminal. The sheet is appended after the owner's custom CSS on purpose — a blog's
+custom CSS may not distort the page you have to get through to fix it.
+
+**The masthead is now the Quire mark, not the blog's logo**, at the owner's request. That
+reverses the phishing argument in `06-auth.md`, and the reversal holds: no reader is ever
+sent to `/login`, so the page addresses one person, and the door should look the same on
+every install. The blog is still named in words, above and below the card. The mark is an
+inline SVG of what the word means — a gathering of folded sheets.
+
+Also fixed while in there: the visibility toggle rendered as tofu on Linux (it was an
+emoji, now two SVGs that flip with the field), the autofocus ring was a solid red
+rectangle, the 32-character enrolment key broke mid-group across lines, and the 6-digit
+code field is now set like a code. Checked in a browser at six states, two palettes and two
+widths, which is the whole of what "looks trustworthy" comes down to.
+
 ## 2026-07-28 — M3 done: the admin exists, and three things that were never wired
 
 **The admin interface was at zero and is now complete.** 68 components and 5 UI primitives

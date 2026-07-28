@@ -173,8 +173,18 @@ The brief is "looks trustworthy", so the details are the point.
 
 **`/login`**, a real page on the site, not a framework-generated route.
 
-- Site logo and name at the top, same masthead as the blog. A sign-in page that does not
-  look like the site it belongs to is the exact thing phishing pages get wrong.
+- **The Quire mark at the top, not the blog's logo.** This reverses what this document
+  originally specified ("the site's own masthead", on the phishing argument), changed by
+  the owner on 2026-07-28 after seeing the built page. The phishing argument does not
+  reach here: no reader is ever sent to `/login`, so the only person it addresses is the
+  one signing in to Quire, and the door should look the same on every install. The blog is
+  still named in words — in the line under the heading and in the way back at the bottom.
+- **It does not load the public stylesheet.** That sheet is written for articles, and one
+  of its rules (`main{flex:1}`) reached the card and stretched it to the height of the
+  viewport. `web/login.css.ts` is self-contained apart from the `--c-*` palette tokens,
+  which it still shares so the page follows the blog's colours and dark mode. It is
+  appended after the owner's custom CSS: a blog's custom CSS may not distort the page you
+  have to get through to fix it.
 - Two fields, labelled, with correct autocomplete attributes: `autocomplete="username"`
   and `autocomplete="current-password"`. Password managers filling correctly is a real
   trust signal and costs one attribute.

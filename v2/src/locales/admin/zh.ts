@@ -614,6 +614,8 @@ const zh = {
   navCollapse: '收起侧边栏',
   navExpand: '展开侧边栏',
   authSignIn: '登录',
+  authSignInLede: '{site} 的管理后台。',
+  authBackTo: '返回 {site}',
   authUsername: '用户名',
   authPassword: '密码',
   authShowPassword: '显示密码',

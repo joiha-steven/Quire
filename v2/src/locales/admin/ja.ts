@@ -614,6 +614,8 @@ const ja = {
   navCollapse: 'サイドバーを折りたたむ',
   navExpand: 'サイドバーを展開',
   authSignIn: 'サインイン',
+  authSignInLede: '{site} の管理画面です。',
+  authBackTo: '{site} に戻る',
   authUsername: 'ユーザー名',
   authPassword: 'パスワード',
   authShowPassword: 'パスワードを表示',
