@@ -13,7 +13,12 @@ export const PROSE_CSS = `
 /* The body's rhythm is ONE rule: every sibling gets the same lead, and the headings then
    buy themselves a little more. Margins were bottom-side and fixed in rem here, which does
    not scale with the reader's type size and left headings floating between paragraphs. */
-.prose{font-size:calc(var(--fs-body) * var(--type-scale, 1));line-height:var(--lh-body);
+/* The reading face belongs HERE, not in the public sheet, because the editor is a .prose
+   surface too and what you type has to be set in the face it will be published in. It lived
+   in public.css.ts, so the writing surface fell back to the chrome font and a post drafted
+   in JetBrains Mono was published in Literata. */
+.prose{font-family:var(--font-reading);
+  font-size:calc(var(--fs-body) * var(--type-scale, 1));line-height:var(--lh-body);
   letter-spacing:var(--ls-body);color:var(--c-text)}
 .prose > * + *{margin-top:1.4em}
 .prose h1,.prose h2,.prose h3,.prose h4,.prose h5{color:var(--c-heading);font-weight:600;

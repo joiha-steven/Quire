@@ -253,6 +253,14 @@ describe('the admin shell carries the owner settings', () => {
     expect(html).toContain('html[data-chrome-font="jetbrains-mono"] body')
   })
 
+  // The writing surface is a `.prose` surface, and what you type has to be set in the face
+  // it will be published in. The rule lived in the PUBLIC sheet, which the admin does not
+  // load, so a post drafted in the chrome font was published in the reading font.
+  it('sets the writing surface in the reading face', async () => {
+    const css = await (await app.request('/admin/assets/admin.css')).text()
+    expect(css).toContain('.prose{font-family:var(--font-reading)')
+  })
+
   it('publishes the motion switch the owner set', async () => {
     await saveSettings({ motion: { enabled: false, typewriter: false } })
     const html = await (await app.request('/admin', { headers: { cookie } })).text()

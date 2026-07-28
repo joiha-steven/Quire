@@ -58,10 +58,10 @@ header.site .title{font-family:var(--font-sans);font-weight:600;color:var(--c-he
 header.site .logo{display:block;height:auto}
 header.site .tagline{color:var(--c-meta);font-size:var(--fs-small);margin:.75rem 0 0}
 
-/* The body is the reader's OWN words, so it takes the reading face. There is deliberately
-   no "article h1" rule: an article IS also the listing card, and a bare element selector
-   here silently restyled every card title. Sizes come from the type-role classes. */
-.prose{font-family:var(--font-reading)}
+/* The reading face for .prose is in prose.css.ts, with the rest of the .prose rules, so the
+   editor gets it too. There is deliberately no "article h1" rule: an article IS also the
+   listing card, and a bare element selector here silently restyled every card title. Sizes
+   come from the type-role classes. */
 article > header h1{color:var(--c-heading);margin:0}
 article > header .t-small{margin:0}
 /* Standfirst: the excerpt, so a long read opens on a sentence rather than a wall. */
