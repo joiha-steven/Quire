@@ -29,6 +29,17 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       over ([ADR 0012](../docs/decisions/0012-flatten-repo-after-cutover.md)). Repoint each
       citation at the 2.0 module. Mechanical, but it needs the code open beside it, and it
       pairs naturally with the `features.md` split below.
+- [ ] **Decide whether 45.8 KB of inlined CSS is the right trade.** Every page carries the
+      whole stylesheet inline: 13.8 KB gzipped of a 29.6 KB page, re-sent on every
+      navigation and never cached. It buys one less round trip on a cold visit. Nothing in
+      `docs/` says this was decided, and it is the largest single lever on repeat reads.
+      Measured 2026-07-29 (`state/audits/2026-07-29-post-cutover.md`).
+- [ ] **The app sends no `content-encoding`.** nginx gzips in front of it here, so the live
+      site is fine, but a self-hoster behind something that does not compress serves 104 KB
+      of HTML per page with no warning. Either compress in the app or say so in
+      `docs/self-host.md`.
+- [ ] **`--font-mono` is referenced in `prose.css.ts` and never defined.** Code always
+      falls through to `ui-monospace`. Define it or drop the reference.
 - [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
       2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
       `@img/sharp-<platform>` native module, so the compiled binary throws on the first

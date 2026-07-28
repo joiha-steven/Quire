@@ -6,6 +6,37 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+## 2026-07-29 — the Go plan is gone, and an audit found dark mode broken in production
+
+Removed `attic/`. [ADR 0004](../docs/decisions/0004-rewrite-in-go-on-sqlite.md) and
+[0005](../docs/decisions/0005-rewrite-in-bun-hono-sqlite.md) already carry the decision,
+the reversal and the salvage record, which is the part that stops the argument being
+re-run; the specs described a program nobody will ever build. Amendment appended to 0012.
+
+Then a first pass over 2.0 — full report in
+[`audits/2026-07-29-post-cutover.md`](audits/2026-07-29-post-cutover.md). Three fixes,
+all of them measured with headless Chromium rather than read out of source.
+
+**The bundles shared a global scope.** Built as ESM, injected as plain `<script src defer>`
+— a classic script, so every top-level declaration is global. `core.js` and `post.js` both
+declared a helper the minifier named `h`, post.js loaded second, and clicking Dark called
+the toggle button as if it were a function. The theme was written to localStorage first, so
+it looked fine after a reload, which is why it survived cutover. `format: 'iife'`, 11 bytes
+a bundle. Nothing could have caught it: every test in `src/assets/js` imports the
+TypeScript, and the shipped artifact had no test. It has one now.
+
+**Form controls did not inherit the page font** — the second Tailwind-preflight reset to go
+missing, one day after the first. "Sao chép" and "Lên đầu trang" were painting in the UA
+font at 12px/normal on a site whose rule is one typeface and no hardcoded sizes.
+
+**Admin tables were clipped on a phone.** The card is `overflow-hidden` for its corners and
+that was the only box, so the analytics table's last column sat past the viewport edge with
+nothing to scroll. Fixed in the shared `TableFrame` and the four components that hand-roll
+the same wrapper.
+
+The admin was driven on a throwaway instance built from a `VACUUM INTO` snapshot, so no
+admin request touched production. 925 tests.
+
 ## 2026-07-28 — the repository now describes the program that is actually running
 
 Cutover inverted every default in this repository and left them inverted. `src/` meant the
