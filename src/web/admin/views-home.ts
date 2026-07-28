@@ -6,6 +6,7 @@
 
 import { getActivity } from '@/server/activity'
 import { lastRunAt } from '@/server/backup'
+import { buildSha } from '@/server/build-info'
 import { getAnalytics, getViewTotals } from '@/analytics/summary'
 import { countsByPosts } from '@/comments/comments'
 import { getIndex } from '@/content/posts'
@@ -120,6 +121,8 @@ export async function dashboardView(): Promise<Record<string, unknown>> {
     recent,
     activityEnabled: activityOn,
     version: (pkg as { version: string }).version,
+    // Null on a machine the deploy did not stamp. The admin then shows the version alone.
+    commit: buildSha(),
     system,
     dashboard: {
       traffic: {

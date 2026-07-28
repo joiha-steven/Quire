@@ -7,6 +7,7 @@ import { formatBytes, formatDateTimeShort } from '@/utils'
 import { CARD, PageHeader, StatCard } from './kit'
 import { DashboardWidgets, type DashboardData } from './DashboardWidgets'
 import { useAdminT } from './I18nProvider'
+import { REPO } from './help-kit'
 
 type Taxo = { name: string; count: number }
 type SourceRow = { label: string; visitors: number }
@@ -40,22 +41,52 @@ type Props = {
   recent: ActivityEntry[]
   activityEnabled: boolean
   version: string
+  commit: string | null
   system: SystemInfo
   dashboard: DashboardData
   seo: SeoHealth
   sources: TrafficSources
 }
 
+/**
+ * The build, and a way to check it.
+ *
+ * `2.0.0-dev` has named every deploy since the cutover, so the version alone cannot answer
+ * the only question this line is here for: is the running code what was just shipped. The
+ * short SHA links to that exact commit on GitHub. Absent when the deploy left no
+ * `build-sha` behind, which is a dev machine or somebody else's install.
+ */
+function BuildLabel({ version, commit }: { version: string; commit: string | null }) {
+  return (
+    <span className="text-xs text-neutral-400">
+      quireblog v{version}
+      {commit && (
+        <>
+          {' · '}
+          <a
+            href={`${REPO}/commit/${commit}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono underline hover:text-neutral-900 dark:hover:text-white"
+          >
+            {commit.slice(0, 7)}
+          </a>
+        </>
+      )}
+    </span>
+  )
+}
+
 export function Overview(props: Props) {
   const t = useAdminT()
-  const { posts, pages, comments, originals, totalBytes, recent, activityEnabled, version, system, dashboard } = props
+  const { posts, pages, comments, originals, totalBytes, recent, activityEnabled, version, commit, system, dashboard } = props
   return (
     <div className="space-y-7">
       <PageHeader
         title={t.overviewTitle}
         actions={
           <div className="flex items-center gap-3">
-            <span className="text-xs text-neutral-400">quireblog v{version}</span>
+            <BuildLabel version={version} commit={commit} />
             <Link href="/admin/editor" className="inline-flex min-h-10 items-center rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-neutral-700 dark:bg-white dark:text-neutral-900">{t.newPost}</Link>
           </div>
         }
@@ -92,7 +123,10 @@ export function Overview(props: Props) {
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-xs text-neutral-400">
-        <span>{system.dbReachable ? 'PostgreSQL · online' : 'PostgreSQL · offline'} · {system.storage}</span>
+        {/* The engine NAME comes from the server. It was the literal string 'PostgreSQL'
+            here, left behind by the port, so the dashboard of a SQLite install reported a
+            database it does not have. */}
+        <span>{system.database} · {system.dbReachable ? 'online' : 'offline'} · {system.storage}</span>
         {system.siteHref && <a href={system.siteHref} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-900 dark:hover:text-white">{t.viewSite} ↗</a>}
       </div>
     </div>
