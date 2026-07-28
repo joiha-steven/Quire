@@ -37,6 +37,7 @@ const zh = {
   relatedTitle: '相关文章',
   seriesLabel: '系列',
   seriesPartPrefix: '第',
+  seriesTitle: '系列',
   emptySeries: '该系列还没有文章。',
   previewNotice: '预览：此页面未公开，也不会被索引。',
   nlInvalid: '这似乎不是一个邮箱地址。',

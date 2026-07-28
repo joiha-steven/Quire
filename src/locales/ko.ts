@@ -37,6 +37,7 @@ const ko = {
   relatedTitle: '관련 게시물',
   seriesLabel: '시리즈',
   seriesPartPrefix: '파트',
+  seriesTitle: '시리즈',
   emptySeries: '이 시리즈에는 아직 글이 없습니다.',
   previewNotice: '미리보기: 이 페이지는 공개되지 않으며 색인되지 않습니다.',
   nlInvalid: '이메일 주소 형식이 아닙니다.',

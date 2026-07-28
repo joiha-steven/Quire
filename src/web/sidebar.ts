@@ -12,6 +12,7 @@
 import type { MenuItem, SiteSettings } from '@/types'
 import { getPublicPosts, getPublicTaxonomy } from '@/content/posts'
 import { getViewTotals } from '@/analytics/summary'
+import { getSeriesList } from '@/content/series'
 import { termSlug } from '@/content/taxonomy'
 import { listingRailCss } from '@/render/rail-css'
 import { t } from '@/i18n/i18n'
@@ -122,8 +123,13 @@ export async function renderSidebar(
   const none: Sidebar = { html: '', css: '' }
   if (!settings.features.sidebar) return none
 
-  const [{ categories, tags }, posts, viewTotals] = await Promise.all([
+  const [{ categories, tags }, posts, viewTotals, allSeries] = await Promise.all([
     getPublicTaxonomy(), getPublicPosts(), getViewTotals(),
+    // Only fetched when the block is on. A series list is its own query and the sidebar
+    // renders on every listing page.
+    settings.features.sidebarSeries
+      ? getSeriesList()
+      : Promise.resolve([] as Awaited<ReturnType<typeof getSeriesList>>),
   ])
   const titleBySlug = new Map(posts.map((p) => [p.slug, p.title]))
   const labels = t(settings.language)
@@ -143,14 +149,20 @@ export async function renderSidebar(
     .slice(0, FEATURED_MAX)
     .map((slug) => ({ href: `/${slug}`, label: titleBySlug.get(slug) ?? '' }))
 
-  if (settings.menu.length === 0 && categories.length === 0
+  if (settings.menu.length === 0 && categories.length === 0 && allSeries.length === 0
     && mostViewed.length === 0 && featured.length === 0 && tags.length === 0) return none
 
   const discovery = indexBlock(labels.mostViewedTitle, mostViewed, activeHref)
     + indexBlock(labels.featuredTitle, featured, activeHref)
+  // Categories, then series, then tags. A series is a reading ORDER rather than a subject,
+  // so it sits below the subjects and above the tags, which are the loosest of the three.
+  // It carries a count for the same reason a category does: how long is this.
   const nav = termCloud(labels.categoriesTitle,
     categories.map((c) => ({ href: `/category/${termSlug(c.name)}`, label: c.name, count: c.count })),
     {}, activeHref)
+    + termCloud(labels.seriesTitle,
+      allSeries.map((x) => ({ href: `/series/${x.slug}`, label: x.name, count: x.count })),
+      {}, activeHref)
     + termCloud(labels.tagsTitle,
       tags.map((tag) => ({ href: `/tag/${termSlug(tag.name)}`, label: tag.name })),
       { lower: true }, activeHref)

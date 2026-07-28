@@ -1,23 +1,21 @@
-// Controlled comment-system toggles. Parent owns state + save. The master switch
-// is always shown; the integration toggles (Turnstile, Google login)
-// appear once comments are on. Each integration is only EFFECTIVE when its env
-// keys exist (`env`); the row shows a "needs key" badge otherwise.
+// The comment MASTER switch, and nothing else.
+//
+// Turnstile and Google sign-in moved to Settings -> Connections, with the keys they need:
+// they are external services this site talks to, which is what that tab is for, and having
+// the toggle in one tab and its credentials in another was the arrangement that let
+// `googleAuth` sit switched on for weeks controlling nothing.
 import type { CommentSettings } from '@/types'
-import type { CommentEnv } from '@/comments/comment-env'
 import { ToggleRow } from '@/admin/ui/Switch'
 import { useAdminT } from './I18nProvider'
 import { PANEL_LIST } from './kit'
 
 type Props = {
   comments: CommentSettings
-  env: CommentEnv
   onChange: (c: CommentSettings) => void
 }
 
-export function CommentFields({ comments, env, onChange }: Props) {
+export function CommentFields({ comments, onChange }: Props) {
   const t = useAdminT()
-  // Flag a toggle whose env keys are missing (so it won't actually take effect).
-  const needsKey = (on: boolean, configured: boolean) => (on && !configured ? t.commentsNeedsKey : undefined)
   return (
     <div className={PANEL_LIST}>
       <ToggleRow
@@ -26,24 +24,6 @@ export function CommentFields({ comments, env, onChange }: Props) {
         checked={comments.enabled}
         onChange={(enabled) => onChange({ ...comments, enabled })}
       />
-      {comments.enabled && (
-        <>
-          <ToggleRow
-            label={t.commentsTurnstile}
-            desc={t.commentsTurnstileDesc}
-            badge={needsKey(comments.turnstile, env.turnstileConfigured)}
-            checked={comments.turnstile}
-            onChange={(turnstile) => onChange({ ...comments, turnstile })}
-          />
-          <ToggleRow
-            label={t.commentsGoogleAuth}
-            desc={t.commentsAuthDesc}
-            badge={needsKey(comments.googleAuth, env.googleConfigured)}
-            checked={comments.googleAuth}
-            onChange={(googleAuth) => onChange({ ...comments, googleAuth })}
-          />
-        </>
-      )}
     </div>
   )
 }

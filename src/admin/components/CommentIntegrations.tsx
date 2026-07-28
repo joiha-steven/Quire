@@ -1,14 +1,19 @@
-// Key entry for the optional comment integrations (Turnstile, Google sign-in). These
-// are SECRETS, so they have their OWN API (`/api/comments/keys` → server-only
-// `integration_keys` table), NOT the settings form. Inputs are write-to-set: a
-// blank field leaves the stored key untouched (only non-empty fields are sent).
-// Sections show only for the toggles that are on.
+// The two services the comment box talks to: Cloudflare Turnstile and Google sign-in.
+//
+// Toggle AND keys together, in Settings -> Connections. They used to be split — the
+// switches under Reading, the credentials in a panel below them — which is how
+// `googleAuth` ended up switched on for weeks with no keys behind it and nothing to say so.
+//
+// The keys are SECRETS, so they have their own API (`/api/comments/keys` → the server-only
+// `integration_keys` table), NOT the settings form. Inputs are write-to-set: a blank field
+// leaves the stored key untouched, because only non-empty fields are sent.
 import { useState } from 'react'
 import type { CommentSettings, ApiResponse } from '@/types'
 import type { CommentEnv } from '@/comments/comment-env'
+import { ToggleRow } from '@/admin/ui/Switch'
 import { useToast } from '@/admin/ui/Toast'
 import { useAdminT } from './I18nProvider'
-import { INSET } from './kit'
+import { INSET, PANEL_LIST } from './kit'
 
 const INPUT =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100'
@@ -44,14 +49,20 @@ function Help({ title, text, href, open }: { title: string; text: string; href: 
   )
 }
 
-export function CommentKeys({ comments, env }: { comments: CommentSettings; env: CommentEnv }) {
+export function CommentIntegrations(
+  { comments, env, onChange }:
+  { comments: CommentSettings; env: CommentEnv; onChange: (c: CommentSettings) => void },
+) {
   const t = useAdminT()
   const { notify } = useToast()
   const [keys, setKeys] = useState<Keys>(EMPTY)
   const [busy, setBusy] = useState(false)
-  const showTurnstile = comments.enabled && comments.turnstile
-  const showGoogle = comments.enabled && comments.googleAuth
-  if (!showTurnstile && !showGoogle) return null
+  // Shown whatever the master switch says. This tab is where the site's credentials live,
+  // and hiding them behind a toggle two tabs away is how they get lost.
+  const showTurnstile = comments.turnstile
+  const showGoogle = comments.googleAuth
+  // A toggle that is on with no key behind it does nothing, and says so here.
+  const needsKey = (on: boolean, configured: boolean) => (on && !configured ? t.commentsNeedsKey : undefined)
 
   const set = (k: keyof Keys, v: string) => setKeys((p) => ({ ...p, [k]: v }))
   // A placeholder hinting the field is already configured (so blank = keep).
@@ -80,7 +91,25 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
   }
 
   return (
-    <div className={`mt-4 space-y-3 ${INSET}`}>
+    <div className="space-y-4">
+      <div className={PANEL_LIST}>
+        <ToggleRow
+          label={t.commentsTurnstile}
+          desc={t.commentsTurnstileDesc}
+          badge={needsKey(comments.turnstile, env.turnstileConfigured)}
+          checked={comments.turnstile}
+          onChange={(turnstile) => onChange({ ...comments, turnstile })}
+        />
+        <ToggleRow
+          label={t.commentsGoogleAuth}
+          desc={t.commentsAuthDesc}
+          badge={needsKey(comments.googleAuth, env.googleConfigured)}
+          checked={comments.googleAuth}
+          onChange={(googleAuth) => onChange({ ...comments, googleAuth })}
+        />
+      </div>
+      {(showTurnstile || showGoogle) && (
+      <div className={`space-y-3 ${INSET}`}>
       {showTurnstile && (
         <div className="space-y-2">
           <Help title={t.commentsTurnstile} text={t.commentsTurnstileHelp} href={LINKS.turnstile} open={t.commentsHelpOpen} />
@@ -112,6 +141,8 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
       >
         {t.commentsKeySave}
       </button>
+      </div>
+      )}
     </div>
   )
 }

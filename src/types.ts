@@ -162,6 +162,7 @@ export type FeatureSettings = {
   progressBar: boolean // reading-progress bar on posts
   activityLog: boolean // record admin mutations to the activity log (Admin -> Log)
   sidebar: boolean // categories + tags in the left gutter of the post list
+  sidebarSeries: boolean // the series list in the sidebar, under the categories
   leadPost: boolean // first post of page 1 gets the h1 role instead of h2
   categoryLabel: boolean // category name in the meta line of cards and post headers
   deck: boolean // the excerpt shown as a standfirst under a post title

@@ -37,6 +37,7 @@ const en = {
   relatedTitle: 'Related posts',
   seriesLabel: 'Series',
   seriesPartPrefix: 'Part',
+  seriesTitle: 'Series',
   emptySeries: 'No posts in this series yet.',
   previewNotice: 'Preview: this page is not public and is not indexed.',
   nlInvalid: 'That does not look like an email address.',

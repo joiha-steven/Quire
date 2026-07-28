@@ -37,6 +37,7 @@ const vi = {
   relatedTitle: 'Bài viết liên quan',
   seriesLabel: 'Loạt bài',
   seriesPartPrefix: 'Phần',
+  seriesTitle: 'Loạt bài',
   emptySeries: 'Chưa có bài nào trong loạt này.',
   previewNotice: 'Bản xem trước: trang này không công khai và không được lập chỉ mục.',
   nlInvalid: 'Địa chỉ email không hợp lệ.',

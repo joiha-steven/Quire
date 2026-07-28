@@ -37,6 +37,7 @@ const ja = {
   relatedTitle: '関連記事',
   seriesLabel: 'シリーズ',
   seriesPartPrefix: 'パート',
+  seriesTitle: 'シリーズ',
   emptySeries: 'このシリーズにはまだ記事がありません。',
   previewNotice: 'プレビュー: このページは公開されておらず、インデックスもされません。',
   nlInvalid: 'メールアドレスの形式が正しくありません。',

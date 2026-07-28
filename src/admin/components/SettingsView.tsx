@@ -43,7 +43,7 @@ import { LayoutMenuFields } from './LayoutMenuFields'
 import { FooterField } from './FooterField'
 import { FeatureFields } from './FeatureFields'
 import { CommentFields } from './CommentFields'
-import { CommentKeys } from './CommentKeys'
+import { CommentIntegrations } from './CommentIntegrations'
 import { CloudflareFields } from './CloudflareFields'
 import { ImportFields } from './ImportFields'
 import { ExportFields } from './ExportFields'
@@ -159,8 +159,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
             />
           </Card>
           <Card title={t.cardComments}>
-            <CommentFields comments={s.comments} env={commentEnv} onChange={(comments) => update({ comments })} />
-            <CommentKeys comments={s.comments} env={commentEnv} />
+            <CommentFields comments={s.comments} onChange={(comments) => update({ comments })} />
           </Card>
         </div>
       )}
@@ -244,6 +243,13 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
         <div className={GRID}>
           <Card title={t.cardNewsletter}>
             <NewsletterFields />
+          </Card>
+          <Card title={t.cardCommentIntegrations}>
+            <CommentIntegrations
+              comments={s.comments}
+              env={commentEnv}
+              onChange={(comments) => update({ comments })}
+            />
           </Card>
           <Card title={t.cardCloudflare}>
             <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />

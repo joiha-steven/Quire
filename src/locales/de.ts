@@ -37,6 +37,7 @@ const de = {
   relatedTitle: 'Ähnliche Beiträge',
   seriesLabel: 'Serie',
   seriesPartPrefix: 'Teil',
+  seriesTitle: 'Reihen',
   emptySeries: 'Noch keine Beiträge in dieser Serie.',
   previewNotice: 'Vorschau: Diese Seite ist nicht öffentlich und wird nicht indexiert.',
   nlInvalid: 'Das sieht nicht nach einer E-Mail-Adresse aus.',

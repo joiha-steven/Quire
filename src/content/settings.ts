@@ -40,6 +40,7 @@ export const DEFAULT_FEATURES: FeatureSettings = {
   progressBar: true,
   activityLog: true,
   sidebar: true,
+  sidebarSeries: true,
   leadPost: true,
   categoryLabel: true,
   deck: true,

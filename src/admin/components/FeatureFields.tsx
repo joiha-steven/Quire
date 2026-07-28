@@ -21,6 +21,7 @@ export function FeatureFields({ features, onChange, relatedCount, onRelatedCount
     { key: 'readingTime', label: t.featReadingTime, desc: t.featReadingTimeDesc },
     { key: 'progressBar', label: t.featProgress, desc: t.featProgressDesc },
     { key: 'sidebar', label: t.featSidebar, desc: t.featSidebarDesc },
+    { key: 'sidebarSeries', label: t.featSidebarSeries, desc: t.featSidebarSeriesDesc },
     { key: 'infiniteScroll', label: t.featInfiniteScroll, desc: t.featInfiniteScrollDesc },
     { key: 'gridView', label: t.featGridView, desc: t.featGridViewDesc },
     { key: 'leadPost', label: t.featLeadPost, desc: t.featLeadPostDesc },

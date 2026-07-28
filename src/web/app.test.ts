@@ -327,3 +327,38 @@ describe('the series card', () => {
     expect(await (await get('/only')).text()).not.toContain('class="series"')
   })
 })
+
+describe('the series block in the sidebar', () => {
+  // With a category and a tag, so the ORDER of the three blocks can be asserted.
+  const inSeries = (slug: string, title: string, order: number) =>
+    savePost({ title, slug, status: 'published', date: PAST, series: 'Ten Years',
+      seriesOrder: order, categories: ['Essays'], tags: ['history'] })
+
+  it('lists each series under the categories, with a count and a link', async () => {
+    await inSeries('one', 'Part One', 1)
+    await inSeries('two', 'Part Two', 2)
+    const html = await (await get('/')).text()
+
+    expect(html).toContain('href="/series/ten-years"')
+    expect(html).toContain('Ten Years')
+    // Under the categories and above the tags: a series is a reading ORDER, not a subject.
+    const cats = html.indexOf('>Categories<')
+    const series = html.indexOf('>Series<')
+    const tags = html.indexOf('>Tags<')
+    expect(cats).toBeGreaterThan(-1)
+    expect(series).toBeGreaterThan(cats)
+    if (tags > -1) expect(tags).toBeGreaterThan(series)
+  })
+
+  it('is gone when the owner turns it off, and the rest of the rail stays', async () => {
+    await inSeries('one', 'Part One', 1)
+    const on = await getSettings()
+    await saveSettings({ features: { ...on.features, sidebarSeries: false } })
+    clearCache()
+    const html = await (await get('/')).text()
+    expect(html).not.toContain('href="/series/ten-years"')
+    expect(html).toContain('rail')
+    await saveSettings({ features: { ...on.features, sidebarSeries: true } })
+    clearCache()
+  })
+})

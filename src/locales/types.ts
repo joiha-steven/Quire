@@ -38,6 +38,7 @@ export type Dict = {
   relatedTitle: string
   seriesLabel: string
   seriesPartPrefix: string
+  seriesTitle: string
   emptySeries: string
   previewNotice: string
   nlInvalid: string
@@ -501,6 +502,8 @@ export type AdminStrings = {
   featProgressDesc: string
   featSidebar: string
   featSidebarDesc: string
+  featSidebarSeries: string
+  featSidebarSeriesDesc: string
   featInfiniteScroll: string
   featInfiniteScrollDesc: string
   featGridView: string
@@ -630,6 +633,7 @@ export type AdminStrings = {
   // MCP server (Admin → Settings → Advanced)
   cardMcp: string
   cardCloudflare: string
+  cardCommentIntegrations: string
   cfHelp: string
   cfZoneId: string
   cfToken: string
