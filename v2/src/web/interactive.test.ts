@@ -11,6 +11,7 @@ import { savePost } from '@/content/posts'
 import { getSettings, saveSettings } from '@/content/settings'
 import { clearCache } from '@/server/cache'
 import { createApp } from '@/web/app'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-interactive'
 freshDatabase(DIR)
@@ -66,7 +67,7 @@ describe('POST /api/comments', () => {
     await publish()
     const res = await post('/api/comments', { postSlug: 'a-post', ...COMMENT }, '203.0.113.11')
     expect(res.status).toBe(200)
-    const { comment } = await res.json() as { comment: Record<string, unknown> }
+    const { comment } = await payload<{ comment: Record<string, unknown> }>(res)
     expect(comment.name).toBe('Reader')
     expect(comment.contentHtml).toContain('Nice post')
   })
@@ -135,7 +136,7 @@ describe('POST /api/comments', () => {
     expect((await post('/api/comments', { postSlug: 'a-post', ...COMMENT }, '203.0.113.18')).status).toBe(403)
     // And the read side returns an empty list rather than an error, so the island renders
     // nothing and the page is unaffected.
-    expect(await get('/api/comments?post=a-post').then((r) => r.json())).toEqual({ comments: [] })
+    expect(await payload<{ comments: unknown[] }>(get('/api/comments?post=a-post'))).toEqual({ comments: [] })
   })
 })
 

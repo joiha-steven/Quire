@@ -13,6 +13,7 @@ import { getSettings, saveSettings } from '@/content/settings'
 import { previewToken } from '@/content/preview'
 import { clearCache } from '@/server/cache'
 import { createApp } from '@/web/app'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-machine'
 freshDatabase(DIR)
@@ -87,7 +88,7 @@ describe('the manifest', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('application/manifest+json')
 
-    const m = await res.json() as Record<string, unknown>
+    const m = await payload<Record<string, unknown>>(res)
     expect(m.name).toBe('My Blog')
     expect(m.description).toBe('A tagline')
     expect(m.lang).toBe('vi')
@@ -112,7 +113,7 @@ describe('GET /api/search', () => {
     await savePost({ title: 'Timezone bugs', content: 'A long body about offsets', status: 'published', date: PAST })
     const res = await get('/api/search?q=timezone')
     expect(res.status).toBe(200)
-    const results = await res.json() as Record<string, unknown>[]
+    const results = await payload<Record<string, unknown>[]>(res)
     expect(results.length).toBe(1)
     expect(results[0]!.title).toBe('Timezone bugs')
     // Sending the body would make a public endpoint an efficient way to dump the blog.

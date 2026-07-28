@@ -10,6 +10,7 @@ import { createUser } from '@/auth/users'
 import { COOKIE_NAME, createSession } from '@/auth/sessions'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin'
 freshDatabase(DIR)
@@ -127,12 +128,12 @@ describe('posts', () => {
   it('creates, reads, updates and deletes', async () => {
     const created = await post('/api/posts', { title: 'Hello', content: 'Body' })
     expect(created.status).toBe(201)
-    const meta = await created.json() as { slug: string; title: string }
+    const meta = await payload<{ slug: string; title: string }>(created)
     expect(meta.title).toBe('Hello')
 
     const read = await asOwner(`/api/posts/${meta.slug}`)
     expect(read.status).toBe(200)
-    expect((await read.json() as { content: string }).content).toBe('Body')
+    expect((await payload<{ content: string }>(read)).content).toBe('Body')
 
     const updated = await asOwner(`/api/posts/${meta.slug}`, {
       method: 'PUT',
@@ -156,7 +157,7 @@ describe('posts', () => {
     await post('/api/posts', { title: 'First', slug: 'taken' })
     const clash = await post('/api/posts', { title: 'Second', slug: 'taken' })
     expect(clash.status).toBe(409)
-    expect(await clash.json()).toEqual({ error: 'slug_taken' })
+    expect(await clash.json()).toEqual({ success: false, error: 'slug_taken' })
   })
 
   // Invariant 2: posts and pages share one /{slug} namespace.
@@ -172,7 +173,7 @@ describe('posts', () => {
 
   it('lists drafts, which is the reason this route is owner-only', async () => {
     await post('/api/posts', { title: 'A draft', status: 'draft' })
-    const list = await (await asOwner('/api/posts')).json() as Array<{ title: string }>
+    const list = await payload<Array<{ title: string }>>(asOwner('/api/posts'))
     expect(list.map((p) => p.title)).toContain('A draft')
   })
 })
@@ -181,7 +182,7 @@ describe('pages', () => {
   it('creates, reads, updates and deletes', async () => {
     const created = await post('/api/pages', { title: 'About', content: 'Who I am' })
     expect(created.status).toBe(201)
-    const meta = await created.json() as { slug: string }
+    const meta = await payload<{ slug: string }>(created)
 
     expect((await asOwner(`/api/pages/${meta.slug}`)).status).toBe(200)
     const updated = await asOwner(`/api/pages/${meta.slug}`, {
@@ -208,7 +209,7 @@ describe('Invariant 1: a write clears the whole page cache', () => {
 
   it('drops a deleted post from the home page', async () => {
     const created = await post('/api/posts', { title: 'Briefly here', status: 'published' })
-    const { slug } = await created.json() as { slug: string }
+    const { slug } = await payload<{ slug: string }>(created)
     expect(await (await app.request('/')).text()).toContain('Briefly here')
     await asOwner(`/api/posts/${slug}`, { method: 'DELETE' })
     expect(await (await app.request('/')).text()).not.toContain('Briefly here')

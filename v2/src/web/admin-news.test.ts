@@ -12,6 +12,7 @@ import { createUser } from '@/auth/users'
 import { COOKIE_NAME, createSession } from '@/auth/sessions'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-news'
 freshDatabase(DIR)
@@ -67,7 +68,7 @@ describe('SMTP configuration', () => {
    */
   it('reports whether a password is set, never the password', async () => {
     await post('/api/mail', { host: 'smtp.example.com', port: 587, user: 'u', pass: 'hunter2', from: 'a@b.c' })
-    const config = await (await asOwner('/api/mail')).json() as Record<string, unknown>
+    const config = await payload<Record<string, unknown>>(asOwner('/api/mail'))
     expect(config.hasPass).toBe(true)
     expect(config.host).toBe('smtp.example.com')
     expect(JSON.stringify(config)).not.toContain('hunter2')
@@ -81,15 +82,15 @@ describe('SMTP configuration', () => {
   it('does not wipe the password when the form omits it', async () => {
     await post('/api/mail', { host: 'smtp.example.com', pass: 'hunter2' })
     await post('/api/mail', { host: 'smtp2.example.com' })
-    const config = await (await asOwner('/api/mail')).json() as { host: string; hasPass: boolean }
+    const config = await payload<{ host: string; hasPass: boolean }>(asOwner('/api/mail'))
     expect(config.host).toBe('smtp2.example.com')
     expect(config.hasPass).toBe(true)
   })
 
   it('reports configured only once it really is', async () => {
-    expect((await (await asOwner('/api/mail')).json() as { configured: boolean }).configured).toBe(false)
+    expect((await payload<{ configured: boolean }>(asOwner('/api/mail'))).configured).toBe(false)
     await post('/api/mail', { host: 'smtp.example.com', port: 587, user: 'u', pass: 'p', from: 'a@b.c' })
-    expect((await (await asOwner('/api/mail')).json() as { configured: boolean }).configured).toBe(true)
+    expect((await payload<{ configured: boolean }>(asOwner('/api/mail'))).configured).toBe(true)
   })
 })
 
@@ -97,7 +98,7 @@ describe('the test send', () => {
   it('rejects a kind it does not know', async () => {
     const res = await post('/api/mail/test', { kind: 'carrier-pigeon' })
     expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'invalid_kind' })
+    expect(await res.json()).toEqual({ success: false, error: 'invalid_kind' })
   })
 
   // 502, not 500. The failure is the upstream mail server's, and the distinction is what
@@ -128,7 +129,7 @@ describe('the broadcast', () => {
     await post('/api/posts', { title: 'Second', status: 'published', content: 'B' })
     const res = await asOwner('/api/broadcast?slug=first&slug=second')
     expect(res.status).toBe(200)
-    const preview = await res.json() as { subject: string; html: string }
+    const preview = await payload<{ subject: string; html: string }>(res)
     expect(preview.html).toContain('First')
     expect(preview.html).toContain('Second')
   })
@@ -136,7 +137,7 @@ describe('the broadcast', () => {
   it('reports a validation failure with its own code, not a 500', async () => {
     const res = await asOwner('/api/broadcast?slug=no-such-post')
     expect(res.status).toBe(400)
-    expect((await res.json() as { error: string }).error).not.toBe('broadcast_failed')
+    expect((await payload<{ error: string }>(res)).error).not.toBe('broadcast_failed')
   })
 })
 
@@ -148,10 +149,10 @@ describe('subscribers', () => {
     )
     const res = await asOwner('/api/subscribers')
     expect(res.status).toBe(200)
-    const data = await res.json() as {
+    const data = await payload<{
       subscribers: Array<{ email: string; stats: unknown }>
       counts: { confirmed: number }
-    }
+    }>(res)
     expect(data.counts.confirmed).toBe(1)
     // The full address, not a truncated one. A subscriber list showing `reader@e…` was a
     // real defect in the frozen tree, and it shipped because nobody opened the page.
@@ -216,7 +217,7 @@ describe('the public search index', () => {
 
     const res = await app.request('/api/search/index')
     expect(res.status).toBe(200)
-    const docs = await res.json() as Array<{ title: string }>
+    const docs = await payload<Array<{ title: string }>>(res)
     expect(docs.map((d) => d.title)).toEqual(['Public one'])
     expect(JSON.stringify(docs)).not.toContain('SECRET BODY TEXT')
   })

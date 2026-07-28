@@ -15,6 +15,7 @@ import { COOKIE_NAME, createSession } from '@/auth/sessions'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
 import { saveSettings } from '@/content/settings'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-mcp'
 freshDatabase(DIR)
@@ -53,7 +54,7 @@ const register = async (uris: string[]): Promise<string> => {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ redirect_uris: uris }),
   })
-  return (await res.json() as { client_id: string }).client_id
+  return (await payload<{ client_id: string }>(res)).client_id
 }
 
 describe('token management', () => {
@@ -88,7 +89,7 @@ describe('token management', () => {
       body: JSON.stringify({ name: 'Claude' }),
     })
     expect(res.status).toBe(201)
-    const { token } = await res.json() as { token: string; info: { id: number } }
+    const { token } = await payload<{ token: string; info: { id: number } }>(res)
     expect(token.length).toBeGreaterThan(20)
 
     // The list never carries it again, and neither does the table.
@@ -114,7 +115,7 @@ describe('client registration', () => {
       body: JSON.stringify({ redirect_uris: ['https://example.com/cb'] }),
     })
     expect(good.status).toBe(201)
-    const body = await good.json() as { client_id: string; token_endpoint_auth_method: string }
+    const body = await payload<{ client_id: string; token_endpoint_auth_method: string }>(good)
     expect(body.client_id.length).toBeGreaterThan(8)
     // No client secret: PKCE is what secures this flow.
     expect(body.token_endpoint_auth_method).toBe('none')
@@ -274,7 +275,7 @@ describe('the token exchange', () => {
       grant_type: 'authorization_code', code, redirect_uri: redirectUri, code_verifier: verifier,
     })
     expect(res.status).toBe(200)
-    const body = await res.json() as { access_token: string; token_type: string }
+    const body = await payload<{ access_token: string; token_type: string }>(res)
     expect(body.token_type).toBe('Bearer')
     expect(body.access_token.length).toBeGreaterThan(20)
   })

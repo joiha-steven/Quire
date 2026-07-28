@@ -15,6 +15,7 @@ import { resetPending } from '@/auth/login'
 import { resetEnrolment } from '@/web/auth-routes'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-auth-routes'
 freshDatabase(DIR)
@@ -125,7 +126,7 @@ describe('POST /api/auth/login', () => {
 
   it('answers JSON with JSON', async () => {
     const res = await json('/api/auth/login', { username: 'hung', password: PASSWORD })
-    const body = await res.json() as { status: string; ticket: string }
+    const body = await payload<{ status: string; ticket: string }>(res)
     expect(body.status).toBe('need-enrolment')
     expect(body.ticket.length).toBeGreaterThan(10)
   })

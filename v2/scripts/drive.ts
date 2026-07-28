@@ -58,6 +58,24 @@ const send = (method: string, params: Record<string, unknown> = {}) =>
   })
 
 await send('Page.enable')
+
+// An owner-only page needs a session, and the session cookie is HttpOnly — so it cannot be
+// set from the page's own JavaScript and has to go in over the protocol. `QUIRE_SESSION` is
+// the cookie VALUE; nothing is read back out, and it never touches the repository.
+if (process.env.QUIRE_SESSION) {
+  const { hostname } = new URL(url)
+  await send('Network.enable')
+  await send('Network.setCookie', {
+    name: '__Host-quire_session',
+    value: process.env.QUIRE_SESSION,
+    domain: hostname,
+    path: '/',
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+  })
+}
+
 await send('Page.navigate', { url })
 // Waiting on the load event would be tighter, but a fixed settle also covers the fonts and
 // the island bundle, and this is a screenshot tool rather than a timing harness.

@@ -51,6 +51,14 @@ if (css.exitCode !== 0) {
   process.exit(1)
 }
 
+// The editor is a `.prose` surface, so it needs the article's own typography — the same
+// rules, from the same constant the public sheet uses. Appended after Tailwind rather than
+// imported into `admin.css`, because Tailwind cannot import a TypeScript module and a
+// second copy of a type scale stays in step for about a month.
+const { PROSE_CSS } = await import(`${ROOT}src/web/prose.css.ts`)
+const sheetText = await Bun.file(`${OUT}/admin.css`).text()
+await Bun.write(`${OUT}/admin.css`, `${sheetText}\n${PROSE_CSS}`)
+
 let total = 0
 for (const output of result.outputs) {
   const size = output.size ?? 0

@@ -12,6 +12,7 @@ import { createUser } from '@/auth/users'
 import { COOKIE_NAME, createSession } from '@/auth/sessions'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-uploads'
 const STORE = './.tmp-test-admin-uploads-store'
@@ -88,7 +89,7 @@ describe('media upload', () => {
   it('accepts an image and lists it', async () => {
     const res = await upload('/api/media/upload', [['one.png', 'image/png']])
     expect(res.status).toBe(201)
-    const uploaded = await res.json() as Array<{ url: string; filename: string }>
+    const uploaded = await payload<Array<{ url: string; filename: string }>>(res)
     expect(uploaded.length).toBe(1)
     // A dedup suffix is allowed. `STORAGE_LOCAL_DIR` is a process-global env var and the
     // test files share a process, so an upload here can land beside one from another file
@@ -97,14 +98,14 @@ describe('media upload', () => {
     // Stored store-relative under `media/` (Invariant 3), served from /uploads.
     expect(uploaded[0].url.startsWith('/uploads/media/')).toBe(true)
 
-    const list = await (await asOwner('/api/media')).json() as unknown[]
+    const list = await payload<unknown[]>(asOwner('/api/media'))
     expect(list.length).toBe(1)
   })
 
   it('refuses an unsupported type with 415 and the string the client shows', async () => {
     const res = await upload('/api/media/upload', [['notes.txt', 'text/plain']])
     expect(res.status).toBe(415)
-    expect(await res.json()).toEqual({ error: 'unsupported_type' })
+    expect(await res.json()).toEqual({ success: false, error: 'unsupported_type' })
   })
 
   /**
@@ -114,7 +115,7 @@ describe('media upload', () => {
   it('refuses the whole batch when one file is the wrong type', async () => {
     const res = await upload('/api/media/upload', [['ok.png', 'image/png'], ['bad.txt', 'text/plain']])
     expect(res.status).toBe(415)
-    expect((await (await asOwner('/api/media')).json() as unknown[]).length).toBe(0)
+    expect((await payload<unknown[]>(asOwner('/api/media'))).length).toBe(0)
   })
 
   it('rejects an empty upload', async () => {
@@ -125,23 +126,23 @@ describe('media upload', () => {
 
 describe('media delete', () => {
   it('deletes in a batch and returns the list that is left', async () => {
-    const a = await (await upload('/api/media/upload', [['a.png', 'image/png']])).json() as Array<{ url: string }>
+    const a = await payload<Array<{ url: string }>>(upload('/api/media/upload', [['a.png', 'image/png']]))
     await upload('/api/media/upload', [['b.png', 'image/png']])
 
     const res = await postJson('/api/media/delete', { urls: [a[0].url] })
     expect(res.status).toBe(200)
     // The AUTHORITATIVE post-delete list, not an acknowledgement: the admin grid is on
     // screen while this happens and must not drift from what the server holds.
-    const left = await res.json() as Array<{ filename: string }>
+    const left = await payload<Array<{ filename: string }>>(res)
     expect(left.length).toBe(1)
     expect(left[0].filename).toMatch(/^b(-\d+)?\.png$/)
   })
 
   it('deletes one by query parameter', async () => {
-    const a = await (await upload('/api/media/upload', [['solo.png', 'image/png']])).json() as Array<{ url: string }>
+    const a = await payload<Array<{ url: string }>>(upload('/api/media/upload', [['solo.png', 'image/png']]))
     const res = await asOwner(`/api/media/solo.png?url=${encodeURIComponent(a[0].url)}`, { method: 'DELETE' })
     expect(res.status).toBe(200)
-    expect((await res.json() as unknown[]).length).toBe(0)
+    expect((await payload<unknown[]>(res)).length).toBe(0)
   })
 
   it('rejects a delete with no urls', async () => {
@@ -153,18 +154,18 @@ describe('media delete', () => {
 describe('the unused audit', () => {
   // Non-destructive by design: it returns what nothing references so the owner can review.
   it('reports an unreferenced image and never deletes it', async () => {
-    const a = await (await upload('/api/media/upload', [['lonely.png', 'image/png']])).json() as Array<{ url: string }>
-    const unused = await (await asOwner('/api/media/unused')).json() as string[]
+    const a = await payload<Array<{ url: string }>>(upload('/api/media/upload', [['lonely.png', 'image/png']]))
+    const unused = await payload<string[]>(asOwner('/api/media/unused'))
     expect(unused.length).toBe(1)
     // Still there.
-    expect((await (await asOwner('/api/media')).json() as unknown[]).length).toBe(1)
+    expect((await payload<unknown[]>(asOwner('/api/media'))).length).toBe(1)
     expect(a[0].url).toContain('lonely')
   })
 
   it('does not report an image a post references', async () => {
-    const a = await (await upload('/api/media/upload', [['used.png', 'image/png']])).json() as Array<{ url: string }>
+    const a = await payload<Array<{ url: string }>>(upload('/api/media/upload', [['used.png', 'image/png']]))
     await postJson('/api/posts', { title: 'Uses it', content: `![x](${a[0].url})` })
-    expect((await (await asOwner('/api/media/unused')).json() as string[]).length).toBe(0)
+    expect((await payload<string[]>(asOwner('/api/media/unused'))).length).toBe(0)
   })
 })
 
@@ -174,16 +175,16 @@ describe('files', () => {
     form.append('file', new File(['hello'], 'notes.txt', { type: 'text/plain' }), 'notes.txt')
     const res = await asOwner('/api/files/attach', { method: 'POST', body: form })
     expect(res.status).toBe(201)
-    expect((await (await asOwner('/api/files')).json() as unknown[]).length).toBe(1)
+    expect((await payload<unknown[]>(asOwner('/api/files'))).length).toBe(1)
   })
 
   it('deletes by batch and by url', async () => {
     const form = new FormData()
     form.append('file', new File(['a'], 'a.txt', { type: 'text/plain' }), 'a.txt')
-    const added = await (await asOwner('/api/files/attach', { method: 'POST', body: form })).json() as Array<{ url: string }>
+    const added = await payload<Array<{ url: string }>>(asOwner('/api/files/attach', { method: 'POST', body: form }))
     const res = await asOwner(`/api/files/by?url=${encodeURIComponent(added[0].url)}`, { method: 'DELETE' })
     expect(res.status).toBe(200)
-    expect((await res.json() as unknown[]).length).toBe(0)
+    expect((await payload<unknown[]>(res)).length).toBe(0)
   })
 
   it('rejects an empty attach and a delete with no urls', async () => {
@@ -201,7 +202,7 @@ describe('icons and fonts', () => {
   it('uploads an icon', async () => {
     const res = await upload('/api/files/upload', [['favicon.png', 'image/png']], { kind: 'favicon' })
     expect(res.status).toBe(201)
-    expect((await res.json() as { url: string }).url).toContain('favicon')
+    expect((await payload<{ url: string }>(res)).url).toContain('favicon')
   })
 
   // The fallback that matters: browsers routinely send no type at all for .ico, and this

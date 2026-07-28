@@ -13,6 +13,7 @@ import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
 import { pageCache } from '@/server/cache'
 import { blobUrl } from '@/media/blob'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-site'
 freshDatabase(DIR)
@@ -70,14 +71,14 @@ describe('taxonomy', () => {
     await newPost({ title: 'Two', tags: ['draft-tag'], status: 'published' })
     const res = await post('/api/taxonomy', { kind: 'tag', name: 'draft-tag', action: 'rename', newName: 'final-tag' })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ changed: 2 })
+    expect(await payload<{ changed: number }>(res)).toEqual({ changed: 2 })
     expect((await app.request('/tag/final-tag')).status).toBe(200)
   })
 
   it('removes a term', async () => {
     await newPost({ title: 'One', categories: ['gone'], status: 'published' })
     const res = await post('/api/taxonomy', { kind: 'category', name: 'gone', action: 'delete' })
-    expect((await res.json() as { changed: number }).changed).toBe(1)
+    expect((await payload<{ changed: number }>(res)).changed).toBe(1)
   })
 
   it('rejects a missing kind, a missing name, and a rename with no new name', async () => {
@@ -93,7 +94,7 @@ describe('series', () => {
     await newPost({ title: 'Part two', series: 'A Series', seriesOrder: 2, status: 'published' })
 
     const renamed = await post('/api/series', { action: 'rename', name: 'A Series', newName: 'Better Name' })
-    expect((await renamed.json() as { changed: number }).changed).toBe(2)
+    expect((await payload<{ changed: number }>(renamed)).changed).toBe(2)
 
     const reordered = await post('/api/series', {
       action: 'reorder', name: 'Better Name', order: ['part-two', 'part-one'],
@@ -101,7 +102,7 @@ describe('series', () => {
     expect(reordered.status).toBe(200)
 
     const removed = await post('/api/series', { action: 'delete', name: 'Better Name' })
-    expect((await removed.json() as { changed: number }).changed).toBe(2)
+    expect((await payload<{ changed: number }>(removed)).changed).toBe(2)
   })
 
   it('rejects a missing name, an unknown action and an empty reorder', async () => {
@@ -114,18 +115,18 @@ describe('series', () => {
 describe('redirects', () => {
   it('creates, lists and deletes', async () => {
     expect((await post('/api/redirects', { source: '/old', destination: '/new' })).status).toBe(201)
-    const list = await (await asOwner('/api/redirects')).json() as Array<{ id: number; source: string; permanent: boolean }>
+    const list = await payload<Array<{ id: number; source: string; permanent: boolean }>>(asOwner('/api/redirects'))
     expect(list.length).toBe(1)
     expect(list[0].source).toBe('/old')
     // 301 unless explicitly told otherwise.
     expect(list[0].permanent).toBe(true)
     expect((await asOwner(`/api/redirects/${list[0].id}`, { method: 'DELETE' })).status).toBe(200)
-    expect((await (await asOwner('/api/redirects')).json() as unknown[]).length).toBe(0)
+    expect((await payload<unknown[]>(asOwner('/api/redirects'))).length).toBe(0)
   })
 
   it('makes a redirect temporary only on an explicit false', async () => {
     await post('/api/redirects', { source: '/a', destination: '/b', permanent: false })
-    const list = await (await asOwner('/api/redirects')).json() as Array<{ permanent: boolean }>
+    const list = await payload<Array<{ permanent: boolean }>>(asOwner('/api/redirects'))
     expect(list[0].permanent).toBe(false)
   })
 
@@ -133,7 +134,7 @@ describe('redirects', () => {
   it('passes a validation message through as a 400', async () => {
     const res = await post('/api/redirects', { source: '', destination: '/b' })
     expect(res.status).toBe(400)
-    expect((await res.json() as { error: string }).error).not.toBe('Internal error')
+    expect((await payload<{ error: string }>(res)).error).not.toBe('Internal error')
   })
 
   it('rejects a non-numeric id', async () => {
@@ -145,7 +146,7 @@ describe('settings', () => {
   it('saves and returns the merged settings', async () => {
     const res = await asOwner('/api/settings', { method: 'PUT', body: JSON.stringify({ title: 'A New Title' }) })
     expect(res.status).toBe(200)
-    expect((await res.json() as { title: string }).title).toBe('A New Title')
+    expect((await payload<{ title: string }>(res)).title).toBe('A New Title')
   })
 
   // Invariant 1. Settings are site-wide, so every cached page is now wrong.
@@ -160,10 +161,10 @@ describe('settings', () => {
 describe('the activity log', () => {
   it('reports what the admin did, and clears', async () => {
     await newPost({ title: 'Logged' })
-    const entries = await (await asOwner('/api/activity')).json() as Array<{ action: string }>
+    const entries = await payload<Array<{ action: string }>>(asOwner('/api/activity'))
     expect(entries.some((e) => e.action === 'post.create')).toBe(true)
     expect((await asOwner('/api/activity', { method: 'DELETE' })).status).toBe(200)
-    expect((await (await asOwner('/api/activity')).json() as unknown[]).length).toBe(0)
+    expect((await payload<unknown[]>(asOwner('/api/activity'))).length).toBe(0)
   })
 })
 
@@ -185,7 +186,7 @@ describe('trash', () => {
 
   it('restores a soft-deleted post to the public site', async () => {
     const created = await newPost({ title: 'Comes back', status: 'published' })
-    const { slug } = await created.json() as { slug: string }
+    const { slug } = await payload<{ slug: string }>(created)
     await asOwner(`/api/posts/${slug}`, { method: 'DELETE' })
     expect(await (await app.request('/')).text()).not.toContain('Comes back')
 
@@ -197,7 +198,7 @@ describe('trash', () => {
 
   it('purges permanently', async () => {
     const created = await newPost({ title: 'Gone for good' })
-    const { slug } = await created.json() as { slug: string }
+    const { slug } = await payload<{ slug: string }>(created)
     await asOwner(`/api/posts/${slug}`, { method: 'DELETE' })
     expect((await post('/api/trash', { kind: 'posts', action: 'purge', ids: [slug] })).status).toBe(200)
     const restored = await post('/api/trash', { kind: 'posts', action: 'restore', ids: [slug] })
@@ -223,7 +224,7 @@ describe('trash', () => {
 
     const refused = await post('/api/trash', { kind: 'media', action: 'purge', ids: [url] })
     expect(refused.status).toBe(409)
-    expect((await refused.json() as { error: string }).error).toBe('in_use:1')
+    expect((await payload<{ error: string }>(refused)).error).toBe('in_use:1')
 
     // ...and goes ahead when the caller confirms.
     const forced = await post('/api/trash', { kind: 'media', action: 'purge', ids: [url], force: true })

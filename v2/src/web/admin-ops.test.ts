@@ -12,6 +12,7 @@ import { COOKIE_NAME, createSession } from '@/auth/sessions'
 import { resetSecretCache } from '@/auth/secret'
 import { resetLimits } from '@/server/rate-limit'
 import { verifyPreview } from '@/content/preview'
+import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-ops'
 freshDatabase(DIR)
@@ -61,7 +62,7 @@ describe('the cron tick', () => {
   it('is open when no secret is set, so a fresh install still ticks', async () => {
     const res = await app.request('/api/cron')
     expect(res.status).toBe(200)
-    expect((await res.json() as { alive: boolean }).alive).toBe(true)
+    expect((await payload<{ alive: boolean }>(res)).alive).toBe(true)
   })
 
   it('demands the bearer token once a secret is set', async () => {
@@ -94,7 +95,7 @@ describe('the cron tick', () => {
       body: JSON.stringify({ title: 'Timed', status: 'published', date: oneMinuteAgo, content: 'x' }),
     })
     const res = await app.request('/api/cron?publish=1')
-    expect((await res.json() as { published: number }).published).toBe(1)
+    expect((await payload<{ published: number }>(res)).published).toBe(1)
     // Invariant 1: on the home page without a cold hit.
     expect(await (await app.request('/')).text()).toContain('Timed')
   })
@@ -107,12 +108,12 @@ describe('the cron tick', () => {
       body: JSON.stringify({ title: 'Old news', status: 'published', date: lastWeek, content: 'x' }),
     })
     const res = await app.request('/api/cron?publish=1')
-    expect((await res.json() as { published: number }).published).toBe(0)
+    expect((await payload<{ published: number }>(res)).published).toBe(0)
   })
 
   it('reports the session purge it now also does', async () => {
     const res = await app.request('/api/cron')
-    const body = await res.json() as { sessions: number; finalized: number }
+    const body = await payload<{ sessions: number; finalized: number }>(res)
     expect(typeof body.sessions).toBe('number')
     expect(typeof body.finalized).toBe('number')
   })
@@ -122,7 +123,7 @@ describe('the health probe', () => {
   it('reports both checks and never caches', async () => {
     const res = await app.request('/api/health')
     expect(res.headers.get('cache-control')).toBe('no-store')
-    const body = await res.json() as { status: string; checks: { database: boolean; storage: boolean } }
+    const body = await payload<{ status: string; checks: { database: boolean; storage: boolean } }>(res)
     expect(body.status).toBe('ok')
     expect(body.checks.database).toBe(true)
   })
@@ -134,7 +135,7 @@ describe('the health probe', () => {
     process.env.STORAGE_LOCAL_DIR = './this-directory-does-not-exist-at-all'
     const res = await app.request('/api/health')
     expect(res.status).toBe(503)
-    expect((await res.json() as { status: string }).status).toBe('degraded')
+    expect((await payload<{ status: string }>(res)).status).toBe('degraded')
     if (previous === undefined) delete process.env.STORAGE_LOCAL_DIR
     else process.env.STORAGE_LOCAL_DIR = previous
   })
@@ -144,7 +145,7 @@ describe('the preview link', () => {
   it('returns a token the preview route accepts', async () => {
     const res = await asOwner('/api/preview-link?slug=a-draft')
     expect(res.status).toBe(200)
-    const { token } = await res.json() as { token: string }
+    const { token } = await payload<{ token: string }>(res)
     expect(verifyPreview('a-draft', token)).toBe(true)
     // Bound to the slug it was issued for, so sharing one draft does not share them all.
     expect(verifyPreview('another-draft', token)).toBe(false)
@@ -180,12 +181,12 @@ describe('the WordPress import', () => {
   it('imports posts and pages and converts the HTML to markdown', async () => {
     const res = await send(wxr(item('First Post') + item('About', 'page')))
     expect(res.status).toBe(200)
-    const result = await res.json() as { posts: number; pages: number }
+    const result = await payload<{ posts: number; pages: number }>(res)
     expect(result.posts).toBe(1)
     expect(result.pages).toBe(1)
 
-    const list = await (await asOwner('/api/posts')).json() as Array<{ slug: string }>
-    const full = await (await asOwner(`/api/posts/${list[0].slug}`)).json() as { content: string }
+    const list = await payload<Array<{ slug: string }>>(asOwner('/api/posts'))
+    const full = await payload<{ content: string }>(asOwner(`/api/posts/${list[0].slug}`))
     expect(full.content).toContain('**First Post**')
     expect(full.content).not.toContain('<strong>')
   })
@@ -197,7 +198,7 @@ describe('the WordPress import', () => {
   it('suffixes a slug that already exists rather than overwriting', async () => {
     await send(wxr(item('Same Title')))
     await send(wxr(item('Same Title')))
-    const list = await (await asOwner('/api/posts')).json() as Array<{ slug: string }>
+    const list = await payload<Array<{ slug: string }>>(asOwner('/api/posts'))
     expect(list.length).toBe(2)
     expect(new Set(list.map((p) => p.slug)).size).toBe(2)
   })
@@ -206,12 +207,12 @@ describe('the WordPress import', () => {
     const res = await send('<html><body>not an export</body></html>')
     expect(res.status).toBe(400)
     // "import failed" on the wrong file is the least useful thing to say to someone.
-    expect(await res.json()).toEqual({ error: 'not_a_wordpress_export' })
+    expect(await res.json()).toEqual({ success: false, error: 'not_a_wordpress_export' })
   })
 
   it('rejects a request with no file', async () => {
     const res = await asOwner('/api/import/wordpress', { method: 'POST', body: new FormData() })
     expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'no_file' })
+    expect(await res.json()).toEqual({ success: false, error: 'no_file' })
   })
 })

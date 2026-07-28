@@ -11,7 +11,14 @@ import { logActivityError } from '@/server/activity'
 
 /** A successful JSON body. */
 export function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
+  // The ENVELOPE is load-bearing, and it went missing in the port. Every admin component
+  // reads `json.success` and `json.data` — that is the frozen tree's contract and 68
+  // components were written against it. Returning the bare payload type-checked, passed
+  // its tests, and made the media library show "no images" over 66 of them, because
+  // `j.data` was undefined and the component fell back to an empty list. A shape mismatch
+  // between a server and a client that never speak the same types is exactly the failure
+  // an integration test catches and a unit test cannot.
+  return new Response(JSON.stringify({ success: true, data }), {
     status,
     headers: { 'content-type': 'application/json; charset=utf-8' },
   })
@@ -19,7 +26,7 @@ export function json(data: unknown, status = 200): Response {
 
 /** A failure, in the one shape every client can rely on. */
 export function fail(c: Context, message: string, status = 400): Response {
-  return c.json({ error: message }, status as 400)
+  return c.json({ success: false, error: message }, status as 400)
 }
 
 /**
