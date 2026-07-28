@@ -10,6 +10,7 @@
 // where this is a window.
 
 import type { MiddlewareHandler } from 'hono'
+import { SPECULATION_HEADER } from '@/web/speculation'
 
 /**
  * 60 seconds, and the edge may keep answering while it refreshes.
@@ -45,6 +46,10 @@ export function cacheHeaders(): MiddlewareHandler {
     }
     if ((c.res.headers.get('content-type') ?? '').includes('text/html')) {
       c.res.headers.set('cache-control', PUBLIC)
+      // Prerender-on-hover, offered on the same responses a shared cache may hold: a public
+      // page, 200, HTML. The owner's surfaces are already gone by the branch above, which
+      // is the point of setting it here rather than in each renderer.
+      c.res.headers.set('speculation-rules', SPECULATION_HEADER)
     }
   }
 }

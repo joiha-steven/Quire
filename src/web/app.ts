@@ -45,6 +45,7 @@ import { currentOwner } from '@/web/guard'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import { commentAuthRoutes } from '@/web/comment-auth'
+import { SPECULATION_PATH, speculationRules } from '@/web/speculation'
 import {
   handleConfirm, handleOpenPixel, handleSubscribe, handleUnsubscribeGet, handleUnsubscribePost,
 } from '@/web/newsletter'
@@ -250,6 +251,9 @@ export function createApp(): Hono {
   app.get('/api/newsletter/open', handleOpenPixel)
   app.get('/api/md/:slug', handleMarkdown)
   app.get('/manifest.webmanifest', handleManifest)
+  // Pointed at by the `Speculation-Rules` header on every public page. A document rather
+  // than an inline script, so the public site keeps shipping none.
+  app.get(SPECULATION_PATH, () => speculationRules())
 
   // ----- sign-in --------------------------------------------------------------
   // The only write routes that cannot be owner-gated, because they are how one becomes an

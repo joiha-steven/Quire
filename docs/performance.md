@@ -119,13 +119,27 @@ list (or the class won't emit). NEVER put an admin-only utility/chrome rule in `
 
 ## Navigation: prerender on hover, zero runtime JS
 
-The root layout ships a `<script type="speculationrules">` (`SPECULATION_RULES` in
-`app/layout.tsx`) with `eagerness: "moderate"`, so Chrome prerenders a same-origin link
-when the reader hovers it. A click then paints an already-rendered document. This is the
-largest perceived-speed win available on a reading site and it costs no runtime JS.
+Every public HTML response carries a `Speculation-Rules` header pointing at
+`/speculation-rules.json` ([`src/web/speculation.ts`](../src/web/speculation.ts), set in
+[`src/web/cache-headers.ts`](../src/web/cache-headers.ts)) with `eagerness: "moderate"`, so
+Chrome prerenders a same-origin link when the reader hovers it. A click then paints an
+already-rendered document. This is the largest perceived-speed win available on a reading
+site and it costs no runtime JS.
+
+**A header, not an inline `<script type="speculationrules">`.** The frozen tree used the
+inline form. 2.0 ships no inline script on the public site, which is what lets the
+recommended CSP omit `unsafe-inline` from `script-src`, and an inline speculationrules block
+is governed by `script-src` like any other. The header keeps both.
 
 Excluded from prerendering: `/admin/*`, `/api/*`, `/uploads/*`, `/preview/*`, `/og*`, plus
-`[rel~=nofollow]` and `[download]` links.
+`[rel~=nofollow]` and `[download]` links. The header itself is only set on a public HTML 200,
+so the owner's surfaces never offer it at all.
+
+> This shipped on 2026-07-29 and was absent before then, while both this file and
+> `spec/04-frontend.md` described it as present. What the port DID carry over was
+> `whenActivated` — the guard that exists only because a prerendered page runs its JS at
+> speculation time. A guard with nothing to guard against is the quietest possible way for a
+> feature to be missing.
 
 > **RULE: a prerendered page runs its JavaScript at speculation time.** Any island that
 > writes, measures time, or beacons **on mount** must be wrapped in `whenActivated()`

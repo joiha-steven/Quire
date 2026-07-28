@@ -86,24 +86,19 @@ Reasoning, the rejected alternatives, and why 18 was chosen over 14/16/24 live i
 
 ## Perceived speed: two zero-JavaScript wins
 
-**Speculation Rules.** Ten lines of JSON in the head; the browser prerenders the likely
-next page on hover or viewport entry. The click then paints an already-rendered document.
-This is the single largest perceived-speed improvement available to a blog and it costs
-no runtime JavaScript.
+**Speculation Rules.** ✅ Shipped 2026-07-29, as a `Speculation-Rules` response header
+pointing at `/speculation-rules.json` rather than the inline `<script type="speculationrules">`
+this section originally specified — the public site ships no inline script, and an inline
+rules block is governed by `script-src` like any other. See
+[`../performance.md`](../performance.md) and [`src/web/speculation.ts`](../../src/web/speculation.ts).
 
-```html
-<script type="speculationrules">
-{"prerender":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}
-</script>
-```
+`moderate` (hover) is the eagerness; `eager` prerenders everything merely in the viewport,
+which on a listing page is every card. Tune against real analytics.
 
-Tune `eagerness` against real analytics; `moderate` (hover) is the safe default, and
-`eager` wastes bandwidth on readers who scroll past everything.
-
-**View Transitions.** Cross-document transitions via `@view-transition { navigation: auto }`
-in CSS. Smooth navigation with no framework and no client router.
-
-Both degrade to nothing on browsers that lack them.
+**View Transitions.** ❌ Not shipped. Cross-document transitions via
+`@view-transition { navigation: auto }` in CSS: smooth navigation with no framework and no
+client router. One rule, and it degrades to nothing where it is unsupported — but it is a
+visible change to how the site moves, so it is the owner's call rather than an omission.
 
 ## The 23 islands
 

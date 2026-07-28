@@ -1,0 +1,70 @@
+// Prerendering is offered to browsers, so the shape has to be right or it is silently
+// ignored — and a feature that fails silently is one nobody notices is gone. That is
+// exactly what happened before it was shipped at all.
+import { describe, expect, it, afterAll } from 'bun:test'
+import { freshDatabase, dropDatabase } from '@/test/db'
+import { savePost } from '@/content/posts'
+import { createApp } from '@/web/app'
+
+const DIR = './.tmp-test-speculation'
+freshDatabase(DIR)
+afterAll(() => dropDatabase(DIR))
+
+const app = createApp()
+
+describe('the rules document', () => {
+  it('is served under the content type browsers require', async () => {
+    const res = await app.request('/speculation-rules.json')
+    expect(res.status).toBe(200)
+    // Not application/json. A browser refuses the document under any other type, so this
+    // assertion is the difference between the feature working and doing nothing at all.
+    expect(res.headers.get('content-type')).toBe('application/speculationrules+json')
+  })
+
+  it('prerenders on hover, and never the paths where a speculative GET is not free', async () => {
+    const rules = await (await app.request('/speculation-rules.json')).json() as {
+      prerender: { eagerness: string; where: { and: unknown[] } }[]
+    }
+    const rule = rules.prerender[0]!
+    expect(rule.eagerness).toBe('moderate')
+
+    const json = JSON.stringify(rule.where)
+    for (const excluded of ['/admin/*', '/api/*', '/uploads/*', '/preview/*', '/og*']) {
+      expect(json).toContain(excluded)
+    }
+    // The author's own markup, honoured: a nofollow or a download link is not a page.
+    expect(json).toContain('[rel~=nofollow]')
+    expect(json).toContain('[download]')
+  })
+})
+
+describe('the header', () => {
+  it('is on a public page, and points at the document', async () => {
+    await savePost({ title: 'A Post', slug: 'a-post', status: 'published',
+      date: '2020-01-01T00:00:00.000Z' })
+    const res = await app.request('/a-post')
+    expect(res.headers.get('speculation-rules')).toBe('"/speculation-rules.json"')
+  })
+
+  // Prerendering the admin would run owner-only JavaScript, and against a shell that
+  // fetches on mount, for a page the owner merely hovered a link to.
+  it('is NOT on the owner\'s surfaces', async () => {
+    for (const path of ['/admin', '/login', '/api/comments?post=a-post']) {
+      expect((await app.request(path)).headers.get('speculation-rules')).toBeNull()
+    }
+  })
+
+  it('is NOT on a 404, which is not a page worth rendering ahead', async () => {
+    const res = await app.request('/nothing-is-here')
+    expect(res.status).toBe(404)
+    expect(res.headers.get('speculation-rules')).toBeNull()
+  })
+
+  // The whole point of the header form: the public site still ships no inline script, so
+  // the recommended CSP can keep refusing `unsafe-inline`.
+  it('adds no inline script to the page', async () => {
+    const html = await (await app.request('/a-post')).text()
+    expect(html).not.toContain('speculationrules')
+    expect(html).not.toMatch(/<script(?![^>]*\ssrc=)[^>]*>/)
+  })
+})
