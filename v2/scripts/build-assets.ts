@@ -57,8 +57,10 @@ const BUDGET: Record<string, number> = {
   // book mode. Raised from 8,000 when book mode grew its real chrome — a title bar, a page
   // count and side arrows over a clipped viewport, and a spread measured to exactly two
   // facing pages — which is the reader the frozen tree shipped rather than the four
-  // edge-to-edge columns that stood in for it.
-  'post.js': 8_600,
+  // edge-to-edge columns that stood in for it. Raised again for the Turnstile widget: the
+  // server has refused unverified comments since M3, and without the widget the reader had
+  // no way to produce a token, so on a site with Turnstile on the form simply did not work.
+  'post.js': 9_500,
   // /login only, and NOT loaded with core.js: the sign-in page carries no beacon, no
   // search overlay and no listing controls, so it pays for the reveal toggle, the caps-lock
   // warning and the one-time-code paste, and nothing else.

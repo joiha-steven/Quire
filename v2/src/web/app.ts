@@ -37,6 +37,8 @@ import { newsRoutes } from '@/web/admin/news'
 import { opsRoutes, publicOpsRoutes } from '@/web/admin/ops'
 import { mcpAdminRoutes, mcpOAuthRoutes } from '@/web/admin/mcp'
 import { viewRoutes } from '@/web/admin/views'
+import { backupRoutes } from '@/web/admin/backup'
+import { handleMcp } from '@/web/admin/mcp-transport'
 import { adminShell, handleAdminAsset } from '@/web/admin/spa'
 import { currentOwner } from '@/web/guard'
 import { staticFile, staticPaths } from '@/web/static'
@@ -267,6 +269,15 @@ export function createApp(): Hono {
   app.route('/', mcpAdminRoutes().routes)
   app.route('/', mcpOAuthRoutes())
   app.route('/', viewRoutes().routes)
+  app.route('/', backupRoutes().routes)
+
+  // The MCP endpoint. NOT on an owner-gated router: it authenticates with a bearer token
+  // the owner minted, not with the session cookie, and it must answer 401 with the
+  // metadata pointer rather than the gate's plain refusal. Declared public in
+  // `check:routes` with that reason.
+  app.get('/api/mcp', handleMcp)
+  app.post('/api/mcp', handleMcp)
+  app.delete('/api/mcp', handleMcp)
 
   // ----- the admin ------------------------------------------------------------
   // The built bundle, and the empty shell that mounts it. Registered before `/:slug` so a

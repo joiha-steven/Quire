@@ -28,14 +28,6 @@
     "@happy-dom/global-registrator": "^20.11.1",
     "@supabase/postgrest-js": "^2.110.8",
     "@tailwindcss/cli": "^4",
-    "@types/bun": "latest",
-    "@types/nodemailer": "^8.0.1",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@types/turndown": "^5.0.6",
-    "typescript": "^5.9.0"
-  },
-  "dependencies": {
     "@tiptap/extension-image": "^3.27.1",
     "@tiptap/extension-link": "^3.27.1",
     "@tiptap/extension-placeholder": "^3.27.1",
@@ -45,18 +37,28 @@
     "@tiptap/extension-underline": "^3.27.1",
     "@tiptap/react": "^3.27.1",
     "@tiptap/starter-kit": "^3.27.1",
+    "@types/bun": "latest",
+    "@types/nodemailer": "^8.0.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/turndown": "^5.0.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tiptap-markdown": "^0.9.0",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "fast-xml-parser": "^5.10.1",
     "hono": "^4.12.32",
     "marked": "18.0.5",
     "nodemailer": "^9.0.3",
     "qrcode-generator": "^2.0.4",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
     "satori": "^0.29.0",
     "sharp": "^0.35.3",
     "shiki": "4.2.0",
-    "tiptap-markdown": "^0.9.0",
     "turndown": "^7.2.4",
-    "turndown-plugin-gfm": "^1.0.2"
+    "turndown-plugin-gfm": "^1.0.2",
+    "zod": "^4.4.3"
   }
 }

@@ -216,3 +216,30 @@ describe('the WordPress import', () => {
     expect(await res.json()).toEqual({ success: false, error: 'no_file' })
   })
 })
+
+describe('the manual archive', () => {
+  // The one backup 2.0 has. Google Drive is gone (parity exception 1) and litestream runs
+  // outside the process, so this is the copy the owner can actually hold — which makes it
+  // worth proving it is a real archive with the real files in it, not an empty tarball.
+  it('builds a gzip archive holding both databases', async () => {
+    const res = await asOwner('/api/backup/export')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('application/gzip')
+    expect(res.headers.get('content-disposition')).toMatch(/attachment; filename="quire-\d{4}-\d{2}-\d{2}\.tar\.gz"/)
+
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    // The gzip magic number. A zero-length or error body would not carry it.
+    expect(bytes[0]).toBe(0x1f)
+    expect(bytes[1]).toBe(0x8b)
+
+    // And it really contains the databases: list the archive rather than trust its size.
+    const listed = Bun.spawnSync(['tar', '-tzf', '-'], { stdin: bytes, stdout: 'pipe' })
+    const names = new TextDecoder().decode(listed.stdout)
+    expect(names).toContain('quire.db')
+    expect(names).toContain('analytics.db')
+  })
+
+  it('is owner-gated like every other admin route', async () => {
+    expect((await app.request('/api/backup/export')).status).toBe(401)
+  })
+})

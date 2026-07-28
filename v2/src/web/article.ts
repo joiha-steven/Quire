@@ -9,6 +9,7 @@ import { getPage } from '@/content/pages'
 import { getMediaRefs } from '@/media/media-refs'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { getMailStatus } from '@/news/mail'
+import { getCommentEnv } from '@/comments/comment-env'
 import { chromeLabels, siteFooter, siteHeader, subscribeCard } from '@/web/chrome'
 import { getSeriesForPost } from '@/content/series'
 import { collapseBlob } from '@/media/blob'
@@ -161,8 +162,14 @@ export async function renderArticle(slug: string): Promise<string | null> {
   // page is cached HTML (Invariant 1) and a comment is not a post, so rendering the thread
   // here would force a choice between flushing the whole page cache whenever a stranger
   // types something and serving a stale thread. Fetching avoids both.
+  // The site key rides on the mount point, so the island can put up the widget without a
+  // second round trip. It is a PUBLIC key by design; the secret half never leaves here.
+  const commentEnv = post && settings.comments.enabled ? await getCommentEnv() : null
+  const turnstile = settings.comments.turnstile && commentEnv?.turnstileConfigured
+    ? ` data-turnstile="${escapeAttr(commentEnv.turnstileSiteKey)}"`
+    : ''
   const commentsMount = post && settings.comments.enabled
-    ? `<section id="comments" data-post="${escapeAttr(post.slug)}"></section>`
+    ? `<section id="comments" data-post="${escapeAttr(post.slug)}"${turnstile}></section>`
     : ''
 
   const { configured: mailConfigured } = await getMailStatus()

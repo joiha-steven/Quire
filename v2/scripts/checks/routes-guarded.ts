@@ -33,6 +33,7 @@ const PUBLIC_WRITES = new Map<string, string>([
   ['/api/cron', 'called by an external scheduler that has no session. Authorised by CRON_SECRET as a bearer token when one is set.'],
   ['/api/mcp/register', 'RFC 7591 dynamic client registration, which happens BEFORE any auth by definition. Rate limited per IP, refused while MCP is off, and registering a client grants nothing on its own - the owner still has to approve it at /api/mcp/authorize.'],
   ['/api/mcp/token', 'the OAuth token exchange. Authorised by a signed, single-use, PKCE-bound code rather than a session.'],
+  ['/api/mcp', 'the MCP endpoint itself. Authorised by a bearer token the owner minted, not by the session cookie, and it must answer 401 with the resource-metadata pointer that starts the OAuth flow rather than the plain refusal the gate would give. Refused outright while MCP is off.'],
   ['/api/mcp/authorize', 'the consent form POST. Requires an owner session AND a session-bound CSRF token; it is listed here only because the GET half must be reachable to sign in from.'],
 ])
 

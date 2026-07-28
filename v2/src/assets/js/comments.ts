@@ -10,6 +10,7 @@
 // the article never pays for it.
 
 import { el, label } from './dom'
+import { mountTurnstile } from './turnstile'
 
 type Comment = {
   id: number
@@ -102,6 +103,12 @@ function buildForm(postSlug: string, parentId: number | null): HTMLFormElement {
     button,
     el('p', { class: 'comment-status', role: 'status' }),
   ) as HTMLFormElement
+
+  // The server refuses a comment whose Turnstile token does not verify whenever the owner
+  // has it on, so the widget has to be here or the form cannot be completed at all. The
+  // site key is server-rendered onto the mount point; absent means Turnstile is off.
+  const siteKey = document.querySelector<HTMLElement>('#comments')?.dataset.turnstile
+  if (siteKey) mountTurnstile(form, siteKey)
 
   form.addEventListener('submit', (e) => {
     e.preventDefault()
