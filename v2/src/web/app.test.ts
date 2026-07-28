@@ -244,3 +244,24 @@ describe('the feed hands itself back a chunk at a time', () => {
     expect(html).toContain('animation-timeline:view()')
   })
 })
+
+describe('what a shared cache may do with a page', () => {
+  // Nothing was sent at all, so the CDN decided for itself: a staging article came back
+  // from the edge two deploys stale. On the live domain that is a published post nobody
+  // can see.
+  it('lets the edge hold a public page briefly, and refresh behind the reader', async () => {
+    await savePost({ title: 'Public', content: 'body', status: 'published', date: PAST })
+    const res = await get('/public')
+    expect(res.headers.get('cache-control')).toBe('public, s-maxage=60, stale-while-revalidate=600')
+  })
+
+  it('never lets a shared cache hold the owner in', async () => {
+    // A sign-in page or an admin shell in a shared cache is a page served to somebody it
+    // was not rendered for.
+    expect((await get('/login')).headers.get('cache-control')).toBe('private, no-store')
+  })
+
+  it('does not let a 404 be cached as though it were a page', async () => {
+    expect((await get('/nothing-here')).headers.get('cache-control')).toBe('private, no-store')
+  })
+})

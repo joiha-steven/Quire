@@ -29,6 +29,7 @@ import { handleMarkdown, wantsMarkdown } from '@/web/markdown'
 import { handleManifest } from '@/web/manifest'
 import { handlePreview } from '@/web/preview'
 import { handleSearch } from '@/web/search-api'
+import { cacheHeaders } from '@/web/cache-headers'
 import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
 import { siteRoutes } from '@/web/admin/site'
@@ -86,6 +87,9 @@ export function createApp(): Hono {
   // ...and the same argument for errors: a handler may throw, and this is the one place
   // that becomes a logged, typed 500.
   app.onError(errorHandler())
+
+  // What a shared cache may do with a page, in one rule at the door.
+  app.use('*', cacheHeaders())
 
   const home = async (page: number) => {
     const settings = await getSettings()
