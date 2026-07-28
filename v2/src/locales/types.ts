@@ -341,10 +341,19 @@ export type AdminStrings = {
   resetDefault: string
   // settings tabs (task-based)
   tabSite: string
-  tabContent: string
+  tabSiteHint: string
+  tabLayout: string
+  tabLayoutHint: string
+  tabReading: string
+  tabReadingHint: string
   tabAppearance: string
+  tabAppearanceHint: string
   tabSeo: string
-  tabIntegrations: string
+  tabSeoHint: string
+  tabConnections: string
+  tabConnectionsHint: string
+  tabSystem: string
+  tabSystemHint: string
   themeAdminNote: string
   // typography (per-role type system)
   cardTypography: string
@@ -646,6 +655,10 @@ export type AdminStrings = {
   mcpCreateFailed: string
   // backups (Google Drive)
   backupTitle: string
+  exportHint: string
+  exportNow: string
+  exportBusy: string
+  exportReplicationNote: string
   backupHint: string
   backupConnect: string
   backupDisconnect: string

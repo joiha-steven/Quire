@@ -58,7 +58,11 @@ export async function statSize(pathname: string): Promise<number> {
 // large video never sits fully in memory the way read() would put it there.
 export function stream(pathname: string, range?: { start: number; end: number }): ReadableStream {
   const rs = createReadStream(resolveSafe(pathname), range)
-  return Readable.toWeb(rs) as ReadableStream
+  // Through `unknown`: node:stream/web and the DOM both declare a ReadableStream and the
+  // two are not assignable to each other. The server project has no DOM lib so the direct
+  // cast compiled there, and only failed once the admin project — which does have DOM —
+  // started following this file through a type import.
+  return Readable.toWeb(rs) as unknown as ReadableStream
 }
 
 // Delete a binary. No-op when missing.

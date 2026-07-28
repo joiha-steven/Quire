@@ -9,6 +9,7 @@
 // registered before it; Hono matches in registration order.
 
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import { getPublicPosts, searchPosts } from '@/content/posts'
 import { getPublicPages } from '@/content/pages'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
@@ -35,6 +36,9 @@ import { uploadRoutes } from '@/web/admin/uploads'
 import { newsRoutes } from '@/web/admin/news'
 import { opsRoutes, publicOpsRoutes } from '@/web/admin/ops'
 import { mcpAdminRoutes, mcpOAuthRoutes } from '@/web/admin/mcp'
+import { viewRoutes } from '@/web/admin/views'
+import { adminShell, handleAdminAsset } from '@/web/admin/spa'
+import { currentOwner } from '@/web/guard'
 import { staticFile, staticPaths } from '@/web/static'
 import { handleCommentsGet, handleCommentsPost } from '@/web/comments'
 import {
@@ -47,6 +51,20 @@ import {
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/**
+ * The admin shell, for the owner, or a redirect to sign in.
+ *
+ * The redirect carries where they were going, so signing in lands them on the page they
+ * asked for rather than dumping them at the dashboard.
+ */
+function adminPage(c: Context): Response {
+  if (currentOwner(c) === null) {
+    const next = encodeURIComponent(c.req.path + (new URL(c.req.url).search || ''))
+    return c.redirect(`/login?next=${next}`, 302)
+  }
+  return c.html(adminShell(), 200, { 'x-robots-tag': 'noindex, nofollow' })
+}
 
 /** A page number from the URL. Anything that is not a positive integer is a 404, not a 1. */
 function pageNumber(raw: string): number | null {
@@ -248,6 +266,20 @@ export function createApp(): Hono {
   app.route('/', publicOpsRoutes())
   app.route('/', mcpAdminRoutes().routes)
   app.route('/', mcpOAuthRoutes())
+  app.route('/', viewRoutes().routes)
+
+  // ----- the admin ------------------------------------------------------------
+  // The built bundle, and the empty shell that mounts it. Registered before `/:slug` so a
+  // page called "admin" cannot shadow it.
+  //
+  // The assets are PUBLIC by deliberate choice: they are a compiled front end containing
+  // no data, every byte of it is in a public repository, and gating them would only mean a
+  // signed-out reader who lands on /admin gets a broken page instead of a sign-in form.
+  // Everything the bundle then asks for is gated.
+  app.get('/admin/assets/*', handleAdminAsset)
+
+  app.get('/admin', (c) => adminPage(c))
+  app.get('/admin/*', (c) => adminPage(c))
 
   // ----- drafts ---------------------------------------------------------------
   // Registered before `/:slug` so a post that happens to be called "preview" cannot

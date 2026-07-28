@@ -1,0 +1,28 @@
+{
+  // The admin SPA: browser code, React, and the second directory that gets DOM types.
+  //
+  // The root tsconfig excludes this folder for the same reason it excludes `assets/js` —
+  // a server module that reaches for `document` must fail to compile, not fail on the
+  // first request. It also sets `jsxImportSource` to hono/jsx for server-rendered markup;
+  // this one is React, which is why the two cannot share a config.
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "types": ["bun"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": "../..",
+    "paths": { "@/*": ["./src/*"] }
+  },
+  // The ambient declarations live outside this folder, and every server module the admin
+  // type-imports leans on them. Without this line those modules fail to resolve their
+  // .sql and asset imports and the admin build reports errors in files it never runs.
+  "include": [".", "../types"]
+}
