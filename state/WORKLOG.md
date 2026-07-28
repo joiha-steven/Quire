@@ -21,6 +21,12 @@ sidebar already clears the way by publishing `--admin-nav-w: 0px`, so the except
 nothing and cost the whole page its margins. Removed. This is exactly what the porting rule
 is for, and it was broken by someone who had read the rule.
 
+**The writing surface was set in the wrong face.** `.prose{font-family:var(--font-reading)}`
+lived in the PUBLIC sheet, which the admin does not load, so the editor fell back to the
+chrome font: a post drafted in JetBrains Mono was published in Literata. The rule now sits
+with the rest of the `.prose` rules in `prose.css.ts`, which both sheets share. Measured
+after the fix - editor and article agree to the pixel: Literata, 18.08px, 29.832px line.
+
 **`data-chrome-font` was never emitted anywhere**, public or admin, so the tracking
 correction the two mono faces need had no selector to match and was simply absent from 2.0.
 **`data-motion` was never emitted either**, which means the owner's Motion switch in
