@@ -11,7 +11,10 @@ export const ISLANDS_CSS = `
    to the server-rendered page, so a reader with JavaScript off sees no gaps: the
    elements simply never exist. */
 
+/* font-family explicitly, because this button lives INSIDE .prose pre and would otherwise
+   inherit the code face. It is chrome sitting on top of code, not code. */
 .code-copy{position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;font-size:.75rem;
+  font-family:var(--font-sans);
   border:1px solid var(--c-rule);background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;transition:opacity .15s}
 .prose pre{position:relative}
 .prose pre:hover .code-copy,.code-copy:focus-visible{opacity:1}

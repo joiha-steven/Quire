@@ -159,6 +159,9 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
           <p className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">{t.mcpNoTokens}</p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+            {/* The frame is overflow-hidden for its corners; without this the table is
+                clipped on a narrow screen. See kit.tsx TABLE_SCROLL. */}
+            <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
             <table className="w-full text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
                 <tr>
@@ -203,6 +206,7 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

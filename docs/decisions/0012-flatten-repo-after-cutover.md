@@ -67,3 +67,12 @@ this applies to, and refreshing them is tracked in `state/TASKS.md`.
   human to apply.
 - `v1/`'s history is preserved: every file moved with `git mv`, and `v1/README.md` is the
   old root README with a banner, not a rewrite.
+
+## Amendment, 2026-07-29
+
+`attic/` is gone. The owner asked for the Go plan to be removed the day after it was
+filed there, and the argument for keeping it did not survive contact with the question
+"what would anyone read this for?" — [0004](0004-rewrite-in-go-on-sqlite.md) and
+[0005](0005-rewrite-in-bun-hono-sqlite.md) already carry the decision, the reversal and
+the salvage record, which is the part that stops the argument being re-run. The specs
+themselves were superseded by `docs/spec/` and describe a program nobody will ever build.

@@ -1,6 +1,6 @@
 # Golden-file parity harness
 
-Replaces `go/docs/03-golden.md`, and the change is large enough to state up front.
+Replaces the Go plan's golden spec, and the change is large enough to state up front.
 
 **The Go plan's single highest risk was that `goldmark` and `marked` render the existing
 corpus differently. That risk no longer exists: `marked` is kept.** So is `shiki`, and so

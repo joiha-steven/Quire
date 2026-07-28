@@ -35,6 +35,15 @@ body{
    three-columns-not-level the owner spotted. Rhythm INSIDE the body copy is restored by
    .prose > * + * in prose.css.ts, exactly as the frozen tree restores it. */
 h1,h2,h3,h4,h5,h6,p,figure,blockquote,ol,ul,dl,dd,pre{margin:0}
+/* The SECOND thing the frozen tree got free from Tailwind's preflight, and the second one
+   to go missing. A form control does not inherit its font: left alone, every button on the
+   site paints in the browser's UI face at the browser's size, not in the owner's typeface
+   at a --fs- token. Measured before this rule existed: "Sao chép" on every code block and
+   "Lên đầu trang" on every article rendered in Arial at 12px/normal, and the theme and menu
+   buttons at 13.33px/normal - four controls on a site whose own rule is one typeface and no
+   hardcoded sizes. The shorthand is deliberate: font:inherit carries line-height too, which
+   font-family alone would leave at the UA's "normal". */
+button,input,select,textarea,optgroup{font:inherit;color:inherit;letter-spacing:inherit}
 img,video,iframe{max-width:100%;height:auto}
 a{color:var(--c-link);text-decoration:underline;text-underline-offset:.15em}
 a:hover{color:var(--c-heading)}

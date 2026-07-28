@@ -33,6 +33,9 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
+      {/* The frame is overflow-hidden for its corners; without this the table is clipped
+          on a narrow screen with no way to reach the rest. See kit.tsx TABLE_SCROLL. */}
+      <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500 whitespace-nowrap">
           <tr>
@@ -67,6 +70,7 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

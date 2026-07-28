@@ -1,6 +1,6 @@
 # Module structure, caching, concurrency
 
-Replaces `go/docs/02-packages.md`.
+Replaces the Go plan's package spec.
 
 ## Layout
 

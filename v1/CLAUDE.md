@@ -8,7 +8,7 @@
 > It is a single **Bun + Hono + SQLite** process and it lives at the repository ROOT: read
 > [`../CLAUDE.md`](../CLAUDE.md) for anything about the running product.
 > Plan: [`docs/spec/00-plan.md`](../docs/spec/00-plan.md) · Decision: [ADR 0005](../docs/decisions/0005-rewrite-in-bun-hono-sqlite.md).
-> (`go/` was an earlier plan, never built, [superseded](../attic/go/SUPERSEDED.md).)
+> (A Go rewrite was planned first and never built: [ADR 0004](../docs/decisions/0004-rewrite-in-go-on-sqlite.md).)
 >
 > **This file's rules apply to `v1/` only.**
 >

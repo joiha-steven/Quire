@@ -1,6 +1,6 @@
 # Frontend: CSS, islands, admin, editor
 
-Replaces `go/docs/04-frontend.md`. Two frontends with opposite budgets.
+Replaces the Go plan's frontend spec. Two frontends with opposite budgets.
 
 - **Public**: server-rendered HTML, no framework, no bundler, **zero JavaScript on an
   article page**.

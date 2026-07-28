@@ -1,11 +1,13 @@
 # Quire 2.0: master plan
 
-Status: **IN PROGRESS.** M0, M0.5, M1 and M2 are done; M3 is part done and M4 has not
-started. `../state/TASKS.md` is the live list — this document is the plan, not the tracker,
-and where the two disagree the tracker is right.
+Status: **DELIVERED.** M0 through M4 are done; Quire 2.0 has served `manhhung.me` since
+2026-07-28. `../../state/TASKS.md` is the live list — this document is the plan, not the
+tracker, and where the two disagree the tracker is right.
 
-Supersedes `go/docs/00-plan.md`. See "What changed from the Go plan" for the record of
-why, and `go/SUPERSEDED.md` for what was salvaged.
+Supersedes the abandoned Go plan, whose specs were deleted on 2026-07-29 once everything
+worth keeping had been folded into this directory. The record of that reversal is
+[ADR 0004](../decisions/0004-rewrite-in-go-on-sqlite.md); "What changed from the Go plan"
+below is the argument.
 
 ## Goal
 
@@ -140,27 +142,24 @@ falling faster than the risk of keeping it is rising.
 - Not a rewrite of the product. Features, URLs, content model and admin concepts stay
   the same.
 - Not horizontally scalable. One process, one machine, one SQLite file.
-- Not a new name. The product stays **Quire**. `v2/` is a temporary directory and
-  disappears at M4.
+- Not a new name. The product stays **Quire**. `v2/` was a temporary directory and
+  disappeared at M4.
 - Not multi-tenant. See "Audience".
 
-## Repository layout during development
+## Repository layout
 
-The Next tree is **not moved**. `manhhung.me` keeps deploying exactly as it does today
-(`rsync src/`, bump `.deployment-id`, build, restart) for the whole project.
+During development the Next tree was **not moved** and kept deploying unchanged, with the
+new implementation built alongside it in `v2/`. At cutover the two swapped places
+([ADR 0012](../decisions/0012-flatten-repo-after-cutover.md)): 2.0 is now the repository
+root and the Next tree is `v1/`.
 
 ```
 quire/
-  src/ scripts/ docs/ deploy/ ...   Next.js, FROZEN, deploy unchanged
-  go/                               SUPERSEDED, kept for its salvaged specs
-  v2/
-    package.json
-    src/                            see 02-structure.md
-    admin/                          the React admin, moved from src/components/admin
-    assets/                         hand-written JS + CSS
-    golden/                         parity harness + reference snapshots
-    docs/                           this directory
-    CLAUDE.md                       working rules for v2 (replaces the src/ rules here)
+  src/                              see 02-structure.md
+  scripts/                          build, checks, ops, the importer
+  golden/                           parity harness + reference snapshots
+  docs/spec/                        this directory
+  v1/                               Next.js, FROZEN
 ```
 
 At M4, in a single commit: `git mv` the Next tree into `legacy/` (or delete it, git keeps

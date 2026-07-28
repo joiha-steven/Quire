@@ -223,7 +223,17 @@ export function EmptyState({
 
 // Table chrome — shared so the 4 admin tables stop re-declaring wrapper + head
 // classes. `TableFrame` is the rounded, bordered surface; `TH`/`TD` standardize cells.
+//
+// TWO nested boxes, and the inner one is not decoration. The frame needs
+// `overflow-hidden` or the table's corners square off the rounded card. But
+// `overflow-hidden` on the ONLY box means a table wider than the card is clipped with no
+// way to reach the rest: measured at 390px, the analytics table ran to 426px and its last
+// column (scroll depth) sat entirely past the viewport edge, unreachable, on every phone.
+// The inner `overflow-x-auto` gives that overflow somewhere to go while the outer box
+// keeps the corners.
 export const TABLE_FRAME = `overflow-hidden ${CARD}`
+/** Goes between TABLE_FRAME and the table. Never let a table be the frame's direct child. */
+export const TABLE_SCROLL = 'overflow-x-auto overscroll-x-contain [scrollbar-width:thin]'
 export const THEAD =
   'whitespace-nowrap border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400'
 export const TROW = 'border-b border-neutral-100 last:border-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40'
@@ -231,7 +241,9 @@ export const TROW = 'border-b border-neutral-100 last:border-0 hover:bg-neutral-
 export function TableFrame({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className={`${TABLE_FRAME} ${className}`}>
-      <table className="w-full text-sm">{children}</table>
+      <div className={TABLE_SCROLL}>
+        <table className="w-full text-sm">{children}</table>
+      </div>
     </div>
   )
 }

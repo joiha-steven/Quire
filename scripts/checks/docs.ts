@@ -22,7 +22,7 @@ const ROOT = process.cwd()
 const CLAUDE_MD_MAX = 170
 const FILE_MAX = 700
 
-const ROOTS = ['.', 'docs', 'state', 'scripts', '.github', 'v1', 'attic']
+const ROOTS = ['.', 'docs', 'state', 'scripts', '.github', 'v1']
 
 // `golden/corpus/` holds markdown FIXTURES, not documents. Their links point at
 // deliberately fake images and dangerous schemes, because that is exactly what they test.

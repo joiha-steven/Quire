@@ -152,7 +152,6 @@ the test suite; offline, no credentials, no services. Contributing rules are in
 | `state/` | Where things stand now: roadmap, tasks, worklog, audits |
 | `golden/` | The rendering contract — fixtures plus the frozen tree's output for each |
 | `v1/` | **Quire 1.5.0**, the Next.js + PostgreSQL implementation this replaced on 2026-07-28. Frozen, security patches only |
-| `attic/` | Plans that were abandoned before anything shipped. Kept so nobody proposes them twice |
 
 ---
 

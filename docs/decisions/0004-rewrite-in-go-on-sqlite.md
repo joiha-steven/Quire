@@ -3,7 +3,9 @@
 Date: 2026-07-26 · Status: **superseded** by [0005](0005-rewrite-in-bun-hono-sqlite.md) on 2026-07-27
 
 > Kept in full, per the append-only rule. No Go code was ever written. The specs it
-> produced live in `go/docs/`; `go/SUPERSEDED.md` records what was salvaged.
+> produced were salvaged into `docs/spec/` (schema and importer moved nearly unchanged,
+> golden and frontend rewritten) and the originals were deleted on 2026-07-29. This ADR
+> and [0005](0005-rewrite-in-bun-hono-sqlite.md) are now the whole record.
 
 ## Context
 
@@ -20,7 +22,7 @@ for the editor, litestream to R2 for backup. Eight to nine weeks across five mil
 ## Why it was superseded
 
 Four reasons, in order of weight. Full argument in
-[0005](0005-rewrite-in-bun-hono-sqlite.md) and `go/SUPERSEDED.md`.
+[0005](0005-rewrite-in-bun-hono-sqlite.md).
 
 1. It would have **translated** ~6,500 lines of pure logic and 2,427 lines of tests that a
    TypeScript target simply **moves**. Translation is where behaviour goes missing.
@@ -34,5 +36,5 @@ Four reasons, in order of weight. Full argument in
 ## What it got right, and still stands
 
 The SQLite schema mapping and the importer verification design were the most expensive
-thinking in this ADR and moved to `v2/docs/` nearly unchanged. So did the payload
+thinking in this ADR and moved to `docs/spec/` nearly unchanged. So did the payload
 measurement and the island-by-island frontend table.

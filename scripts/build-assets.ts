@@ -25,7 +25,15 @@ const result = await Bun.build({
   ],
   outdir: OUT,
   target: 'browser',
-  format: 'esm',
+  // IIFE, not ESM, and this is load-bearing. The bundles are injected as plain
+  // `<script src defer>` (see src/web/assets.ts), which is a CLASSIC script: every
+  // top-level declaration lands on the global scope. Three self-contained ESM bundles have
+  // no import or export left to make that a syntax error, so they loaded happily and then
+  // stamped on each other — post.js declares `h` (its scroll-watch helper) and so does
+  // core.js (`drawIcon`), the minifier gave both the same letter, post.js loaded second and
+  // won, and clicking Dark called the button as if it were a function. Dark mode did
+  // nothing until the reader reloaded. An IIFE has no top-level scope to collide in.
+  format: 'iife',
   minify: true,
   // The oldest engines that still get updates. Anything older does not run the frozen
   // tree either, so this narrows nothing that was previously supported.
