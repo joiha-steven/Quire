@@ -17,19 +17,31 @@
 #
 # Install:
 #   install -m 755 quire2-backup.sh /usr/local/bin/
+#   Set the block below, or export the same names from the crontab / an EnvironmentFile.
 #   crontab -e ->  17 * * * * /usr/local/bin/quire2-backup.sh
 #                  40 20 * * * /usr/local/bin/quire2-backup.sh daily
 
 set -uo pipefail
 
-DATA=/var/lib/quire2/data
-UPLOADS=/var/lib/quire2/uploads
-BUN=/home/quire2/.bun/bin/bun
-REMOTE="r2:joiha-server-backup/sv1-usa-joiha/quire2"
-STAGE=/root/backups/stage
-LOG=/root/backups/quire2-backup.log
-LOCK=/var/lock/quire2-backup.lock
-ALERT_HOOK_FILE=/root/.alert-webhook
+# ---- this machine ------------------------------------------------------------
+# Everything that describes ONE installation. Set them here, or in the environment, and
+# nothing below needs reading. They are variables rather than literals because this file
+# is in a public repository: a script that names somebody's data directory, their bucket
+# and their alert endpoint publishes all three to everyone who reads it.
+DATA="${QUIRE_DATA:-/var/lib/quire2/data}"
+UPLOADS="${QUIRE_UPLOADS:-/var/lib/quire2/uploads}"
+BUN="${QUIRE_BUN:-$HOME/.bun/bin/bun}"
+# An rclone remote and a path under it: `rclone config` names the remote, this points into
+# it. There is no default worth guessing, so an unset value stops the run.
+REMOTE="${QUIRE_BACKUP_REMOTE:?set QUIRE_BACKUP_REMOTE, e.g. r2:my-bucket/quire2}"
+STAGE="${QUIRE_BACKUP_STAGE:-/var/tmp/quire2-backup}"
+LOG="${QUIRE_BACKUP_LOG:-/var/log/quire2-backup.log}"
+LOCK="${QUIRE_BACKUP_LOCK:-/var/lock/quire2-backup.lock}"
+# A file holding one webhook URL. Absent, a failure is logged and not announced.
+ALERT_HOOK_FILE="${QUIRE_ALERT_HOOK_FILE:-/etc/quire2/alert-webhook}"
+# The name this installation calls itself in an alert.
+ALERT_ALIAS="${QUIRE_ALERT_ALIAS:-quire2 backup}"
+# ------------------------------------------------------------------------------
 
 MODE="${1:-hourly}"
 TAG="$(date +%Y%m%d-%H%M)"

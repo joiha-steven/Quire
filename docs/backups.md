@@ -89,5 +89,19 @@ an untested backup is a belief, not a backup.
 
 ## Instance configuration
 
-The remote, the alert hook and the data paths are at the top of the script. They describe
-one machine, so they are the only part worth reading before installing it somewhere else.
+One block at the top of the script, and the only part worth reading before installing it
+somewhere else. Every value is `${QUIRE_…:-default}`, so it can be set in the file, in the
+crontab, or in a systemd `EnvironmentFile` — whichever the machine already uses.
+
+| | Default |
+|:--|:--|
+| `QUIRE_DATA` / `QUIRE_UPLOADS` | `/var/lib/quire2/{data,uploads}` |
+| `QUIRE_BUN` | `$HOME/.bun/bin/bun` |
+| `QUIRE_BACKUP_REMOTE` | **none — the run stops without it.** An rclone remote and a path, e.g. `r2:my-bucket/quire2` |
+| `QUIRE_BACKUP_STAGE` / `_LOG` / `_LOCK` | `/var/tmp/quire2-backup`, `/var/log/quire2-backup.log`, `/var/lock/quire2-backup.lock` |
+| `QUIRE_ALERT_HOOK_FILE` | `/etc/quire2/alert-webhook` — a file holding one URL. Absent, a failure is logged and not announced |
+| `QUIRE_ALERT_ALIAS` | `quire2 backup` — what this installation calls itself in that alert |
+
+They are variables rather than literals because **this repository is public**. A script that
+names somebody's data directory, their bucket and their alert endpoint publishes all three
+to everyone who reads it.
