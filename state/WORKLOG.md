@@ -3,6 +3,51 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — M4: manhhung.me is Quire 2.0
+
+Two things had to land first, and both were about losing something rather than about the
+site looking right.
+
+**There was no backup.** Google Drive was dropped on the argument that replication would
+replace it, and until this afternoon the only copy of everything the owner had written was
+one directory on one machine. `scripts/ops/quire2-backup.sh` now sends both databases to R2
+hourly with `VACUUM INTO` — never a file copy, because a live SQLite database has a
+write-ahead log — and syncs the uploads with a 7-day `--backup-dir`. Verified by RESTORING
+it: 2 MB archive, `integrity_check` ok, 74 posts and 4 pages present. It is a separate
+script from `jk-backup.sh` on purpose: that one backs up the money site, and adding a sixth
+engine to a proven, monitored backup to serve a blog would have put those at risk for no
+gain. It reuses its R2 remote, its retention habit and its alert hook.
+
+**Nothing said what a shared cache could do with a page**, so the CDN decided. That cost an
+hour of chasing a staging bug that had already been fixed, and on the live domain the same
+thing is a published post nobody can see. Public pages now say `s-maxage=60` with
+`stale-while-revalidate`; the admin, the sign-in page and anything that is not a 200 say
+`private, no-store`.
+
+Then the switch itself:
+
+- `old.manhhung.me` serves the frozen tree on :3000, `noindex`, keeping its
+  `'unsafe-inline'` CSP because Next needs it.
+- `manhhung.me` serves 2.0 on :3100 with a STRICTER CSP — no `'unsafe-inline'` for scripts,
+  which 2.0 can finally afford because it has no inline script anywhere and that property
+  is tested.
+- `SITE_URL` moved with it. Canonical, og:url, robots, sitemap and the feed all say
+  manhhung.me.
+
+**`import-v1` was deliberately NOT re-run.** The counts matched on both sides (74 posts, 4
+pages, 2 comments, 68 media) and so did the newest rows to the millisecond — nothing had
+been written to the frozen tree since the import that morning, so a reimport would have
+been a no-op carrying real risk.
+
+Every session was revoked at the cutover. The cookie is `__Host-` prefixed and therefore
+host-scoped, so a session from next.manhhung.me would not have carried to manhhung.me
+anyway; revoking also retires the token that was minted for driving the browser during the
+week's debugging.
+
+Left for the owner: purge the Cloudflare cache. The edge still holds the frozen tree's HTML
+under `s-maxage=3600, stale-while-revalidate=31532400` — a year of permitted staleness —
+and no Cloudflare credentials exist on the box.
+
 ## 2026-07-28 — the header controls, the feed, and a margin the browser was supplying
 
 The owner went through the public site control by control. Everything reported was real,
