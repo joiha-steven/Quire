@@ -3,6 +3,39 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — M3 done: the admin exists, and three things that were never wired
+
+**The admin interface was at zero and is now complete.** 68 components and 5 UI primitives
+moved out of the frozen tree, a router in place of `next/link` and `next/navigation`, and
+one endpoint per page under `/api/admin/view/` standing in for what each server component
+used to fetch inline. Every runtime import the components made turned out to be a pure
+helper, so the tree moved with its imports rewritten and nothing else touched — which is
+the bet [ADR 0006](../docs/decisions/0006-admin-stays-react-spa.md) made, and it held.
+
+**The envelope was missing, and it hid in plain sight.** Every admin component reads
+`json.success` and `json.data`; the ported handlers returned the bare payload. It
+type-checked, it passed 900 tests, and the media library showed "no images" over 66 of
+them. The dashboard counted them correctly at the same time from a different endpoint,
+which is what made it look like a data problem. Fixed in one place. The 44 tests that broke
+had been asserting the bare shape — they tested the server against itself, and no test in
+the suite had ever put a client on the other end.
+
+**Settings regrouped**, at the owner's request: five tangled tabs into seven defined ones,
+each printing the question it answers. [ADR 0011](../docs/decisions/0011-settings-regrouped-into-seven.md).
+
+**Three things were wired to nothing:**
+- The **MCP transport**, the one genuine rewrite in M3. Stateless Streamable HTTP against
+  the SDK. Five wire tests, because "the tools are ported" and "a connector can talk to it"
+  are different claims.
+- The **manual archive**. Drive is gone by decision; the archive that decision promised in
+  exchange did not exist. `VACUUM INTO`, not a file copy — a live SQLite database has a
+  write-ahead log and copying the file can capture a torn state.
+- **Turnstile**. The server has refused unverified comments since M3 and the widget that
+  produces the token was never ported, so on a site with it on, every comment was rejected
+  and the form looked broken.
+
+907 tests. Every admin page verified by opening it, signed in, in a real browser.
+
 ## 2026-07-28 — The public design, ported for real, and measured against v1
 
 The owner's verdict on the first staging build was "khác quá xa" — nothing like the blog.

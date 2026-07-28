@@ -4,23 +4,18 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Now
 
-- [ ] **M3 — admin, API and the rest.** Auth rebuilt per `v2/docs/06-auth.md`; 57 of 63
-      admin API routes moved; `check:routes` enforcing Invariant 4. 900 tests.
-      **The admin INTERFACE does not exist yet — 0%.** Not one route renders `/admin`.
-      The frozen tree has 14 admin route folders and 68 components behind them, and the
-      plan ([ADR 0006](../docs/decisions/0006-admin-stays-react-spa.md)) is to build them as a
-      static React SPA embedded in the binary rather than port them to vanilla. The JSON
-      API they will talk to is the part that is done.
-      - [ ] **The admin SPA.** The largest single piece left. Needs a browser to build
-            against, which is why it waited.
-      - [ ] **Backup (6 routes + `lib/{backup,gdrive,backup-state}.ts`).** Nothing is
-            ported: `/api/cron` currently answers `backup: { ran: false, error: 'not yet
-            ported' }`. The Drive round trip needs a real OAuth client and refresh token.
-            The pure parts can be ported and unit-tested first.
-      - [ ] **The MCP transport (`/api/mcp`) and its tools.** The OAuth layer is done; the
-            transport is not. `mcp-handler` is Next-specific, so Streamable HTTP has to be
-            wired to `@modelcontextprotocol/sdk` directly. A rewrite, not a port.
-      - [ ] **`Turnstile`**, with the comment form's configuration. The last unported island.
+- [ ] **M4 — cutover.** Final import, DNS switch, one week of observation, then the
+      repository reshuffle. Keep the frozen tree runnable for 3 to 6 months against a
+      read-only copy so "did we lose something?" is answerable by comparison.
+      **Gate:** seven days on the new stack with no rollback.
+      - [ ] Re-run `import-v1` at cutover.
+      - [ ] **Set up litestream** to R2. It is the whole of parity exception 1 and the
+            reason there is no Drive backup; until it runs, the only backup is the manual
+            archive the admin offers.
+      - [ ] **The 30-flow headless tour** the M3 gate asked for. Every admin page has now
+            been opened in a real browser and checked by eye, and the archive, the MCP
+            handshake and each view endpoint have tests — but the scripted tour that
+            drives thirty flows end to end does not exist yet.
 - [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
       2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
       `@img/sharp-<platform>` native module, so the compiled binary throws on the first
@@ -30,9 +25,6 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Next
 
-- [ ] **M4 — cutover**, then keep the frozen tree runnable for 3 to 6 months against a
-      read-only copy so "did we lose something?" is answerable by comparison.
-      Re-run `import-v1` once more at cutover.
 - [ ] **Tighten `v2/tsconfig.json` after the port finishes.** It currently matches the
       frozen tree exactly (`strict`, nothing beyond it). `noUncheckedIndexedAccess` was
       tried during M1 and reverted: mid-port it turns a pure-motion diff into a
@@ -90,6 +82,11 @@ nobody has to rediscover them by eye:
 
 ## Done
 
+- [x] **M3 — admin, API and the rest. DONE 2026-07-28.** The admin SPA (68 components, 12
+      pages, its own router and view API), the MCP Streamable HTTP transport, the manual
+      export archive, Turnstile, and the API envelope the whole admin is written against.
+      Settings regrouped into seven defined tabs at the owner's request
+      ([ADR 0011](../docs/decisions/0011-settings-regrouped-into-seven.md)). 907 tests.
 - [x] **M1 — foundations and data layer.** Done 2026-07-27. SQLite schema; ~6,500 lines of
       pure logic and its tests moved unchanged; every `db()` call site on `bun:sqlite`; all
       six plpgsql functions reimplemented; `import-v1` with its four verification tiers.

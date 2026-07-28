@@ -32,6 +32,7 @@ abandoned on 2026-07-26, and the only trace was a private memory file.
 | [0008](0008-hand-written-css-no-tailwind-public.md) | Hand-write the public CSS, drop Tailwind from the reader path | 2026-07-27 | ✅ |
 | [0009](0009-pin-optical-size-axis.md) | Pin the `opsz` axis in the bundled variable fonts | 2026-07-27 | ✅ |
 | [0010](0010-four-homes-doc-layout.md) | Adopt the four-homes documentation layout | 2026-07-27 | ✅ |
+| [0011](0011-settings-regrouped-into-seven.md) | Regroup settings into seven defined tabs | 2026-07-28 | ✅ |
 
 ## Superseded, and why that matters
 
