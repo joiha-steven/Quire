@@ -9,7 +9,7 @@
 // Loaded only when the thread scrolls into view. A reader who never reaches the bottom of
 // the article never pays for it.
 
-import { el, label } from './dom'
+import { el, label, payload } from './dom'
 import { mountTurnstile } from './turnstile'
 
 type Comment = {
@@ -170,7 +170,7 @@ async function load(): Promise<void> {
   let comments: Comment[] = []
   try {
     const res = await fetch(`/api/comments?post=${encodeURIComponent(slug)}`)
-    ;({ comments } = await res.json() as { comments: Comment[] })
+    ;({ comments } = await payload<{ comments: Comment[] }>(res))
   } catch {
     root.textContent = label('commentError')
     return

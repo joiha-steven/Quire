@@ -159,5 +159,10 @@ export function chromeLabels(settings: SiteSettings): Record<string, string> {
     nlNoMail: s.nlNoMail,
     nlInvalid: s.nlInvalid,
     nlError: s.nlError,
+    // The header's sign-up overlay builds its own form, because the in-page card only
+    // exists at the foot of an ARTICLE and the button is in the header of every page.
+    nlHeading: s.nlHeading,
+    nlPlaceholder: s.nlPlaceholder,
+    nlButton: s.nlButton,
   }
 }

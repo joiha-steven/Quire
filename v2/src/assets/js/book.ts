@@ -17,6 +17,7 @@ import { el, label } from './dom'
 const OUTER_MARGIN = 48 // px, the minimum gap from the spread to the viewport edge
 const MAX_WIDTH = 1400 // px, so the spread does not sprawl on an ultrawide monitor
 const COL_GAP = 56 // px between the two facing pages
+const FADE_MS = 130 // the spread-to-spread crossfade; 200 (the frozen tree's) read as sluggish
 
 export function book(): void {
   const toggle = document.querySelector<HTMLButtonElement>('[data-book-open]')
@@ -41,10 +42,30 @@ export function book(): void {
     const viewport = el('div', { class: 'book-viewport' }, flow)
     const page = el('span', { class: 'book-count' })
 
-    const turn = (delta: number) => {
-      viewport.scrollBy({ left: delta * viewport.clientWidth, behavior: 'instant' as ScrollBehavior })
+    // The spread INDEX is the state, not the scroll offset. A relative scrollBy accumulates
+    // error, and this one accumulated a whole column gap per turn: the viewport is
+    // 2*col + gap wide, but the third column starts at 2*(col + gap), so every turn drifted
+    // 56px and by the third page the reader was looking at two half-columns.
+    let spread = 0
+    let step = 1
+    let spreads = 1
+    const goto = (index: number) => {
+      const next = Math.min(Math.max(index, 0), spreads - 1)
+      if (next === spread) return
+      spread = next
+      // The counter moves with the key, not with the animation: it says where you are
+      // going, and a number that lags 200ms behind the arrow feels broken.
       update()
+      // Fade out, jump, fade back in - the frozen tree's transition, and the reason a page
+      // turn reads as a page turn rather than as a jolt. An instant scroll is what made it
+      // feel broken even on the turns that landed correctly.
+      viewport.style.opacity = '0'
+      setTimeout(() => {
+        viewport.scrollLeft = spread * step
+        viewport.style.opacity = '1'
+      }, FADE_MS)
     }
+    const turn = (delta: number) => goto(spread + delta)
     // The spread is exactly TWO columns, sized to the page's own footprint. Leaving the
     // column count to `column-width` alone gave four thin columns running edge to edge,
     // which is a newspaper, not a book: a spread has to be two facing pages with margins.
@@ -60,14 +81,20 @@ export function book(): void {
       const column = Math.floor((width - COL_GAP) / 2)
       flow.style.setProperty('--book-col-w', `${column}px`)
       viewport.style.width = `${column * 2 + COL_GAP}px`
+      // One spread is TWO column PITCHES. The pitch is the column plus the gap after it,
+      // which is what the viewport width leaves out and what the old step got wrong.
+      step = (column + COL_GAP) * 2
       // Cap media to one page, so an image can never push a column past the spread.
       flow.style.setProperty('--book-page-h', `${flow.clientHeight}px`)
+      const columns = Math.max(1, Math.round(viewport.scrollWidth / (column + COL_GAP)))
+      spreads = Math.max(1, Math.ceil(columns / 2))
+      // A narrower window can leave the reader past the end.
+      spread = Math.min(spread, spreads - 1)
+      viewport.scrollLeft = spread * step
       update()
     }
     const update = () => {
-      const per = viewport.clientWidth || 1
-      const total = Math.max(1, Math.round(viewport.scrollWidth / per))
-      page.textContent = `${Math.round(viewport.scrollLeft / per) + 1} / ${total}`
+      page.textContent = `${spread + 1} / ${spreads}`
     }
 
     const nav = (cls: string, glyph: string, delta: number, name: string) => {
@@ -103,7 +130,6 @@ export function book(): void {
     })
     // The column count changes with the window, and so does the page count.
     addEventListener('resize', measure)
-    viewport.addEventListener('scroll', update, { passive: true })
 
     document.body.appendChild(next)
     dialog = next

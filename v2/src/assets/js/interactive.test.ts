@@ -15,13 +15,20 @@ useDom()
 beforeEach(() => page(''))
 
 describe('subscribe', () => {
-  const form = `<form class="subscribe" method="post" action="/api/subscribe">
-    <input type="email" name="email">
-    <button type="submit">Subscribe</button>
+  // The markup `subscribeCard()` actually renders: the status line is a SIBLING of the
+  // form, inside the card. The fixture used to nest it inside the form, which is what the
+  // handler's old selector looked for - so the test passed against markup the server has
+  // never produced, and the real card was never enhanced on any page.
+  const form = `<section class="subscribe-card" id="subscribe">
+    <h2>Newsletter</h2>
+    <form class="subscribe" method="post" action="/api/subscribe">
+      <input type="email" name="email">
+      <button type="submit">Subscribe</button>
+    </form>
     <p class="subscribe-status"></p>
-  </form>`
+  </section>`
 
-  const LABELS = { nlSuccess: 'Check your inbox.', nlNoMail: 'No mail configured.', nlInvalid: 'Bad address.', nlError: 'Something broke.' }
+  const LABELS = { nlSuccess: 'Check your inbox.', nlNoMail: 'No mail configured.', nlInvalid: 'Bad address.', nlError: 'Something broke.', nlHeading: 'Newsletter', nlPlaceholder: 'you@example.com', nlButton: 'Subscribe' }
 
   /** Stand in for the network, and record what was sent. */
   function stubFetch(status: number, body: unknown): { calls: RequestInit[] } {
@@ -42,7 +49,9 @@ describe('subscribe', () => {
   it('posts the address and reports success without leaving the page', async () => {
     page(form, LABELS)
     document.querySelector<HTMLInputElement>('input[name=email]')!.value = 'reader@example.com'
-    const { calls } = stubFetch(200, { status: 'sent' })
+    // The envelope every handler answers with. The island read the bare payload for a
+    // while after it was introduced, which is how search and the comment thread broke.
+    const { calls } = stubFetch(200, { success: true, data: { status: 'sent' } })
     subscribe()
     await submit()
     expect(calls.length).toBe(1)
@@ -89,7 +98,10 @@ describe('comments', () => {
 
   function stubFetch(comments: unknown[]): void {
     globalThis.fetch = ((() =>
-      Promise.resolve(new Response(JSON.stringify({ comments })))) as unknown) as typeof fetch
+      // The envelope the server actually sends. This stub used to return the bare payload,
+      // so it agreed with an island that read the bare payload and the pair of them stayed
+      // wrong together: on the real site the thread threw on undefined and never rendered.
+      Promise.resolve(new Response(JSON.stringify({ success: true, data: { comments } })))) as unknown) as typeof fetch
   }
 
   /** The island waits for an intersection; drive it directly instead of faking a scroll. */
@@ -179,7 +191,9 @@ describe('search overlay', () => {
     globalThis.fetch = (((url: string) => {
       urls.push(url)
       const q = new URL(url, 'http://x').searchParams.get('q') ?? ''
-      const body = JSON.stringify(byQuery[q] ?? [])
+      // Enveloped, as the server sends it. Bare, the island saw an object where an array
+      // belonged and the overlay reported "nothing found" for every query.
+      const body = JSON.stringify({ success: true, data: byQuery[q] ?? [] })
       const delay = delays[q] ?? 0
       return new Promise((resolve) =>
         setTimeout(() => resolve(new Response(body)), delay))
@@ -276,5 +290,46 @@ describe('search overlay', () => {
     page('<article>x</article>', LABELS)
     expect(() => search()).not.toThrow()
     expect(document.querySelector('.search-overlay')).toBeNull()
+  })
+})
+
+describe('subscribe overlay', () => {
+  // The header button is on EVERY page; its `#subscribe` anchor only exists at the foot of
+  // an article. On a listing the fallback scrolled nowhere, so the button did nothing at
+  // all — which is what the owner saw. The overlay carries its own copy of the form.
+  const header = '<a class="icon-btn" href="#subscribe" data-subscribe-open>mail</a>'
+  const LABELS = {
+    nlHeading: 'Newsletter', nlPlaceholder: 'you@example.com', nlButton: 'Subscribe',
+    nlSuccess: 'Check your inbox.', nlNoMail: 'x', nlInvalid: 'x', nlError: 'x',
+  }
+
+  const click = () => {
+    subscribe()
+    document.querySelector<HTMLAnchorElement>('[data-subscribe-open]')!
+      .dispatchEvent(new MouseEvent('click', { cancelable: true, bubbles: true }))
+    return document.querySelector<HTMLDialogElement>('.subscribe-overlay')
+  }
+
+  it('opens a modal carrying a real sign-up form, on a page with no card', () => {
+    page(header, LABELS)
+    const overlay = click()
+    expect(overlay).not.toBeNull()
+    expect(overlay!.querySelector('form.subscribe')).not.toBeNull()
+    expect(overlay!.querySelector('input[name=email]')).not.toBeNull()
+    expect(overlay!.querySelector('h2')!.textContent).toBe('Newsletter')
+  })
+
+  it('posts from the overlay form and reports back into it', async () => {
+    page(header, LABELS)
+    globalThis.fetch = (((_u: string, init: RequestInit) => {
+      void init
+      return Promise.resolve(new Response(JSON.stringify({ success: true, data: { status: 'sent' } })))
+    }) as unknown) as typeof fetch
+    const overlay = click()!
+    overlay.querySelector<HTMLInputElement>('input[name=email]')!.value = 'reader@example.com'
+    overlay.querySelector<HTMLFormElement>('form.subscribe')!
+      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+    await new Promise((r) => setTimeout(r, 0))
+    expect(overlay.querySelector('.subscribe-status')!.textContent).toBe('Check your inbox.')
   })
 })

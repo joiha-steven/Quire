@@ -11,6 +11,25 @@ export function label(name: string): string {
   return document.body.dataset[name] ?? ''
 }
 
+/**
+ * The body of an API response, out of its envelope.
+ *
+ * Every handler answers `{success, data}`. The islands were written against the bare
+ * payload and kept reading it that way after the envelope was introduced for the admin:
+ * search returned an object where an array was expected and showed nothing, and the comment
+ * thread destructured `comments` off the wrapper, got undefined, and threw. Both failed
+ * silently in the sense that mattered - the page looked empty rather than broken.
+ *
+ * An error response has no `data` and is returned as-is, which is what the callers reading
+ * `.error` off it expect.
+ */
+export async function payload<T>(res: Response): Promise<T> {
+  const body: unknown = await res.json()
+  return (body !== null && typeof body === 'object' && 'data' in body
+    ? (body as { data: T }).data
+    : body) as T
+}
+
 /** Create an element with attributes and children in one call. */
 export function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,

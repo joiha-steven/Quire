@@ -6,7 +6,7 @@
 //
 // A `<dialog>`, so Escape, focus trapping and the inert background are the browser's.
 
-import { el, label } from './dom'
+import { el, label, payload } from './dom'
 
 type Result = { slug: string; title: string; date: string }
 
@@ -73,7 +73,7 @@ export function search(): void {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
         if (!res.ok) return
-        const results = await res.json() as Result[]
+        const results = await payload<Result[]>(res)
         if (seq === latest) show(results, list, query)
       } catch {
         /* a failed search leaves the previous results alone */
