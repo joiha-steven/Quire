@@ -9,6 +9,7 @@ import { Button } from '@/admin/ui/Button'
 import { useToast } from '@/admin/ui/Toast'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/i18n/admin-i18n'
+import { PANEL_LIST } from './kit'
 
 type Props = {
   value: FontSettings
@@ -76,7 +77,7 @@ export function FontUpload({ value, onChange }: Props) {
         }}
       />
 
-      <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+      <div className={PANEL_LIST}>
         {FONT_WEIGHTS.map((w) => {
           const has = value.faces.some((f) => f.weight === w)
           return (

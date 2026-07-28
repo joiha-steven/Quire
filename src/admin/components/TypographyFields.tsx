@@ -6,6 +6,7 @@ import type { TypographySettings, TypeRole, TypeStyle } from '@/types'
 import { DEFAULT_TYPOGRAPHY, TYPE_ROLES } from '@/content/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/i18n/admin-i18n'
+import { INSET } from './kit'
 
 const ROLE_LABEL: Record<TypeRole, keyof AdminStrings> = {
   h1: 'typoH1',
@@ -105,7 +106,7 @@ export function TypographyFields({ typography, onChange }: Props) {
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.typographyUnits}</p>
 
       {/* Live preview of the heading roles + body, each at its own style. */}
-      <div className="space-y-1.5 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+      <div className={`space-y-1.5 ${INSET}`}>
         {(['h1', 'h2', 'h3'] as const).map((k) => (
           <p
             key={k}

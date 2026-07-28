@@ -11,6 +11,7 @@ import { ToggleRow } from '@/admin/ui/Switch'
 import { useToast } from '@/admin/ui/Toast'
 import { formatDateTimeShort } from '@/utils'
 import { useAdminT } from './I18nProvider'
+import { PANEL, TABLE_SCROLL } from './kit'
 
 const MAX = 5 // manual tokens only; OAuth-connector tokens are exempt
 
@@ -106,7 +107,7 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
 
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+      <div className={PANEL}>
         <ToggleRow
           label={t.mcpEnable}
           desc={t.mcpEnableDesc}
@@ -158,10 +159,8 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
         {tokens.length === 0 ? (
           <p className="py-6 text-center text-sm text-neutral-400 dark:text-neutral-500">{t.mcpNoTokens}</p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
-            {/* The frame is overflow-hidden for its corners; without this the table is
-                clipped on a narrow screen. See kit.tsx TABLE_SCROLL. */}
-            <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
+          <div className={PANEL}>
+            <div className={TABLE_SCROLL}>
             <table className="w-full text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
                 <tr>

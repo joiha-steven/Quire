@@ -6,6 +6,7 @@ import type { PostRevision, ApiResponse } from '@/types'
 import { Button } from '@/admin/ui/Button'
 import { formatDateTimeShort } from '@/utils'
 import { useAdminT } from './I18nProvider'
+import { INSET } from './kit'
 
 type Props = {
   slug: string
@@ -58,7 +59,7 @@ export function TimeMachine({ slug, onRestore, onClose }: Props) {
               {revisions.map((rev, i) => (
                 <li
                   key={rev.savedAt}
-                  className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800"
+                  className={INSET}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">

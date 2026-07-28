@@ -9,6 +9,7 @@ import type { ThemePreset } from '@/content/themes'
 import { getPreset } from '@/content/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/i18n/admin-i18n'
+import { INSET } from './kit'
 
 type ColorKey = keyof ThemeColors
 
@@ -134,7 +135,7 @@ function ModeBox({
   t: AdminStrings
 }) {
   return (
-    <div className="space-y-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+    <div className={`space-y-3 ${INSET}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold">{title}</h3>
         <button type="button" onClick={onReset} className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">

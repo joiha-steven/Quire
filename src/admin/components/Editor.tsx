@@ -19,6 +19,7 @@ import { Video } from './VideoNode'
 import { Toolbar, BubbleBar } from './EditorMenus'
 import { isVideoUrl } from '@/render/video'
 import { useAdminT } from './I18nProvider'
+import { CARD } from './kit'
 
 export type EditorApi = {
   insertImage: (url: string) => void
@@ -366,7 +367,7 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
   }
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
+    <div className={CARD}>
       <Toolbar editor={editor} onPickImage={onPickImage} onPickGallery={onPickGallery} raw={raw} onToggleRaw={toggleRaw} stickyTop={toolbarTop} />
       {/* Floating menu on a text selection / link — not in raw source mode. */}
       {!raw && <BubbleBar editor={editor} />}

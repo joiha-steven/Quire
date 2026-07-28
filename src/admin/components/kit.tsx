@@ -10,6 +10,22 @@ import type { ReactNode, SelectHTMLAttributes } from 'react'
 export const CARD =
   'rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none'
 
+// The two surfaces that sit INSIDE a card, both hand-written in several places before
+// they were named here. A settings page is a Card holding a PANEL_LIST of rows; a row that
+// needs its own boxed sub-area uses INSET.
+//
+// `rounded-xl`, not the card's `rounded-2xl`: a box nested inside a rounded box needs the
+// smaller radius or the two curves fight. No background and no shadow, because the card
+// underneath already provides both.
+export const PANEL = 'overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800'
+export const PANEL_LIST = `divide-y divide-neutral-200 dark:divide-neutral-800 ${PANEL}`
+export const INSET = 'rounded-xl border border-neutral-200 p-4 dark:border-neutral-800'
+
+// The status bar both editors put above the form (scheduled-for, unsaved-changes and the
+// like). Tinted rather than white so it reads as a message about the page, not part of it.
+export const NOTICE =
+  'flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-900'
+
 // Canonical form-control chrome — shared by admin <input> and <select> so height,
 // padding, radius and focus never drift (they were hand-rolled + cramped before).
 // Matches the labeled `FIELD` in ui/Input.tsx. Callers add width (w-full or fixed).

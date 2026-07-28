@@ -5,6 +5,7 @@ import { useRouter } from '@/admin/router'
 import type { Page, ApiResponse } from '@/types'
 import { useToast } from '@/admin/ui/Toast'
 import { RowActions, StatusPill } from './RowActions'
+import { TableFrame, THEAD, TROW } from './kit'
 import { useAdminT } from './I18nProvider'
 
 export function PagesTable({ initialPages, views }: { initialPages: Page[]; views: Record<string, number> }) {
@@ -32,12 +33,8 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
-      {/* The frame is overflow-hidden for its corners; without this the table is clipped
-          on a narrow screen with no way to reach the rest. See kit.tsx TABLE_SCROLL. */}
-      <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
-      <table className="w-full text-sm">
-        <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500 whitespace-nowrap">
+    <TableFrame>
+        <thead className={THEAD}>
           <tr>
             <th className="px-4 py-3 font-medium">{t.colTitle}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
@@ -48,7 +45,7 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
         </thead>
         <tbody>
           {pages.map((p) => (
-            <tr key={p.slug} className="border-b border-neutral-100 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40 last:border-0">
+            <tr key={p.slug} className={`transition-colors ${TROW}`}>
               <td className="px-4 py-3 font-medium">
                 <Link href={`/admin/page-editor/${p.slug}`} className="hover:underline">
                   {p.title || t.untitled}
@@ -69,8 +66,6 @@ export function PagesTable({ initialPages, views }: { initialPages: Page[]; view
             </tr>
           ))}
         </tbody>
-      </table>
-      </div>
-    </div>
+    </TableFrame>
   )
 }

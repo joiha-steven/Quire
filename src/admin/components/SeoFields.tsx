@@ -7,6 +7,7 @@ import { Button } from '@/admin/ui/Button'
 import { ToggleRow } from '@/admin/ui/Switch'
 import { MediaLibrary } from './MediaLibrary'
 import { useAdminT } from './I18nProvider'
+import { PANEL_LIST } from './kit'
 
 type Feature = { key: keyof SeoSettings; label: string; desc: string; path: string }
 
@@ -39,7 +40,7 @@ export function SeoFields({ s, update }: Props) {
         <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.seoCanonicalHint}</p>
       </div>
 
-      <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+      <div className={PANEL_LIST}>
         {FEATURES.map((f) => (
           <ToggleRow
             key={f.key}

@@ -7,6 +7,7 @@ import type { Post, ApiResponse } from '@/types'
 import { useToast } from '@/admin/ui/Toast'
 import { formatDateTimeShort, foldAccents } from '@/utils'
 import { RowActions, StatusPill } from './RowActions'
+import { TableFrame, THEAD, TROW } from './kit'
 import { useAdminT } from './I18nProvider'
 
 type StatusFilter = 'all' | 'published' | 'draft'
@@ -95,12 +96,8 @@ export function PostsTable({
       {filtered.length === 0 ? (
         <p className="py-16 text-center text-neutral-500 dark:text-neutral-400">{t.filterEmpty}</p>
       ) : (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.035)] dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
-      {/* The frame is overflow-hidden for its corners; without this the table is clipped
-          on a narrow screen with no way to reach the rest. See kit.tsx TABLE_SCROLL. */}
-      <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
-      <table className="w-full text-sm">
-        <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 text-left text-neutral-500 whitespace-nowrap">
+    <TableFrame>
+        <thead className={THEAD}>
           <tr>
             <th className="px-4 py-3 font-medium">{t.colTitle}</th>
             <th className="px-4 py-3 font-medium">{t.colStatus}</th>
@@ -114,7 +111,7 @@ export function PostsTable({
         </thead>
         <tbody>
           {filtered.map((p) => (
-            <tr key={p.slug} className="border-b border-neutral-100 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40 last:border-0">
+            <tr key={p.slug} className={`transition-colors ${TROW}`}>
               <td className="px-4 py-3 font-medium">
                 <Link href={`/admin/editor/${p.slug}`} className="hover:underline">
                   {p.title || t.untitled}
@@ -142,9 +139,7 @@ export function PostsTable({
             </tr>
           ))}
         </tbody>
-      </table>
-      </div>
-    </div>
+    </TableFrame>
       )}
     </>
   )

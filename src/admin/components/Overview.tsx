@@ -4,7 +4,7 @@
 import Link from '@/admin/router'
 import type { ActivityEntry } from '@/server/activity'
 import { formatBytes, formatDateTimeShort } from '@/utils'
-import { PageHeader, StatCard } from './kit'
+import { CARD, PageHeader, StatCard } from './kit'
 import { DashboardWidgets, type DashboardData } from './DashboardWidgets'
 import { useAdminT } from './I18nProvider'
 
@@ -71,7 +71,7 @@ export function Overview(props: Props) {
 
       <DashboardWidgets data={dashboard} />
 
-      <section className="rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.035)] sm:p-6 dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
+      <section className={`p-5 sm:p-6 ${CARD}`}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold">{t.recentActivity}</h2>
           <Link href="/admin/log" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">{t.recentViewAll}</Link>

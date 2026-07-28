@@ -3,6 +3,7 @@ import type { FeatureSettings } from '@/types'
 import { Input } from '@/admin/ui/Input'
 import { ToggleRow } from '@/admin/ui/Switch'
 import { useAdminT } from './I18nProvider'
+import { PANEL_LIST } from './kit'
 
 type Props = {
   features: FeatureSettings
@@ -31,7 +32,7 @@ export function FeatureFields({ features, onChange, relatedCount, onRelatedCount
   ]
   return (
     <div className="space-y-4">
-      <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+      <div className={PANEL_LIST}>
         {ITEMS.map((f) => (
           <ToggleRow
             key={f.key}

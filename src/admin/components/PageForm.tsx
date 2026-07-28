@@ -13,6 +13,7 @@ import { PageSettings, type PageDraft } from './PageSettings'
 import { MediaLibrary } from './MediaLibrary'
 import { useLocalDraft } from './useLocalDraft'
 import { useAdminT } from './I18nProvider'
+import { CARD, NOTICE } from './kit'
 
 type Props = { initial?: PageWithContent; contentWidth: number; typewriterEffects: boolean }
 type PickTarget = 'editor' | 'gallery' | 'featured'
@@ -208,7 +209,7 @@ export function PageForm({ initial, contentWidth, typewriterEffects }: Props) {
       />
 
       {localRecovered && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+        <div className={`mb-4 ${NOTICE}`}>
           <span className="text-neutral-800 dark:text-neutral-200">
             {t.localDraftFound} · {formatTime(localRecovered.at)}
           </span>
@@ -235,7 +236,7 @@ export function PageForm({ initial, contentWidth, typewriterEffects }: Props) {
           contentWidth={contentWidth}
           typewriterEffects={typewriterEffects}
         />
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm lg:sticky lg:top-6 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className={`p-5 lg:sticky lg:top-6 ${CARD}`}>
           <PageSettings draft={draft} update={update} onPickFeatured={() => setPicker('featured')} />
         </div>
       </div>

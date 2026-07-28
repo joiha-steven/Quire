@@ -4,6 +4,7 @@
 import type { TypographySettings, MotionSettings } from '@/types'
 import { ToggleRow } from '@/admin/ui/Switch'
 import { useAdminT } from './I18nProvider'
+import { PANEL_LIST } from './kit'
 
 type Props = {
   typography: TypographySettings
@@ -15,7 +16,7 @@ type Props = {
 export function AdvancedFields({ typography, onTypography, motion, onMotion }: Props) {
   const t = useAdminT()
   return (
-    <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <div className={PANEL_LIST}>
       <ToggleRow
         label={t.fontSmoothing}
         desc={t.fontSmoothingDesc}

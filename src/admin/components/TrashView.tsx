@@ -9,7 +9,7 @@ import { useRouter } from '@/admin/router'
 import type { Post, Page, MediaItem, FileItem, AdminComment, ApiResponse } from '@/types'
 import { useToast } from '@/admin/ui/Toast'
 import { formatDateTimeShort } from '@/utils'
-import { PageHeader } from './kit'
+import { PageHeader, TableFrame, THEAD } from './kit'
 import { useAdminT } from './I18nProvider'
 
 type Kind = 'posts' | 'pages' | 'media' | 'files' | 'comments'
@@ -151,12 +151,8 @@ export function TrashView({
 
   function Shell({ head, children }: { head: React.ReactNode; children: React.ReactNode }) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:shadow-none">
-        {/* The frame is overflow-hidden for its corners; without this the table is clipped
-            on a narrow screen with no way to reach the rest. See kit.tsx TABLE_SCROLL. */}
-        <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
-        <table className="w-full text-sm">
-          <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 whitespace-nowrap">
+      <TableFrame>
+          <thead className={THEAD}>
             <tr>
               <th className="px-4 py-3 font-medium">{t.colTitle}</th>
               <th className="hidden px-4 py-3 font-medium sm:table-cell">{t.colDeletedAt}</th>
@@ -164,9 +160,7 @@ export function TrashView({
             </tr>
           </thead>
           <tbody>{children}</tbody>
-        </table>
-        </div>
-      </div>
+      </TableFrame>
     )
   }
 

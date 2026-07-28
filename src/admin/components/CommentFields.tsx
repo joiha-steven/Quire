@@ -6,6 +6,7 @@ import type { CommentSettings } from '@/types'
 import type { CommentEnv } from '@/comments/comment-env'
 import { ToggleRow } from '@/admin/ui/Switch'
 import { useAdminT } from './I18nProvider'
+import { PANEL_LIST } from './kit'
 
 type Props = {
   comments: CommentSettings
@@ -18,7 +19,7 @@ export function CommentFields({ comments, env, onChange }: Props) {
   // Flag a toggle whose env keys are missing (so it won't actually take effect).
   const needsKey = (on: boolean, configured: boolean) => (on && !configured ? t.commentsNeedsKey : undefined)
   return (
-    <div className="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <div className={PANEL_LIST}>
       <ToggleRow
         label={t.commentsEnable}
         desc={t.commentsEnableDesc}

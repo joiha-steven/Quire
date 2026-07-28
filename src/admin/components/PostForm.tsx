@@ -14,6 +14,7 @@ import { MediaLibrary } from './MediaLibrary'
 import { TimeMachine } from './TimeMachine'
 import { useLocalDraft } from './useLocalDraft'
 import { useAdminT } from './I18nProvider'
+import { CARD, NOTICE } from './kit'
 
 type Props = {
   initial?: PostWithContent
@@ -333,7 +334,7 @@ export function PostForm({ initial, allCategories, allTags, allSeries, contentWi
       </div>
 
       {localRecovered && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-2.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+        <div className={`mb-4 ${NOTICE}`}>
           <span className="text-neutral-800 dark:text-neutral-200">
             {t.localDraftFound} · {formatTime(localRecovered.at)}
           </span>
@@ -362,7 +363,7 @@ export function PostForm({ initial, allCategories, allTags, allSeries, contentWi
           <Editor initialContent={draft.content} onChange={(md) => { contentRef.current = md }} onDirty={() => setDirty(true)} onPickImage={() => setPicker('editor')} onPickGallery={() => setPicker('gallery')} onUploadFile={uploadInline} apiRef={editorApi} contentWidth={contentWidth} toolbarTop={toolbarTop} typewriterEffects={typewriterEffects} />
         </div>
         {settingsOpen && (
-          <aside className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto dark:border-neutral-800 dark:bg-neutral-900">
+          <aside className={`p-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto ${CARD}`}>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold">{t.attributes}</h2>
               <div className="flex gap-3 text-xs">

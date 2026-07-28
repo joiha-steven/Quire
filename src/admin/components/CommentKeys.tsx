@@ -8,6 +8,7 @@ import type { CommentSettings, ApiResponse } from '@/types'
 import type { CommentEnv } from '@/comments/comment-env'
 import { useToast } from '@/admin/ui/Toast'
 import { useAdminT } from './I18nProvider'
+import { INSET } from './kit'
 
 const INPUT =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100'
@@ -72,7 +73,7 @@ export function CommentKeys({ comments, env }: { comments: CommentSettings; env:
   }
 
   return (
-    <div className="mt-4 space-y-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+    <div className={`mt-4 space-y-3 ${INSET}`}>
       {showTurnstile && (
         <div className="space-y-2">
           <Help title={t.commentsTurnstile} text={t.commentsTurnstileHelp} href={LINKS.turnstile} open={t.commentsHelpOpen} />
