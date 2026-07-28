@@ -14,17 +14,13 @@ import { getPublicPages } from '@/content/pages'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { resolveSeries } from '@/content/series'
 import { resolveTerm } from '@/content/taxonomy'
-import { paginate } from '@/content/paginate'
 import { t } from '@/i18n/i18n'
 import { foldAccents } from '@/utils'
-import { pageCache } from '@/server/cache'
-import { renderDocument, pageStyles } from '@/web/layout'
-import { PUBLIC_CSS } from '@/web/public.css'
 import { renderListing } from '@/web/listing'
+import { cached, listingPage, renderFeedBody } from '@/web/listing-page'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
 import { renderArticle } from '@/web/article'
-import { assetBody, scriptTag } from '@/web/assets'
-import { ogCardUrl, siteDomain } from '@/render/og'
+import { assetBody } from '@/web/assets'
 import { handleOg } from '@/web/og'
 import { handleTrack } from '@/web/track'
 import { handleUpload } from '@/web/uploads'
@@ -32,8 +28,6 @@ import { handleMarkdown, wantsMarkdown } from '@/web/markdown'
 import { handleManifest } from '@/web/manifest'
 import { handlePreview } from '@/web/preview'
 import { handleSearch } from '@/web/search-api'
-import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
-import { getMailStatus } from '@/news/mail'
 import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
 import { siteRoutes } from '@/web/admin/site'
@@ -54,45 +48,6 @@ import {
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-/** Wrap listing markup in the site shell. Shared by home, taxonomy, series and search. */
-async function listingPage(
-  title: string, body: string, canonicalPath?: string, cardTitle?: string,
-): Promise<string> {
-  const settings = await getSettings()
-  const site = resolveSiteUrl(settings)
-  const { configured: mailConfigured } = await getMailStatus()
-  return renderDocument(
-    settings,
-    {
-      title,
-      description: settings.description,
-      canonical: site && canonicalPath !== undefined ? `${site}${canonicalPath}` : undefined,
-      // A listing card is two explicit lines rather than a post's title/excerpt/date.
-      // Home reads as domain over description; a term page as its name over the domain.
-      image: ogCardUrl(settings, site, cardTitle === undefined
-        ? { title: siteDomain(site), site: settings.description }
-        : { title: cardTitle, site: siteDomain(site) }),
-    },
-    pageStyles(settings, PUBLIC_CSS),
-    `<div class="wrap">
-${siteHeader(settings, { mailConfigured })}
-<main>${body}</main>
-${siteFooter(settings, { mailConfigured })}
-</div>`,
-    // `core` carries the analytics beacon AND the header's overlays, both of which are on
-    // every public page. A pageview that only fired on posts would undercount the home
-    // page and every listing, which between them are most of a blog's traffic.
-    {
-      bodyData: {
-        ...chromeLabels(settings),
-        // Presence, not a value: the island checks `'infinite' in dataset`.
-        ...(settings.features.infiniteScroll ? { infinite: '' } : {}),
-      },
-      scripts: scriptTag('core'),
-    },
-  )
-}
-
 /** A page number from the URL. Anything that is not a positive integer is a 404, not a 1. */
 function pageNumber(raw: string): number | null {
   const n = Number(raw)
@@ -110,28 +65,18 @@ export function createApp(): Hono {
   // that becomes a logged, typed 500.
   app.onError(errorHandler())
 
-  // Cached HTML routes go through here so the cache rule lives in ONE place.
-  const cached = (key: string, render: () => Promise<string | null>) => async () => {
-    const hit = pageCache.get(key)
-    if (hit !== undefined) return new Response(hit, { headers: { 'content-type': 'text/html; charset=utf-8' } })
-    const html = await render()
-    if (html === null) return new Response('Not found', { status: 404 })
-    pageCache.set(key, html)
-    return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } })
-  }
-
   const home = async (page: number) => {
     const settings = await getSettings()
-    const paged = paginate(await getPublicPosts(), page, settings.postsPerPage)
-    // `paginate` CLAMPS an out-of-range page, so an emptiness check never fires: /page/9
-    // would silently serve the last page under a ninth URL, which is duplicate content
-    // at every number a crawler tries. Compare against the real total instead.
-    if (page > paged.totalPages) return null
-    return listingPage(
-      page === 1 ? settings.title : `${settings.title} · page ${page}`,
-      renderListing({ paged, basePath: '', empty: t(settings.language).emptyPosts }, settings),
-      page === 1 ? '/' : `/page/${page}`,
-    )
+    const built = await renderFeedBody(await getPublicPosts(), page, {
+      basePath: '', empty: t(settings.language).emptyPosts,
+    })
+    if (!built) return null
+    return listingPage({
+      title: page === 1 ? settings.title : `${settings.title} · page ${page}`,
+      body: built.body,
+      css: built.css,
+      canonicalPath: page === 1 ? '/' : `/page/${page}`,
+    })
   }
 
   app.get('/', async () => cached('/', () => home(1))())
@@ -155,19 +100,27 @@ export function createApp(): Hono {
       const settings = await getSettings()
       const { name, posts } = resolveTerm(await getPublicPosts(), field, slug)
       if (!name) return null
-      const paged = paginate(posts, page, settings.postsPerPage)
-      if (page > paged.totalPages) return null // see the home route
-      return listingPage(
-        `${name} · ${settings.title}`,
-        renderListing({
-          heading: name,
-          subheading: `${posts.length} post${posts.length === 1 ? '' : 's'}`,
-          paged, basePath: `/${kind}/${slug}`,
-          empty: kind === 'category' ? t(settings.language).emptyCategory : t(settings.language).emptyTag,
-        }, settings),
-        `/${kind}/${slug}`,
-        name,
-      )
+      // "Danh muc: Kinh te" / "The: #edc" — the label, then the term, exactly as the
+      // frozen tree reads. A tag lowercases its own name and wears a hash.
+      const label = kind === 'category' ? t(settings.language).categoryLabel : t(settings.language).tagLabel
+      const term = kind === 'category'
+        ? escapeHtml(name)
+        : `<span class="lower">#${escapeHtml(name)}</span>`
+      const built = await renderFeedBody(posts, page, {
+        heading: `${escapeHtml(label)}: ${term}`,
+        basePath: `/${kind}/${slug}`,
+        empty: kind === 'category' ? t(settings.language).emptyCategory : t(settings.language).emptyTag,
+      })
+      if (!built) return null
+      return listingPage({
+        title: `${name} · ${settings.title}`,
+        body: built.body,
+        css: built.css,
+        canonicalPath: `/${kind}/${slug}`,
+        cardTitle: name,
+        // The archive's own URL is the row to mark in the rail.
+        activeHref: `/${kind}/${slug}`,
+      })
     }
 
     app.get(`/${kind}/:slug`, async (c) =>
@@ -189,18 +142,18 @@ export function createApp(): Hono {
       const settings = await getSettings()
       const { name, posts } = await resolveSeries(slug)
       if (!name) return null
-      // A series is read in order, front to back: it is not paginated.
-      return listingPage(
-        `${name} · ${settings.title}`,
-        renderListing({
-          heading: name,
-          subheading: `${posts.length} part${posts.length === 1 ? '' : 's'}`,
+      // A series is read in order, front to back: it is not paginated, and it is never a
+      // timeline — its order is the owner's, not the calendar's.
+      return listingPage({
+        title: `${name} · ${settings.title}`,
+        body: renderListing({
+          heading: `${escapeHtml(t(settings.language).seriesLabel)}: ${escapeHtml(name)}`,
           paged: { items: posts, page: 1, totalPages: 1 },
           basePath: `/series/${slug}`, empty: t(settings.language).emptySeries,
         }, settings),
-        `/series/${slug}`,
-        name,
-      )
+        canonicalPath: `/series/${slug}`,
+        cardTitle: name,
+      })
     })()
   })
 
@@ -214,7 +167,7 @@ export function createApp(): Hono {
     const q = (c.req.query('q') ?? '').trim().slice(0, 200)
     const results = q ? await searchPosts(q) : []
     const body = renderListing({
-      heading: t(settings.language).search,
+      heading: escapeHtml(t(settings.language).search),
       subheading: q ? `${results.length} result${results.length === 1 ? '' : 's'} for "${q}"` : undefined,
       paged: { items: results, page: 1, totalPages: 1 },
       basePath: '/search',
@@ -224,7 +177,10 @@ export function createApp(): Hono {
 <input type="search" name="q" value="${escapeHtml(q)}" aria-label="${escapeHtml(t(settings.language).search)}">
 <button type="submit">${escapeHtml(t(settings.language).search)}</button>
 </form>`
-    return c.html(await listingPage(`${t(settings.language).search} · ${settings.title}`, form + body))
+    return c.html(await listingPage({
+      title: `${t(settings.language).search} · ${settings.title}`,
+      body: form + body,
+    }))
   })
 
   // ----- the analytics beacon -------------------------------------------------

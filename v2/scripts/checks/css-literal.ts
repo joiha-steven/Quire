@@ -9,8 +9,12 @@
 
 import { readFileSync } from 'node:fs'
 
+// Every sheet, by the declaration that opens it. This list went stale once already: the
+// public sheet was split in two and renamed, the check kept passing against a constant that
+// no longer existed, and the fourth backtick got through.
 const SHEETS: Array<{ file: string; decl: string }> = [
-  { file: 'src/web/public.css.ts', decl: 'export const PUBLIC_CSS = ' },
+  { file: 'src/web/public.css.ts', decl: 'const BASE_CSS = ' },
+  { file: 'src/web/islands.css.ts', decl: 'export const ISLANDS_CSS = ' },
   { file: 'src/web/login.css.ts', decl: 'export const LOGIN_CSS = ' },
 ]
 
@@ -24,8 +28,14 @@ for (const { file, decl } of SHEETS) {
   // failed on a clean file. A guard that cries wolf gets switched off.
   const declAt = source.indexOf(decl)
   const open = declAt === -1 ? -1 : source.indexOf('`', declAt)
-  const close = source.lastIndexOf('`')
-  if (open === -1 || open === close) {
+  // The CLOSE is the terminator that follows the opener, not the last backtick in the
+  // file: public.css.ts now ends with an interpolated export, so the last backtick sits
+  // past the sheet and the scanned range came out empty.
+  // Some sheets close with .trim() and some with a bare backtick opening a line.
+  const ends = [source.indexOf('`.trim()', open + 1), source.indexOf('\n`', open + 1)]
+    .filter((i) => i !== -1)
+  const close = open === -1 || ends.length === 0 ? -1 : Math.min(...ends)
+  if (open === -1 || close === -1) {
     console.error(`✗ check:css-literal: ${file} does not look like one template literal any more`)
     failed = true
     continue

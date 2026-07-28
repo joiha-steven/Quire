@@ -20,7 +20,8 @@
     "check:css": "bun scripts/checks/css-literal.ts",
     "check:routes": "bun scripts/checks/routes-guarded.ts",
     "user": "bun scripts/user.ts",
-    "shot": "bun scripts/shot.ts"
+    "shot": "bun scripts/shot.ts",
+    "drive": "bun scripts/drive.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.11.1",

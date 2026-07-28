@@ -4,21 +4,22 @@
 // is not publicly readable, and the caller turns that into a 404 — a renderer that decides
 // status codes is a renderer that eventually returns a 200 with an apology on it.
 
-import { getPost } from '@/content/posts'
+import { getPost, getRelatedPosts } from '@/content/posts'
 import { getPage } from '@/content/pages'
 import { getMediaRefs } from '@/media/media-refs'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { getMailStatus } from '@/news/mail'
-import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
+import { chromeLabels, siteFooter, siteHeader, subscribeCard } from '@/web/chrome'
 import { getSeriesForPost } from '@/content/series'
 import { collapseBlob } from '@/media/blob'
 import { renderPostContent, type ImageDims } from '@/render/post-content'
 import { extractHeadings } from '@/utils'
+import { TOC_ANCHORS } from '@/render/toc'
 import { termSlug } from '@/content/taxonomy'
-import { formatDate, t } from '@/i18n/i18n'
+import { formatCount, formatDate, t } from '@/i18n/i18n'
 import { scriptTag } from '@/web/assets'
 import { ogImageUrl } from '@/render/og'
-import { isPublicallyVisible, clampExcerpt, toPlainText } from '@/utils'
+import { isPublicallyVisible, clampExcerpt, readingMinutes, toPlainText, wordCount } from '@/utils'
 import { renderDocument, pageStyles } from '@/web/layout'
 import { PUBLIC_CSS } from '@/web/public.css'
 
@@ -41,10 +42,11 @@ async function mediaFacts(): Promise<{ ready: Set<string>; dims: ImageDims }> {
   return { ready, dims }
 }
 
-/** Comma-separated term links, as the frozen tree rendered them. */
-function terms(list: string[], kind: 'category' | 'tag'): string {
+/** Comma-separated term links, as the frozen tree rendered them. Tags read lowercase. */
+function terms(list: string[], kind: 'category' | 'tag', lower = false): string {
   return list
-    .map((x) => `<a href="/${kind}/${escapeAttr(termSlug(x))}">${escapeHtml(x)}</a>`)
+    .map((x) => `<a class="link-accent${lower ? ' lower' : ''}" href="/${kind}/${
+      escapeAttr(termSlug(x))}">${escapeHtml(x)}</a>`)
     .join(', ')
 }
 
@@ -67,34 +69,59 @@ export async function renderArticle(slug: string): Promise<string | null> {
     markdown: item.content, readyOriginals: ready, imageDims: dims,
   })
 
-  let meta = ''
+  let header = `<header><h1 class="reading-font fs-h1 font-semibold">${escapeHtml(item.title)}</h1></header>`
   let footer = ''
   if (post) {
-    const bits = [
-      `<time datetime="${escapeAttr(post.date)}">${escapeHtml(formatDate(post.date, settings.language))}</time>`,
-      post.readingMinutes ? `${post.readingMinutes} min` : '',
-      terms(post.categories, 'category'),
-      // Desktop and tablet only, hidden by CSS on a narrow screen: two columns of type in
-      // a phone-width viewport is worse than one, not better.
-      settings.features.bookMode
-        ? `<button type="button" class="book-mode-toggle" data-book-open>${escapeHtml(s.bookMode)}</button>`
-        : '',
-    ].filter(Boolean)
-    meta = `<p class="meta">${bits.join(' · ')}</p>`
+    const { features } = settings
+    // The meta line sits ABOVE the title, matching the list cards, and it is chrome: the
+    // date, the length of the read, and the way into book mode. It read "14 min" with the
+    // word count missing entirely — the suffixes are in the locale table for a reason.
+    const category = features.categoryLabel ? post.categories[0] : undefined
+    const length = features.readingTime
+      ? ` · ${formatCount(wordCount(post.content), settings.language)} ${escapeHtml(s.wordsSuffix)}`
+        + ` · ${readingMinutes(post.content)} ${escapeHtml(s.readingSuffix)}`
+      : ''
+    // Desktop and tablet only, hidden by CSS on a narrow screen: two columns of type in
+    // a phone-width viewport is worse than one, not better.
+    const book = features.bookMode
+      ? ` · <button type="button" class="book-mode-toggle" data-book-open>${escapeHtml(s.bookMode)}</button>`
+      : ''
+    header = `<header>
+<p class="t-small text-meta">${category
+      ? `<a class="link-accent" href="/category/${escapeAttr(termSlug(category))}">${escapeHtml(category)}</a> · `
+      : ''}<time datetime="${escapeAttr(post.date)}">${
+      escapeHtml(formatDate(post.date, settings.language))}</time>${length}${book}</p>
+<h1 class="reading-font mt-2 fs-h1 font-semibold">${escapeHtml(item.title)}</h1>${
+      // Standfirst: the excerpt, so a long read opens on a sentence rather than a wall.
+      features.deck && post.excerpt ? `
+<p class="deck">${escapeHtml(post.excerpt)}</p>` : ''}
+</header>`
 
     const series = await getSeriesForPost(post.slug)
-    const seriesBox = series
+    const seriesBox = series && series.posts.length > 1
       ? `<nav class="series"><p class="meta">${escapeHtml(series.name)}</p><ol>${
-          series.posts.map((p, i) => (p.slug === post.slug
+          series.posts.map((p) => (p.slug === post.slug
             ? `<li aria-current="true">${escapeHtml(p.title)}</li>`
-            : `<li><a href="/${escapeAttr(p.slug)}">${escapeHtml(p.title)}</a></li>`)
-            + (i === series.currentIndex ? '' : '')).join('')
+            : `<li><a href="/${escapeAttr(p.slug)}">${escapeHtml(p.title)}</a></li>`)).join('')
         }</ol></nav>`
       : ''
-    const tagLine = post.tags.length
-      ? `<p class="tags">${terms(post.tags, 'tag')}</p>`
+    // Tags and categories, each on its own labelled line, over a rule. The rule is the
+    // article ending; without it the taxonomy reads as one more paragraph.
+    const taxo = [
+      post.tags.length ? `<p id="post-tags">${escapeHtml(s.tagLabel)}: ${terms(post.tags, 'tag', true)}</p>` : '',
+      post.categories.length
+        ? `<p id="post-categories">${escapeHtml(s.categoryLabel)}: ${terms(post.categories, 'category')}</p>` : '',
+    ].filter(Boolean).join('')
+    const taxoBlock = taxo ? `<hr><footer class="post-taxo t-small text-meta">${taxo}</footer>` : ''
+
+    const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
+    const relatedBlock = related.length
+      ? `<hr><section class="related"><h2>${escapeHtml(s.relatedTitle)}</h2><ul>${
+          related.map((r) => `<li><a class="link-accent" href="/${escapeAttr(r.slug)}">${escapeHtml(r.title)}</a>`
+            + `<p class="t-small text-meta">${escapeHtml(formatDate(r.date, settings.language))}</p></li>`).join('')
+        }</ul></section>`
       : ''
-    footer = seriesBox + tagLine
+    footer = seriesBox + taxoBlock + relatedBlock
   }
 
   // The table of contents is server-rendered markup, so a reader without JavaScript still
@@ -102,14 +129,30 @@ export async function renderArticle(slug: string): Promise<string | null> {
   // Only on posts, only when the owner has it on, and only when there is more than one
   // heading — a contents list with one entry is furniture, not navigation.
   const headings = post && settings.features.toc ? extractHeadings(post.content) : []
-  const toc = headings.length > 1
-    ? `<nav class="toc rail" aria-label="${escapeAttr(s.tocTitle)}">
+  // It OPENS with the post's title (a click is "back to the top") and CLOSES with one jump
+  // to whatever end-of-article sections exist, so every post has a usable index even with
+  // no headings at all. Rendering only the headings made a post with none lose its rail
+  // entirely, and a post with two show a bare pair of links with nowhere to return to.
+  const endLabel = post
+    ? [post.tags.length ? s.tagLabel : '', post.categories.length ? s.categoryLabel : '',
+      settings.comments.enabled ? s.commentsHeading : ''].filter(Boolean).join(' / ')
+    : ''
+  const endAnchor = post && post.tags.length ? TOC_ANCHORS.tags
+    : post && post.categories.length ? TOC_ANCHORS.categories
+      : TOC_ANCHORS.comments
+  // Nest visually ONLY when the post MIXES levels: an H2 row takes a dot marker and an H3
+  // row goes smaller. A post that is all one level stays uniform.
+  const mixed = headings.some((h) => h.level === 2) && headings.some((h) => h.level === 3)
+  const row = (href: string, text: string, extra = '') =>
+    `<li><a class="rail-row link-accent t-small${extra}" href="${escapeAttr(href)}">${escapeHtml(text)}</a></li>`
+  const toc = post && settings.features.toc && (headings.length > 0 || endLabel)
+    ? `<nav class="toc rail" aria-label="${escapeAttr(s.tocIndex)}">
 <div class="rail-inner">
-<p class="toc-title">${escapeHtml(s.tocTitle)}</p>
-<ol>${headings.map((h) =>
-        `<li class="toc-l${h.level}"><a class="rail-row" href="#${escapeAttr(h.id)}">${
-          escapeHtml(h.text)}</a></li>`,
-      ).join('')}</ol>
+<h2>${escapeHtml(s.tocIndex)}</h2>
+<ul>${row('#top', post.title, ' is-active')}${
+      headings.map((h) => row(`#${h.id}`, h.text,
+        mixed ? (h.level === 3 ? ' rail-sub' : ' rail-lead') : '')).join('')
+    }${endLabel ? row(`#${endAnchor}`, endLabel, ' toc-end') : ''}</ul>
 </div>
 </nav>`
     : ''
@@ -184,16 +227,21 @@ export async function renderArticle(slug: string): Promise<string | null> {
       ogType: post ? 'article' : 'website',
     },
     pageStyles(settings, PUBLIC_CSS),
-    `${progress}<div class="wrap">
+    // `book-text` is the owner's book-typography switch: indented paragraphs, a tighter
+    // lead between them, justified with hyphens once the column is wide enough. It sits on
+    // the shell rather than on .prose so the editor and the reading view can share it.
+    `${progress}<div class="wrap${settings.features.bookText ? ' book-text' : ''}">
 ${siteHeader(settings, { mailConfigured })}
+<div class="with-rail"><main id="content">
 <article>
-<h1>${escapeHtml(item.title)}</h1>
+${header}
 ${toc}
-${meta}
-<div class="prose">${body}</div>
+<div id="post-body" class="prose">${body}</div>
 ${footer}
 </article>
+${post && mailConfigured ? subscribeCard(settings) : ''}
 ${commentsMount}
+</main></div>
 ${siteFooter(settings, { mailConfigured })}
 </div>`,
     shell,

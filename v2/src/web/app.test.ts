@@ -40,7 +40,9 @@ describe('article page', () => {
     const html = await res.text()
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('text/html')
-    expect(html).toContain('<h1>Hello World</h1>')
+    // The title carries the type-role classes rather than leaning on an element selector,
+    // and the meta line sits ABOVE it, so match the classes and not the bare tag.
+    expect(html).toContain('class="reading-font mt-2 fs-h1 font-semibold">Hello World</h1>')
     expect(html).toContain('<h2 id="a-section">A section</h2>')
     expect(html).toContain('<strong>prose</strong>')
     expect(html).toContain('My Blog')
@@ -133,7 +135,7 @@ describe('article page', () => {
   it('serves a published page from the same /{slug} namespace', async () => {
     await savePage({ title: 'About', content: 'Who I am.', status: 'published' })
     const html = await get('/about').then((r) => r.text())
-    expect(html).toContain('<h1>About</h1>')
+    expect(html).toContain('class="reading-font fs-h1 font-semibold">About</h1>')
     expect(html).toContain('Who I am.')
   })
 

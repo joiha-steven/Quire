@@ -30,8 +30,18 @@ export function toc(): void {
       const el = document.getElementById(id)
       if (el && el.getBoundingClientRect().top <= READING_LINE) current = link
     }
+    // Above the first heading nothing has passed the line, so the TITLE row is current —
+    // which is why it is the fallback rather than "no row at all". The server marks it
+    // with `is-active` for the no-script case, and that class has to move with the state
+    // or the title stays lit while the reader is six sections down.
+    // The title row is the one anchor with no element behind it (#top scrolls the
+    // document). Falling back to `targets[0]` instead would light the first HEADING while
+    // the reader is still above it, which is a different claim.
+    const lit = current ?? targets.find((x) => x.id === 'top')?.link ?? null
     for (const { link } of targets) {
-      if (link === current) link.setAttribute('aria-current', 'location')
+      const on = link === lit
+      link.classList.toggle('is-active', on)
+      if (on) link.setAttribute('aria-current', 'location')
       else link.removeAttribute('aria-current')
     }
   })

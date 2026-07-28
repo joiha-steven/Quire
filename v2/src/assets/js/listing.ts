@@ -1,10 +1,14 @@
-// The two things a reader can do to a list of posts: change its shape, and keep reading.
+// The one thing a reader can do to a list of posts: change its shape.
 //
-// Both are opt-in per site (`features.gridView`, `features.infiniteScroll`) and both
-// self-guard on markup, so on a site with neither turned on this file does two failed
-// queries and stops.
+// Opt-in per site (`features.gridView`) and self-guarding on markup, so on a site with it
+// switched off this file does one failed query and stops.
+//
+// Infinite scroll used to live here too, as a fetch of the next page's HTML. It does not
+// any more: a site with `features.infiniteScroll` on has no pagination at all — the feed is
+// one year-grouped timeline and `/page/2` is a 404, exactly as in the frozen tree — so
+// there was no next page left to fetch. Scroll reveal is now the CSS `reveal` animation.
 
-import { el, label } from './dom'
+import { label } from './dom'
 
 const STORE_KEY = 'quire:list'
 
@@ -26,7 +30,7 @@ function gridToggle(): void {
   if (!button) return
 
   // Nothing to toggle on a page with no list: a reading view, /search, a 404.
-  if (!document.querySelector('.listing')) {
+  if (!document.querySelector('.post-list')) {
     button.hidden = true
     return
   }
@@ -56,59 +60,6 @@ function gridToggle(): void {
   })
 }
 
-/**
- * Load the next page in place when the reader reaches the bottom.
- *
- * No new endpoint: it fetches the next page's HTML and moves its cards across. That page
- * has to exist and be crawlable anyway, so this reuses it rather than adding a second
- * representation of the same list that could drift from the first.
- *
- * The pager stays in the DOM and keeps working. If a fetch fails, the reader has a link.
- */
-function infiniteListing(): void {
-  const listing = document.querySelector<HTMLElement>('.listing')
-  const pager = document.querySelector<HTMLElement>('.pager')
-  if (!listing || !pager || !('infinite' in document.body.dataset)) return
-
-  let next = pager.querySelector<HTMLAnchorElement>('a[rel="next"]')?.href ?? ''
-  if (!next) return
-  let loading = false
-
-  const sentinel = el('div', { class: 'listing-sentinel', 'aria-hidden': 'true' })
-  listing.after(sentinel)
-
-  const observer = new IntersectionObserver(async (entries) => {
-    if (loading || !next || !entries.some((e) => e.isIntersecting)) return
-    loading = true
-    try {
-      const res = await fetch(next)
-      if (!res.ok) throw new Error(String(res.status))
-      const doc = new DOMParser().parseFromString(await res.text(), 'text/html')
-      const cards = doc.querySelectorAll('.listing > .card')
-      if (!cards.length) throw new Error('no cards')
-      listing.append(...Array.from(cards))
-      // The URL of the page just consumed becomes the history entry, so a reload lands
-      // where the reader actually is rather than back at the top.
-      history.replaceState(null, '', next)
-      next = doc.querySelector<HTMLAnchorElement>('.pager a[rel="next"]')?.getAttribute('href') ?? ''
-      if (!next) {
-        observer.disconnect()
-        sentinel.remove()
-        pager.remove() // nothing left to page to
-      }
-    } catch {
-      // Give up quietly and leave the pager alone: the reader still has a working link,
-      // which is the whole reason it was not replaced by this in the first place.
-      observer.disconnect()
-      sentinel.remove()
-    } finally {
-      loading = false
-    }
-  }, { rootMargin: '600px' })
-  observer.observe(sentinel)
-}
-
 export function listing(): void {
   gridToggle()
-  infiniteListing()
 }

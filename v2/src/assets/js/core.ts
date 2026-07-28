@@ -11,9 +11,12 @@
 import { listing } from './listing'
 import { search } from './search'
 import { subscribe } from './subscribe'
+import { rail, theme } from './theme'
 import { track } from './track'
 
 track()
+theme()
+rail()
 search()
 subscribe()
 listing()

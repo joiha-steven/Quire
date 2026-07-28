@@ -13,27 +13,8 @@ useDom()
 beforeEach(() => page(''))
 
 describe('listing controls', () => {
-  const page1 = `<div class="listing"><article class="card">One</article></div>
-    <nav class="pager"><a rel="next" href="/page/2">Older</a></nav>`
+  const page1 = '<div class="post-list"><article>One</article></div>'
   const LABELS = { gridView: 'Grid view', listView: 'List view' }
-
-  const nextPage = (cards: string, next: string | null) =>
-    `<html><body><div class="listing">${cards}</div>${
-      next ? `<nav class="pager"><a rel="next" href="${next}">Older</a></nav>` : ''
-    }</body></html>`
-
-  /** Drive the observer directly rather than faking a scroll. */
-  function captureObserver(): { fire: () => void } {
-    const box = { fire: () => {} }
-    globalThis.IntersectionObserver = class {
-      constructor(cb: (entries: { isIntersecting: boolean }[]) => void) {
-        box.fire = () => cb([{ isIntersecting: true }])
-      }
-      observe(): void {}
-      disconnect(): void {}
-    } as unknown as typeof IntersectionObserver
-    return box
-  }
 
   beforeEach(() => {
     try { localStorage.clear() } catch { /* ignore */ }
@@ -42,7 +23,6 @@ describe('listing controls', () => {
 
   it('remembers grid across page loads', () => {
     page(`<button data-grid-toggle></button>${page1}`, LABELS)
-    captureObserver()
     listing()
     expect(document.documentElement.dataset.list).toBe('list')
 
@@ -56,54 +36,19 @@ describe('listing controls', () => {
     expect(document.documentElement.dataset.list).toBe('grid')
   })
 
+  // The class is `post-list`, and it has been renamed once already: the island kept
+  // querying the old `.listing` for a whole milestone, which silently hid the toggle on
+  // every page that HAD a list. Named after the rename so the next one is caught here.
+  it('finds the list under its real class name', () => {
+    page(`<button data-grid-toggle></button>${page1}`, LABELS)
+    listing()
+    expect(document.querySelector<HTMLButtonElement>('[data-grid-toggle]')!.hidden).toBe(false)
+  })
+
   it('hides the toggle on a page with no list', () => {
     page('<button data-grid-toggle></button><article>a post</article>', LABELS)
-    captureObserver()
     listing()
     expect(document.querySelector<HTMLButtonElement>('[data-grid-toggle]')!.hidden).toBe(true)
-  })
-
-  it('appends the next page and follows its pager', async () => {
-    page(page1, { ...LABELS, infinite: '' })
-    const observer = captureObserver()
-    stubFetch(() => new Response(nextPage('<article class="card">Two</article>', '/page/3')))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(document.querySelectorAll('.listing .card').length).toBe(2)
-  })
-
-  it('removes the pager once there is nothing left to page to', async () => {
-    page(page1, { ...LABELS, infinite: '' })
-    const observer = captureObserver()
-    stubFetch(() => new Response(nextPage('<article class="card">Two</article>', null)))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(document.querySelector('.pager')).toBeNull()
-  })
-
-  it('LEAVES the pager alone when a fetch fails', async () => {
-    // The reader still has a working link, which is the whole reason the pager was not
-    // replaced by this in the first place.
-    page(page1, { ...LABELS, infinite: '' })
-    const observer = captureObserver()
-    stubFetch(() => new Response('nope', { status: 500 }))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(document.querySelector('.pager a[rel="next"]')).not.toBeNull()
-  })
-
-  it('does nothing at all when the owner has infinite scroll off', async () => {
-    page(page1, LABELS) // no `infinite` attribute
-    const observer = captureObserver()
-    const urls = stubFetch(() => new Response(nextPage('<article class="card">Two</article>', null)))
-    listing()
-    observer.fire()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(urls.length).toBe(0)
-    expect(document.querySelectorAll('.listing .card').length).toBe(1)
   })
 })
 
@@ -145,17 +90,19 @@ describe('book mode', () => {
   it('turns pages with the arrow keys and counts them', () => {
     page(article, LABELS)
     const overlay = open()
-    const stage = overlay.querySelector<HTMLElement>('.book-stage')!
-    geometry(stage, 1000, 4000)
+    // The horizontal scroller is the VIEWPORT now, not the stage: the stage holds the two
+    // side arrows beside it, so it is no longer the box that clips the columns.
+    const viewport = overlay.querySelector<HTMLElement>('.book-viewport')!
+    geometry(viewport, 1000, 4000)
 
     dispatchEvent(new Event('resize'))
-    expect(overlay.querySelector('.book-page')!.textContent).toBe('1 / 4')
+    expect(overlay.querySelector('.book-count')!.textContent).toBe('1 / 4')
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }))
-    expect(overlay.querySelector('.book-page')!.textContent).toBe('2 / 4')
+    expect(overlay.querySelector('.book-count')!.textContent).toBe('2 / 4')
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }))
-    expect(overlay.querySelector('.book-page')!.textContent).toBe('1 / 4')
+    expect(overlay.querySelector('.book-count')!.textContent).toBe('1 / 4')
   })
 
   it('tears down on close and stops listening for keys', () => {

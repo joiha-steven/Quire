@@ -59,3 +59,6 @@ audit/legacy-blob-backup-*/
 
 # Local screenshot scratch (scripts/shot.ts writes here)
 _shots/
+
+# Screenshots taken while comparing v2 against the frozen tree. Evidence, not source.
+.shots/

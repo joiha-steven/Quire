@@ -203,13 +203,22 @@ describe('the table of contents', () => {
     expect(html).toContain('<nav class="toc rail"')
     expect(html).toContain('href="#first-section"')
     expect(html).toContain('href="#a-sub-heading"')
-    expect(html).toContain('class="toc-l3"') // nesting survives
+    // Nesting survives: a post that MIXES H2 and H3 marks the children as sub-rows.
+    expect(html).toContain('rail-sub')
+    // ...and it opens with the post's title, so there is always a way back to the top.
+    expect(html).toContain('href="#top"')
     expect(html).toContain('id="first-section"') // and the anchors it points at exist
   })
 
-  it('leaves it out of a post with one heading, which is furniture not navigation', async () => {
+  // A one-heading post STILL gets an index, because the index is not just the headings: it
+  // opens with the post's title and closes with a jump to the tags, categories and
+  // comments. Rendering only when there were two or more headings dropped the rail from
+  // short posts entirely, and with it the only way back to the top.
+  it('still renders for a post with one heading, because the title and end rows earn it', async () => {
     await savePost({ title: 'Short', content: '## Only one\n\nText.', status: 'published', date: PAST })
-    expect(await get('/short').then((r) => r.text())).not.toContain('<nav class="toc rail"')
+    const html = await get('/short').then((r) => r.text())
+    expect(html).toContain('<nav class="toc rail"')
+    expect(html).toContain('href="#only-one"')
   })
 
   it('leaves it out when the owner turns it off', async () => {

@@ -15,6 +15,7 @@ import type { SiteSettings } from '@/types'
 import { fontPreloadHrefs, fontPresetCss, chromeFontCss, themesToCss } from '@/content/themes'
 import { typographyToCss, fontToCss } from '@/content/settings'
 import { singleRailCss } from '@/render/rail-css'
+import { fontFaceCss } from '@/render/font-faces'
 
 export type Head = {
   title: string
@@ -55,13 +56,25 @@ const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
  * then the owner's custom font and CSS. Each later layer is allowed to win, and a fresh
  * install with nothing configured still gets a complete sheet.
  */
-export function pageStyles(settings: SiteSettings, base: string): string {
+export function pageStyles(settings: SiteSettings, base: string, extra = ''): string {
   return [
+    // FIRST: a family has to be declared before anything can ask for it by name.
+    fontFaceCss(settings.fontPreset, settings.chromeFont),
+    // The chrome face, and the reading face's fallback until a preset repoints it. Inter
+    // is the universal base, exactly as in the frozen tree.
+    `:root{--font-sans:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;`
+    + `--font-reading:var(--font-sans)}`,
     base,
+    // The reading column, from the owner's setting. A two-rail listing narrows it by
+    // overriding this later in the sheet, which is why it is a variable and not baked in.
+    `:root{--shell-w:${settings.contentWidth}px}`,
     // Injected at runtime, not written by hand, because a media query cannot read a CSS
     // variable and the breakpoint is COMPUTED from the reading column: the rail only moves
     // into the gutter when there is room for it on BOTH sides, so the column stays centred.
     singleRailCss(settings.contentWidth),
+    // Page-specific geometry: the listing's second rail, the feed's gutter timeline. It
+    // comes BEFORE the owner's own settings, so custom CSS still has the last word.
+    extra,
     fontPresetCss(settings.fontPreset),
     chromeFontCss(settings.chromeFont),
     themesToCss(settings.themes, settings.themePreset),

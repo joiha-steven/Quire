@@ -11,7 +11,7 @@
 export const LOGIN_CSS = `
 .login-wrap{min-height:100dvh;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:1.5rem;padding:2rem 1rem}
-.login-brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-chrome);
+.login-brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-sans);
   font-size:var(--fs-h3);color:var(--c-heading);text-decoration:none}
 .login-brand img{border-radius:4px}
 .login-card{width:100%;max-width:23rem;border:1px solid var(--c-rule);border-radius:8px;

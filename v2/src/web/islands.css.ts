@@ -1,0 +1,232 @@
+// Everything that styles an element the browser bundle CREATES.
+//
+// Split out of `public.css.ts` at the 400-line limit, and the seam is a real one rather
+// than an arbitrary halfway point: none of these rules apply to the server-rendered page,
+// so a reader with JavaScript off sees no gaps — the elements simply never exist. The two
+// sheets are concatenated and inlined together, so this costs no extra request.
+
+export const ISLANDS_CSS = `
+/* --- islands -------------------------------------------------------------------
+   Every rule below styles an element the browser bundle CREATES. None of it applies
+   to the server-rendered page, so a reader with JavaScript off sees no gaps: the
+   elements simply never exist. */
+
+.code-copy{position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;font-size:.75rem;
+  border:1px solid var(--c-rule);background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;transition:opacity .15s}
+.prose pre{position:relative}
+.prose pre:hover .code-copy,.code-copy:focus-visible{opacity:1}
+
+/* The reading-progress bar has NO script behind it: a scroll-driven animation reads the
+   document's own scroll position. It therefore works with JavaScript off, and runs off the
+   main thread. On an engine without scroll timelines the bar would sit at zero forever, so
+   the @supports rule removes it entirely rather than leaving a dead hairline on the page.
+   NOTE: no backticks anywhere in this file. It is one template literal, and a backtick in
+   a comment ends the string. That has now cost two debugging sessions. */
+.progress{display:none;position:fixed;inset-inline:0;top:0;height:2px;z-index:50}
+.progress-fill{height:100%;background:var(--c-heading);transform:scaleX(0);transform-origin:0 50%}
+@supports (animation-timeline:scroll()){
+  .progress{display:block}
+  .progress-fill{animation:read-progress linear both;animation-timeline:scroll(root block)}
+}
+@keyframes read-progress{to{transform:scaleX(1)}}
+
+.to-top{position:fixed;bottom:1.25rem;right:1.25rem;z-index:40;display:flex;width:2.5rem;height:2.5rem;
+  align-items:center;justify-content:center;border:1px solid var(--c-rule);border-radius:999px;
+  background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,color .2s}
+.to-top.shown{opacity:1;pointer-events:auto}
+.to-top:hover{color:var(--c-heading)}
+
+/* A <dialog>, so Escape, focus trapping and the inert background come from the browser.
+   The viewer is deliberately NOT themed: a light backdrop behind a photograph is a worse
+   reading of the photograph, and readers expect a lightbox to be dark. */
+.lightbox[open]{display:flex}
+.lightbox{width:100%;max-width:100%;height:100%;max-height:100%;border:0;overflow:hidden;
+  flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:1rem;
+  background:rgba(0,0,0,.9);color:#fff}
+.lightbox::backdrop{background:rgba(0,0,0,.9)}
+.lightbox-caption:empty{display:none}
+.lightbox-img{max-height:85vh;max-width:100%;object-fit:contain}
+.lightbox-caption{max-width:42rem;text-align:center;font-size:.875rem;color:rgba(255,255,255,.7);margin:0}
+.lightbox button{position:absolute;display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.8);cursor:pointer;line-height:1}
+.lightbox button:hover{background:rgba(255,255,255,.1);color:#fff}
+.lightbox-close{top:.75rem;right:.75rem;width:2.5rem;height:2.5rem;font-size:1.5rem}
+.lightbox-prev,.lightbox-next{top:50%;transform:translateY(-50%);width:3rem;height:3rem;font-size:1.875rem}
+.lightbox-prev{left:.5rem}
+.lightbox-next{right:.5rem}
+.lightbox-count{position:absolute;bottom:1rem;font-size:.75rem;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
+
+.preview-note{border:1px solid var(--c-rule);background:var(--c-rule);color:var(--c-meta);
+  border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);margin:0 0 1.5rem}
+
+/* Book mode. Its OWN standard rather than the site theme: paper and ink, not the reader's
+   palette, and the same on a dark site as a light one. Carried over from the frozen tree.
+   The columns come from column-width, so the BROWSER paginates and turning a page is one
+   scrollLeft assignment rather than a measurement loop fighting the layout engine. */
+.book-mode-toggle{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-underline-offset:3px}
+.book-mode-toggle:hover{color:var(--c-heading);text-decoration:underline}
+@media (max-width:767px){.book-mode-toggle{display:none}}
+
+body:has(.book-overlay[open]){overflow:hidden}
+.book-overlay[open]{display:grid}
+/* Book mode is its OWN standard, not the site theme and not dark mode: a printed page. ONE
+   flat warm-paper background across the whole reader, near-black ink, with a grain baked
+   into the background so a flat screen reads as printed stock. Overriding the theme TOKENS
+   here recolours everything inside — prose text, headings, links, rules — in one place, and
+   the base page keeps its own, so closing the reader restores the previous colours by
+   itself. They must be the real --c-* tokens: anything else leaves the body text following
+   the site theme, and dark mode then shows white ink on white paper. */
+.book-overlay{position:fixed;inset:0;z-index:60;width:100%;max-width:100%;height:100%;
+  max-height:100%;border:0;padding:0;grid-template-rows:auto 1fr;
+  font-family:var(--font-reading);
+  --book-paper:#f9f4ec;--c-bg:var(--book-paper);
+  /* Reading text runs 15% larger in here. It MULTIPLIES the owner's --fs-* roles, so it
+     tracks the site's own type setting rather than replacing it. */
+  --type-scale:1.15;
+  --c-text:#211f1a;--c-heading:#16130d;--c-meta:#8d8676;--c-link:#2f2c25;
+  --c-accent:#2f2c25;--c-rule:#d8cfbc;color:var(--c-text);
+  background-color:var(--book-paper);background-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.62'/%3E%3C/svg%3E")}
+.book-overlay::backdrop{background:#f9f4ec}
+.book-chrome{position:relative;display:flex;align-items:center;justify-content:center;
+  min-height:56px;padding:0 clamp(16px,4vw,48px)}
+.book-top{border-bottom:1px solid var(--c-rule)}
+.book-title{font-size:1rem;font-weight:400;color:var(--c-meta);text-align:center;
+  max-width:min(70%,720px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-topright{position:absolute;right:clamp(12px,4vw,44px);top:0;height:100%;
+  display:flex;align-items:center;gap:16px}
+.book-x{background:none;border:0;cursor:pointer;color:var(--c-meta);font-size:1rem;
+  line-height:1;padding:8px}
+.book-x:hover{color:var(--c-heading)}
+.book-count{font-size:.8rem;color:var(--c-meta);font-variant-numeric:tabular-nums}
+.book-stage{position:relative;display:flex;align-items:center;justify-content:center;
+  min-height:0;padding:clamp(20px,4vh,52px) 0}
+/* The reading area just CLIPS the flowing columns: no sheet, no shadow, so the one paper
+   background and its grain show through everywhere. */
+/* A flex:1 here silently beat the measured width — a flex item with a basis of 0 and
+   grow 1 fills the stage no matter what the inline style says, so the spread ran the
+   full viewport and the two facing pages became four. */
+.book-viewport{position:relative;height:100%;flex:0 0 auto;max-width:100%;overflow:hidden;
+  padding:clamp(4px,2vh,24px) 0}
+.book-flow{height:100%;column-gap:56px;column-width:var(--book-col-w,340px);column-fill:auto;
+  max-width:none;
+  /* Western book touches: oldstyle figures and discretionary ligatures where the reading
+     face carries them. A sans quietly ignores both. */
+  font-feature-settings:"onum" 1,"liga" 1,"dlig" 1}
+/* Media stays column-width and never taller than a page, so nothing overflows the spread. */
+.book-flow :is(img,video,iframe,pre,table,blockquote,figure){break-inside:avoid}
+.book-flow :is(img,video,iframe){max-width:100%;max-height:var(--book-page-h,70vh);object-fit:contain}
+.book-flow pre{max-height:var(--book-page-h,70vh);overflow:auto}
+/* A "wide" image has NO effect in here: it renders at column width like any other figure,
+   so it can never spill into the next page. This overrides the desktop gutter-widening the
+   rail geometry injects, which otherwise leaks in because the flow is also .prose. */
+.book-flow.prose figure.img-wide,.book-flow.prose .video-wide{
+  width:100%;max-width:100%;margin-left:auto;margin-right:auto}
+/* The first column opens flush with the top of the page. */
+.book-flow.prose > :first-child{margin-top:0}
+/* Drop cap: the first paragraph opens with a large raised initial spanning about three
+   lines, which is the classic chapter opening. The line beside it is not also indented. */
+.book-flow.prose > p:first-child::first-letter{float:left;margin:.02em .09em 0 0;
+  font-size:3.1em;line-height:.72;font-weight:600;color:var(--c-heading)}
+.book-flow.prose > p:first-child{text-indent:0}
+/* A section break becomes a centred asterism rather than a rule. */
+.book-flow hr{border:0;height:auto;margin:1.5em 0;text-align:center;background:none}
+.book-flow hr::before{content:"⁂";color:var(--c-meta);font-size:1.05em;letter-spacing:.35em}
+/* A faint spine down the centre gutter. It sits on the viewport, so it stays put while the
+   pages flip beneath it. */
+.book-viewport::after{content:"";position:absolute;top:7%;bottom:7%;left:50%;width:1px;
+  background:var(--c-rule);opacity:.7;pointer-events:none}
+.book-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;background:none;
+  border:0;cursor:pointer;color:var(--c-meta);font-size:2rem;line-height:1;padding:12px 16px}
+.book-arrow:hover{color:var(--c-heading)}
+.book-prev{left:clamp(4px,2vw,28px)}
+.book-next{right:clamp(4px,2vw,28px)}
+
+/* Comments and sign-up. The FORM is server-rendered markup, so these rules apply with or
+   without JavaScript; the comment thread is built by the island, so its rules only ever
+   match once the script has run. */
+/* Grid view. The attribute is set by the island; with no script the list stays a list,
+   which is the shape every reader gets by default anyway. */
+[data-list="grid"] .post-list{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))}
+[data-list="grid"] .post-list > article{margin:0}
+[data-list="grid"] .post-list h2{font-size:var(--fs-h3);line-height:var(--lh-h3)}
+[data-list="grid"] .post-list .t-body{display:none}
+.listing-sentinel{height:1px}
+
+/* Cards ease in as they enter the viewport, in CSS. The frozen tree shipped an
+   IntersectionObserver fallback for engines without scroll-driven animations; 04-frontend.md
+   called for deleting it, and this is that deletion. An engine without support simply shows
+   the cards, which is the correct end state anyway. Motion is skipped entirely when the
+   reader has asked for less of it. */
+@supports (animation-timeline:view()){
+  @media (prefers-reduced-motion:no-preference){
+    .post-list > article{animation:card-in linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
+  }
+}
+@keyframes card-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.site-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+/* -0.625rem optically aligns the LAST icon's glyph with the column's right margin: the
+   40px button centres a 20px glyph, so the glyph sits 10px inside the button edge. Pulling
+   the row right by that 10px lands it flush, matching the logo's flush-left edge. */
+.site-actions{display:flex;align-items:center;gap:.125rem;flex-shrink:0;margin-right:-.625rem}
+.icon-btn{display:flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;
+  border:0;border-radius:.5rem;background:none;color:var(--c-meta);cursor:pointer;text-decoration:none}
+.icon-btn:hover{color:var(--c-heading);background:var(--c-rule)}
+
+/* The overlays. Both are dialogs, so Escape and the inert background are the browser's. */
+.overlay[open]{display:flex}
+.overlay{flex-direction:column;border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem;
+  width:min(36rem,92vw);max-height:70vh;background:var(--c-bg);color:var(--c-text);margin-top:8vh}
+.overlay::backdrop{background:rgba(0,0,0,.4)}
+.search-close{position:absolute;top:.5rem;right:.5rem;border:0;background:none;color:var(--c-meta);
+  font-size:1.25rem;line-height:1;cursor:pointer}
+.search-input{padding:.6rem .75rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  background:var(--c-bg);color:var(--c-text);font:inherit;margin-right:2rem}
+.search-results{list-style:none;padding:0;margin:1rem 0 0;overflow-y:auto}
+.search-results li{margin:0 0 .6rem}
+.search-results a{color:var(--c-heading);text-decoration:none}
+.search-results a:hover{text-decoration:underline}
+
+/* The sign-up card: a bordered panel at the end of an article, and the same markup the
+   header's mail button opens as an overlay. It was a bare form with a top rule, which read
+   as another section of the article rather than as an invitation. */
+.subscribe-card{border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem;
+  font-size:calc(var(--fs-small) * var(--type-scale, 1))}
+.subscribe-card h2{font-size:inherit;font-weight:600;color:var(--c-heading);margin:0 0 .75rem}
+form.subscribe{display:flex;gap:.5rem;margin:0}
+form.subscribe input{min-width:0;flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);
+  border-radius:.5rem;background:var(--c-bg);color:var(--c-text);font:inherit}
+form.subscribe input:focus{outline:none;border-color:var(--c-heading)}
+form.subscribe button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.5rem;
+  background:var(--c-bg);color:var(--c-heading);font:inherit;font-weight:500;cursor:pointer}
+form.subscribe button:hover{background:var(--c-rule)}
+form.subscribe button:disabled{opacity:.5}
+@media (max-width:639px){form.subscribe{flex-direction:column}}
+.subscribe-status:empty{display:none}
+.subscribe-status{color:var(--c-meta);margin:.5rem 0 0}
+
+#comments{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem}
+#comments h2{font-size:var(--fs-h2);color:var(--c-heading);font-weight:600;margin:0 0 1.5rem}
+.comment-list,.comment-replies{list-style:none;padding:0;margin:0}
+.comment-replies{margin-left:1.25rem;padding-left:1rem;border-left:1px solid var(--c-rule)}
+.comment{margin:0 0 1.5rem}
+.comment-meta{color:var(--c-meta);font-size:var(--fs-small);margin:0 0 .35rem}
+.comment-name{color:var(--c-heading);font-weight:600}
+.comment-body p:last-child{margin-bottom:0}
+.comment-reply{border:0;background:none;padding:0;margin-top:.35rem;color:var(--c-meta);
+  font:inherit;font-size:var(--fs-small);cursor:pointer;text-decoration:underline}
+.comment-reply:hover{color:var(--c-heading)}
+.comment-form{margin-top:1.5rem;font-size:var(--fs-small)}
+.comment-field{margin:0 0 .75rem}
+.comment-field label{display:block;color:var(--c-meta);margin-bottom:.25rem}
+.comment-form input,.comment-form textarea{width:100%;padding:.5rem .75rem;border:1px solid var(--c-rule);
+  border-radius:.35rem;background:var(--c-bg);color:var(--c-text);font:inherit}
+.comment-form button{margin-top:.75rem;padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
+.comment-status:empty{display:none}
+.comment-status{color:var(--c-meta);margin:.5rem 0 0}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+`.trim()

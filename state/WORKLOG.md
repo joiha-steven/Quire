@@ -3,6 +3,45 @@
 Newest first. What happened, not what is true now (that is `docs/`) or what is next (that
 is `TASKS.md`). Keep entries short; the detail is in the commit.
 
+## 2026-07-28 — The public design, ported for real, and measured against v1
+
+The owner's verdict on the first staging build was "khác quá xa" — nothing like the blog.
+It was correct, and the causes were bigger than the missing sidebar.
+
+**No `@font-face` existed anywhere in 2.0.** The settings named Literata and JetBrains Mono,
+the layout preloaded their .woff2 files, the routes served them with a 200, and no rule ever
+told the browser what they were. Every page rendered in Georgia and a system serif. A
+preload with no matching face is a download the browser throws away. `render/font-faces.ts`
+now generates them from a table, emitting only the two families a page can use.
+
+**`--font-chrome` never existed.** Four rules asked for it; the real handle is `--font-sans`.
+And `body` defaulted to `--font-reading`, so the whole site was set in the article face and
+the owner's chrome font was never seen. The rail, the dates and the reading times are mono
+on this blog, which is most of its character.
+
+**`--content-width` was never set either**, so every page was 42rem regardless of the
+setting. Fixed to `--shell-w`. The gutter is 2rem at every width, which the frozen tree's
+markup denies — it says `px-8 sm:px-5`, but no `.sm\:px-5` rule was ever compiled into its
+stylesheet. Measured off the rendered page, not read off the class list; the two disagreed
+by 24px of column, which is one word per line.
+
+**What was actually missing**, now ported: the listing sidebar (menu, featured, categories
+with counts, tags) and its mobile drawer; the year timeline in the right gutter; the logo;
+the theme control; the article's meta line, word count, deck, taxonomy, related posts and
+sign-up card; the ToC's title and end rows; book typography; and book mode's real reader —
+paper grain, drop cap, spine, asterism, and a spread measured to exactly two facing pages.
+
+**`scripts/drive.ts`**: screenshot a page after clicking something, over the DevTools
+protocol. `shot.ts` can only photograph what the server sent, which cannot see book mode,
+dark mode or any overlay — precisely the surfaces that shipped unlooked-at.
+
+Verified by measuring both sites' rendered pixels, not by reading source: rail 187..416 vs
+187..417, column 472..1126 vs 472..1125, book spread 183..1411 vs 183..1417.
+
+**`check:css-literal` had gone stale** and let a fourth backtick through: the sheet had been
+split and renamed, and the check kept passing against a constant that no longer existed. Now
+covers all three sheets, and its firing was proved before being trusted.
+
 ## 2026-07-28 — Staging is live, and `import-v1` finally met a real v1
 
 **<https://next.manhhung.me>** runs Quire 2.0 beside the live v1 on the same box: own user

@@ -47,8 +47,18 @@ if (!result.success) {
  * framework is what that looks like after two years.
  */
 const BUDGET: Record<string, number> = {
-  'core.js': 6_500, // every public page: the beacon, the header's overlays, the listing controls
-  'post.js': 8_000, // /{slug}: back to top, code copy, lightbox, subscribe, comments
+  // Every public page: the beacon, the header's overlays and controls, the grid toggle.
+  // Raised from 6,500 when the theme control and the sidebar drawer were ported — two
+  // header buttons that had no JavaScript behind them at all, so the site could neither
+  // switch to dark nor open its own sidebar on a phone. Paid for in part by deleting the
+  // fetch-based infinite scroll, which a timeline feed has no next page for.
+  'core.js': 7_000,
+  // /{slug}: back to top, code copy, lightbox, subscribe, comments, the ToC highlight and
+  // book mode. Raised from 8,000 when book mode grew its real chrome — a title bar, a page
+  // count and side arrows over a clipped viewport, and a spread measured to exactly two
+  // facing pages — which is the reader the frozen tree shipped rather than the four
+  // edge-to-edge columns that stood in for it.
+  'post.js': 8_600,
   // /login only, and NOT loaded with core.js: the sign-in page carries no beacon, no
   // search overlay and no listing controls, so it pays for the reveal toggle, the caps-lock
   // warning and the one-time-code paste, and nothing else.
