@@ -73,6 +73,12 @@ header.site .title{font-family:var(--font-sans);font-weight:600;color:var(--c-he
 /* width+height on the tag reserve the space, so the header does not jump when the logo
    arrives; the CSS width keeps it responsive and height:auto keeps the ratio. */
 header.site .logo{display:block;height:auto}
+/* When the owner has uploaded a dark twin both are in the markup and exactly one shows.
+   The :has() test keeps the light one visible on a site with no dark logo, where
+   .logo-dark is simply absent. */
+header.site .logo-dark{display:none}
+html.dark header.site .title:has(.logo-dark) .logo{display:none}
+html.dark header.site .logo-dark{display:block}
 header.site .tagline{color:var(--c-meta);font-size:var(--fs-small);margin:.75rem 0 0}
 
 /* The reading face for .prose is in prose.css.ts, with the rest of the .prose rules, so the

@@ -294,6 +294,9 @@ export type AdminStrings = {
   showDescription: string
   showLogo: string
   noLogo: string
+  noLogoDark: string
+  chooseLogoDark: string
+  logoDarkHint: string
   chooseLogo: string
   removeLogo: string
   logoWidth: string

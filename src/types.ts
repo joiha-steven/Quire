@@ -181,6 +181,9 @@ export type SiteSettings = {
   logoRenderUrl: string // derived, display-sized WebP (2x for retina) generated from logoUrl at logoWidth; '' = serve original (vector/animated, or none). Regenerated + old one deleted whenever logoUrl/logoWidth change
   logoRenderHeight: number // displayed height (px) of the logo at logoWidth — set width+height on the <img> to reserve space (no CLS); 0 when unknown
   logoEmailUrl: string // derived PNG twin of the logo, for the newsletter masthead ONLY. '' = none (vector/undecodable source), then the email falls back to the site name as text. PNG because WebP is unrenderable in Outlook on Windows and the web render is always WebP
+  logoDarkUrl: string // '' = none, and then the normal logo is used in dark mode too. A logo is ink on transparency: a dark mark measures ~3.4:1 on the dark background and reads as a black smudge
+  logoDarkRenderUrl: string // derived, same pipeline as logoRenderUrl, at the same logoWidth
+  logoDarkRenderHeight: number // displayed height (px); 0 when unknown
   showLogo: boolean
   showDescription: boolean
   fontPreset: string // built-in font choice id (lib/themes FONT_PRESETS); '' -> Inter

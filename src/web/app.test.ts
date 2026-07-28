@@ -63,6 +63,35 @@ describe('article page', () => {
     expect(html).not.toContain('onclick=')
   })
 
+  // The page cache is keyed by URL alone (Invariant 1), so the header cannot branch on the
+  // reader's theme: whichever mode the first visitor had would be cached for everyone.
+  // Both marks go in the markup and CSS picks. These two assertions are what stops someone
+  // "simplifying" that into a server-side conditional.
+  describe('the dark logo', () => {
+    it('emits both marks when one is set, and only the light one carries fetchpriority', async () => {
+      await saveSettings({
+        showLogo: true, logoUrl: '/uploads/files/light.svg', logoDarkUrl: '/uploads/files/dark.svg',
+      })
+      const html = await get('/').then((r) => r.text())
+      expect(html).toContain('light.svg')
+      expect(html).toContain('dark.svg')
+      expect(html).toMatch(/class="logo logo-dark"/)
+      // Exactly one LCP candidate, and on a light page it is the light mark.
+      expect((html.match(/fetchpriority="high"/g) ?? []).length).toBe(1)
+      expect(html).toMatch(/class="logo" src="[^"]*light\.svg"[^>]*fetchpriority="high"/)
+    })
+
+    it('emits one mark when no dark twin is set', async () => {
+      await saveSettings({ showLogo: true, logoUrl: '/uploads/files/light.svg', logoDarkUrl: '' })
+      const html = await get('/').then((r) => r.text())
+      expect(html).toContain('light.svg')
+      // The class NAME is in the inlined stylesheet either way; what must be absent is a
+      // second <img> wearing it.
+      expect(html).not.toMatch(/class="logo logo-dark"/)
+      expect((html.match(/<img class="logo/g) ?? []).length).toBe(1)
+    })
+  })
+
   it('gives a listing the beacon and nothing else', async () => {
     await savePost({ title: 'Listed', content: 'body', status: 'published', date: PAST })
     const html = await get('/').then((r) => r.text())

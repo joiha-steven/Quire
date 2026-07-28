@@ -92,6 +92,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   logoRenderUrl: '',
   logoEmailUrl: '',
   logoRenderHeight: 0,
+  logoDarkUrl: '',
+  logoDarkRenderUrl: '',
+  logoDarkRenderHeight: 0,
   showLogo: false,
   showDescription: true,
   fontPreset: DEFAULT_FONT_PRESET,
@@ -171,6 +174,8 @@ export async function getSettings(): Promise<SiteSettings> {
       logoUrl: expandBlob(stored.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
       logoRenderUrl: expandBlob(stored.logoRenderUrl ?? DEFAULT_SETTINGS.logoRenderUrl),
       logoEmailUrl: expandBlob(stored.logoEmailUrl ?? DEFAULT_SETTINGS.logoEmailUrl),
+      logoDarkUrl: expandBlob(stored.logoDarkUrl ?? DEFAULT_SETTINGS.logoDarkUrl),
+      logoDarkRenderUrl: expandBlob(stored.logoDarkRenderUrl ?? DEFAULT_SETTINGS.logoDarkRenderUrl),
       faviconUrl: expandBlob(stored.faviconUrl ?? DEFAULT_SETTINGS.faviconUrl),
       appIconUrl: expandBlob(stored.appIconUrl ?? DEFAULT_SETTINGS.appIconUrl),
       siteUrl: sanitizeUrl(stored.siteUrl),
@@ -235,6 +240,31 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoEmailUrl = rendered?.emailUrl ?? ''
   }
 
+  // The dark twin, same pipeline and same width so the two marks are interchangeable in
+  // the header. It has no email variant: a newsletter has no dark mode to respond to.
+  const logoDarkUrl = input.logoDarkUrl ?? current.logoDarkUrl
+  let logoDarkRenderUrl = current.logoDarkRenderUrl
+  let logoDarkRenderHeight = current.logoDarkRenderHeight
+  const dropDark = async () => {
+    if (current.logoDarkRenderUrl) {
+      await deleteByPathname(collapseBlob(current.logoDarkRenderUrl)).catch(() => {})
+    }
+  }
+  if (!showLogo || !logoDarkUrl) {
+    await dropDark()
+    logoDarkRenderUrl = ''
+    logoDarkRenderHeight = 0
+  } else if (
+    logoDarkUrl !== current.logoDarkUrl
+    || logoWidth !== current.logoWidth
+    || !current.logoDarkRenderUrl
+  ) {
+    const rendered = await renderLogo(logoDarkUrl, logoWidth)
+    await dropDark()
+    logoDarkRenderUrl = rendered?.url ?? ''
+    logoDarkRenderHeight = rendered?.height ?? 0
+  }
+
   // The (possibly new) default palette — used both as `themePreset` and as the
   // always-included member of `enabledPalettes`.
   const themePreset = isPresetId(input.themePreset) ? input.themePreset : current.themePreset
@@ -249,6 +279,9 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoRenderUrl,
     logoRenderHeight,
     logoEmailUrl,
+    logoDarkUrl,
+    logoDarkRenderUrl,
+    logoDarkRenderHeight,
     showLogo,
     showDescription: input.showDescription ?? current.showDescription,
     faviconUrl: input.faviconUrl ?? current.faviconUrl,
@@ -285,6 +318,8 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     logoUrl: collapseBlob(next.logoUrl),
     logoRenderUrl: collapseBlob(next.logoRenderUrl),
     logoEmailUrl: collapseBlob(next.logoEmailUrl),
+    logoDarkUrl: collapseBlob(next.logoDarkUrl),
+    logoDarkRenderUrl: collapseBlob(next.logoDarkRenderUrl),
     faviconUrl: collapseBlob(next.faviconUrl),
     appIconUrl: collapseBlob(next.appIconUrl),
     customFont: { ...next.customFont, faces: next.customFont.faces.map((x) => ({ ...x, url: collapseBlob(x.url) })) },

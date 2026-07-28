@@ -54,10 +54,21 @@ function siteTitle(settings: SiteSettings): string {
   const src = settings.showLogo && settings.logoUrl
     ? (settings.logoRenderUrl || settings.logoUrl)
     : ''
+  const darkSrc = settings.showLogo && settings.logoDarkUrl
+    ? (settings.logoDarkRenderUrl || settings.logoDarkUrl)
+    : ''
+  const img = (url: string, cls: string, height: number, priority: boolean) =>
+    `<img class="${cls}" src="${escapeAttr(url)}" alt="${escapeAttr(settings.title)}"
+ width="${settings.logoWidth}"${height ? ` height="${height}"` : ''}
+ style="width:${settings.logoWidth}px"${priority ? ' fetchpriority="high"' : ''} decoding="async">`
+  // BOTH marks are emitted and CSS picks one. The page cache is keyed by URL alone
+  // (Invariant 1), so a server-side branch on the reader's theme would cache whichever
+  // mode the first visitor happened to have and serve it to everyone. The dark one is
+  // never `fetchpriority=high`: only one of the two is the LCP candidate on any given
+  // page, and on a light page that is the light one.
   const inner = src
-    ? `<img class="logo" src="${escapeAttr(src)}" alt="${escapeAttr(settings.title)}"
- width="${settings.logoWidth}"${settings.logoRenderHeight ? ` height="${settings.logoRenderHeight}"` : ''}
- style="width:${settings.logoWidth}px" fetchpriority="high" decoding="async">`
+    ? img(src, 'logo', settings.logoRenderHeight, true)
+      + (darkSrc ? img(darkSrc, 'logo logo-dark', settings.logoDarkRenderHeight, false) : '')
     : escapeHtml(settings.title)
   return `<a class="title" href="/">${inner}</a>`
 }

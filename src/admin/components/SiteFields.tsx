@@ -15,7 +15,8 @@ type Props = { s: SiteSettings; update: (p: Partial<SiteSettings>) => void }
 export function SiteFields({ s, update }: Props) {
   const t = useAdminT()
   const setLang = useSetAdminLang()
-  const [picking, setPicking] = useState(false)
+  // Which logo slot the media picker is filling. One picker, two targets.
+  const [picking, setPicking] = useState<'light' | 'dark' | null>(null)
 
   return (
     <div className="space-y-5">
@@ -64,11 +65,30 @@ export function SiteFields({ s, update }: Props) {
             <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.noLogo}</p>
           )}
           <div className="flex gap-2">
-            <Button variant="secondary" type="button" onClick={() => setPicking(true)}>{t.chooseLogo}</Button>
+            <Button variant="secondary" type="button" onClick={() => setPicking('light')}>{t.chooseLogo}</Button>
             {s.logoUrl && (
               <Button variant="ghost" type="button" onClick={() => update({ logoUrl: '' })}>{t.removeLogo}</Button>
             )}
           </div>
+
+          {/* The dark twin. Optional: with none set, the light mark is used in both modes,
+              which is what every install did before this existed. The preview sits on a
+              dark tile because that is the only background it will ever be seen on. */}
+          <div className="space-y-3 border-t border-neutral-200 pt-3 dark:border-neutral-800">
+            {s.logoDarkUrl ? (
+              <img src={s.logoDarkUrl} alt="Logo (dark)" className="h-12 w-auto rounded bg-neutral-900 p-1" />
+            ) : (
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.noLogoDark}</p>
+            )}
+            <div className="flex gap-2">
+              <Button variant="secondary" type="button" onClick={() => setPicking('dark')}>{t.chooseLogoDark}</Button>
+              {s.logoDarkUrl && (
+                <Button variant="ghost" type="button" onClick={() => update({ logoDarkUrl: '' })}>{t.removeLogo}</Button>
+              )}
+            </div>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.logoDarkHint}</p>
+          </div>
+
           <div className="space-y-1.5">
             <Input
               label={t.logoWidth}
@@ -111,10 +131,10 @@ export function SiteFields({ s, update }: Props) {
         <MediaLibrary
           mode="picker"
           onSelect={(url) => {
-            update({ logoUrl: url })
-            setPicking(false)
+            update(picking === 'dark' ? { logoDarkUrl: url } : { logoUrl: url })
+            setPicking(null)
           }}
-          onClose={() => setPicking(false)}
+          onClose={() => setPicking(null)}
         />
       )}
     </div>

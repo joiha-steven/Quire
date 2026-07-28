@@ -14,17 +14,51 @@ and to ship a fix or mitigation before any public disclosure.
 
 ## Scope
 
-Quire is self-hosted, single-owner software. The trust model: the authorized owner
-(`AUTHORIZED_EMAIL`) is trusted — owner-only actions (uploading media, editing content,
-custom CSS/SVG) are not vulnerabilities. Reports we care about include:
+Quire is self-hosted, single-owner software. The trust model: the account created with
+`bun run user create` is the owner, and the owner is trusted. Owner-only actions
+(uploading media, editing content, custom CSS, uploading an SVG) are not vulnerabilities.
 
-- Anything reachable **without** an owner session that reads or writes owner data,
-  bypasses `requireOwner()` / the middleware guard, or forges an MCP/OAuth token.
-- Injection (SQL/PostgREST filter, path traversal out of the store), SSRF, or stored
-  XSS reachable by a **non-owner** (reader comments, public pages, OG).
-- Secret exposure to the client (service key, Drive token, Turnstile/integration keys).
+Reports we care about:
+
+- **Anything reachable without a session** that reads or writes owner data, escapes the
+  owner-gated router group, or forges an MCP token or OAuth code.
+- **Authentication**: bypassing the password or the TOTP second factor, replaying a TOTP
+  code or a recovery code, fixing or stealing a session, or defeating the rate limiter on
+  the sign-in path.
+- **Injection** reachable by a non-owner: SQL, path traversal out of the upload store,
+  SSRF through a URL the app fetches, or stored XSS in reader comments, public pages or
+  OG images.
+- **Secret exposure to a client**: `users.password_hash`, `users.totp_secret`, recovery
+  codes, `integration_keys` (SMTP password, Turnstile secret, Cloudflare token), MCP token
+  hashes, or the server secret.
+
+## What the current design already assumes
+
+Stated so a report can say which of these is wrong, which is more useful than a scan.
+
+- Sessions are a 32-byte CSPRNG token in a `__Host-` prefixed, `HttpOnly`, `Secure`,
+  `SameSite=Lax` cookie. Only its SHA-256 is stored. The prefix scopes it to one host, so
+  a session does not follow a domain change.
+- Passwords are argon2id (`Bun.password`). TOTP is required, not optional, and a used step
+  is recorded so a code cannot be replayed. Ten single-use recovery codes are hashed at
+  rest and shown once.
+- Every write route is protected by **where it is mounted**, not by a check inside the
+  handler, and a static guard (`bun run check:routes`) fails the build if a route escapes
+  that group. See `docs/invariants.md`.
+- Every SQL statement is a literal with bound parameters. There is no query string
+  building anywhere in the request path.
+- Raw HTML in markdown and in comments is escaped, never executed, and `javascript:`,
+  `data:` and `vbscript:` hrefs are dropped.
+- The public site ships **no inline script**, which is what lets the recommended CSP omit
+  `'unsafe-inline'` from `script-src`. A report that this is violated is a real finding.
+- Uploads are served from a single directory by exact path lookup; `..` and encoded
+  variants do not escape it.
 
 ## Supported versions
 
-Fixes land on `main` and the latest release. Please test against the latest `main`
-before reporting.
+Fixes land on `main`. Please test against the latest `main` before reporting.
+
+`v1/` in this repository is **Quire 1.5.0**, the frozen Next.js + PostgreSQL implementation
+that 2.0 replaced on 2026-07-28. It accepts security patches only. Its trust model was
+different in one important way: the owner signed in with Google and was identified by
+`AUTHORIZED_EMAIL`. If you are reporting against a 1.x deployment, say so.

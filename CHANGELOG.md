@@ -1,5 +1,86 @@
 # CHANGELOG
 
+## 2026-07-29 — Quire 2.0: one process, two SQLite files, no infrastructure
+
+**The whole thing was rewritten and `manhhung.me` has been serving it since 2026-07-28.**
+Next.js 16 + React + PostgreSQL + PostgREST became **Bun + Hono + SQLite**: one process,
+two database files, a directory of uploads. Nothing to provision, nothing to keep running
+beside it, no third-party account anywhere in the path.
+
+It is a **port, not a reimplementation** ([ADR 0005](docs/decisions/0005-rewrite-in-bun-hono-sqlite.md)).
+Roughly 6,500 lines of pure logic and every test moved unchanged; the admin's 68 React
+components moved almost verbatim. That was the point: the owner does not read code, so the
+dominant risk was a behaviour quietly not surviving the move, and translation is where
+behaviour goes missing.
+
+### ⚠️ Breaking — everything about running it
+
+- **Sign-in is now yours.** Google and NextAuth are gone. Username + password (argon2id) +
+  **required TOTP** + ten single-use recovery codes ([ADR 0007](docs/decisions/0007-self-hosted-password-totp-auth.md)).
+  Create the account with `bun run user create --username <name> --email <address>`.
+  `AUTHORIZED_EMAIL`, `AUTH_GOOGLE_*` and `AUTH_URL` no longer exist.
+- **No database server.** `POSTGREST_URL` / `POSTGREST_TOKEN` are gone. `DATA_DIR` holds
+  `quire.db` and `analytics.db`; the schema is applied at boot inside a transaction, so
+  there is no migration step.
+- **Env is down to four things that matter**: `DATA_DIR`, `SITE_URL`, `AUTH_SECRET`,
+  `STORAGE_LOCAL_DIR`. Everything else is entered in the admin.
+- **Google Drive backup is gone** ([parity exception 1](docs/spec/07-parity.md)). Backup is
+  now an operational job that keeps working when the application does not: a cron script
+  to object storage, plus a one-click download of the whole install from the admin. That
+  deleted ~730 lines of OAuth, token refresh and folder bookkeeping. See [docs/backups.md](docs/backups.md).
+- **Sessions do not carry over.** The cookie is `__Host-` prefixed and therefore scoped to
+  one hostname. You will sign in again.
+
+### The reader's side
+
+- The public site now ships **no framework at all**: server-rendered HTML plus a few small
+  hand-written islands, and **no inline script anywhere** — a property covered by a test,
+  which is what lets the CSP drop `'unsafe-inline'` from `script-src`.
+- Article HTML is **byte-identical** to 1.5's. The golden harness became a hard equality
+  gate rather than a diff review, because `marked` and `shiki` came along unchanged.
+- **Book reading mode** paginates correctly: 1.5 drifted one column gap on every page turn.
+- Search runs on SQLite FTS5 with Vietnamese diacritics folded.
+- **A dark logo can be uploaded** (Settings → Site). A logo is ink on transparency and a
+  dark mark measures about 3.4:1 on a dark page, which reads as a black smudge. Both marks
+  are emitted and CSS picks one, because the page cache is keyed by URL alone.
+- `cache-control` is sent for the first time: 60 seconds plus `stale-while-revalidate` on
+  public HTML, `private, no-store` on the admin, sign-in and API.
+
+### The owner's side
+
+- The admin is the same React SPA, extracted from Next and served as a static bundle
+  ([ADR 0006](docs/decisions/0006-admin-stays-react-spa.md)). Settings were regrouped into
+  seven defined tabs ([ADR 0011](docs/decisions/0011-settings-regrouped-into-seven.md)).
+- **Dark mode actually works.** It was applying to four elements and nothing else: Tailwind
+  v4 compiles `dark:` to a media query unless told otherwise, so 668 utilities were
+  following the operating system while the admin's own switch toggled a class nobody was
+  listening to.
+- Tables no longer clip on a phone, and the analytics table no longer spends its width on
+  three-character numbers while truncating every title.
+- The MCP server, the WordPress import, scheduled publishing, redirects, series, the
+  activity log, Trash and the in-app Help all moved across intact.
+
+### Under it
+
+- Two SQLite files joined with `ATTACH`. `bun:sqlite` is synchronous and the runtime is
+  single-threaded, so there is exactly one writer by construction: no pool, no mutex, no
+  busy-retry.
+- The seven invariants were restated for the new shape ([docs/invariants.md](docs/invariants.md)).
+  The cache one got blunter on purpose: the whole page cache is thrown away after every
+  write, which costs a few renders and cannot be wrong.
+- 927 tests. `bun run check:all` is typecheck, four static guards and the suite, offline,
+  with no services.
+- The repository was flattened after cutover ([ADR 0012](docs/decisions/0012-flatten-repo-after-cutover.md)):
+  2.0 at the root, the frozen Next tree in `v1/`.
+
+### Known gaps
+
+- **Google sign-in for commenters is not implemented.** The toggle survived the port and
+  the feature did not; it does nothing until it is built.
+- The backup schedule and retention fields in Settings are inert for the same reason.
+- Numbered pagination is prev/next only, and the palette switcher and grid-view thumbnails
+  were not ported (both are off on this install). Full list in `state/TASKS.md`.
+
 ## 2026-07-26 — Quire 1.5: newsletter, a real dev stack, and a security pass (v1.5.0)
 
 The minor moves for two reasons: the blog can now **email its readers** as a first-class
