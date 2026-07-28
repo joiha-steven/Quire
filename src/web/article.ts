@@ -72,6 +72,8 @@ export async function renderArticle(slug: string): Promise<string | null> {
 
   let header = `<header><h1 class="reading-font fs-h1 font-semibold">${escapeHtml(item.title)}</h1></header>`
   let footer = ''
+  /** The series card, which sits ABOVE the body rather than in the footer with the rest. */
+  let lead = ''
   if (post) {
     const { features } = settings
     // The meta line sits ABOVE the title, matching the list cards, and it is chrome: the
@@ -98,13 +100,19 @@ export async function renderArticle(slug: string): Promise<string | null> {
 <p class="deck">${escapeHtml(post.excerpt)}</p>` : ''}
 </header>`
 
+    // The series card. Three things the port dropped, each of which the data and the locale
+    // strings were already carrying: the name LINKS to the series page (nothing on the site
+    // linked there, so `/series/<slug>` existed and was unreachable), the header says which
+    // part of how many, and it sits at the top of the post rather than after it.
     const series = await getSeriesForPost(post.slug)
     const seriesBox = series && series.posts.length > 1
-      ? `<nav class="series"><p class="meta">${escapeHtml(series.name)}</p><ol>${
+      ? `<aside class="series"><p class="series-head"><a class="link-accent" href="/series/${
+          escapeAttr(series.slug)}">${escapeHtml(series.name)}</a> · ${escapeHtml(s.seriesPartPrefix)} ${
+          series.currentIndex + 1}/${series.posts.length}</p><ol>${
           series.posts.map((p) => (p.slug === post.slug
             ? `<li aria-current="true">${escapeHtml(p.title)}</li>`
             : `<li><a href="/${escapeAttr(p.slug)}">${escapeHtml(p.title)}</a></li>`)).join('')
-        }</ol></nav>`
+        }</ol></aside>`
       : ''
     // Tags and categories, each on its own labelled line, over a rule. The rule is the
     // article ending; without it the taxonomy reads as one more paragraph.
@@ -122,7 +130,8 @@ export async function renderArticle(slug: string): Promise<string | null> {
             + `<p class="t-small text-meta">${escapeHtml(formatDate(r.date, settings.language))}</p></li>`).join('')
         }</ul></section>`
       : ''
-    footer = seriesBox + taxoBlock + relatedBlock
+    lead = seriesBox
+    footer = taxoBlock + relatedBlock
   }
 
   // The table of contents is server-rendered markup, so a reader without JavaScript still
@@ -251,6 +260,7 @@ ${siteHeader(settings, { mailConfigured })}
 <div class="with-rail"><main id="content">
 <article>
 ${header}
+${lead}
 ${toc}
 <div id="post-body" class="prose">${body}</div>
 ${footer}

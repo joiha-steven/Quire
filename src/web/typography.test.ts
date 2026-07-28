@@ -59,13 +59,16 @@ describe('the public sheet', () => {
     }
   })
 
-  // The end-of-article furniture descends. A related title used to have no size rule at
-  // all and fell back to the BODY size, so the quietest block on the page was set as large
-  // as the writing.
-  it('sets the related list below the body, and its label below that', () => {
-    const block = PUBLIC_CSS.slice(PUBLIC_CSS.indexOf('.related{'))
-    expect(block.slice(0, block.indexOf('.related p'))).toContain('.related a{font-size:var(--fs-h5)')
+  // A related title used to have no size rule at all and fell back to the BODY size, so the
+  // quietest block on the page was set as large as the writing. It is now one size
+  // throughout, told apart by weight and colour.
+  it('sets the whole related block at --fs-small, with no size of its own on the link', () => {
     expect(PUBLIC_CSS).toContain('.related{font-size:var(--fs-small)')
+    expect(PUBLIC_CSS).toContain('.related h2{font-size:var(--fs-small)')
+    const block = PUBLIC_CSS.slice(PUBLIC_CSS.indexOf('.related a{'))
+    const rule = block.slice(0, block.indexOf('}'))
+    expect(rule).toContain('font-weight:600')
+    expect(rule).not.toContain('font-size')
   })
 
   // A comment is somebody's words. The frozen tree set it in the reading face and the port

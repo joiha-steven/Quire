@@ -294,3 +294,36 @@ describe('what a shared cache may do with a page', () => {
     expect((await get('/nothing-here')).headers.get('cache-control')).toBe('private, no-store')
   })
 })
+
+describe('the series card', () => {
+  const part = (slug: string, title: string, order: number) =>
+    savePost({ title, slug, status: 'published', date: PAST, series: 'Ten Years', seriesOrder: order })
+
+  it('links to the series page, says which part, and marks the current one', async () => {
+    await part('one', 'Part One', 1)
+    await part('two', 'Part Two', 2)
+    await part('three', 'Part Three', 3)
+
+    const html = await (await get('/two')).text()
+    // The series page existed and NOTHING on the site linked to it, which is most of why
+    // the feature read as missing.
+    expect(html).toContain('href="/series/ten-years"')
+    expect(html).toContain('2/3')
+    // The part you are reading is not a link to itself.
+    expect(html).toMatch(/<li aria-current="true">Part Two<\/li>/)
+    expect(html).toContain('href="/one"')
+  })
+
+  // It belongs above the body: the point of it is knowing where you are BEFORE reading.
+  it('sits above the article body, not after it', async () => {
+    await part('one', 'Part One', 1)
+    await part('two', 'Part Two', 2)
+    const html = await (await get('/one')).text()
+    expect(html.indexOf('class="series"')).toBeLessThan(html.indexOf('id="post-body"'))
+  })
+
+  it('is absent for a post that is alone in its series', async () => {
+    await part('only', 'The Only One', 1)
+    expect(await (await get('/only')).text()).not.toContain('class="series"')
+  })
+})

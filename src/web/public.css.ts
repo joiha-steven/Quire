@@ -98,8 +98,11 @@ article > header .t-small{margin:0}
    NO size rule at all, so a related title inherited the BODY size: the quietest thing on the
    page (a list of "you might also read") was set as large as the writing, and in the chrome
    face, which on a monospace setting is visibly wider again. h5 is the title role that sits
-   below body; the label and the date are --fs-small, so the block descends 16/14/14 and the
-   heading is told apart by weight and colour rather than by size. */
+   below body. The whole block is now ONE size: at h5 the titles still read as headings under
+   a chrome font that is monospace on this site, and the owner asked for them smaller again.
+   So the label, the titles and the dates are all --fs-small and nothing here competes with
+   the article; weight and colour do the separating, which is how a book sets its back
+   matter. */
 .related{font-size:var(--fs-small);line-height:var(--lh-small)}
 /* The size is stated even though the block already sets it: an h2 carries a UA default of
    1.5em, so leaving it to inherit made the quiet label the largest thing in the block. */
@@ -107,8 +110,7 @@ article > header .t-small{margin:0}
   font-weight:600;color:var(--c-meta);margin:0 0 1.25rem}
 .related ul{list-style:none;padding:0;margin:0}
 .related li + li{margin-top:1rem}
-.related a{font-size:var(--fs-h5);line-height:var(--lh-h5);letter-spacing:var(--ls-h5);
-  font-weight:600}
+.related a{font-weight:600;color:var(--c-heading)}
 .related p{margin:.125rem 0 0}
 article + .subscribe-card,article + #comments{margin-top:2.5rem}
 
@@ -171,9 +173,19 @@ form.search input{flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);bor
   background:var(--c-bg);color:var(--c-text);font:inherit}
 form.search button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.35rem;
   background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
-nav.series{border-top:1px solid var(--c-rule);margin-top:2.5rem;padding-top:1rem;font-size:var(--fs-small)}
-nav.series ol{margin:.5rem 0 0;padding-left:1.25rem}
-nav.series li[aria-current]{color:var(--c-meta)}
+/* The series box: a bordered card at the TOP of the post, as the frozen tree had it. The
+   port turned it into a plain rule at the foot of the article, which is the wrong end — the
+   point of it is knowing you are in part 3 of 6 BEFORE reading, not after. */
+aside.series{border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem 1.5rem;
+  margin:2rem 0 0;font-size:var(--fs-small);line-height:var(--lh-small)}
+aside.series .series-head{margin:0;color:var(--c-meta)}
+aside.series ol{margin:1rem 0 0;padding-left:1.25rem}
+aside.series li{margin-top:.5rem}
+aside.series li a{color:var(--c-meta);text-decoration:none}
+aside.series li a:hover{color:var(--c-heading)}
+/* The part you are reading is not a link, and it is the one thing in the card set in the
+   heading colour: the card answers "where am I" before it answers "what else is there". */
+aside.series li[aria-current]{color:var(--c-heading);font-weight:600}
 p.tags{margin-top:1.5rem;font-size:var(--fs-small);color:var(--c-meta)}
 
 figure{margin:2rem 0}
