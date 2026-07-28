@@ -30,6 +30,7 @@ data-dev-uploads/
 
 # test and script scratch
 .tmp-test-*/
+.tmp-drive-data/
 .tmp-run/
 .tmp-binary/
 coverage/
