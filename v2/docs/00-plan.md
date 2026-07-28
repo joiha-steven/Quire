@@ -1,6 +1,8 @@
 # Quire 2.0: master plan
 
-Status: DRAFT for review. No code written yet.
+Status: **IN PROGRESS.** M0, M0.5, M1 and M2 are done; M3 is part done and M4 has not
+started. `../state/TASKS.md` is the live list — this document is the plan, not the tracker,
+and where the two disagree the tracker is right.
 
 Supersedes `go/docs/00-plan.md`. See "What changed from the Go plan" for the record of
 why, and `go/SUPERSEDED.md` for what was salvaged.
