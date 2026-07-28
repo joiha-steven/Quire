@@ -1,0 +1,7 @@
+# `bun test` walks the working directory, and the working directory now contains `v1/` —
+# the frozen Next tree, whose ~100 test files are written for vitest and throw on
+# `vi.hoisted` under Bun's runner. Rooting the test run at `src` keeps the frozen tree out
+# without a filter argument, which Bun matches as a substring and which therefore also
+# matches `v1/src`.
+[test]
+root = "src"

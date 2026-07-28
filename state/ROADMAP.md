@@ -3,7 +3,9 @@
 Direction for Quire Blog beyond the current single-owner, self-hosted blog. This is
 a planning document — nothing here is built yet unless its status says so. Operational
 detail for shipped features lives in [`CLAUDE.md`](../CLAUDE.md); the *why* of the
-current design is in [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+current design is in [`docs/spec/02-structure.md`](../docs/spec/02-structure.md), and the
+*why* of the implementation it replaced is in
+[`v1/ARCHITECTURE.md`](../v1/ARCHITECTURE.md).
 
 > **Done (2026-07-13):** the admin and editor received a complete monochrome UI/UX pass without
 > removing working features: coherent shared surfaces/spacing/radii, compact sidebar, repaired

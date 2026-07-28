@@ -48,7 +48,7 @@ nothing else, so it cannot lose a setting or migrate one.
 
 ## Why this is an exception to the porting rule
 
-[`v2/CLAUDE.md`](../../v2/CLAUDE.md) says: move it, do not improve it. That rule exists
+[`v2/CLAUDE.md`](../../CLAUDE.md) says: move it, do not improve it. That rule exists
 because every "small improvement" made in transit is a place a behaviour can vanish
 without anyone noticing, and silent feature loss is the top risk in the register.
 
@@ -62,6 +62,6 @@ still holds for everything else in the admin, which moved verbatim.
 - `?tab=` deep links to the old names (`content`, `integrations`) no longer resolve and
   fall back to the first tab. Nothing links to them: the only producer was the Google
   Drive consent redirect, which no longer exists ([parity exception
-  1](../../v2/docs/07-parity.md)).
+  1](../spec/07-parity.md)).
 - The Backup card became the manual archive, because Drive-connect is gone for a separate
   reason recorded there.

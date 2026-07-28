@@ -1,8 +1,11 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Quire runs two trees out of one repository: the live Bun/Hono/SQLite implementation at
+# the root, and the frozen Next.js one in `v1/`. Patterns are deliberately UNANCHORED so a
+# single rule covers both; the anchored `/node_modules` form used before the reshuffle
+# stopped matching the moment the Next tree moved down a level.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,42 +13,44 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# build output — the compiled binary, the bundled admin and island JS, Next's cache
+dist/
+.next/
+out/
+build/
 
-# next.js
-/.next/
-/out/
+# runtime data. SQLite databases and everything a reader or the owner uploaded: this is
+# the instance, not the product, and none of it belongs in a public repository.
+*.db
+*.db-wal
+*.db-shm
+data/
+uploads/
+data-dev-uploads/
 
-# production
-/build
+# test and script scratch
+.tmp-test-*/
+.tmp-run/
+.tmp-binary/
+coverage/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
+# env files. The committed templates carry no secrets and are tracked.
 .env*
-# …but the committed templates (no secrets) are tracked.
-!.env.example
-!.env.docker.example
-
-# docker self-host: the bundled stack writes Postgres data + uploaded binaries
-# here (docker-compose bind mounts). Runtime data, never committed.
-/data/
-# docker-compose.dev.yml keeps its Postgres in a named Docker volume (outside the
-# tree); only the dev server's uploaded binaries land here.
-/data-dev-uploads/
+!v1/.env.example
+!v1/.env.docker.example
+.deployment-id
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
 # Local media-wipe backup artifacts
 media-index-backup-*.json
@@ -53,12 +58,6 @@ media-index-backup-*.json
 # Local blob-cleanup backups (contain real site content — never commit)
 audit/legacy-blob-backup-*/
 
-# Local env backups
-.env.local.bak*
-.deployment-id
-
-# Local screenshot scratch (scripts/shot.ts writes here)
-_shots/
-
-# Screenshots taken while comparing v2 against the frozen tree. Evidence, not source.
+# Screenshots taken while driving the site with headless Chromium. Evidence, not source.
 .shots/
+_shots/

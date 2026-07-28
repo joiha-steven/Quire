@@ -39,6 +39,9 @@ export type Dict = {
   seriesLabel: string
   seriesPartPrefix: string
   emptySeries: string
+  previewNotice: string
+  nlInvalid: string
+  nlNoMail: string
   copyCode: string
   copiedCode: string
   nlHeading: string
@@ -338,10 +341,19 @@ export type AdminStrings = {
   resetDefault: string
   // settings tabs (task-based)
   tabSite: string
-  tabContent: string
+  tabSiteHint: string
+  tabLayout: string
+  tabLayoutHint: string
+  tabReading: string
+  tabReadingHint: string
   tabAppearance: string
+  tabAppearanceHint: string
   tabSeo: string
-  tabIntegrations: string
+  tabSeoHint: string
+  tabConnections: string
+  tabConnectionsHint: string
+  tabSystem: string
+  tabSystemHint: string
   themeAdminNote: string
   // typography (per-role type system)
   cardTypography: string
@@ -643,6 +655,10 @@ export type AdminStrings = {
   mcpCreateFailed: string
   // backups (Google Drive)
   backupTitle: string
+  exportHint: string
+  exportNow: string
+  exportBusy: string
+  exportReplicationNote: string
   backupHint: string
   backupConnect: string
   backupDisconnect: string
@@ -736,4 +752,43 @@ export type AdminStrings = {
   // sidebar collapse
   navCollapse: string
   navExpand: string
+  // sign-in (new in 2.0; see v2/docs/06-auth.md)
+  authSignIn: string
+  // Both take {site}. The sign-in page wears the Quire mark, so the blog it opens is named
+  // in words instead — once under the heading, once in the way back out.
+  authSignInLede: string
+  authBackTo: string
+  authUsername: string
+  authPassword: string
+  authShowPassword: string
+  authHidePassword: string
+  authCapsLock: string
+  authContinue: string
+  // Deliberately says nothing about WHICH was wrong. Same string for an unknown account
+  // and a wrong password, or the message itself becomes the account-existence oracle that
+  // the constant-time verification exists to close.
+  authBadCredentials: string
+  authLockedOut: string
+  authTwoFactor: string
+  authTwoFactorHint: string
+  authCode: string
+  authBadCode: string
+  authUseRecovery: string
+  authRecoveryCode: string
+  authRecoveryHint: string
+  authUseAuthenticator: string
+  authRestart: string
+  authSignOut: string
+  // first-run enrolment
+  authSetUp: string
+  authStepOf: string
+  authScanTitle: string
+  authScanHint: string
+  authManualEntry: string
+  authConfirmCode: string
+  authCodesTitle: string
+  authCodesHint: string
+  authCodesDownload: string
+  authCodesSaved: string
+  authDone: string
 }

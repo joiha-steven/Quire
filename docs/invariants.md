@@ -1,34 +1,34 @@
-> Split from CLAUDE.md. The load-bearing rules: break one and something silently
-> breaks in production. Each is enforced in code AND pinned by a test or a static guard,
-> all run by `npm run check:all`. A change that weakens one updates its guard in the SAME
-> commit, which makes the weakening visible in review.
-
 # Invariants
 
-Each is *Enforced at* code + pinned by a *Test* or static *Guard* — all run by `npm run check:all`.
+The load-bearing rules. Break one and something breaks in production quietly — no crash, no
+red test, just a page that never updates or a deleted row that comes back.
 
-1. **Revalidate is a SUPERSET — never under-purge.** Every admin write goes through ONE place,
-   `lib/revalidate.ts`; each helper runs `freshenData()` (`revalidateTag('db')`) THEN a
-   `revalidatePath` superset of what the change touches. *Enforced at:* `lib/revalidate.ts`.
-   *Test:* `lib/revalidate.test.ts`.
-2. **Posts + pages share ONE `/{slug}` namespace.** Every create/rename calls `ensureSlugFree`
-   → 409 `SlugConflictError` on collision (trashed rows still reserve their slug).
-   *Enforced at:* `lib/slugs.ts`. *Test:* `lib/slugs.test.ts`.
-3. **Image refs are stored store-relative.** `collapseBlob` strips the `/uploads` prefix on WRITE,
-   `expandBlob` re-adds it on READ — applied in the data layer only (posts/pages/settings), so stored
-   bytes carry no origin. *Enforced at:* `lib/blob.ts` + the data-layer files. *Test:* `lib/blob.test.ts`.
-4. **Every write/delete route calls `requireOwner()` first.** `src/middleware.ts` is the edge
-   defence-in-depth net (blocks `/admin` + owner-only `/api`); a NEW public/bearer route must be
-   added to `isPublicApi()` or it 401s. *Enforced at:* `lib/api.ts` + `src/middleware.ts`.
-   *Guard:* `check:routes` (static presence) + the middleware net; no integration test.
-5. **Raw HTML in markdown is escaped, never executed.** `html` renderer → `escapeHtml`; `safeHref` drops
-   `javascript:`/`data:`/`vbscript:`. *Enforced at:* `PostContent.tsx`. *Test:* `post-content.test.ts`.
-6. **Every delete is a soft delete.** `deleteX()` sets `deleted_at`; EVERY live read filters
-   `.is('deleted_at', null)` via `liveOnly()` (`db.ts`) — predicate defined ONCE; Trash reads the
-   complement. *Enforced at:* data-layer files + `docs/features.md`. *Test:* `lib/soft-delete.test.ts`.
-7. **Cache-bust is asymmetric.** Out-of-band writes (`backup_state`) MUST `revalidateTag(DB_TAG)`; MCP
-   token routes MUST NOT (`force-no-store`; busting `db` over-purges public). *Enforced at:*
-   `lib/backup-state.ts` vs `api/mcp/tokens`. *Test:* `check:token-bust` (backup side = coarse tripwire).
+Each is enforced in ONE place in code and pinned by a test or a static guard, all run by
+`bun run check:all`. A change that weakens one updates its guard in the SAME commit, which
+is what makes the weakening visible in review.
 
-> **Accepted risk — no drift check (2C):** `scripts/schema.sql` is hand-maintained, the app never runs
-> it. Any table/RPC/index change MUST update it in the SAME commit — review-enforced (live diff declined).
+The reasoning behind each is in [`spec/02-structure.md`](spec/02-structure.md). The frozen
+Next implementation had its own seven, which overlap but are not the same rules — they are
+in [`../v1/docs/invariants.md`](../v1/docs/invariants.md).
+
+| # | Rule | Enforced at | Pinned by |
+|---|---|---|---|
+| 1 | **The cache is cleared COMPLETELY after every write.** `clearCache()`, unconditional. No per-tag, per-path or per-kind invalidation | [`src/server/cache.ts`](../src/server/cache.ts) | `src/web/app.test.ts` · `src/web/admin.test.ts` |
+| 2 | **Posts and pages share ONE `/{slug}` namespace.** `ensureSlugFree` on create and on rename; a trashed row still reserves its slug | [`src/content/slugs.ts`](../src/content/slugs.ts) | `src/content/slugs.test.ts` · `src/web/admin.test.ts` |
+| 3 | **Image refs are stored store-relative.** `collapseBlob` on write, `expandBlob` on read, in the data layer only — stored bytes carry no origin | [`src/media/blob.ts`](../src/media/blob.ts) | `src/media/blob.test.ts` · `src/web/admin-uploads.test.ts` |
+| 4 | **Write routes are owner-gated by router-group MEMBERSHIP**, not by a check inside the handler. A new write route is protected because of where it is mounted, or it fails the build | [`src/web/guard.ts`](../src/web/guard.ts) | `check:routes` · `src/web/admin.test.ts` |
+| 5 | **Raw HTML in user content is escaped, never executed.** `escapeHtml` first; `javascript:`/`data:`/`vbscript:` hrefs are dropped | [`src/utils.ts`](../src/utils.ts) | `src/render/post-content.test.ts` · `src/comments/comment-md.test.ts` |
+| 6 | **Every delete is a soft delete.** `deleted_at` is set; every live read filters through the single `liveOnly()` fragment, and Trash reads its complement | [`src/store/db.ts`](../src/store/db.ts) | `src/store/db.test.ts` |
+| 7 | **Analytics writes go through the flush buffer**, never straight from a handler. A request never waits on an analytics write | [`src/analytics/buffer.ts`](../src/analytics/buffer.ts) | `src/analytics/analytics.test.ts` |
+
+## Why 1 is blunt on purpose
+
+The frozen tree invalidated selectively, per kind and per action, and the rule there was
+"never under-purge" — a superset, because getting the set exactly right was impossible and
+being wrong meant a published post nobody could see. 2.0 removes the problem instead of
+managing it: the page cache is one `Map` in one process, so throwing all of it away costs a
+few renders and cannot be wrong.
+
+Note that this is the IN-PROCESS cache only. What a *shared* cache in front of the app may
+do is a separate rule with a separate file, [`src/web/cache-headers.ts`](../src/web/cache-headers.ts),
+because a CDN cannot be told to forget.

@@ -2,7 +2,8 @@
 > reader. One rule set, applied system-wide (every language, every font preset, every
 > uploaded font). Touching the root layout, `lib/themes.ts` font helpers, the stylesheet
 > entries, or adding a client island? Read this first. The *why* is in
-> [`ARCHITECTURE.md`](../ARCHITECTURE.md) "Resource loading".
+> [`v1/ARCHITECTURE.md`](../v1/ARCHITECTURE.md) "Resource loading" — the reasoning was
+> written for the Next implementation and carried over to 2.0 unchanged.
 
 # Performance — resource loading (fonts · CSS · JS)
 

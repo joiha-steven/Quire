@@ -2,26 +2,22 @@
 
 Not yet decided. Answering one usually means writing an ADR, not editing this file.
 
-## Are the 61 API routes as mechanical as the import count suggests?
+## How does the binary ship, now that `sharp` is a dependency?
 
-The three-week estimate in `v2/docs/00-plan.md` assumes `next/server` to Hono is mostly a
-signature change. If they turn out entangled with `next/cache` and ISR, week 3 becomes
-weeks 3 to 5. **Probe first:** port the two most cache-entangled routes before committing
-to the estimate.
+The only one of the rewrite's open questions still open. `bun build --compile` bundles
+sharp's JavaScript but not its `@img/sharp-<platform>` native module, so the compiled
+binary throws on the first image call. Production currently runs from source. Options and
+the measurement are in [`TASKS.md`](TASKS.md).
 
-## Do `sharp` and `satori` embed in a compiled Bun executable?
+---
 
-Native and wasm parts may have to ship beside the binary. The Go plan carried the same
-asterisk through cgo and libvips, so this does not change the decision, but it changes what
-"one executable" means in the deploy runbook.
+## Answered during the rewrite
 
-## What replaces the Google Drive backup archive for instance-to-instance moves?
+Kept as pointers, because "we already looked at that" is worth more than a clean file.
 
-litestream covers continuous replication. `v2/docs/00-plan.md` promises a manual
-export/import archive still exists, but its format is unspecified.
-
-## Does book mode survive the vanilla rewrite intact?
-
-It is the single most intricate island (column-flow pagination, clone of the rendered body,
-resize and font-load recomputation) and the one with no equivalent anywhere else to copy
-from.
+| Question | Answer |
+|---|---|
+| Are the 61 API routes as mechanical as the import count suggested? | Yes. All of them ported inside M3, in three days, with no cache entanglement worth an ADR. `next/cache` collapsed into one `clearCache()` (Invariant 1) |
+| Do `sharp` and `satori` embed in a compiled Bun executable? | `satori` yes, `sharp` no. Still open as a packaging question, above |
+| What replaces the Google Drive backup for instance-to-instance moves? | Two things, neither of them litestream: a downloadable `tar.gz` of both databases and the uploads tree (`/api/backup/export`), and an off-box cron script to R2. [`../docs/backups.md`](../docs/backups.md) |
+| Does book mode survive the vanilla rewrite intact? | Yes, and it is measurably better: the frozen tree drifted one column-gap per page turn. `src/assets/js/book.ts` |

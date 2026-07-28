@@ -1,38 +1,58 @@
-> Split from CLAUDE.md — read when touching backups: Google Drive auth, restore, the backup cron, `backup_state`, `lib/backup.ts`, `lib/gdrive.ts`.
+# Backups
 
-# Backups — Google Drive (Admin → Settings → Advanced)
+Off-box, on a schedule, and **verified by restoring** — not by the fact that the script
+exited 0. Source: [`scripts/ops/quire2-backup.sh`](../scripts/ops/quire2-backup.sh),
+installed to `/usr/local/bin/` and driven by cron.
 
-- **What it is.** A full-site snapshot to the owner's Google Drive: one self-contained
-  `.tar.gz` = `db.json` (every text table except `backup_state`) + `blob/<pathname>` (every
-  binary, read through the storage driver via `readBlob`, which reads the local disk) +
-  `manifest.json`. Built in
-  `/tmp` then resumable-uploaded into a `quire-backups`
-  Drive folder. Runs on a schedule (cron, every `settings.backups.intervalDays`, default 4) or
-  the "Back up now" button; retention keeps the newest `settings.backups.keep` (default 4).
-- **Auth is SEPARATE from sign-in.** A dedicated `drive.file` OAuth flow (reuses the Google
-  client `AUTH_GOOGLE_*`, never touches the login scope): `GET /api/backup/connect` → Google
-  consent → `GET /api/backup/callback` exchanges the code for a **refresh token**, stored in
-  `backup_state` (server-only). `drive.file` = the app only ever sees files IT created. The
-  **redirect URI is `backupRedirectUri(settings)` = `${resolveSiteUrl(settings)}/api/backup/callback`**
-  — derived from the canonical site URL, NOT `req.nextUrl.origin` (which can be an internal/proxy
-  host when the admin is opened there → `redirect_uri_mismatch`). So the URI registered on the OAuth
-  client must use the canonical host (`settings.siteUrl`).
-- **Secret hygiene (HARD RULE).** The Drive refresh token must NEVER reach the client. It lives
-  in `backup_state`, NOT in `settings.data` (which is sent to the admin). Only non-secret config
-  (`enabled`/`intervalDays`/`keep`) lives in `settings.backups` and flows through the settings
-  form; the connection + snapshot list come from owner-only `/api/backup` (returns `toStatus`,
-  never the token) — same split as MCP tokens.
-- **`backup_state` writes MUST `revalidateTag(DB_TAG, 'max')`** (`backup-state.ts`:
-  `setDriveAuth`/`clearDriveAuth`/`setFolderId`/`recordRun`). The state read is Data-Cache-eligible
-  (tag `db`, 1h) and is read by BOTH `/api/backup` and the admin Overview — `force-dynamic` on one
-  route is NOT enough to dodge the *shared* Data Cache, so without busting it the admin showed stale
-  "not connected" after a successful connect (the bug that shipped in 1.0.11–1.0.13).
-- **Restore is DESTRUCTIVE** (`POST /api/backup/restore`): replaces every text table (settings
-  upserted by id=1; others delete-all then insert with `id`/`search` stripped) and re-uploads
-  every blob. A **pre-restore snapshot is taken first**. UI confirms before calling.
-- **Routes:** `/api/backup` (GET status+list, POST run-now, DELETE `?id=`), `/api/backup/restore`,
-  `/api/backup/{connect,callback,disconnect}`. All owner-only (middleware + `requireOwner`); the
-  cron calls `maybeRunBackup()` directly (no HTTP). New mutating action? `logActivity('backup.*')`.
-- **Owner setup (one-time):** enable the **Google Drive API** in the Cloud project behind
-  `AUTH_GOOGLE_ID`, add `https://<domain>/api/backup/callback` (+ localhost) as an Authorized
-  redirect URI on the OAuth client, then click **Connect Google Drive**. No new env var.
+The frozen tree backed up to the owner's Google Drive from inside the application, with an
+OAuth flow, a `backup_state` table and a destructive in-app restore. 2.0 dropped all of it
+(parity exception 1, [`spec/07-parity.md`](spec/07-parity.md)): backup is an operational
+concern, it should keep working when the application does not, and an application that can
+overwrite every table in itself is a bigger risk than the one it removes.
+
+What the exception promised in exchange is still in the admin: **Settings → Advanced →
+Export** (`GET /api/backup/export`, owner-only) streams a `tar.gz` of both databases and the
+uploads tree to the owner's machine. Same `VACUUM INTO` snapshot, no third party in the
+path, no shell access needed. That is a copy you take; what follows is the copy that happens
+whether or not anyone remembers.
+
+## What it copies
+
+| | How | Why that way |
+|---|---|---|
+| `quire.db`, `analytics.db` | `VACUUM INTO` a temporary file, then `tar -czf` | **Never a file copy.** A live SQLite database has a write-ahead log, and copying the file can capture a torn state that only reveals itself on restore |
+| `uploads/` | `rclone sync` with `--backup-dir` | A deleted or overwritten file stays recoverable for 7 days instead of vanishing on the next run |
+
+`.env` is deliberately NOT in the backup. It holds the session secret and the SMTP
+password; a copy of it off the box is a second place to lose them from.
+
+## Schedule and retention
+
+- **Hourly** (`:17`) and **daily** (`20:40`). Both take the same snapshot; only the tag
+  differs, and only the daily run applies retention.
+- Hourly copies kept 3 days, daily copies 30 days, deleted uploads 7 days.
+- One run at a time, held by `flock`. An hourly run overlapping the daily one would have
+  both writing the same staging file.
+- Failure posts to the alert webhook the other backups on the box already use. A backup
+  that fails silently is not a backup.
+
+## Restoring
+
+```sh
+tar -xzf quire2-<tag>.tar.gz -C /tmp/restore
+sqlite3 /tmp/restore/quire.db 'pragma integrity_check;'   # expect: ok
+sqlite3 /tmp/restore/quire.db 'select count(*) from posts;'
+systemctl stop quire2 && cp /tmp/restore/*.db /var/lib/quire2/data/ && systemctl start quire2
+```
+
+Stop the service first. Copying a database under a running process is the same torn-state
+problem the backup itself avoids, in the other direction.
+
+**Do this on a schedule, not only when something is on fire.** The restore was exercised
+end to end when the script was installed — `integrity_check: ok`, 74 posts, 4 pages — and
+an untested backup is a belief, not a backup.
+
+## Instance configuration
+
+The remote, the alert hook and the data paths are at the top of the script. They describe
+one machine, so they are the only part worth reading before installing it somewhere else.

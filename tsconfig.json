@@ -1,34 +1,36 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "Preserve",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
+    "moduleDetection": "force",
+    "types": ["bun"],
     "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "jsxImportSource": "hono/jsx",
+
+    // `strict` matches the frozen tree exactly, ON PURPOSE. Turning on a stricter flag
+    // mid-port (noUncheckedIndexedAccess was tried first) turns a pure-motion diff into a
+    // motion-plus-rewrite diff across every moved file, which is what the porting rule in
+    // CLAUDE.md exists to prevent. Tightening is a separate, reviewable pass once the port
+    // is finished; tracked in state/TASKS.md.
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["src", "scripts"],
+  // `src/assets/js` is BROWSER code and has its own tsconfig with DOM types. Excluding it
+  // here is what stops a server module reaching for `document`: the root project has no
+  // DOM lib, so such a reference fails to compile instead of failing on a request.
+  // `src/assets/dist` is the bundler's output, imported as text, never type-checked.
+  // `src/admin` is the React SPA and has its own config for the same reason: DOM types,
+  // and a different JSX runtime (React, not hono/jsx). `src/admin/dist` is bundler output.
+  "exclude": ["src/assets/js", "src/assets/dist", "src/admin", "src/admin/dist"]
 }

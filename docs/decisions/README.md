@@ -22,7 +22,7 @@ abandoned on 2026-07-26, and the only trace was a private memory file.
 
 | # | Decision | Date | In force |
 |:--|:--|:--|:--|
-| [0001](0001-self-hosted-native-postgres.md) | Self-host natively on Postgres + PostgREST, drop Vercel and Supabase cloud | 2026-07-04 | ✅ until v2 cutover |
+| [0001](0001-self-hosted-native-postgres.md) | Self-host natively on Postgres + PostgREST, drop Vercel and Supabase cloud | 2026-07-04 | ❌ ended at the 2026-07-28 cutover; `v1/` only |
 | [0002](0002-no-saas-single-instance.md) | Quire is one instance for its author. No SaaS, no multi-tenancy | 2026-07-26 | ✅ |
 | [0003](0003-freeze-v1-rewrite-as-v2.md) | Freeze the Next tree and rewrite as Quire 2.0 | 2026-07-26 | ✅ |
 | [0004](0004-rewrite-in-go-on-sqlite.md) | Rewrite in Go on SQLite | 2026-07-26 | ❌ superseded by 0005 |
@@ -33,6 +33,7 @@ abandoned on 2026-07-26, and the only trace was a private memory file.
 | [0009](0009-pin-optical-size-axis.md) | Pin the `opsz` axis in the bundled variable fonts | 2026-07-27 | ✅ |
 | [0010](0010-four-homes-doc-layout.md) | Adopt the four-homes documentation layout | 2026-07-27 | ✅ |
 | [0011](0011-settings-regrouped-into-seven.md) | Regroup settings into seven defined tabs | 2026-07-28 | ✅ |
+| [0012](0012-flatten-repo-after-cutover.md) | Flatten the repository after cutover: 2.0 to the root, the Next tree to `v1/` | 2026-07-28 | ✅ |
 
 ## Superseded, and why that matters
 
