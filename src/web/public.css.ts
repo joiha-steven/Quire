@@ -69,7 +69,7 @@ main{flex:1;padding:3rem 0 1rem}
 
 header.site{padding:1.75rem 0}
 header.site .title{font-family:var(--font-sans);font-weight:600;color:var(--c-heading);
-  text-decoration:none;font-size:calc(var(--fs-h4) * var(--type-scale, 1));line-height:var(--lh-h4)}
+  text-decoration:none;font-size:var(--fs-h4);line-height:var(--lh-h4)}
 /* width+height on the tag reserve the space, so the header does not jump when the logo
    arrives; the CSS width keeps it responsive and height:auto keeps the ratio. */
 header.site .logo{display:block;height:auto}
@@ -89,16 +89,26 @@ article > header h1{color:var(--c-heading);margin:0}
 article > header .t-small{margin:0}
 /* Standfirst: the excerpt, so a long read opens on a sentence rather than a wall. */
 .deck{margin:1rem 0 0;color:var(--c-meta);
-  font-size:calc(var(--fs-h4) * var(--type-scale, 1));line-height:var(--lh-h4)}
+  font-size:var(--fs-h4);line-height:var(--lh-h4)}
 #post-body{margin-top:2.5rem}
 /* Tags and categories over a rule: the rule is where the article ends. Without it the
    taxonomy reads as one more paragraph. */
 .post-taxo p{margin:0 0 .25rem;scroll-margin-top:6rem}
-.related h2{font-size:calc(var(--fs-small) * var(--type-scale, 1));font-weight:600;
-  color:var(--c-meta);margin:0 0 1.25rem}
+/* End-of-article furniture, and it needs its own scale rather than the page's. The link had
+   NO size rule at all, so a related title inherited the BODY size: the quietest thing on the
+   page (a list of "you might also read") was set as large as the writing, and in the chrome
+   face, which on a monospace setting is visibly wider again. h5 is the title role that sits
+   below body; the label and the date are --fs-small, so the block descends 16/14/14 and the
+   heading is told apart by weight and colour rather than by size. */
+.related{font-size:var(--fs-small);line-height:var(--lh-small)}
+/* The size is stated even though the block already sets it: an h2 carries a UA default of
+   1.5em, so leaving it to inherit made the quiet label the largest thing in the block. */
+.related h2{font-size:var(--fs-small);line-height:var(--lh-small);
+  font-weight:600;color:var(--c-meta);margin:0 0 1.25rem}
 .related ul{list-style:none;padding:0;margin:0}
 .related li + li{margin-top:1rem}
-.related a{font-weight:500}
+.related a{font-size:var(--fs-h5);line-height:var(--lh-h5);letter-spacing:var(--ls-h5);
+  font-weight:600}
 .related p{margin:.125rem 0 0}
 article + .subscribe-card,article + #comments{margin-top:2.5rem}
 
@@ -107,18 +117,18 @@ ${PROSE_CSS}
 /* An archive heading is chrome, not the reader's words: it stays in --font-sans and it is
    BOLD, where a post title is 600. Both come from the frozen tree's own markup. */
 .listing-head{margin:0 0 2rem}
-.listing-head h1{font-size:calc(var(--fs-h1) * var(--type-scale, 1));line-height:var(--lh-h1);
+.listing-head h1{font-size:var(--fs-h1);line-height:var(--lh-h1);
   letter-spacing:var(--ls-h1);color:var(--c-heading);margin:0;font-weight:700}
 .lower{text-transform:lowercase}
 /* Type ROLES, ported from the frozen tree. A card composes these rather than declaring
    its own sizes, which is why the listing and the article agree without anyone keeping
    two numbers in step. Every size is the owner's --fs-* setting times --type-scale, so
    nothing here is a literal. */
-.fs-h1{font-size:calc(var(--fs-h1) * var(--type-scale, 1));line-height:var(--lh-h1);letter-spacing:var(--ls-h1)}
-.fs-h2{font-size:calc(var(--fs-h2) * var(--type-scale, 1));line-height:var(--lh-h2);letter-spacing:var(--ls-h2)}
-.fs-h3{font-size:calc(var(--fs-h3) * var(--type-scale, 1));line-height:var(--lh-h3);letter-spacing:var(--ls-h3)}
-.t-small{font-size:calc(var(--fs-small) * var(--type-scale, 1));line-height:var(--lh-small);letter-spacing:var(--ls-small)}
-.t-body{font-size:calc(var(--fs-body) * var(--type-scale, 1));line-height:var(--lh-body);letter-spacing:var(--ls-body)}
+.fs-h1{font-size:var(--fs-h1);line-height:var(--lh-h1);letter-spacing:var(--ls-h1)}
+.fs-h2{font-size:var(--fs-h2);line-height:var(--lh-h2);letter-spacing:var(--ls-h2)}
+.fs-h3{font-size:var(--fs-h3);line-height:var(--lh-h3);letter-spacing:var(--ls-h3)}
+.t-small{font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small)}
+.t-body{font-size:var(--fs-body);line-height:var(--lh-body);letter-spacing:var(--ls-body)}
 .text-meta{color:var(--c-meta)}
 .text-text{color:var(--c-text)}
 .reading-font{font-family:var(--font-reading)}
@@ -148,7 +158,7 @@ ${PROSE_CSS}
    longest month label. */
 .tl-year-tag{align-items:center;gap:.5rem;white-space:nowrap;color:var(--c-heading);
   font-weight:600;background:var(--c-bg);padding:.1rem 3rem .1rem 0;
-  font-size:calc(var(--fs-h3) * var(--type-scale, 1));line-height:var(--lh-h3);
+  font-size:var(--fs-h3);line-height:var(--lh-h3);
   letter-spacing:var(--ls-h3)}
 .tl-year-tag .tl-dot{background:var(--c-accent)}
 .tl-dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--c-meta)}
@@ -235,7 +245,7 @@ html[data-rail=open] .rail{transform:none}
 .rail-inner{position:sticky;top:2.5rem}
 .rail-inner > * + *,.drawer-only > * + *{margin-top:1.75rem}
 .rail h2{margin:0 0 .75rem;padding-left:var(--rail-pad);font-weight:600;color:var(--c-heading);
-  font-size:calc(var(--fs-small) * var(--type-scale, 1));line-height:var(--lh-small);
+  font-size:var(--fs-small);line-height:var(--lh-small);
   letter-spacing:var(--ls-small)}
 .rail ul{list-style:none;margin:0;padding:0}
 .rail li{margin-top:.5rem}
@@ -270,7 +280,7 @@ html[data-rail=open] .rail{transform:none}
    ::before, so it flows for BOTH rail orientations with no per-side handling. */
 .rail-lead::before{content:"•";font-size:.72em;margin-inline-end:.5em;vertical-align:.12em;
   color:var(--c-meta)}
-.rail-sub{font-size:calc(var(--fs-caption) * var(--type-scale, 1))}
+.rail-sub{font-size:var(--fs-caption)}
 .toc-end{margin-top:1rem}
 /* Below the rail breakpoint the ToC is the drawer, and a post with a long index needs the
    whole column: the listing rail is not on this page to share it with. */

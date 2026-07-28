@@ -13,7 +13,7 @@ export const ISLANDS_CSS = `
 
 /* font-family explicitly, because this button lives INSIDE .prose pre and would otherwise
    inherit the code face. It is chrome sitting on top of code, not code. */
-.code-copy{position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;font-size:.75rem;
+.code-copy{position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;font-size:var(--fs-caption);
   font-family:var(--font-sans);
   border:1px solid var(--c-rule);background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;transition:opacity .15s}
 .prose pre{position:relative}
@@ -49,7 +49,7 @@ export const ISLANDS_CSS = `
 .lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lightbox-caption:empty{display:none}
 .lightbox-img{max-height:85vh;max-width:100%;object-fit:contain}
-.lightbox-caption{max-width:42rem;text-align:center;font-size:.875rem;color:rgba(255,255,255,.7);margin:0}
+.lightbox-caption{max-width:42rem;text-align:center;font-size:var(--fs-small);color:rgba(255,255,255,.7);margin:0}
 .lightbox button{position:absolute;display:flex;align-items:center;justify-content:center;
   border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.8);cursor:pointer;line-height:1}
 .lightbox button:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -57,7 +57,7 @@ export const ISLANDS_CSS = `
 .lightbox-prev,.lightbox-next{top:50%;transform:translateY(-50%);width:3rem;height:3rem;font-size:1.875rem}
 .lightbox-prev{left:.5rem}
 .lightbox-next{right:.5rem}
-.lightbox-count{position:absolute;bottom:1rem;font-size:.75rem;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
+.lightbox-count{position:absolute;bottom:1rem;font-size:var(--fs-caption);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
 
 /* Scroll reveal: a card eases in as it enters the viewport. This is what the owner meant
    by the fade at the foot of the feed going missing - the markup has carried a .reveal
@@ -125,14 +125,14 @@ body:has(.book-overlay[open]){overflow:hidden}
 .book-chrome{position:relative;display:flex;align-items:center;justify-content:center;
   min-height:56px;padding:0 clamp(16px,4vw,48px)}
 .book-top{border-bottom:1px solid var(--c-rule)}
-.book-title{font-size:1rem;font-weight:400;color:var(--c-meta);text-align:center;
+.book-title{font-size:var(--fs-small);font-weight:400;color:var(--c-meta);text-align:center;
   max-width:min(70%,720px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .book-topright{position:absolute;right:clamp(12px,4vw,44px);top:0;height:100%;
   display:flex;align-items:center;gap:16px}
 .book-x{background:none;border:0;cursor:pointer;color:var(--c-meta);font-size:1rem;
   line-height:1;padding:8px}
 .book-x:hover{color:var(--c-heading)}
-.book-count{font-size:.8rem;color:var(--c-meta);font-variant-numeric:tabular-nums}
+.book-count{font-size:var(--fs-caption);color:var(--c-meta);font-variant-numeric:tabular-nums}
 .book-stage{position:relative;display:flex;align-items:center;justify-content:center;
   min-height:0;padding:clamp(20px,4vh,52px) 0}
 /* The reading area just CLIPS the flowing columns: no sheet, no shadow, so the one paper
@@ -243,7 +243,7 @@ body:has(.book-overlay[open]){overflow:hidden}
 .theme-menu[hidden]{display:none}
 .theme-menu button{display:flex;width:100%;align-items:center;justify-content:space-between;
   padding:.5rem .75rem;border:0;background:none;cursor:pointer;text-align:left;font:inherit;
-  font-size:calc(var(--fs-small) * var(--type-scale, 1));line-height:var(--lh-small);
+  font-size:var(--fs-small);line-height:var(--lh-small);
   color:var(--c-meta)}
 .theme-menu button:hover{background:var(--c-rule)}
 .theme-menu button.is-current{font-weight:600;color:var(--c-heading)}
@@ -252,7 +252,7 @@ body:has(.book-overlay[open]){overflow:hidden}
 .theme-menu button.is-current::after{content:"✓"}
 
 .subscribe-card{border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem;
-  font-size:calc(var(--fs-small) * var(--type-scale, 1))}
+  font-size:var(--fs-small)}
 .subscribe-card h2{font-size:inherit;font-weight:600;color:var(--c-heading);margin:0 0 .75rem}
 form.subscribe{display:flex;gap:.5rem;margin:0}
 form.subscribe input{min-width:0;flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);
@@ -266,18 +266,33 @@ form.subscribe button:disabled{opacity:.5}
 .subscribe-status:empty{display:none}
 .subscribe-status{color:var(--c-meta);margin:.5rem 0 0}
 
-#comments{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem}
-#comments h2{font-size:var(--fs-h2);color:var(--c-heading);font-weight:600;margin:0 0 1.5rem}
+/* The thread runs at --fs-small throughout, which is the frozen tree's setting and the
+   reason it holds: this is a conversation ABOUT the article, one step below it, and a
+   comment set at the same size as the body reads as a continuation of the piece. The
+   heading is h3, not h2 — h2 belongs to the reader's own subheadings inside the article,
+   and a louder comments heading than any heading in the writing is the wrong emphasis.
+   The port had it at h2. */
+#comments{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem;
+  font-size:var(--fs-small);line-height:var(--lh-small)}
+#comments h2{font-size:var(--fs-h3);line-height:var(--lh-h3);letter-spacing:var(--ls-h3);
+  color:var(--c-heading);font-weight:600;margin:0 0 1.5rem}
 .comment-list,.comment-replies{list-style:none;padding:0;margin:0}
 .comment-replies{margin-left:1.25rem;padding-left:1rem;border-left:1px solid var(--c-rule)}
 .comment{margin:0 0 1.5rem}
-.comment-meta{color:var(--c-meta);font-size:var(--fs-small);margin:0 0 .35rem}
+.comment-meta{color:var(--c-meta);margin:0 0 .35rem}
 .comment-name{color:var(--c-heading);font-weight:600}
+/* A comment is somebody's WORDS, so it is set in the reading face like the article is —
+   the frozen tree did this and the port dropped it, which left every comment in the chrome
+   font. On this site that is JetBrains Mono, so the thread was rendering as monospace. */
+.comment-body{font-family:var(--font-reading);color:var(--c-text)}
 .comment-body p:last-child{margin-bottom:0}
 .comment-reply{border:0;background:none;padding:0;margin-top:.35rem;color:var(--c-meta);
-  font:inherit;font-size:var(--fs-small);cursor:pointer;text-decoration:underline}
+  font:inherit;cursor:pointer;text-decoration:underline}
 .comment-reply:hover{color:var(--c-heading)}
-.comment-form{margin-top:1.5rem;font-size:var(--fs-small)}
+/* The empty state is meta, not body: "no comments yet" is the absence of a conversation,
+   and setting it at reading size made it the loudest thing under the article. */
+#comments .empty{color:var(--c-meta);margin:0}
+.comment-form{margin-top:1.5rem}
 .comment-field{margin:0 0 .75rem}
 .comment-field label{display:block;color:var(--c-meta);margin-bottom:.25rem}
 .comment-form input,.comment-form textarea{width:100%;padding:.5rem .75rem;border:1px solid var(--c-rule);

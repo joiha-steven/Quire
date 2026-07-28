@@ -43,12 +43,25 @@
 
 ## Typography — one source of truth (HARD RULES)
 
-- **No hardcoded text sizes on the public site.** 9 roles (`TypeRole`: `h1–h5`, `body`,
-  `small`, `caption`, `code`), each with size/line-height/letter-spacing → CSS vars
-  `--fs/--lh/--ls-<role>`. Defaults baked into `globals.css :root` and mirrored by
-  `DEFAULT_TYPOGRAPHY` in `lib/themes.ts`. The owner's `settings.typography` is emitted by
-  `typographyToCss()` into the root layout AFTER `globals.css` (also applies in the admin
-  editor `.prose` = WYSIWYG). `smoothing` adds `-webkit-font-smoothing` on `body`.
+- **No hardcoded text sizes on the public site**, and since 2026-07-29 that is a check
+  rather than a sentence: `bun run check:type` ([`scripts/checks/type-roles.ts`](../scripts/checks/type-roles.ts))
+  fails the build on any `font-size` in the reader's sheets that is not `var(--fs-<role>)`,
+  `inherit`, a value in `em` (an ornament measured against its own context), or a listed
+  exception with a reason. It was written because the rule had already been broken in nine
+  places, and because a related-post title had no size rule at all and silently fell back to
+  the body size.
+- 9 roles (`TypeRole`: `h1–h5`, `body`, `small`, `caption`, `code`), each with
+  size/line-height/letter-spacing → CSS vars `--fs/--lh/--ls-<role>`, from
+  `DEFAULT_TYPOGRAPHY` in [`src/content/themes.ts`](../src/content/themes.ts). The owner's
+  `settings.typography` is emitted by `typographyToCss()` (also applies in the admin editor
+  `.prose` = WYSIWYG). `smoothing` adds `-webkit-font-smoothing` on `body`.
+- **`--type-scale` lives inside the variable, not at the call site.** Each `--fs-<role>` is
+  emitted as `calc(<size>rem * var(--type-scale, 1))`, so any subtree that overrides
+  `--type-scale` (book mode sets 1.15) scales EVERYTHING inside it. It used to be spelled
+  per rule, so a rule either had it or did not: book mode enlarged the prose and left
+  figcaptions, tags and the comment thread behind.
+- **`small` is most of the page.** Dates, tags, footnotes, the footer, the related list and
+  the whole comment thread are set in it. Treat a change to it as a change to the site.
 - **Where applied:** `.prose` (h1–h5/pre/code/figcaption/table) read the role vars; titles/UI
   OUTSIDE `.prose` use `.fs-h1…fs-h5` (titles) + `.t-small` (secondary text) + `.t-body`
   (body-role text outside prose: card excerpts, footer). H1 = single post/page titles +

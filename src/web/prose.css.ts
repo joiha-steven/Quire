@@ -18,20 +18,20 @@ export const PROSE_CSS = `
    in public.css.ts, so the writing surface fell back to the chrome font and a post drafted
    in JetBrains Mono was published in Literata. */
 .prose{font-family:var(--font-reading);
-  font-size:calc(var(--fs-body) * var(--type-scale, 1));line-height:var(--lh-body);
+  font-size:var(--fs-body);line-height:var(--lh-body);
   letter-spacing:var(--ls-body);color:var(--c-text)}
 .prose > * + *{margin-top:1.4em}
 .prose h1,.prose h2,.prose h3,.prose h4,.prose h5{color:var(--c-heading);font-weight:600;
   scroll-margin-top:2rem}
-.prose h1{font-size:calc(var(--fs-h1) * var(--type-scale, 1));line-height:var(--lh-h1);
+.prose h1{font-size:var(--fs-h1);line-height:var(--lh-h1);
   letter-spacing:var(--ls-h1);margin-top:1.9em}
-.prose h2{font-size:calc(var(--fs-h2) * var(--type-scale, 1));line-height:var(--lh-h2);
+.prose h2{font-size:var(--fs-h2);line-height:var(--lh-h2);
   letter-spacing:var(--ls-h2);margin-top:1.85em;margin-bottom:-.15em}
-.prose h3{font-size:calc(var(--fs-h3) * var(--type-scale, 1));line-height:var(--lh-h3);
+.prose h3{font-size:var(--fs-h3);line-height:var(--lh-h3);
   letter-spacing:var(--ls-h3);margin-top:1.6em}
-.prose h4{font-size:calc(var(--fs-h4) * var(--type-scale, 1));line-height:var(--lh-h4);
+.prose h4{font-size:var(--fs-h4);line-height:var(--lh-h4);
   letter-spacing:var(--ls-h4);margin-top:1.5em}
-.prose h5{font-size:calc(var(--fs-h5) * var(--type-scale, 1));line-height:var(--lh-h5);
+.prose h5{font-size:var(--fs-h5);line-height:var(--lh-h5);
   letter-spacing:var(--ls-h5);margin-top:1.4em}
 /* Bold is EMPHASIS in the body colour. A book serif's 700 is blacker than the 600 of the
    headings, so a preset can dial it back through --reading-bold. */
@@ -47,7 +47,7 @@ export const PROSE_CSS = `
 .prose blockquote{border-left:2px solid var(--c-rule);margin-left:0;padding-left:1rem;color:var(--c-meta)}
 /* ONE typeface site-wide: inline code reuses the reading font a touch smaller, on a tinted
    slab. A separate monospace family here would be a second face nobody chose. */
-.prose code{font-family:inherit;font-size:calc(var(--fs-code) * var(--type-scale, 1))}
+.prose code{font-family:inherit;font-size:var(--fs-code)}
 .prose :not(pre) > code{background:var(--c-rule);padding:.15em .38em}
 .prose pre{padding:1rem;border-radius:.5rem;overflow-x:auto;font-size:var(--fs-code)}
 .prose pre code{font-size:inherit;font-family:var(--font-mono,ui-monospace,monospace)}

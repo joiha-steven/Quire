@@ -28,8 +28,14 @@ export const FONT_WEIGHTS = [400, 500, 600, 700] as const
 //    (books differentiate with weight + whitespace, not size); larger sizes take
 //    tighter leading + a little negative tracking, body/small stay at 0.
 //  - h4 sits just above body; h5 is the small label (was 0.9, below body — fixed).
-// Mirror any change in globals.css :root (the no-JS fallback) AND the table in
-// docs/conventions.md.
+//  - `small` at 0.9375 (15px), not 0.875 (14px). It is not a minor role: dates, tags,
+//    footnotes, the footer, the related list and the whole comment thread are all set in
+//    it, so it is most of the page that is not the article. 14px against an 18px body is
+//    0.78 of it, which is a bigger drop than book typography uses for secondary matter;
+//    0.83 keeps the hierarchy and stops the furniture reading as fine print.
+//  - `caption` follows it up to 0.875 (14px) for the same reason: it labels a photograph
+//    the reader is looking at, and 13px under an 18px column was a squint.
+// Mirror any change in the table in docs/conventions.md.
 export const DEFAULT_TYPOGRAPHY: TypographySettings = {
   roles: {
     h1: { size: 2.0, line: 1.2, spacing: -0.02 },
@@ -38,8 +44,8 @@ export const DEFAULT_TYPOGRAPHY: TypographySettings = {
     h4: { size: 1.15, line: 1.45, spacing: -0.006 },
     h5: { size: 1.0, line: 1.5, spacing: 0 },
     body: { size: 1.125, line: 1.7, spacing: 0 },
-    small: { size: 0.875, line: 1.55, spacing: 0 },
-    caption: { size: 0.8125, line: 1.5, spacing: 0.003 },
+    small: { size: 0.9375, line: 1.6, spacing: 0 },
+    caption: { size: 0.875, line: 1.5, spacing: 0.003 },
     code: { size: 0.875, line: 1.6, spacing: 0 },
   },
   smoothing: false,
@@ -117,6 +123,8 @@ export const FONT_PRESETS: FontPreset[] = [
     // Literata — Google's book serif (Play Books). A generous x-height, so 18px body
     // is plenty; booklike leading; headings drop the sans's negative tracking; a 600
     // bold so emphasis stays lighter than the headings.
+    // A serif's secondary text needs to run a shade larger than a sans's: the strokes are
+    // finer and the modulation between thick and thin is what goes first at small sizes.
     id: 'literata',
     slug: 'literata',
     name: 'Literata',
@@ -124,12 +132,14 @@ export const FONT_PRESETS: FontPreset[] = [
     readingBold: 600,
     typography: tuned({
       body: { size: 1.125, line: 1.65 },
+      small: { size: 0.95, line: 1.6 }, caption: { size: 0.9, line: 1.5 },
       h1: { spacing: -0.01 }, h2: { spacing: -0.008 }, h3: { spacing: 0 }, h4: { spacing: 0 },
     }),
   },
   {
     // Source Serif 4 — Adobe's screen book serif, sibling to Source Sans. A little
-    // finer than Literata, similar reading setup.
+    // finer than Literata, similar reading setup, and the finer strokes are why its
+    // secondary text is set at the same size on a slightly tighter line.
     id: 'source-serif',
     slug: 'sourceserif',
     name: 'Source Serif 4',
@@ -137,6 +147,7 @@ export const FONT_PRESETS: FontPreset[] = [
     readingBold: 600,
     typography: tuned({
       body: { size: 1.15, line: 1.62 },
+      small: { size: 0.95, line: 1.58 }, caption: { size: 0.9, line: 1.5 },
       h1: { spacing: -0.01 }, h2: { spacing: -0.008 }, h3: { spacing: 0 }, h4: { spacing: 0 },
     }),
   },

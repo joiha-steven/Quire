@@ -57,10 +57,20 @@ export const DEFAULT_COMMENTS: CommentSettings = {
 
 // Per-role type CSS vars on :root (+ optional font-smoothing). Injected after
 // globals.css (same defaults), so a saved scale wins and a fresh install still works.
+//
+// The `--type-scale` multiplier lives HERE, inside the variable, and not at the call sites.
+// It used to be spelled `calc(var(--fs-body) * var(--type-scale, 1))` in each rule that
+// wanted it, which meant a rule either had it or did not, with no way to tell which was
+// intended: book mode (the only thing that sets the scale, to 1.15) enlarged the prose and
+// left figcaptions, tags and the comment thread at their unscaled size. Custom properties
+// are substituted where they are USED, so a `calc` inside the definition re-resolves in any
+// subtree that overrides `--type-scale` — which gets the same behaviour everywhere, from one
+// place, and leaves every rule able to say plainly `font-size:var(--fs-body)`.
 export function typographyToCss(t: TypographySettings): string {
   const vars = TYPE_ROLES.map((r) => {
     const s = t.roles[r]
-    return `--fs-${r}:${s.size}rem;--lh-${r}:${s.line};--ls-${r}:${s.spacing}em`
+    return `--fs-${r}:calc(${s.size}rem * var(--type-scale, 1))`
+      + `;--lh-${r}:${s.line};--ls-${r}:${s.spacing}em`
   }).join(';')
   const smooth = t.smoothing ? `body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}` : ''
   return `:root{${vars}}${smooth}`
