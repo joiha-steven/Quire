@@ -251,3 +251,64 @@ nothing fills the right. A listing is much closer (102 vs 240) because the year 
 occupies the right gutter. The reading column itself is centred to the pixel — it is the
 PAGE that is not. Deliberate (the rail is "type on the page", ADR-level) and therefore the
 owner's call, not a defect to fix silently.
+
+## Postscript 2 — book mode had never been larger than the article
+
+The owner asked for the book-mode formula to be fixed and recorded: reading text 15% larger
+than the article, every gap scaled with it. Measuring the current behaviour before changing
+it found that **the first half was not happening either**. Article against book mode, on the
+owner's own settings:
+
+```
+                body  leading  h2   para gap  pre pad  quote indent  figure  td pad
+  ratio before  1.000  1.000  1.000  1.000    1.000     1.000        1.000   1.000
+  ratio after   1.150  1.150  1.150  1.150    1.150     1.150        1.150   1.150
+```
+
+`--type-scale: 1.15` was set on `.book-overlay` and read back as `1.15` there — and
+`--fs-body` still computed to `calc(1.13rem * 1)` inside it. **A `var()` inside a custom
+property is substituted where the property is DECLARED, not where it is used.** `--fs-body`
+declared on `:root` resolves the scale against `:root`, where it is undefined, and the
+resolved value is what inherits. Proven in the browser rather than argued:
+
+```
+  #a { --scale:1; --unit:calc(10px * var(--scale,1)) }   ->  calc(10px * 1)
+  #b { --scale:2 }                         (inherits #a) ->  calc(10px * 1)
+  #c { --scale:2; --unit:calc(10px * var(--scale,1)) }   ->  calc(10px * 2)
+```
+
+`settings.ts` carried a comment asserting the opposite, and `docs/conventions.md` stated it
+as a hard rule. `typographyToCss` now emits the identical block on `:root` AND on
+`.book-overlay`, which re-substitutes it there. The nine article gaps that were frozen in
+`rem` became multiples of a new `--sp`, which carries the scale the same way.
+
+**The running head was set at -0.7px a character.** The book overlay is the reading face
+throughout — its running head is the article's own title — but it stated no tracking, so it
+inherited the mono-chrome correction from `body` and rendered a book serif at -0.05em. That
+is what "the letters are too close together" was. The overlay states `--ls-body` now, and
+`.book-title` / `.book-count` came out of `CHROME_TRACKED`.
+
+## Postscript 3 — the section break, and an IDE chrome behind a switch
+
+Two design decisions taken by the owner on 2026-07-29.
+
+**The article's section break is now a short centred rule** (6em, air above and below).
+A book does not rule a line across the text block to change subject. The full-width rule
+stays for the structural separations, which are a different job: the footnote rule, the
+comment thread, the pager. In book mode it remains the asterism.
+
+**`settings.ideChrome`** dresses the furniture as source code while the reading column
+stays analogue: `//` markers on rail headings, bracketed counts and dates in `--c-accent`,
+and an editor line-number gutter. Server-rendered as `<html data-ide-chrome="on">`, so no
+island runs and there is no flash. Three properties are tested rather than described: every
+rule is behind the attribute so off leaves no trace; nothing touches `.prose`,
+`.reading-font`, `.deck`, `.comment-body` or `.fs-*`; and the only colours are the two
+theme tokens an editor actually distinguishes, comment and literal.
+
+Two things the measurement decided rather than taste. The rail **ranges left** under the
+switch — in the gutter layout it ranges right so its text hugs the article, which is correct
+typography and exactly wrong for a line-number gutter; and `text-align` alone does nothing
+to a flex item, `justify-content` is what ranges the row. And the gutter is **legible**
+(`--c-meta`, 4.56:1): `--c-rule` measured 1.16:1 against the page, which is invisible, and a
+generated counter is still announced by some screen readers. What makes a gutter a gutter is
+where it sits and that its figures are tabular.

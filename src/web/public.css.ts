@@ -12,6 +12,7 @@
 
 
 import { ISLANDS_CSS } from '@/web/islands.css'
+import { IDE_CSS } from '@/web/ide.css'
 import { PROSE_CSS } from '@/web/prose.css'
 
 const BASE_CSS = `
@@ -200,27 +201,29 @@ aside.series li[aria-current]{color:var(--c-heading);font-weight:600}
 p.tags{margin-top:1.5rem;font-size:var(--fs-small);line-height:var(--lh-small);
   letter-spacing:var(--ls-small);color:var(--c-meta)}
 
-figure{margin:2rem 0}
+figure{margin:calc(var(--sp) * 2) 0}
 figure img{display:block;margin:0 auto;border-radius:.25rem}
 figcaption{color:var(--c-meta);font-size:var(--fs-caption);line-height:var(--lh-caption);
-  letter-spacing:var(--ls-caption);text-align:center;margin-top:.5rem}
+  letter-spacing:var(--ls-caption);text-align:center;margin-top:calc(var(--sp) * .5)}
 .img-left img{margin-left:0}
 .img-right img{margin-right:0}
 .img-wide{margin-left:calc(-1 * clamp(0px,4vw,4rem));margin-right:calc(-1 * clamp(0px,4vw,4rem))}
-.gallery{display:grid;gap:.5rem;margin:2rem 0}
+.gallery{display:grid;gap:calc(var(--sp) * .5);margin:calc(var(--sp) * 2) 0}
 .gallery figure{margin:0}
 .gallery-cols-2{grid-template-columns:repeat(2,1fr)}
 .gallery-cols-3{grid-template-columns:repeat(3,1fr)}
 .gallery-cols-4{grid-template-columns:repeat(4,1fr)}
 
-.video-embed,.video-file{margin:2rem 0}
+.video-embed,.video-file{margin:calc(var(--sp) * 2) 0}
 .video-embed{position:relative;padding-top:56.25%}
 .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .video-file video{width:100%;display:block}
 .audio-embed iframe{width:100%;height:9.25rem;border:0}
 
-.callout{border-left:2px solid var(--c-accent);padding:.75rem 0 .75rem 1rem;margin:1.75rem 0}
-.callout-label{font-weight:600;color:var(--c-heading);margin:0 0 .35rem}
+.callout{border-left:2px solid var(--c-accent);
+  padding:calc(var(--sp) * .75) 0 calc(var(--sp) * .75) var(--sp);
+  margin:calc(var(--sp) * 1.75) 0}
+.callout-label{font-weight:600;color:var(--c-heading);margin:0 0 calc(var(--sp) * .35)}
 .callout p:last-child{margin-bottom:0}
 
 /* applyFootnotes already emits an <hr class="fn-rule">; a border-top here as well
@@ -228,7 +231,7 @@ figcaption{color:var(--c-meta);font-size:var(--fs-caption);line-height:var(--lh-
 .prose .fn-rule{margin-top:2.5em}
 .footnotes{font-size:var(--fs-small);line-height:var(--lh-small);
   letter-spacing:var(--ls-small);color:var(--c-meta)}
-.footnotes ol{padding-left:1.25rem}
+.footnotes ol{padding-left:calc(var(--sp) * 1.25)}
 sup.fnref a{text-decoration:none}
 
 footer.site{padding:3rem 0;text-align:center;color:var(--c-meta);
@@ -317,4 +320,5 @@ html[data-rail=open] .rail{transform:none}
 
 /** The document sheet plus the island sheet, in that order, inlined as one <style>. */
 export const PUBLIC_CSS = `${BASE_CSS}
-${ISLANDS_CSS}`
+${ISLANDS_CSS}
+${IDE_CSS}`

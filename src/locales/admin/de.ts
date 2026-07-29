@@ -254,6 +254,8 @@ const de = {
   cardRendering: 'Textdarstellung',
   fontSmoothing: 'Kantenglättung (Anti-Aliasing)',
   fontSmoothingDesc: 'Glättet die Textkanten. Kann auf dem Mac dünner/heller wirken — aus nutzt die Browser-Vorgabe.',
+  ideChromeLabel: 'IDE-Rahmen',
+  ideChromeDesc: 'Das Beiwerk um den Artikel wie Quelltext gestalten: Kommentarzeichen an den Seitenleisten-Überschriften, Zähler in Klammern und eine Zeilennummern-Spalte. Die Lesespalte bleibt unberührt.',
   motionLabel: 'Bewegung',
   motionDesc: 'Dezente Animationen auf Website + Admin (Seiten-Fades, Hover/Klick, Scroll-Einblendung). Aus = sofort. Reduced-Motion wird stets beachtet.',
   typewriterLabel: 'Schreibmaschinen-Feedback',

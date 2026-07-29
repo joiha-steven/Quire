@@ -148,3 +148,94 @@ describe('the author\'s own words are set in the reading face', () => {
     expect(MONO_TRACKING).not.toContain(' .deck,')
   })
 })
+
+describe('book mode is one number, and the owner asked for it not to move', () => {
+  const css = typographyToCss(DEFAULT_TYPOGRAPHY)
+
+  // THE FORMULA, fixed by the owner on 2026-07-29:
+  //   book mode reading text = article reading text x 1.15
+  //   every gap inside the article = the same x 1.15
+  // Type and the space around it are one system. Enlarging the words and leaving the gaps
+  // gives crowded reading, not bigger reading.
+  it('emits every scale-dependent variable TWICE, on :root and on .book-overlay', () => {
+    // The mechanism, not decoration. A var() inside a custom property is substituted where
+    // that property is DECLARED, so `--fs-body` on :root resolves --type-scale against
+    // :root — where it is undefined — and overriding the scale on a descendant changes
+    // NOTHING. Book mode rendered at exactly the article's size from the port until this
+    // was measured. Re-declaring the identical text on .book-overlay re-substitutes it
+    // there, where the scale is 1.15.
+    const root = /:root\{(.*?)\}/s.exec(css)?.[1] ?? ''
+    const book = /\.book-overlay\{(.*?)\}/s.exec(css)?.[1] ?? ''
+    expect(root).not.toBe('')
+    expect(book).toBe(root)
+    for (const role of TYPE_ROLES) {
+      expect(book).toContain(`--fs-${role}:calc(`)
+      expect(book).toContain('var(--type-scale, 1)')
+    }
+  })
+
+  it('carries the SPACING unit through the same block, so gaps scale with the type', () => {
+    // --sp is why the 15% reaches the gaps. It must live in this one block: a second
+    // definition on :root anywhere else would win or lose by source order, and the overlay
+    // would silently go back to unscaled spacing.
+    expect(css).toContain('--sp:calc(1rem * var(--type-scale, 1))')
+    expect((css.match(/--sp:calc/g) ?? []).length).toBe(2)
+  })
+
+  it('spends --sp on the article gaps that used to be frozen in rem', () => {
+    // Measured 2026-07-29 in a real browser, book mode against the article: every ratio
+    // 1.15 — body, leading, headings, paragraph gap, pre padding, blockquote indent,
+    // figure margin, table cell padding. Before, every ratio was 1.000.
+    for (const frozen of [
+      '.prose li{margin:calc(var(--sp) * .25) 0}',
+      'padding-left:var(--sp);color:var(--c-meta)}',
+      '.prose pre{padding:var(--sp)',
+      'padding:calc(var(--sp) * .4) calc(var(--sp) * .6)',
+      'figure{margin:calc(var(--sp) * 2) 0}',
+    ]) {
+      expect(PUBLIC_CSS).toContain(frozen)
+    }
+  })
+
+  it('sets the overlay in the reading face, tracking included', () => {
+    // The running head IS the article's title, in the reading face. With no tracking of its
+    // own it inherited the mono-chrome correction from body and set a book serif at
+    // -0.05em: -0.7px a character, which is what "the letters are too close" was.
+    expect(PUBLIC_CSS).toContain('font-family:var(--font-reading);letter-spacing:var(--ls-body)')
+    expect(MONO_TRACKING).not.toContain('.book-title')
+    expect(MONO_TRACKING).not.toContain('.book-count')
+  })
+})
+
+describe('the IDE chrome is one switch, and off leaves no trace', () => {
+  // The owner's brief: the furniture reads as source code while the reading column stays
+  // analogue. The contrast IS the design, which also makes it a taste — so it is a switch,
+  // and every rule behind it hangs off one attribute selector.
+  it('gates every rule on the attribute, so nothing leaks when it is off', () => {
+    const ide = PUBLIC_CSS.split('\n').filter((l) => l.includes('data-ide-chrome'))
+    expect(ide.length).toBeGreaterThan(8)
+    // A rule that mentions the attribute in a comment but selects without it would apply
+    // unconditionally. Every declaration line must carry the selector.
+    for (const line of ide) expect(line).toContain('html[data-ide-chrome=on]')
+  })
+
+  it('never touches the reading column', () => {
+    // The half that must NOT look technical: the article body, its title, the card
+    // excerpts and the comment bodies are the reader's own words.
+    for (const line of PUBLIC_CSS.split('\n').filter((l) => l.includes('data-ide-chrome'))) {
+      for (const reading of ['.prose', '.reading-font', '.deck', '.comment-body', '.fs-h1']) {
+        expect(line).not.toContain(reading)
+      }
+    }
+  })
+
+  it('borrows only theme tokens for its two syntax roles', () => {
+    // An editor distinguishes a comment from a literal. That is the whole palette here:
+    // labels are --c-meta, counts and dates are --c-accent. No third colour, and no hex —
+    // the same rule the rest of the public site follows.
+    const ide = PUBLIC_CSS.split('\n').filter((l) => l.includes('data-ide-chrome')).join('\n')
+    expect(ide).toContain('var(--c-accent)')
+    expect(ide).toContain('var(--c-meta)')
+    expect(ide).not.toMatch(/#[0-9a-fA-F]{3,8}/)
+  })
+})

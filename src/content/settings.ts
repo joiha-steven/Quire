@@ -59,22 +59,47 @@ export const DEFAULT_COMMENTS: CommentSettings = {
 // Per-role type CSS vars on :root (+ optional font-smoothing). Injected after
 // globals.css (same defaults), so a saved scale wins and a fresh install still works.
 //
-// The `--type-scale` multiplier lives HERE, inside the variable, and not at the call sites.
-// It used to be spelled `calc(var(--fs-body) * var(--type-scale, 1))` in each rule that
-// wanted it, which meant a rule either had it or did not, with no way to tell which was
-// intended: book mode (the only thing that sets the scale, to 1.15) enlarged the prose and
-// left figcaptions, tags and the comment thread at their unscaled size. Custom properties
-// are substituted where they are USED, so a `calc` inside the definition re-resolves in any
-// subtree that overrides `--type-scale` — which gets the same behaviour everywhere, from one
-// place, and leaves every rule able to say plainly `font-size:var(--fs-body)`.
-export function typographyToCss(t: TypographySettings): string {
-  const vars = TYPE_ROLES.map((r) => {
+// BOOK MODE IS ONE NUMBER, AND IT IS EMITTED TWICE. Do not "simplify" this to one block.
+//
+// The rule the owner asked for: in book mode the reading text runs 15% larger than the
+// article, and every gap around it moves by the same 15%. Type and the space between it are
+// one system; enlarging the words alone gives you crowded reading, not bigger reading. So
+// `--sp`, the article's spacing unit, carries the scale exactly as `--fs-<role>` does, and
+// every gap inside the article is a multiple of it.
+//
+// Emitting the block a SECOND time on `.book-overlay` is the whole mechanism, and it is
+// there because the obvious version does not work. A `var()` inside a custom property is
+// substituted where that property is DECLARED, not where it is used — so `--fs-body`
+// declared on `:root` resolves `var(--type-scale, 1)` against `:root`, where the scale is
+// undefined, and the resolved `calc(1.13rem * 1)` is what inherits. Overriding
+// `--type-scale` on a descendant then changes nothing at all. This file used to claim the
+// opposite in a comment, and book mode had been rendering at EXACTLY the article's size
+// since the port. Measured 2026-07-29, every ratio 1.000: body, leading, headings, and
+// every gap.
+//
+//   #a { --scale:1; --unit:calc(10px * var(--scale,1)) }  ->  calc(10px * 1)
+//   #b { --scale:2 }                        (inherits #a's) ->  calc(10px * 1)   <- the trap
+//   #c { --scale:2; --unit:calc(10px * var(--scale,1)) }  ->  calc(10px * 2)   <- the fix
+//
+// Re-declaring the identical text on `.book-overlay` re-substitutes it THERE, where the
+// scale is 1.15. The numbers still live in one place: this function. Pinned by
+// `web/typography.test.ts`, and the reasoning is in docs/conventions.md.
+function scaledVars(t: TypographySettings): string {
+  const roles = TYPE_ROLES.map((r) => {
     const s = t.roles[r]
     return `--fs-${r}:calc(${s.size}rem * var(--type-scale, 1))`
       + `;--lh-${r}:${s.line};--ls-${r}:${s.spacing}em`
   }).join(';')
+  // The article's spacing unit. Scale-dependent, so it belongs in this block and nowhere
+  // else: a second definition on :root elsewhere would win or lose by source order and the
+  // book overlay would go back to unscaled gaps.
+  return `${roles};--sp:calc(1rem * var(--type-scale, 1))`
+}
+
+export function typographyToCss(t: TypographySettings): string {
+  const vars = scaledVars(t)
   const smooth = t.smoothing ? `body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}` : ''
-  return `:root{${vars}}${smooth}`
+  return `:root{${vars}}.book-overlay{${vars}}${smooth}`
 }
 
 // Emit one @font-face per uploaded weight for the owner typeface and point
@@ -116,6 +141,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   postsPerPage: 10,
   relatedCount: 3,
   excerptLength: 50,
+  ideChrome: false,
   customCss: '',
   footer: '© {year} {title} · [powered by Quire Blog](https://github.com/joiha-steven/Quire)',
   menu: [],
@@ -196,6 +222,7 @@ export async function getSettings(): Promise<SiteSettings> {
       themePreset: isPresetId(stored.themePreset) ? stored.themePreset : DEFAULT_PRESET_ID,
       fontPreset: isFontPresetId(stored.fontPreset) ? stored.fontPreset : DEFAULT_FONT_PRESET,
       chromeFont: resolveChromeFont(stored),
+      ideChrome: stored.ideChrome === true,
       featured: sanitizeFeatured(stored.featured, []),
       mostViewedCount: clampNumber(stored.mostViewedCount, 0, 10, DEFAULT_SETTINGS.mostViewedCount),
       sidebarLayout: stored.sidebarLayout === 'two' ? 'two' : 'single',
@@ -312,6 +339,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     themePreset,
     fontPreset: isFontPresetId(input.fontPreset) ? input.fontPreset : current.fontPreset,
     chromeFont: isChromeFontId(input.chromeFont) ? input.chromeFont : current.chromeFont,
+    ideChrome: typeof input.ideChrome === 'boolean' ? input.ideChrome : current.ideChrome,
     enabledPalettes: sanitizeEnabledPalettes(input.enabledPalettes ?? current.enabledPalettes, themePreset),
     themes: sanitizeThemes(input.themes, current.themes),
     typography: sanitizeTypography(input.typography, current.typography),

@@ -21,6 +21,7 @@ const SHEETS: Array<{ file: string; decl: string }> = [
   { file: 'src/web/public.css.ts', decl: 'const BASE_CSS = ' },
   { file: 'src/web/prose.css.ts', decl: 'export const PROSE_CSS = ' },
   { file: 'src/web/islands.css.ts', decl: 'export const ISLANDS_CSS = ' },
+  { file: 'src/web/ide.css.ts', decl: 'export const IDE_CSS = ' },
   { file: 'src/web/login.css.ts', decl: 'export const LOGIN_CSS = ' },
 ]
 

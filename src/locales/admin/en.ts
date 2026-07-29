@@ -254,6 +254,8 @@ const en = {
   cardRendering: 'Text rendering',
   fontSmoothing: 'Font smoothing (anti-aliasing)',
   fontSmoothingDesc: 'Smooths text edges. Can look lighter/thinner on Mac — off uses the browser default.',
+  ideChromeLabel: 'IDE chrome',
+  ideChromeDesc: 'Dress the furniture around the article as source code: comment markers on the sidebar headings, bracketed counts, and a line-number gutter. The reading column is untouched.',
   motionLabel: 'Motion',
   motionDesc: 'Subtle animations across the site + admin (page fades, hover/press, scroll reveal). Off = instant. Reduced-motion is always respected.',
   typewriterLabel: 'Typewriter feedback',

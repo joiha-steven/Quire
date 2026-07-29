@@ -220,6 +220,8 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
               <AdvancedFields
                 typography={s.typography}
                 onTypography={(typography) => update({ typography })}
+                ideChrome={s.ideChrome}
+                onIdeChrome={(ideChrome) => update({ ideChrome })}
                 motion={s.motion}
                 onMotion={(motion) => update({ motion })}
               />

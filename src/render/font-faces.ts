@@ -121,7 +121,8 @@ export function allFontFaceCss(): string {
  * listed here.
  *
  * Reading surfaces are deliberately ABSENT, and three of them used to be here by
- * accident. `.deck`, `figcaption` and `.footnotes` sit inside the article and are set in
+ * accident, and the whole book overlay was a fourth. `.deck`, `figcaption` and
+ * `.footnotes` sit inside the article and are set in
  * the READING face — but with no tracking of their own they inherited the correction
  * from `body`, which is a mono adjustment applied to a serif. Measured 2026-07-29: all
  * three carried -0.05em under a JetBrains Mono chrome while rendering in Literata. They
@@ -133,7 +134,7 @@ const CHROME_TRACKED = [
   'header.site .tagline', 'header.site .title',
   'footer.site', '.pager', 'p.tags', '.related', 'aside.series',
   '.rail-sub', '.preview-note', '.subscribe-card', '#comments',
-  '.code-copy', '.book-title', '.book-count', '.lightbox-caption', '.lightbox-count',
+  '.code-copy', '.lightbox-caption', '.lightbox-count',
 ]
 
 /**

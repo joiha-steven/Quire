@@ -55,8 +55,9 @@ export const PROSE_CSS = `
 .prose a:hover{text-decoration-color:var(--c-accent)}
 .prose ul{list-style:disc;padding-left:1.4em}
 .prose ol{list-style:decimal;padding-left:1.4em}
-.prose li{margin:.25rem 0}
-.prose blockquote{border-left:2px solid var(--c-rule);margin-left:0;padding-left:1rem;color:var(--c-meta)}
+.prose li{margin:calc(var(--sp) * .25) 0}
+.prose blockquote{border-left:2px solid var(--c-rule);margin-left:0;
+  padding-left:var(--sp);color:var(--c-meta)}
 /* Code is the ONE role that is not the reading face, and it is one face for both forms.
    It used to be two: inline code inherited the reading font while a fenced block asked for
    var(--font-mono), which nothing ever defined — so the same code role rendered in a book
@@ -67,12 +68,20 @@ export const PROSE_CSS = `
 .prose code{font-family:var(--font-mono);font-size:var(--fs-code);
   line-height:var(--lh-code);letter-spacing:var(--ls-code)}
 .prose :not(pre) > code{background:var(--c-rule);padding:.15em .38em}
-.prose pre{padding:1rem;border-radius:.5rem;overflow-x:auto;font-size:var(--fs-code);
+.prose pre{padding:var(--sp);border-radius:.5rem;overflow-x:auto;font-size:var(--fs-code);
   line-height:var(--lh-code);letter-spacing:var(--ls-code)}
 .prose pre code{font-size:inherit;line-height:inherit;letter-spacing:inherit}
-.prose hr{margin:2.4em 0}
+/* A SECTION BREAK, not a divider. A printed book never rules a line across the text
+   block to change subject: it leaves white space, and marks it with something small and
+   centred so the reader knows the gap is deliberate rather than a page ending. The
+   full-width rule stays for the STRUCTURAL separations, which are a different job: the
+   footnote rule, the top of the comment thread, the pager. Those are edges of the
+   document; this is a pause inside it.
+   Width in em, so it grows with the reader's type and with book mode's 1.15. */
+.prose hr:not(.fn-rule){width:6em;margin:2.6em auto;border-top:1px solid var(--c-rule)}
 .prose table{border-collapse:collapse;width:100%}
-.prose th,.prose td{border:1px solid var(--c-rule);padding:.4rem .6rem;text-align:left}
+.prose th,.prose td{border:1px solid var(--c-rule);
+  padding:calc(var(--sp) * .4) calc(var(--sp) * .6);text-align:left}
 
 /* BOOK TYPOGRAPHY (features.bookText). A printed book leads a paragraph with nothing but
    an indent; on screen that reads as a wall, so a small lead stays. A paragraph that OPENS

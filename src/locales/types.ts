@@ -401,6 +401,8 @@ export type AdminStrings = {
   cardRendering: string
   fontSmoothing: string
   fontSmoothingDesc: string
+  ideChromeLabel: string
+  ideChromeDesc: string
   motionLabel: string
   motionDesc: string
   typewriterLabel: string

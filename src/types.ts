@@ -188,6 +188,7 @@ export type SiteSettings = {
   showLogo: boolean
   showDescription: boolean
   fontPreset: string // built-in font choice id (lib/themes FONT_PRESETS); '' -> Inter
+  ideChrome: boolean // dress the SYSTEM CHROME as source code (comment markers on rail headings, bracketed counts in the accent, an editor line-number gutter). Deliberately a switch: the contrast it creates with an analogue reading column is a taste, and a taste has to be reversible in one click. Public site only; the admin has its own scale
   chromeFont: string // system-chrome font (lib/themes CHROME_FONTS): 'inter' | 'reading' (follow the reading font) | 'plex-mono' (IBM Plex Mono). Drives --font-sans (header/footer/rail/meta/admin); leaves the article body alone
   faviconUrl: string // browser-tab icon; '' = the bundled default favicon
   appIconUrl: string // PWA / home-screen app icon (square); '' = favicon, else bundled default

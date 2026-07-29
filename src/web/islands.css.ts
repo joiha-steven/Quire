@@ -116,7 +116,11 @@ body:has(.book-overlay[open]){overflow:hidden}
    the site theme, and dark mode then shows white ink on white paper. */
 .book-overlay{position:fixed;inset:0;z-index:60;width:100%;max-width:100%;height:100%;
   max-height:100%;border:0;padding:0;grid-template-rows:auto 1fr;
-  font-family:var(--font-reading);
+  /* The overlay is the READING face throughout, chrome included: the running head is the
+     article's own title. Tracking has to be stated for the same reason the family does, or
+     it inherits the mono-chrome correction from body and sets a book serif at -0.05em.
+     Measured 2026-07-29: the running head was running -0.7px per character. */
+  font-family:var(--font-reading);letter-spacing:var(--ls-body);
   --book-paper:#f9f4ec;--c-bg:var(--book-paper);
   /* Reading text runs 15% larger in here. It MULTIPLIES the owner's --fs-* roles, so it
      tracks the site's own type setting rather than replacing it. */
@@ -172,8 +176,11 @@ body:has(.book-overlay[open]){overflow:hidden}
 .book-flow.prose > p:first-child::first-letter{float:left;margin:.02em .09em 0 0;
   font-size:3.1em;line-height:.72;font-weight:600;color:var(--c-heading)}
 .book-flow.prose > p:first-child{text-indent:0}
-/* A section break becomes a centred asterism rather than a rule. */
-.book-flow hr{border:0;height:auto;margin:1.5em 0;text-align:center;background:none}
+/* In the reader the same break becomes an asterism: more room, so the ornament can be a
+   real one. The width and the top border are reset explicitly because the article's short
+   rule is the more specific selector and would otherwise draw a line under the mark. */
+.book-flow hr,.book-flow hr:not(.fn-rule){border:0;border-top:0;width:auto;height:auto;
+  margin:1.5em 0;text-align:center;background:none}
 .book-flow hr::before{content:"⁂";color:var(--c-meta);font-size:1.05em;letter-spacing:.35em}
 /* A faint spine down the centre gutter. It sits on the viewport, so it stays put while the
    pages flip beneath it. */

@@ -150,8 +150,13 @@ export function renderDocument(
   // correction for the two mono faces. Both were missed in the port, so the owner's Motion
   // toggle did nothing and a mono chrome rendered untracked.
   const motion = settings.motion.enabled ? 'on' : 'off'
+  // The third switch of the same kind, and stamped here for the same reason: CSS reads it,
+  // the server writes it, so the first paint is already right and no island has to run for
+  // the page to look like itself. Absent rather than "off" when the owner has it off, so
+  // the whole IDE ruleset is one attribute selector that simply never matches.
+  const ide = settings.ideChrome ? ' data-ide-chrome="on"' : ''
   return `<!DOCTYPE html>
-<html lang="${escapeAttr(settings.language)}" data-motion="${motion}" data-chrome-font="${escapeAttr(settings.chromeFont)}">
+<html lang="${escapeAttr(settings.language)}" data-motion="${motion}" data-chrome-font="${escapeAttr(settings.chromeFont)}"${ide}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

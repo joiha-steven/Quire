@@ -254,6 +254,8 @@ const vi = {
   cardRendering: 'Hiển thị chữ',
   fontSmoothing: 'Khử răng cưa (anti-aliasing)',
   fontSmoothingDesc: 'Làm mượt viền chữ. Trên Mac có thể trông mảnh/nhạt hơn - tắt thì dùng mặc định trình duyệt.',
+  ideChromeLabel: 'Giao diện kiểu IDE',
+  ideChromeDesc: 'Cho phần khung quanh bài viết trông như mã nguồn: dấu chú thích ở tiêu đề cột bên, số đếm trong ngoặc vuông, và cột số dòng. Cột chữ đọc giữ nguyên.',
   motionLabel: 'Chuyển động',
   motionDesc: 'Hiệu ứng tinh tế toàn site + admin (mờ dần khi chuyển trang, hover/bấm, hiện dần khi cuộn). Tắt = tức thì. Luôn tôn trọng prefers-reduced-motion.',
   typewriterLabel: 'Hiệu ứng máy đánh chữ',

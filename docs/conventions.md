@@ -125,6 +125,56 @@ font, only the site language's subset(s), never the chrome font or an uploaded c
   each. **Adding a public route/component that uses a NEW utility → extend `globals.css`'s
   `@source` list** or it won't emit. Never put admin-only utilities/chrome in `globals.css`.
 
+## Book mode is ONE number, fixed by the owner (HARD RULE)
+
+    book mode reading text = article reading text x 1.15
+    every gap inside the article  = the same x 1.15
+
+Set on 2026-07-29 and not to be changed. Type and the space around it are one system:
+enlarging the words and leaving the gaps gives crowded reading, not bigger reading. So
+`--sp` (the article's spacing unit) carries `--type-scale` exactly as `--fs-<role>` does,
+and every gap inside the article is a multiple of `--sp`.
+
+**The block is emitted TWICE, and that is the mechanism.** A `var()` inside a custom
+property is substituted where the property is DECLARED, not where it is used. `--fs-body`
+on `:root` therefore resolves `var(--type-scale, 1)` against `:root`, where the scale is
+undefined, and the resolved value inherits. Overriding `--type-scale` on a descendant
+changes nothing. This file used to state the opposite, and **book mode had been rendering
+at exactly the article's size since the port** — measured 2026-07-29, every ratio 1.000.
+`typographyToCss` now emits the identical block on `:root` and on `.book-overlay`, which
+re-substitutes it there. Pinned by `web/typography.test.ts`.
+
+## The article's section break is a SHORT centred rule (HARD RULE)
+
+`.prose hr:not(.fn-rule)` is 6em wide, centred, with air above and below. A book does not
+rule a line across the text block to change subject. The FULL-WIDTH rule stays for the
+structural separations, which are a different job: the footnote rule, the top of the
+comment thread, the pager. Those are edges of the document; a section break is a pause
+inside it. In book mode the same break becomes the asterism.
+
+## IDE chrome — one switch, `settings.ideChrome` (HARD RULES)
+
+The furniture around the article reads as source code; the reading column stays analogue.
+The contrast is the point, and because it is a taste it is a switch (Admin → Appearance →
+Rendering), server-rendered as `<html data-ide-chrome="on">` so the first paint is right
+and no island runs.
+
+- **Every rule hangs off `html[data-ide-chrome=on]`.** Off leaves not a trace. Tested.
+- **It never touches the reading column** — not `.prose`, `.reading-font`, `.deck`,
+  `.comment-body` or `.fs-*`. Those are the reader's own words and are the half that must
+  not look technical. Tested.
+- **Two syntax roles, both from theme tokens.** An editor distinguishes a comment from a
+  literal, so: labels are `--c-meta` and carry a `//` marker from CSS (never markup, so the
+  heading a feed and a screen reader see stays the plain word); counts and dates are
+  `--c-accent` and counts are bracketed. No third colour, no hex. Tested.
+- **The rail ranges LEFT in here**, and the row packs `space-between`. In the gutter layout
+  it ranges right so its text hugs the article — correct typography, and exactly wrong for
+  a line-number gutter. `text-align` alone does nothing to a flex item; `justify-content`
+  is what ranges the row.
+- **The gutter is legible** (`--c-meta`, 4.56:1), not a hairline. `--c-rule` measured
+  1.16:1 against the page, and a generated counter is still announced by some screen
+  readers. What makes a gutter a gutter is where it sits and that its figures are tabular.
+
 ## Chrome reuse, divider, colour (HARD RULES)
 
 - **Repeated chrome shares ONE class constant — never hand-roll per element.** Sibling controls
