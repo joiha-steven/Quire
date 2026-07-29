@@ -164,7 +164,13 @@ ${PROSE_CSS}
 .tl-feed > .tl-yr:first-child > article:first-of-type{margin-top:0}
 [data-list=grid] .tl-yr{display:contents}
 [data-list=grid] .tl-feed article{margin-top:0} /* the grid supplies its own gap */
-.tl-mark{align-items:center;gap:.5rem;white-space:nowrap;color:var(--c-meta)}
+/* A node ON the spine, not under it. The spine is .post-list::after, a pseudo-element of
+   the LIST, so it paints after the list's children and drew straight over every month
+   dot; and unlike the year tag the mark carried no background, so the hairline ran
+   through the label too. Both fixed the way the year already solved it: a --c-bg mask
+   that breaks the line, and a stacking order above it. */
+.tl-mark{align-items:center;gap:.5rem;white-space:nowrap;color:var(--c-meta);
+  background:var(--c-bg);padding:.1rem 3rem .1rem 0;z-index:1}
 /* The sticky year is a --c-bg tag, so months sliding up to the top pass UNDER it and
    disappear instead of overlapping; the right padding widens the mask to cover the
    longest month label. */

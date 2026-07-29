@@ -57,23 +57,23 @@ html[data-ide-chrome=on] .t-small time{color:var(--c-text)}
    nothing else about the rail changes. The active marker stays where the gutter layout
    put it, at the row's right edge, which is now 3.5ch clear of the numbers. */
 html[data-ide-chrome=on] .rail ul{counter-reset:ln}
-/* The gap between a row and its number is the ROW's right padding plus whatever the li
-   reserves, and both were at their defaults - 14px of rail padding under a 3.5ch column,
-   which put the number about 43px from the text it counts and ate a fifth of the rail.
-   An editor's gutter sits right against the code. Pulled to ~1ch of clear air, which
-   still leaves the active marker its own lane. */
-html[data-ide-chrome=on] .rail-row{padding-right:1ch}
-html[data-ide-chrome=on] .rail li{counter-increment:ln;position:relative;
-  padding-right:2.4ch}
-/* The SIZE is stated, and it has to be. The counter hangs off the <li>, which sits
-   OUTSIDE .rail-row and its .t-small - so it inherited the BODY size and the gutter came
-   out larger than the labels it counts. Caption is the role for a figure's label, which
-   is what a line number is. */
+/* The number sits in a small ring ON the rail's divider, the same language the feed's
+   year and month markers already speak: a node on a hairline. It costs the rail NO
+   width - the ring lives out on the line, past the text - which is why the row keeps its
+   normal padding and nothing here reserves a column.
+
+   -22px = the divider's own -13px offset, minus half the 18px ring. The ring carries a
+   --c-bg fill so the line breaks around it rather than running through it. */
+html[data-ide-chrome=on] .rail li{counter-increment:ln;position:relative}
 html[data-ide-chrome=on] .rail li::before{content:counter(ln);position:absolute;
-  right:0;width:2ch;text-align:right;color:var(--c-meta);
-  font-size:var(--fs-caption);line-height:var(--lh-caption);
-  letter-spacing:var(--ls-caption);
-  font-variant-numeric:tabular-nums;pointer-events:none}
+  top:.05em;right:-23px;width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--c-bg);border:1px solid var(--c-rule);color:var(--c-meta);
+  font-size:.62em;font-variant-numeric:tabular-nums;pointer-events:none}
+/* .rail-inner scrolls a long index, and overflow-y:auto clips horizontally too - so the
+   ring would be cut in half by its own container. The box grows right by the overhang and
+   pads it back, which puts the ring inside the padding box where nothing clips it. */
+html[data-ide-chrome=on] .rail-inner{width:calc(100% + 24px);padding-right:24px}
 /* The tag cloud is a run of words, not a list, so it has no lines to number. */
 html[data-ide-chrome=on] .rail-tags{counter-reset:none}
 `.trim()

@@ -61,8 +61,14 @@ export function timelineCss(colWidth: number): string {
     `@media (min-width:${at}px){` +
     // Spine: a hairline down the right gutter, exactly as tall as the post list — the same
     // faint `--c-rule` as the sidebar dividers. The dots + year give it presence.
+    //
+    // BEHIND everything, and it has to be said explicitly. The spine is a pseudo-element of
+    // the LIST, so it paints after the list's children — and a month marker cannot climb over
+    // it with z-index, because `.reveal` runs a card-in animation on each `article`, which
+    // makes the article a stacking context and traps the marker's z-index inside it. So the
+    // hairline ran straight through every month dot, cutting it in half. Measured 2026-07-29.
     `.post-list{position:relative}` +
-    `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 4px);width:1px;background:var(--c-rule)}` +
+    `.post-list::after{content:"";position:absolute;top:0;bottom:0;left:calc(100% + var(--rail-gap) + 4px);width:1px;background:var(--c-rule);z-index:-1}` +
     // Month marker: a child of a month's first card, anchored to the card top out in the gutter.
     `.post-list article{position:relative}` +
     `.post-list article .tl-mark{display:flex;position:absolute;top:0;left:calc(100% + var(--rail-gap));width:max-content;max-width:var(--rail-w)}` +
