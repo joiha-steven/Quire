@@ -461,3 +461,45 @@ Two things found on the way that were not on anyone's list:
   compression middleware and reported it as an ungated DELETE route. A route path in Hono
   starts with `/`; the guard now requires that. A guard that cries wolf is a guard that gets
   switched off, and this one is load-bearing.
+
+## 2026-07-29 — the header controls, the index nesting, and the chrome font
+
+Three from the owner, with one condition restated: **the IDE style applies only when the
+switch is on. With it off the site is exactly what it was.** Everything below honours that
+the same way the info panel does — both forms are in the markup and the sheet decides which
+one has a box.
+
+**The header controls.** Four round line-art glyphs were the last thing on the page still
+speaking the language of a phone app. With the switch on they become
+`[/tìm] [tối] [lưới] [@email]`, brackets from the sheet as every other literal on the site.
+Only from 640px up: five words are far wider than five 40px squares and would wrap the
+header on a phone, so below that the icons stay.
+
+**The index nesting was wrong in two ways at once.** It said "sub-heading" with a smaller
+size and a bullet on the PARENT, and at a glance neither reads — the two sizes are close and
+the bullet sits at the far end of a right-ranged row. And the numbers ran 1..12 straight
+through, so a sub-heading of section 2 was numbered 7 and looked like a section. A child is
+a path segment now: same size and weight, a leading `/`, and numbered within its parent
+(`2.1`).
+
+That took `counter-set` rather than `counter-reset`. A reset on the parent row creates a new
+counter instance scoped to that row and its following siblings, and the children go on
+reading the outer one — measured, the index ran `1.1 1.2 2.3 2.4 2.5 3.6` before the fix.
+
+**The chrome font is preloaded now, and the rule that said never to has been reversed.**
+That rule was written when the chrome font was Inter and the fallback a system sans, so the
+swap was barely visible. It is a monospace on any site that picks one, and the header, the
+meta line and both rails all re-flow when it lands. Measured at the origin, cold, 4x CPU
+throttle, median of five runs:
+
+| | LCP | CLS |
+|---|---|---|
+| no chrome preload | 472 ms | 0.0004 on four runs of five |
+| chrome face preloaded | **472 ms** | **0 on all five** |
+| Inter preloaded by mistake | 632 ms | 0.0004 |
+
+Free in LCP, and it removes the shift. The third row is the trap and I walked into it while
+measuring: `getChromeFont` falls back to Inter for an unknown id, which is right for the
+font STACK and wrong for a preload — 44 KB the page never paints a glyph in, and 160 ms of
+LCP. The argument is now `chromeFont: string` with no default, and an id that is not a known
+one preloads nothing.

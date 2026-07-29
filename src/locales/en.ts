@@ -9,6 +9,13 @@ const en = {
   pageLabel: 'Page',
   skipToContent: 'Skip to content',
   menu: 'Menu',
+  // Short tokens for the header controls, shown INSTEAD of the icons when the IDE chrome
+  // is on. Brackets come from the sheet, never from here.
+  shortSearch: '/find',
+  shortTheme: 'dark',
+  shortGrid: 'grid',
+  shortMail: '@mail',
+  shortMenu: 'menu',
   gridView: 'Grid view',
   listView: 'List view',
   palette: 'Palette',

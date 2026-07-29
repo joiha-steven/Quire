@@ -9,6 +9,13 @@ const vi = {
   pageLabel: 'Trang',
   skipToContent: 'Tới nội dung',
   menu: 'Menu',
+  // Short tokens for the header controls, shown INSTEAD of the icons when the IDE chrome
+  // is on. Brackets come from the sheet, never from here.
+  shortSearch: '/tìm',
+  shortTheme: 'tối',
+  shortGrid: 'lưới',
+  shortMail: '@email',
+  shortMenu: 'menu',
   gridView: 'Dạng lưới',
   listView: 'Dạng danh sách',
   palette: 'Bảng màu',

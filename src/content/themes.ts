@@ -86,12 +86,27 @@ export type FontPreset = {
 //   • chrome font → NEVER preloaded here (it is not the LCP element; it swaps in).
 // `hasCustomFont` = an owner typeface is set (see FontSettings); when true the reading
 // font is that upload, so the built-in preset is not the one painting the title.
-export function fontPreloadHrefs(id: string, lang: string, hasCustomFont: boolean): string[] {
-  if (hasCustomFont || lang === 'ja' || lang === 'zh' || lang === 'ko') return []
-  const slug = getFontPreset(id).slug
-  const hrefs = [`/fonts/${slug}-latin.woff2`]
-  if (lang === 'vi') hrefs.push(`/fonts/${slug}-vietnamese.woff2`)
-  return hrefs
+export function fontPreloadHrefs(
+  id: string, lang: string, hasCustomFont: boolean, chromeFont: string,
+): string[] {
+  if (lang === 'ja' || lang === 'zh' || lang === 'ko') return []
+  const subsets = (slug: string): string[] => (lang === 'vi'
+    ? [`/fonts/${slug}-latin.woff2`, `/fonts/${slug}-vietnamese.woff2`]
+    : [`/fonts/${slug}-latin.woff2`])
+  const reading = hasCustomFont ? [] : subsets(getFontPreset(id).slug)
+  // The CHROME face too, when it is a self-hosted family of its own. The rule above used to
+  // be "never, it is not the LCP", and that was written when the chrome font was Inter: the
+  // fallback was a system sans and the swap was barely visible. It is a MONOSPACE now on any
+  // site that picked one, and the header, the meta line and both rails all re-flow when it
+  // lands. Measured before changing it (origin, cold, 4x CPU throttle) — see
+  // docs/performance.md; the reading font still wins the race and is still declared first.
+  // `getChromeFont` falls back to Inter for an unknown id, which is right for the FONT
+  // STACK and wrong here: an install that has never chosen a chrome font is using the
+  // reading face, and preloading 44 KB of Inter it will not paint a glyph in is worse than
+  // preloading nothing. Measured — that mistake cost 160ms of LCP.
+  const chrome = isChromeFontId(chromeFont) ? getChromeFont(chromeFont).slug : null
+  const extra = chrome && chrome !== getFontPreset(id).slug ? subsets(chrome) : []
+  return [...reading, ...extra]
 }
 
 // A preset's typography = the tuned defaults with a few roles overridden.
@@ -206,12 +221,16 @@ export function fontPresetCss(id: string): string {
 //   plex-mono -> IBM Plex Mono, the self-hosted "code" face declared in globals.css
 //   jetbrains-mono -> JetBrains Mono, self-hosted variable mono (globals.css)
 // Add one = append here (+ its @font-face in globals.css if it's self-hosted).
-export type ChromeFont = { id: string; name: string; sans: string | null }
+// `slug` is the file stem the face is served under (`/fonts/<slug>-<subset>.woff2`), or
+// null when nothing extra is fetched: `reading` follows the reading font, which is already
+// preloaded. It has to match the slug in `render/font-faces.ts` FACES, and a test pins that
+// — two lists of the same filenames is exactly how a preload ends up pointing at a 404.
+export type ChromeFont = { id: string; name: string; sans: string | null; slug: string | null }
 export const CHROME_FONTS: ChromeFont[] = [
-  { id: 'inter', name: 'Inter', sans: null },
-  { id: 'reading', name: 'Reading font', sans: 'var(--font-reading)' },
-  { id: 'plex-mono', name: 'IBM Plex Mono', sans: `'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
-  { id: 'jetbrains-mono', name: 'JetBrains Mono', sans: `'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
+  { id: 'inter', name: 'Inter', sans: null, slug: 'inter' },
+  { id: 'reading', name: 'Reading font', sans: 'var(--font-reading)', slug: null },
+  { id: 'plex-mono', name: 'IBM Plex Mono', slug: 'plexmono-400', sans: `'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
+  { id: 'jetbrains-mono', name: 'JetBrains Mono', slug: 'jetbrainsmono', sans: `'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` },
 ]
 
 export const DEFAULT_CHROME_FONT = 'inter'

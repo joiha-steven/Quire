@@ -9,6 +9,13 @@ const zh = {
   pageLabel: '页',
   skipToContent: '跳到内容',
   menu: '菜单',
+  // Short tokens for the header controls, shown INSTEAD of the icons when the IDE chrome
+  // is on. Brackets come from the sheet, never from here.
+  shortSearch: '/搜索',
+  shortTheme: '暗色',
+  shortGrid: '网格',
+  shortMail: '@邮件',
+  shortMenu: '菜单',
   gridView: '网格视图',
   listView: '列表视图',
   palette: '配色',

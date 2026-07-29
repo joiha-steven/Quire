@@ -73,6 +73,19 @@ function siteTitle(settings: SiteSettings): string {
   return `<a class="title" href="/">${inner}</a>`
 }
 
+/**
+ * The short token shown INSTEAD of an icon when the IDE chrome is on.
+ *
+ * Both are in the markup and the sheet decides which one has a box, because the switch has
+ * to leave no trace when it is off: a reader who does not want the terminal look gets the
+ * icons the site has always had. Same pattern as the article's info panel, and as the
+ * listing sidebar's `drawer-only`.
+ *
+ * The brackets come from CSS, never from here — that is the rule for every literal on the
+ * site, and it is what lets the switch put them back.
+ */
+const token = (text: string): string => `<span class="btn-token">${escapeHtml(text)}</span>`
+
 export function siteHeader(settings: SiteSettings, opts: ChromeOptions): string {
   const s = t(settings.language)
   const actions: string[] = []
@@ -81,31 +94,31 @@ export function siteHeader(settings: SiteSettings, opts: ChromeOptions): string 
     // A LINK, not a button. Without JavaScript it goes to the search page, which renders
     // the same results server-side. The island turns it into an overlay.
     actions.push(`<a class="icon-btn" href="/search" data-search-open
- aria-label="${escapeAttr(s.search)}" title="${escapeAttr(s.search)}">${ICON.search}</a>`)
+ aria-label="${escapeAttr(s.search)}" title="${escapeAttr(s.search)}">${ICON.search}${token(s.shortSearch)}</a>`)
   }
   // The sun is what the server can honestly draw: the reader's mode lives in their own
   // storage, and the page cache is keyed by URL alone (Invariant 1), so a server-rendered
   // moon would be wrong for everyone who did not choose dark. The island swaps it on load.
   actions.push(`<button type="button" class="icon-btn" data-theme-toggle
- aria-label="${escapeAttr(s.theme)}" title="${escapeAttr(s.theme)}">${ICON.sun}</button>`)
+ aria-label="${escapeAttr(s.theme)}" title="${escapeAttr(s.theme)}">${ICON.sun}${token(s.shortTheme)}</button>`)
   if (settings.features.gridView) {
     // A BUTTON, not a link: there is no server-side URL for "the same list as a grid", and
     // inventing one would be a second URL for the same content. It hides itself on a page
     // that has no list.
     actions.push(`<button type="button" class="icon-btn" data-grid-toggle
- aria-pressed="false" aria-label="${escapeAttr(s.gridView)}">${ICON.grid}</button>`)
+ aria-pressed="false" aria-label="${escapeAttr(s.gridView)}">${ICON.grid}${token(s.shortGrid)}</button>`)
   }
   if (opts.mailConfigured) {
     // Points at the sign-up card at the foot of an article, so it does something on a
     // page with no script. The island opens it as an overlay instead.
     actions.push(`<a class="icon-btn" href="#subscribe" data-subscribe-open
- aria-label="${escapeAttr(s.nlHeading)}" title="${escapeAttr(s.nlHeading)}">${ICON.mail}</a>`)
+ aria-label="${escapeAttr(s.nlHeading)}" title="${escapeAttr(s.nlHeading)}">${ICON.mail}${token(s.shortMail)}</a>`)
   }
   // Opens the sidebar drawer, and stays the rightmost control. Above the rail breakpoint
   // the injected geometry hides it, because the sidebar is then the gutter rail; on a page
   // that rendered no rail the island hides it, because it would open nothing.
   actions.push(`<button type="button" class="icon-btn rail-toggle" data-rail-toggle
- aria-expanded="false" aria-label="${escapeAttr(s.menu)}">${ICON.menu}</button>`)
+ aria-expanded="false" aria-label="${escapeAttr(s.menu)}">${ICON.menu}${token(s.shortMenu)}</button>`)
 
   return `<header class="site">
 <div class="site-bar">${siteTitle(settings)}<nav class="site-actions">${actions.join('')}</nav></div>${

@@ -121,6 +121,27 @@ html[data-ide-chrome=on] aside.series li::before{content:"[" counter(part) "]";p
    would push the slash a space clear of the digits. The negative margin cancels it. */
 html[data-ide-chrome=on] .tl-year-tag::after{content:"/";margin-left:-.5rem;color:var(--c-meta)}
 
+/* THE HEADER CONTROLS. Four round line-art glyphs are the language of a phone app, and
+   they were the last thing on the page still speaking it. Under the switch each button
+   drops its icon and shows a bracketed token instead: [/tim] [toi] [luoi] [@email].
+
+   Both are in the markup and exactly one has a box, which is the same arrangement the
+   article's info panel uses — because the switch has to leave NO trace when it is off. A
+   reader who does not want the terminal look gets the icons the site has always had.
+
+   Only from 640px up. Five tokens are far wider than five 40px buttons, and on a phone
+   they would wrap the header onto two lines; below that width the icons stay. */
+@media (min-width:640px){
+  html[data-ide-chrome=on] .icon-btn svg{display:none}
+  html[data-ide-chrome=on] .btn-token{display:inline}
+  html[data-ide-chrome=on] .btn-token::before{content:"[";color:var(--c-meta)}
+  html[data-ide-chrome=on] .btn-token::after{content:"]";color:var(--c-meta)}
+  /* The 40px square was sized around a 20px glyph. A word needs its own width, and the row
+     needs a real gap once the buttons stop being squares that touch. */
+  html[data-ide-chrome=on] .icon-btn{width:auto;height:auto;padding:.3rem .45rem}
+  html[data-ide-chrome=on] .site-actions{gap:.5rem;margin-right:-.45rem}
+}
+
 /* THE GUTTER. A counter on the list, ranged right in its own column, exactly as an
    editor numbers lines. It is decoration, so it is aria-hidden by being generated
    content on the <li> rather than inside the link - the row's accessible name is
@@ -183,4 +204,36 @@ html[data-ide-chrome=on] .toc li:has(.toc-end)::before{content:none}
 
 /* The tag cloud is a run of words, not a list, so it has no lines to number. */
 html[data-ide-chrome=on] .rail-tags{counter-reset:none}
+
+/* NESTING. The article index used to say "this is a sub-heading" with a smaller size and a
+   bullet on the PARENT, and at a glance neither reads: the two sizes are close and the
+   bullet sits at the far end of a right-ranged row. And the numbers counted every row 1..12
+   straight through, so a sub-heading of section 2 was numbered 7 and looked like a section.
+
+   A child is a path segment now. Same size, same weight as its parent, with a leading "/" —
+   the same mark the feed's gutter year already uses, and the only one on the site that
+   means "inside". The parent keeps its plain number; the child is numbered WITHIN it, so
+   "2.1" says where it lives instead of where it falls in a flat list.
+
+   Only under the switch. With the chrome off the index keeps the bullet and the smaller
+   size it has always had. */
+html[data-ide-chrome=on] .rail-lead::before{content:none}
+html[data-ide-chrome=on] .rail-sub{font-size:var(--fs-small);line-height:var(--lh-small);
+  letter-spacing:var(--ls-small)}
+/* gap:0 on the row: .rail-row spreads its flex children by .875rem, which is right for a
+   label and its count and puts the slash a thumb width away from the word it belongs to. */
+html[data-ide-chrome=on] .toc .rail-sub{gap:0}
+html[data-ide-chrome=on] .rail-sub::before{content:"/";color:var(--c-meta);margin-inline-end:.35em}
+html[data-ide-chrome=on] .toc ul{counter-reset:ln h2 h3}
+/* counter-SET, not counter-reset. A reset on the parent row creates a new instance
+   scoped to that row and its following siblings, and the children read the outer one
+   regardless: measured, the numbers ran 1.1 1.2 2.3 2.4 2.5 3.6 straight through. */
+html[data-ide-chrome=on] .toc li:has(.rail-lead){counter-increment:h2;counter-set:h3 0}
+html[data-ide-chrome=on] .toc li:has(.rail-lead)::before{content:counter(h2)}
+html[data-ide-chrome=on] .toc li:has(.rail-sub){counter-increment:h3}
+/* A pill rather than a circle: "2.1" is three characters and will not fit an 18px ring.
+   Wider, and pushed out by half the extra width, so its centre stays on the divider. */
+html[data-ide-chrome=on] .toc li:has(.rail-sub)::before{content:counter(h2) "." counter(h3);
+  width:30px;right:-29px;border-radius:999px}
+html[data-ide-chrome=on] .toc .rail-inner{width:calc(100% + 32px);padding-right:32px}
 `.trim()

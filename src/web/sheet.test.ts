@@ -8,6 +8,7 @@ import { describe, expect, it, beforeEach, afterAll } from 'bun:test'
 import { freshDatabase, dropDatabase } from '@/test/db'
 import { db } from '@/store/db'
 import { savePost } from '@/content/posts'
+import { saveSettings } from '@/content/settings'
 import { clearCache } from '@/server/cache'
 import { createApp } from '@/web/app'
 
@@ -75,5 +76,36 @@ describe('the public stylesheet', () => {
     // The opposite call from the sheet: a bundle from another deploy can call into markup
     // that moved. Doing nothing beats doing the wrong thing.
     expect((await get('/assets/core.0000000000.js')).status).toBe(404)
+  })
+})
+
+describe('font preloads', () => {
+  it('preloads the CHROME face as well, when it is a family of its own', async () => {
+    // The rule used to be "never — chrome is not the LCP", written when the chrome font was
+    // Inter and the fallback was a system sans. It is a monospace on any site that picks
+    // one, and the header, the meta line and both rails all re-flow when it lands.
+    //
+    // MEASURED at the origin, cold, 4x CPU throttle, median of five runs:
+    //   no chrome preload      LCP 472ms, CLS 0.0004 on four runs of five
+    //   chrome preloaded       LCP 472ms, CLS 0 on all five
+    // Free in LCP, and it removes the shift.
+    await saveSettings({ fontPreset: 'literata', chromeFont: 'jetbrains-mono', language: 'vi' })
+    await savePost({ title: 'Fonts', content: 'body', status: 'published', date: PAST })
+    const page = await get('/fonts').then((r) => r.text())
+    expect(page).toContain('/fonts/literata-latin.woff2')
+    expect(page).toContain('/fonts/jetbrainsmono-latin.woff2')
+    expect(page).toContain('/fonts/jetbrainsmono-vietnamese.woff2')
+  })
+
+  it('preloads no SECOND face when the chrome font follows the reading font', async () => {
+    // "reading" is not a family, it is `--font-reading` again — already preloaded. Fetching
+    // a second file for it would be 44 KB the page never paints a glyph in, which is what
+    // the measurement above cost when the fallback-to-Inter default did exactly that.
+    clearCache()
+    await saveSettings({ fontPreset: 'literata', chromeFont: 'reading', language: 'vi' })
+    await savePost({ title: 'Nochrome', content: 'body', status: 'published', date: PAST })
+    const page = await get('/nochrome').then((r) => r.text())
+    const preloads = [...page.matchAll(/rel="preload" href="([^"]+)"/g)].map((m) => m[1])
+    expect(preloads).toEqual(['/fonts/literata-latin.woff2', '/fonts/literata-vietnamese.woff2'])
   })
 })

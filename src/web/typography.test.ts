@@ -302,6 +302,27 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     expect(ide).toContain('#comments .empty::before{content:none}')
   })
 
+  it('swaps the header icons for tokens, and puts BOTH in the markup', () => {
+    // The owner's condition, in as many words: this style only applies when the switch is
+    // on. So the icons are still there with it off, and the sheet decides which of the two
+    // has a box — the same arrangement as the article's info panel.
+    const ide = idelines()
+    expect(ide).toContain('.icon-btn svg{display:none}')
+    expect(ide).toContain('.btn-token{display:inline}')
+    expect(PUBLIC_CSS).toContain('.btn-token{display:none}') // ...and OFF is the default
+  })
+
+  it('numbers a sub-heading within its parent, not straight through the list', () => {
+    // counter-SET, not counter-reset: a reset on the parent row creates a new instance
+    // scoped to that row and its siblings, and the children went on reading the outer one.
+    // Measured before the fix, the index ran 1.1 1.2 2.3 2.4 2.5 3.6.
+    const ide = idelines()
+    expect(ide).toContain('counter-increment:h2;counter-set:h3 0')
+    expect(ide).toContain('content:counter(h2) "." counter(h3)')
+    // A child is a path segment, so it takes the slash and drops the smaller size.
+    expect(ide).toContain('.rail-sub::before{content:"/"')
+  })
+
   it('gives the archive year a path mark rather than brackets', () => {
     // The feed's right gutter is a year over its months: a path, not a count. Brackets mean
     // "index" everywhere else here, and using them for a directory would say the wrong

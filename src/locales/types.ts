@@ -10,6 +10,11 @@ export type Dict = {
   pageLabel: string
   menu: string
   skipToContent: string
+  shortSearch: string
+  shortTheme: string
+  shortGrid: string
+  shortMail: string
+  shortMenu: string
   gridView: string
   listView: string
   palette: string

@@ -187,6 +187,20 @@ and no island runs.
   1.16:1 against the page, and a generated counter is still announced by some screen
   readers. What makes a gutter a gutter is where it sits and that its figures are tabular.
 
+## IDE chrome — the header and the index (HARD RULES)
+
+- **The header controls swap icons for tokens, from 640px up**: `[/tìm] [tối] [lưới]
+  [@email]`. BOTH are in the markup and the sheet decides which has a box, because the
+  switch must leave no trace when it is off — a reader who does not want the terminal look
+  gets the icons the site has always had. Below 640px the icons stay: five words are far
+  wider than five 40px squares and would wrap the header.
+- **A sub-heading in the index is a PATH SEGMENT, not a smaller line.** Same size and weight
+  as its parent with a leading `/`, and numbered WITHIN it (`2.1`), because a flat 1..12 run
+  made a sub-heading of section 2 look like section 7. Use **`counter-set`, never
+  `counter-reset`**: a reset on the parent row creates a new instance scoped to that row and
+  its siblings, and the children go on reading the outer one — measured, the index ran
+  `1.1 1.2 2.3 2.4 2.5 3.6`. With the switch off the index keeps its bullet and smaller size.
+
 ## The article's right gutter — the info panel (HARD RULES)
 
 Above the rail breakpoint an article's right gutter carries `.post-info`: the date, the

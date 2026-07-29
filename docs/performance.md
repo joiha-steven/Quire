@@ -73,6 +73,20 @@ Hard invariants (also in [`conventions.md`](./conventions.md) typography):
   (one file per subset carries every weight); `latin-ext` glyphs are rare and load on demand.
 - **Never preload the chrome font**, in any config. (Regression to watch: a "no swap flash
   on chrome" instinct will try to re-add it — don't; chrome is not LCP.)
+  **REVERSED 2026-07-29 for a self-hosted chrome family.** That rule was written when the
+  chrome font was Inter and the fallback a system sans, so the swap was barely visible. It
+  is a MONOSPACE on any site that picks one, and the header, the meta line and both rails
+  re-flow when it lands. Measured at the origin, cold, 4x CPU throttle, median of five:
+
+  | | LCP | CLS |
+  |---|---|---|
+  | no chrome preload | 472 ms | 0.0004 on four runs of five |
+  | chrome face preloaded | **472 ms** | **0 on all five** |
+  | Inter preloaded by mistake (44 KB unused) | 632 ms | 0.0004 |
+
+  Free in LCP, and it removes the shift. The third row is the trap: `getChromeFont` falls
+  back to Inter for an unknown id, which is right for the font STACK and costs 160 ms as a
+  preload. `chromeFont: 'reading'` preloads nothing extra — it is the reading face again.
 - Changing which subsets exist? Keep `fontPreloadHrefs` and the `@font-face`
   `unicode-range` blocks (`globals.css`) in sync.
 

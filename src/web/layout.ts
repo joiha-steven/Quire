@@ -110,7 +110,8 @@ export function renderDocument(
   const bodyAttrs = Object.entries(shell.bodyData ?? {})
     .map(([k, v]) => ` ${dataAttr(k)}="${escapeAttr(v)}"`)
     .join('')
-  const preloads = fontPreloadHrefs(settings.fontPreset, settings.language, !!settings.customFont.family)
+  const preloads = fontPreloadHrefs(settings.fontPreset, settings.language,
+    !!settings.customFont.family, settings.chromeFont)
     .map((href) => `<link rel="preload" href="${escapeAttr(href)}" as="font" type="font/woff2" crossorigin>`)
     .join('')
   const description = head.description

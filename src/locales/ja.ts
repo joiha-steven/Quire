@@ -9,6 +9,13 @@ const ja = {
   pageLabel: 'ページ',
   skipToContent: '本文へスキップ',
   menu: 'メニュー',
+  // Short tokens for the header controls, shown INSTEAD of the icons when the IDE chrome
+  // is on. Brackets come from the sheet, never from here.
+  shortSearch: '/検索',
+  shortTheme: 'ダーク',
+  shortGrid: 'グリッド',
+  shortMail: '@メール',
+  shortMenu: 'メニュー',
   gridView: 'グリッド表示',
   listView: 'リスト表示',
   palette: 'パレット',
