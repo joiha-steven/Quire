@@ -12,7 +12,11 @@
 // The delay is the one piece of cleverness worth its size: `speculation-rules` prerenders on
 // hover, so a large share of navigations finish in a few milliseconds, and a bar that
 // appeared for one frame each time would read as a flicker rather than as progress.
-const DELAY_MS = 150
+//
+// 150ms turned out to be too patient: on a site this fast the owner never saw the bar at all
+// and reported it missing. 60ms still swallows a prerendered hit (those land in single digits)
+// and shows up on anything that actually has to travel.
+const DELAY_MS = 60
 
 export function navProgress(): void {
   const root = document.documentElement

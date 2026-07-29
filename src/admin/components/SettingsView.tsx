@@ -55,8 +55,23 @@ import { NewsletterFields } from './NewsletterFields'
 type Tab = 'site' | 'layout' | 'reading' | 'appearance' | 'seo' | 'connections' | 'system'
 const TAB_IDS: Tab[] = ['site', 'layout', 'reading', 'appearance', 'seo', 'connections', 'system']
 
-/** Two balanced columns on a wide screen, one on a narrow one. Nothing stretches. */
+/**
+ * Two columns on a wide screen, one on a narrow one.
+ *
+ * The cards go in EXPLICIT column stacks (`COL`), never straight into the grid. A grid lays
+ * its children out in rows, and a row is as tall as its tallest cell — so a short card beside
+ * a tall one left a void underneath it, and the next card started below BOTH. The System tab
+ * showed it plainly: Import, then Backups twice its height, then Cache stranded at the bottom
+ * of the left column with a hole above it. Two stacks pack each side independently and there
+ * is no row to align to.
+ *
+ * `items-start` stays for the same reason it was there: a column must not stretch to match
+ * its neighbour.
+ */
 const GRID = 'grid items-start gap-5 xl:grid-cols-2'
+const COL = 'space-y-5'
+/** One card, or a form that reads better narrow: a measure, not the full 1480px. */
+const ONE_COL = 'max-w-3xl space-y-5'
 
 export function SettingsView({ settings, presets, commentEnv, integrations, posts }: {
   settings: SiteSettings
@@ -128,7 +143,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
 
       {/* SITE — what this site IS. Identity only: nothing here moves a pixel. */}
       {tab === 'site' && (
-        <div className={GRID}>
+        <div className={ONE_COL}>
           <Card title={t.cardGeneral}>
             <SiteFields s={s} update={update} />
           </Card>
@@ -139,18 +154,22 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           the old "Site" tab, which had no reason to hold both. */}
       {tab === 'layout' && (
         <div className={GRID}>
-          <Card title={t.cardLayout}>
-            <LayoutMenuFields s={s} update={update} posts={posts} />
-          </Card>
-          <Card title={t.footerContent}>
-            <FooterField value={s.footer} onChange={(footer) => update({ footer })} />
-          </Card>
+          <div className={COL}>
+            <Card title={t.cardLayout}>
+              <LayoutMenuFields s={s} update={update} posts={posts} />
+            </Card>
+          </div>
+          <div className={COL}>
+            <Card title={t.footerContent}>
+              <FooterField value={s.footer} onChange={(footer) => update({ footer })} />
+            </Card>
+          </div>
         </div>
       )}
 
       {/* READING — what a reader gets on a post, and whether they can reply. */}
       {tab === 'reading' && (
-        <div className={GRID}>
+        <div className={ONE_COL}>
           <Card title={t.cardFeatures}>
             <FeatureFields
               features={s.features}
@@ -169,7 +188,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           stack on the right. */}
       {tab === 'appearance' && (
         <div className={GRID}>
-          <div className="space-y-5">
+          <div className={COL}>
             <Card title={t.navAppearance}>
               <p className="mb-4 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500 dark:bg-neutral-800/60 dark:text-neutral-400">
                 {t.themeAdminNote}
@@ -198,7 +217,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
               </div>
             </Card>
           </div>
-          <div className="space-y-5">
+          <div className={COL}>
             <Card title={t.cardFont}>
               <FontFields
                 value={s.fontPreset}
@@ -235,12 +254,16 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           address is a search-engine concern before it is anything else. */}
       {tab === 'seo' && (
         <div className={GRID}>
-          <Card title={t.tabSeo}>
-            <SeoFields s={s} update={update} />
-          </Card>
-          <Card title={t.redirectsTitle}>
-            <RedirectsManager />
-          </Card>
+          <div className={COL}>
+            <Card title={t.tabSeo}>
+              <SeoFields s={s} update={update} />
+            </Card>
+          </div>
+          <div className={COL}>
+            <Card title={t.redirectsTitle}>
+              <RedirectsManager />
+            </Card>
+          </div>
         </div>
       )}
 
@@ -248,25 +271,26 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           never read back, which is why these cards show status rather than values. */}
       {tab === 'connections' && (
         <div className={GRID}>
-          <Card title={t.cardNewsletter}>
-            <NewsletterFields />
-          </Card>
-          <Card title={t.cardCommentIntegrations}>
-            <CommentIntegrations
-              comments={s.comments}
-              env={commentEnv}
-              onChange={(comments) => update({ comments })}
-            />
-          </Card>
-          <Card title={t.cardCloudflare}>
-            <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
-          </Card>
-          {/* Full width: it holds a five-column table, and in half a grid the last column
-              (expiry) was clipped at the card's edge on every screen size. A card carrying a
-              table is not a half-width card. */}
-          <Card title={t.cardMcp} className="xl:col-span-2">
-            <McpFields mcp={s.mcp} siteUrl={s.siteUrl} onChange={(mcp) => update({ mcp })} />
-          </Card>
+          <div className={COL}>
+            <Card title={t.cardNewsletter}>
+              <NewsletterFields />
+            </Card>
+            <Card title={t.cardCloudflare}>
+              <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
+            </Card>
+          </div>
+          <div className={COL}>
+            <Card title={t.cardCommentIntegrations}>
+              <CommentIntegrations
+                comments={s.comments}
+                env={commentEnv}
+                onChange={(comments) => update({ comments })}
+              />
+            </Card>
+            <Card title={t.cardMcp}>
+              <McpFields mcp={s.mcp} siteUrl={s.siteUrl} onChange={(mcp) => update({ mcp })} />
+            </Card>
+          </div>
         </div>
       )}
 
@@ -274,15 +298,19 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           read as a content SETTING rather than the one-time tool it is. */}
       {tab === 'system' && (
         <div className={GRID}>
-          <Card title={t.cardImport}>
-            <ImportFields />
-          </Card>
-          <Card title={t.backupTitle}>
-            <ExportFields backups={s.backups} onChange={(backups) => update({ backups })} />
-          </Card>
-          <Card title={t.cacheTitle}>
-            <CacheFields cache={s.cache} onChange={(cache) => update({ cache })} />
-          </Card>
+          <div className={COL}>
+            <Card title={t.cardImport}>
+              <ImportFields />
+            </Card>
+            <Card title={t.cacheTitle}>
+              <CacheFields cache={s.cache} onChange={(cache) => update({ cache })} />
+            </Card>
+          </div>
+          <div className={COL}>
+            <Card title={t.backupTitle}>
+              <ExportFields backups={s.backups} onChange={(backups) => update({ backups })} />
+            </Card>
+          </div>
         </div>
       )}
 

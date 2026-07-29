@@ -6,6 +6,36 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+## 2026-07-30 (later) — the two-column layout was the actual complaint
+
+The order rule landed and the screens still looked wrong, because the problem was never the
+order inside a card. **A grid lays its children out in rows, and a row is as tall as its
+tallest cell.** Import beside Backups meant a void under Import; Cache then started below
+both and sat stranded at the foot of the left column. Every tab did it. Owner: "is splitting
+into two columns so hard, leaving gaps like that".
+
+Each tab is now `GRID` holding two explicit `COL` stacks, with cards assigned to a side by
+hand so the two come out close in height. Each stack packs independently and there is no row
+to align to. `ONE_COL` (`max-w-3xl`) for the tabs whose cards cannot balance: fifteen feature
+toggles beside a single comments switch is a column and a void, not a layout.
+
+**And the MCP card is half width again.** Spanning it to give its five-column table room, which
+was yesterday's fix, turned it into a wide slab under a two-column tab — the owner's "suddenly
+MCP is this big column". A table that does not fit scrolls inside its card; a card is not
+widened to suit its contents. Written into `admin-design.md` as a corollary, because it looked
+like an improvement while making it worse.
+
+**The admin tab said "Quire".** It says `Quire blog · <domain>` now, which is the one thing a
+tab among fifteen tabs is for. The favicon was worse than absent: the shell linked none, so the
+browser fell back to `/favicon.ico`, which is the icon compiled into the PRODUCT — an owner who
+had uploaded their own was looking at Quire's mark. The shell links theirs now, and
+`/favicon.ico` itself redirects to it when one is set, so a bookmark or a feed reader gets the
+right image too.
+
+**The public bar was working and invisible.** Two reasons, both mine: `--c-accent` in a
+monochrome palette is nearly the page colour, and a 150ms delay on a site this fast means it
+never gets to appear. `--c-heading`, 3px, 60ms.
+
 ## 2026-07-30 — one rule for every setting, and the reader gets a progress bar too
 
 Owner, after looking at the live admin: the progress bar and the cache card are not there

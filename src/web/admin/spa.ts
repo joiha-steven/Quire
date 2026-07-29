@@ -90,9 +90,31 @@ function adminStyles(settings: SiteSettings): string {
  * The class on <body> is the neutral canvas: the one paint the bundle must not be
  * responsible for, or the admin flashes white before React mounts.
  */
+/**
+ * What the browser tab says, and what it shows.
+ *
+ * "Quire" alone told the owner which PRODUCT they were in, which they knew, and not which
+ * SITE — the one thing a tab among fifteen tabs is for. The favicon was worse than absent:
+ * the shell linked none, so the browser fell back to `/favicon.ico`, which is the icon
+ * compiled into the product. An owner who had uploaded their own was looking at Quire's.
+ */
+function tabHead(settings: SiteSettings): string {
+  let host = ''
+  try {
+    host = new URL(settings.siteUrl).host
+  } catch {
+    /* not set, or not a URL: the name alone is still better than the product's */
+  }
+  const title = host ? `Quire blog · ${host}` : 'Quire blog'
+  const icon = settings.faviconUrl
+    ? `<link rel="icon" href="${settings.faviconUrl.replace(/"/g, '&quot;')}">`
+    : ''
+  return `<title>${title}</title>${icon}`
+}
+
 export function adminShell(settings: SiteSettings): string {
   if (ASSETS.size === 0) {
-    return '<!DOCTYPE html><meta charset="utf-8"><title>Quire</title>'
+    return `<!DOCTYPE html><meta charset="utf-8">${tabHead(settings)}`
       + '<p style="font:14px system-ui;padding:2rem">The admin bundle has not been built. '
       + 'Run <code>bun run build:admin</code>.</p>'
   }
@@ -103,7 +125,7 @@ export function adminShell(settings: SiteSettings): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quire</title>
+${tabHead(settings)}
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="${STYLES}">
 <style>${adminStyles(settings)}</style>

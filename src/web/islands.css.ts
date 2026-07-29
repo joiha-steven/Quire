@@ -36,11 +36,13 @@ export const ISLANDS_CSS = `
 /* The NAVIGATION bar: shown while the next page is loading, which is a different question
    from how far down this one the reader is. A pseudo-element on the root, so there is no
    element to inject and nothing in the markup of a page that is not navigating.
-   Above the reading bar, and the accent rather than the heading colour, so the two are
-   never mistaken for each other on an article. The colour is --c-accent because a public
-   colour comes from a theme token, never a literal. */
+   Above the reading bar, which is the only thing it could be confused with, and only ever on
+   screen while a page is on its way. --c-heading rather than --c-accent: the accent of a
+   monochrome palette is very close to the page colour, so the first version was drawn and
+   invisible, which is what "I do not see it" turned out to mean. A theme token either way,
+   never a literal. 3px, because 2px reads as a rendering artefact. */
 html[data-navigating]::before{content:"";position:fixed;inset:0 auto auto 0;z-index:60;
-  height:2px;width:100%;background:var(--c-accent);transform:translateX(-100%);
+  height:3px;width:100%;background:var(--c-heading);transform:translateX(-100%);
   animation:nav-progress 6s cubic-bezier(.05,.8,.2,1) forwards}
 @keyframes nav-progress{to{transform:translateX(-12%)}}
 /* Motion off kills every animation on the page (see the rule at the foot of this file), so

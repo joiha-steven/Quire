@@ -313,6 +313,19 @@ export function createApp(): Hono {
 
   app.get('/uploads/*', handleUpload)
 
+  // `/favicon.ico` is the path a browser asks for when nothing told it otherwise, and what
+  // it got was the icon compiled into the PRODUCT — so a bookmark, a feed reader or any tab
+  // whose page carried no icon link showed Quire's mark on somebody else's blog. The owner's
+  // own upload wins when there is one; the bundled file is the fallback, which is the right
+  // answer for a fresh install. The redirect itself is not a 200, so `cache-headers.ts`
+  // gives it `private, no-store` — which is what a pointer that changes on the next upload
+  // wants, while the file it points AT keeps its immutable year.
+  app.get('/favicon.ico', async (c) => {
+    const { faviconUrl } = await getSettings()
+    if (faviconUrl) return c.redirect(faviconUrl, 302)
+    return (await staticFile('/favicon.ico')) ?? new Response('Not found', { status: 404 })
+  })
+
   // Fonts, favicon and app icon. Registered path by path rather than under a prefix, so
   // this route can only ever serve files that are compiled in. The reading font is the LCP
   // resource on an article page, which is why the head preloads it.

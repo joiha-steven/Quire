@@ -181,3 +181,21 @@ sits next to a button gets `min-h-10` to match it.
 
 **A card holding a table is not a half-width card.** The MCP token table has five columns and
 its last one was clipped at the card's edge in the two-column grid at every screen size.
+
+### Cards go in column stacks, never straight into the grid
+
+A grid lays its children out in ROWS, and a row is as tall as its tallest cell. Two cards of
+different heights therefore leave a void under the shorter one, and the next card starts below
+BOTH. The System tab showed it plainly: Import, then Backups at twice its height, then Cache
+stranded at the foot of the left column with a hole above it. The owner's words were "is
+splitting into two columns so hard".
+
+So a tab is `GRID` holding two `COL` stacks, and the cards are assigned to a side by hand so
+the two come out close in height. Each stack packs independently and there is no row to align
+to. `ONE_COL` (a `max-w-3xl` stack) is for a tab with one card, or one whose cards cannot
+balance: fifteen feature toggles beside a single comments switch is not a two-column layout,
+it is a column and a void.
+
+Corollary: **do not widen a card to fix its contents.** Making the MCP card span both columns
+gave its table room and turned it into a wide slab under a two-column tab, which reads as a
+mistake. A table that does not fit scrolls inside its card.
