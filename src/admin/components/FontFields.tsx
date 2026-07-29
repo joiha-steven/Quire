@@ -49,7 +49,10 @@ export function FontFields({
       <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.fontPresetHint}</p>
       <div className="border-t border-neutral-200 pt-3 dark:border-neutral-800">
         <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.chromeFontLabel}</p>
-        <div className="grid grid-cols-3 gap-2">
+        {/* Two columns, matching the reading grid above. It was three, and CHROME_FONTS
+            grew to four when JetBrains Mono was added — so the fourth choice sat alone on
+            a second row, half the width of the others. */}
+        <div className="grid grid-cols-2 gap-2">
           {CHROME_FONTS.map((f) => {
             const active = f.id === chromeFont
             const label = f.id === 'reading' ? t.chromeFontReading : f.name

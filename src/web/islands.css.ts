@@ -14,7 +14,7 @@ export const ISLANDS_CSS = `
 /* font-family explicitly, because this button lives INSIDE .prose pre and would otherwise
    inherit the code face. It is chrome sitting on top of code, not code. */
 .code-copy{position:absolute;top:.4rem;right:.4rem;padding:.15rem .5rem;font-size:var(--fs-caption);
-  font-family:var(--font-sans);
+  line-height:var(--lh-caption);letter-spacing:var(--ls-caption);font-family:var(--font-sans);
   border:1px solid var(--c-rule);background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;transition:opacity .15s}
 .prose pre{position:relative}
 .prose pre:hover .code-copy,.code-copy:focus-visible{opacity:1}
@@ -49,7 +49,8 @@ export const ISLANDS_CSS = `
 .lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lightbox-caption:empty{display:none}
 .lightbox-img{max-height:85vh;max-width:100%;object-fit:contain}
-.lightbox-caption{max-width:42rem;text-align:center;font-size:var(--fs-small);color:rgba(255,255,255,.7);margin:0}
+.lightbox-caption{max-width:42rem;text-align:center;font-size:var(--fs-small);
+  line-height:var(--lh-small);letter-spacing:var(--ls-small);color:rgba(255,255,255,.7);margin:0}
 .lightbox button{position:absolute;display:flex;align-items:center;justify-content:center;
   border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.8);cursor:pointer;line-height:1}
 .lightbox button:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -57,7 +58,9 @@ export const ISLANDS_CSS = `
 .lightbox-prev,.lightbox-next{top:50%;transform:translateY(-50%);width:3rem;height:3rem;font-size:1.875rem}
 .lightbox-prev{left:.5rem}
 .lightbox-next{right:.5rem}
-.lightbox-count{position:absolute;bottom:1rem;font-size:var(--fs-caption);font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
+.lightbox-count{position:absolute;bottom:1rem;font-size:var(--fs-caption);
+  line-height:var(--lh-caption);letter-spacing:var(--ls-caption);
+  font-variant-numeric:tabular-nums;color:rgba(255,255,255,.6)}
 
 /* Scroll reveal: a card eases in as it enters the viewport. This is what the owner meant
    by the fade at the foot of the feed going missing - the markup has carried a .reveal
@@ -90,7 +93,8 @@ export const ISLANDS_CSS = `
 html[data-chunked] .post-list article[data-more]{display:none}
 
 .preview-note{border:1px solid var(--c-rule);background:var(--c-rule);color:var(--c-meta);
-  border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);margin:0 0 1.5rem}
+  border-radius:.5rem;padding:.5rem 1rem;font-size:var(--fs-small);
+  line-height:var(--lh-small);letter-spacing:var(--ls-small);margin:0 0 1.5rem}
 
 /* Book mode. Its OWN standard rather than the site theme: paper and ink, not the reader's
    palette, and the same on a dark site as a light one. Carried over from the frozen tree.
@@ -125,14 +129,16 @@ body:has(.book-overlay[open]){overflow:hidden}
 .book-chrome{position:relative;display:flex;align-items:center;justify-content:center;
   min-height:56px;padding:0 clamp(16px,4vw,48px)}
 .book-top{border-bottom:1px solid var(--c-rule)}
-.book-title{font-size:var(--fs-small);font-weight:400;color:var(--c-meta);text-align:center;
+.book-title{font-size:var(--fs-small);line-height:var(--lh-small);
+  letter-spacing:var(--ls-small);font-weight:400;color:var(--c-meta);text-align:center;
   max-width:min(70%,720px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .book-topright{position:absolute;right:clamp(12px,4vw,44px);top:0;height:100%;
   display:flex;align-items:center;gap:16px}
 .book-x{background:none;border:0;cursor:pointer;color:var(--c-meta);font-size:1rem;
   line-height:1;padding:8px}
 .book-x:hover{color:var(--c-heading)}
-.book-count{font-size:var(--fs-caption);color:var(--c-meta);font-variant-numeric:tabular-nums}
+.book-count{font-size:var(--fs-caption);line-height:var(--lh-caption);
+  letter-spacing:var(--ls-caption);color:var(--c-meta);font-variant-numeric:tabular-nums}
 .book-stage{position:relative;display:flex;align-items:center;justify-content:center;
   min-height:0;padding:clamp(20px,4vh,52px) 0}
 /* The reading area just CLIPS the flowing columns: no sheet, no shadow, so the one paper
@@ -186,7 +192,8 @@ body:has(.book-overlay[open]){overflow:hidden}
    which is the shape every reader gets by default anyway. */
 [data-list="grid"] .post-list{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))}
 [data-list="grid"] .post-list > article{margin:0}
-[data-list="grid"] .post-list h2{font-size:var(--fs-h3);line-height:var(--lh-h3)}
+[data-list="grid"] .post-list h2{font-size:var(--fs-h3);line-height:var(--lh-h3);
+  letter-spacing:var(--ls-h3)}
 [data-list="grid"] .post-list .t-body{display:none}
 .listing-sentinel{height:1px}
 
@@ -243,7 +250,7 @@ body:has(.book-overlay[open]){overflow:hidden}
 .theme-menu[hidden]{display:none}
 .theme-menu button{display:flex;width:100%;align-items:center;justify-content:space-between;
   padding:.5rem .75rem;border:0;background:none;cursor:pointer;text-align:left;font:inherit;
-  font-size:var(--fs-small);line-height:var(--lh-small);
+  font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small);
   color:var(--c-meta)}
 .theme-menu button:hover{background:var(--c-rule)}
 .theme-menu button.is-current{font-weight:600;color:var(--c-heading)}
@@ -252,7 +259,7 @@ body:has(.book-overlay[open]){overflow:hidden}
 .theme-menu button.is-current::after{content:"✓"}
 
 .subscribe-card{border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem;
-  font-size:var(--fs-small)}
+  font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small)}
 .subscribe-card h2{font-size:inherit;font-weight:600;color:var(--c-heading);margin:0 0 .75rem}
 form.subscribe{display:flex;gap:.5rem;margin:0}
 form.subscribe input{min-width:0;flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);
@@ -273,7 +280,7 @@ form.subscribe button:disabled{opacity:.5}
    and a louder comments heading than any heading in the writing is the wrong emphasis.
    The port had it at h2. */
 #comments{border-top:1px solid var(--c-rule);margin-top:3rem;padding-top:1.5rem;
-  font-size:var(--fs-small);line-height:var(--lh-small)}
+  font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small)}
 #comments h2{font-size:var(--fs-h3);line-height:var(--lh-h3);letter-spacing:var(--ls-h3);
   color:var(--c-heading);font-weight:600;margin:0 0 1.5rem}
 .comment-list,.comment-replies{list-style:none;padding:0;margin:0}
@@ -284,7 +291,10 @@ form.subscribe button:disabled{opacity:.5}
 /* A comment is somebody's WORDS, so it is set in the reading face like the article is —
    the frozen tree did this and the port dropped it, which left every comment in the chrome
    font. On this site that is JetBrains Mono, so the thread was rendering as monospace. */
-.comment-body{font-family:var(--font-reading);color:var(--c-text)}
+/* Tracking too, not just the family: #comments is chrome and carries the mono-chrome
+   correction, which a comment written in the reading face has no business inheriting. */
+.comment-body{font-family:var(--font-reading);letter-spacing:var(--ls-small);
+  color:var(--c-text)}
 .comment-body p:last-child{margin-bottom:0}
 .comment-reply{border:0;background:none;padding:0;margin-top:.35rem;color:var(--c-meta);
   font:inherit;cursor:pointer;text-decoration:underline}

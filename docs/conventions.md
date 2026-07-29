@@ -50,6 +50,13 @@
   exception with a reason. It was written because the rule had already been broken in nine
   places, and because a related-post title had no size rule at all and silently fell back to
   the body size.
+- **A role is THREE numbers, and a rule takes all three or none.** `check:type` fails a
+  rule that sets `font-size: var(--fs-X)` without `line-height: var(--lh-X)` and
+  `letter-spacing: var(--ls-X)`. It was added on 2026-07-29 after measuring the rendered
+  page: eight surfaces took the size alone — figcaption, the footnote block, both code
+  forms, the tagline, the footer, the pager and the ToC sub-rows — so the owner's leading
+  and tracking for those roles moved nothing at all. A rule that names a role variable
+  LOOKS wired, which is why review never caught it.
 - 9 roles (`TypeRole`: `h1–h5`, `body`, `small`, `caption`, `code`), each with
   size/line-height/letter-spacing → CSS vars `--fs/--lh/--ls-<role>`, from
   `DEFAULT_TYPOGRAPHY` in [`src/content/themes.ts`](../src/content/themes.ts). The owner's
@@ -71,10 +78,20 @@
   `.fs-h*`/`.t-*` classes already emit `letter-spacing: var(--ls-<role>)`, so NEVER add Tailwind
   `tracking-tight`/`tracking-*` on a public heading/title: it overrides the owner's tuned value and
   the Admin letter-spacing control stops working. (`grep -rE "tracking-" src/app/\(blog\) src/components/blog` must stay empty.)
-- **Reading-optimized defaults (= the Reset target).** Restrained, monotonic heading scale
-  (h1 2.0 → h5 1.0, h5 no longer below body), 18px body at ~1.7 leading, ~66-char measure
-  (`contentWidth` 672). Text wraps normally (no `text-wrap: balance`/`pretty` — both re-broke lines
-  and left a premature right rag). Change the numbers in BOTH `globals.css :root` and `DEFAULT_TYPOGRAPHY`.
+- **Reading-optimized defaults.** Restrained, monotonic heading scale (h1 2.0 → h5 1.0),
+  18px body at ~1.7 leading. Two claims that used to sit here were measured on 2026-07-29
+  and are not true: h5 (1.0rem = 16px) renders BELOW body (1.125rem = 18px), and the
+  measure at `contentWidth` 672 is 70 characters in Inter, 71 in Literata and 72 in Source
+  Serif — near the 45-75 band's top, not the 66 the note claimed.
+- **Reset restores the CHOSEN FONT's setup, not `DEFAULT_TYPOGRAPHY`.** Each preset carries
+  typography tuned for its own face, so resetting to the Inter defaults while reading in
+  Literata silently swapped the serif's numbers for a sans's. Text wraps normally (no `text-wrap: balance`/`pretty` — both re-broke lines
+  and left a premature right rag). Change the numbers in `DEFAULT_TYPOGRAPHY`.
+- **A heading belongs to what comes after it.** Space above beats space below at every
+  level (`prose.css.ts`). It did not: heading margins were a multiple of the HEADING's own
+  size while the space below was a fixed multiple of the BODY's, so the two converged as
+  the level dropped and inverted at h5 — 22px above, 25px below. Measured after the fix:
+  h2 44/14, h3 36/11, h4 32/11, h5 27/11.
 - **Inter is self-hosted** (`public/fonts/inter-{latin,latin-ext,vietnamese}.woff2`,
   variable, declared via `@font-face` + `unicode-range` in `globals.css`; `--font-inter:'Inter'`
   there). **No `next/font/google`** — it fetched at build, which broke offline/CI builds. The OG
@@ -82,11 +99,16 @@
   Inter, re-drop the woff2 files. **Which font files are `<link rel=preload>`-ed is one
 system-wide rule** (`fontPreloadHrefs` → `docs/performance.md`): only the LCP title's reading
 font, only the site language's subset(s), never the chrome font or an uploaded custom face.
-- **ONE typeface for EVERYTHING — hard rule, no exceptions (incl. admin + OG).** No
-  `font-family`, no `font-mono`, no second family; `.prose code` is `inherit`;
-  **`grep -rE "font-mono" src` must be empty.** A custom font (`settings.customFont` =
+- **ONE typeface for everything the reader READS, and one for code.** Two handles, plus
+  `--font-mono`. There is no third: no `font-family` anywhere else, no second text family.
+  `--font-mono` is JetBrains Mono, self-hosted, and it dresses BOTH inline code and fenced
+  blocks — it was a `var(--font-mono, ui-monospace)` fallback that nothing ever defined, so
+  inline code came out in the book serif and a fenced block three lines later came out in
+  whatever `ui-monospace` meant on that machine. Declaring the face costs a page with no
+  code nothing: `unicode-range` means the browser fetches a file only when a glyph needs it
+  (measured 2026-07-29 — 30 KB on a post with code, 0 KB on one without). A custom font (`settings.customFont` =
   family + `faces[]` per weight 400/500/600/700, uploaded via `FontUpload` → `/api/files/font`,
-  stored at `files/font-<weight>-<ms>`, store-relative) overrides `--font-sans` (Inter fallback) —
+  stored at `files/font-<weight>-<ms>`, store-relative) overrides `--font-reading` —
   one `@font-face` per weight because faux-bold is disabled (`font-synthesis-weight: none`).
   `/og` renders Inter + the custom font (`lib/og.ts` `?font=`). Empty = bundled Inter.
 - **Admin chrome does NOT follow the reader's type settings** — it uses Tailwind's standard
@@ -175,8 +197,11 @@ font, only the site language's subset(s), never the chrome font or an uploaded c
 
 ## Motion — one engine, token-gated (HARD RULES)
 
-- **Every transition/animation reads the motion tokens** `--dur-fast/base/slow` + `--ease`
-  (globals.css `:root`). NEVER hardcode a `ms`/`s` duration or an easing in CSS or inline styles.
+- ⚠️ **The `--dur-fast/base/slow` + `--ease` tokens do NOT exist in 2.0.** This rule was
+  written for the frozen tree and carried over; measured 2026-07-29, `grep -r -- '--dur-' src`
+  is empty and every duration in `islands.css.ts` is a literal. The ONE switch below is real
+  and is what actually gates motion. Either reintroduce the tokens or delete this bullet —
+  it is on `state/TASKS.md`, and until then it describes nothing.
 - **ONE switch gates ALL visual motion.** `<html data-motion>` is server-rendered from `settings.motion.enabled`
   (no flash, no client JS); `:root[data-motion='off']` AND `@media (prefers-reduced-motion: reduce)`
   zero every `--dur-*`, so everything becomes instant with no per-component branching. Toggle in

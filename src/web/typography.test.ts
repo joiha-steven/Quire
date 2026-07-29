@@ -7,6 +7,7 @@ import { freshDatabase, dropDatabase } from '@/test/db'
 import { typographyToCss } from '@/content/settings'
 import { DEFAULT_TYPOGRAPHY, TYPE_ROLES, getFontPreset } from '@/content/themes'
 import { PUBLIC_CSS } from '@/web/public.css'
+import { MONO_TRACKING } from '@/render/font-faces'
 
 const DIR = './.tmp-test-typography'
 freshDatabase(DIR)
@@ -108,5 +109,28 @@ describe('the font presets', () => {
     const small = (id: string) => getFontPreset(id).typography.roles.small.size
     expect(small('literata')).toBeGreaterThan(small('inter'))
     expect(small('source-serif')).toBeGreaterThan(small('source-sans'))
+  })
+})
+
+describe('the mono-chrome tracking correction', () => {
+  // Tracking INHERITS, so `body` alone covered the chrome until each rule started naming
+  // its own --ls-<role> for the owner's sake. A rule that sets the property stops
+  // inheriting, so the correction has to name it — and naming the wrong ones is the other
+  // half of the same mistake.
+  it('reaches the chrome surfaces that state their own tracking', () => {
+    for (const selector of ['footer.site', 'p.tags', '.pager', 'header.site .tagline', '.related']) {
+      expect(MONO_TRACKING).toContain(`html[data-chrome-font="jetbrains-mono"] ${selector}`)
+      expect(MONO_TRACKING).toContain(`html[data-chrome-font="plex-mono"] ${selector}`)
+    }
+  })
+
+  it('leaves the reading face alone', () => {
+    // `figcaption` and `.footnotes` sit inside the article and render in --font-reading.
+    // They were being given a MONO adjustment while painting in a book serif, because they
+    // inherited it from body. Nothing set in the reading face may appear here.
+    for (const selector of ['figcaption', '.footnotes', '.prose', '.reading-font', '.comment-body']) {
+      expect(MONO_TRACKING).not.toContain(` ${selector}{`)
+      expect(MONO_TRACKING).not.toContain(` ${selector},`)
+    }
   })
 })

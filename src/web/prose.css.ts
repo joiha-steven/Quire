@@ -26,13 +26,25 @@ export const PROSE_CSS = `
 .prose h1{font-size:var(--fs-h1);line-height:var(--lh-h1);
   letter-spacing:var(--ls-h1);margin-top:1.9em}
 .prose h2{font-size:var(--fs-h2);line-height:var(--lh-h2);
-  letter-spacing:var(--ls-h2);margin-top:1.85em;margin-bottom:-.15em}
+  letter-spacing:var(--ls-h2);margin-top:1.85em}
 .prose h3{font-size:var(--fs-h3);line-height:var(--lh-h3);
-  letter-spacing:var(--ls-h3);margin-top:1.6em}
+  letter-spacing:var(--ls-h3);margin-top:1.8em}
 .prose h4{font-size:var(--fs-h4);line-height:var(--lh-h4);
-  letter-spacing:var(--ls-h4);margin-top:1.5em}
+  letter-spacing:var(--ls-h4);margin-top:1.75em}
 .prose h5{font-size:var(--fs-h5);line-height:var(--lh-h5);
-  letter-spacing:var(--ls-h5);margin-top:1.4em}
+  letter-spacing:var(--ls-h5);margin-top:1.7em}
+/* A heading belongs to what comes AFTER it. Left to the shared 1.4em lead, the space below
+   a heading is a fixed 1.4 x the BODY size while the space above is a multiple of the
+   HEADING's own size — so the smaller the heading, the closer the two get, and at h5 they
+   inverted: 22px above, 25px below. Measured on the specimen page, all four levels:
+
+     h2  44 above / 22 below      h3  32 / 25      h4  28 / 25      h5  22 / 25
+
+   The space below is therefore stated here, in the FOLLOWING element's em (it is that
+   paragraph's lead, not the heading's), and graded so every level keeps a clear
+   above-beats-below ratio while the absolute space still shrinks with the level. */
+.prose > :is(h1,h2) + *{margin-top:.75em}
+.prose > :is(h3,h4,h5) + *{margin-top:.6em}
 /* Bold is EMPHASIS in the body colour. A book serif's 700 is blacker than the 600 of the
    headings, so a preset can dial it back through --reading-bold. */
 .prose strong,.prose b{font-weight:var(--reading-bold, 700)}
@@ -45,12 +57,19 @@ export const PROSE_CSS = `
 .prose ol{list-style:decimal;padding-left:1.4em}
 .prose li{margin:.25rem 0}
 .prose blockquote{border-left:2px solid var(--c-rule);margin-left:0;padding-left:1rem;color:var(--c-meta)}
-/* ONE typeface site-wide: inline code reuses the reading font a touch smaller, on a tinted
-   slab. A separate monospace family here would be a second face nobody chose. */
-.prose code{font-family:inherit;font-size:var(--fs-code)}
+/* Code is the ONE role that is not the reading face, and it is one face for both forms.
+   It used to be two: inline code inherited the reading font while a fenced block asked for
+   var(--font-mono), which nothing ever defined — so the same code role rendered in a book
+   serif on one line and the browser's ui-monospace three lines later. --font-mono is now a
+   real token (JetBrains Mono, self-hosted, declared in font-faces.ts). The face costs
+   nothing on a post with no code: unicode-range means the browser fetches a file only when
+   a glyph actually needs it. */
+.prose code{font-family:var(--font-mono);font-size:var(--fs-code);
+  line-height:var(--lh-code);letter-spacing:var(--ls-code)}
 .prose :not(pre) > code{background:var(--c-rule);padding:.15em .38em}
-.prose pre{padding:1rem;border-radius:.5rem;overflow-x:auto;font-size:var(--fs-code)}
-.prose pre code{font-size:inherit;font-family:var(--font-mono,ui-monospace,monospace)}
+.prose pre{padding:1rem;border-radius:.5rem;overflow-x:auto;font-size:var(--fs-code);
+  line-height:var(--lh-code);letter-spacing:var(--ls-code)}
+.prose pre code{font-size:inherit;line-height:inherit;letter-spacing:inherit}
 .prose hr{margin:2.4em 0}
 .prose table{border-collapse:collapse;width:100%}
 .prose th,.prose td{border:1px solid var(--c-rule);padding:.4rem .6rem;text-align:left}
@@ -61,8 +80,11 @@ export const PROSE_CSS = `
    there is nothing to continue from. */
 .book-text .prose p{margin-top:.65em;text-indent:1.6em}
 .book-text .prose > p:first-child{text-indent:0}
-.book-text .prose :is(h1,h2,h3,h4,h5,blockquote,figure,pre,ul,ol,hr,table,.gallery,.video-embed) + p{
+.book-text .prose :is(blockquote,figure,pre,ul,ol,hr,table,.gallery,.video-embed) + p{
   text-indent:0;margin-top:1.4em}
+/* A heading keeps the tighter lead the rhythm rules give it: restating 1.4em here would
+   undo, in book mode only, the one thing that binds a heading to its own section. */
+.book-text .prose :is(h1,h2,h3,h4,h5) + p{text-indent:0}
 .book-text .prose li p,.book-text .prose blockquote p{text-indent:0}
 @media (min-width:600px){
   .book-text .prose p,.book-text .prose li{text-align:justify;hyphens:auto}

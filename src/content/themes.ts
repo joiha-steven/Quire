@@ -111,13 +111,38 @@ export const FONT_PRESETS: FontPreset[] = [
     typography: tuned({}),
   },
   {
-    // Source Sans 3 — Adobe's humanist sans. A touch warmer than Inter, slightly
-    // shorter x-height, so nudge the body up and loosen the line a hair.
+    // Source Sans 3 — Adobe's humanist sans, and the one preset whose numbers were guessed
+    // rather than measured. Measured 2026-07-29 against the other three, at the default
+    // 672px column:
+    //
+    //   preset          body px   x-height   chars/line   leading ÷ x-height
+    //   Inter            18.08      10.0        70            3.07
+    //   Literata         18.08       9.0        71            3.31
+    //   Source Serif 4   18.40       9.0        72            3.31
+    //   Source Sans 3    18.40       9.0      * 79 *        * 3.52 *
+    //
+    // Two things at once, and they compound. The face is NARROW — 7.70px per character
+    // against Inter's 8.69 — so the same column takes nine more characters per line, past
+    // the 45-75 band this site's defaults are built on. And the old note here reasoned from
+    // the short x-height to "loosen the line a hair", which is backwards: a small x-height
+    // under a long measure is exactly when the eye loses the return sweep, and 1.72 made it
+    // the loosest of the four.
+    //
+    // The LEADING is fixed here: 1.62 puts it at 3.31 x the x-height, exactly where both
+    // serifs sit. The MEASURE is not, and cannot be from this file. Sizing up until 79
+    // characters comes back into band needs body ~1.26rem, and two pinned rules in
+    // `web/typography.test.ts` refuse it — `small` must stay above 0.8 of body, and the
+    // serifs' secondary text must stay larger than the sans's. Both are right: `small` also
+    // sets the CHROME, which renders in the chrome font and has no reason to grow with the
+    // reading face. Under them the ceiling is ~1.17rem, which moves the measure by one
+    // character. So the body goes up only as far as the rules allow, and the real lever is
+    // recorded rather than forced: **the measure belongs to `contentWidth`, which a preset
+    // does not own.** A reader on this preset wants roughly a 620px column, not 672.
     id: 'source-sans',
     slug: 'sourcesans',
     name: 'Source Sans 3',
     stack: `'Source Sans 3', system-ui, -apple-system, sans-serif`,
-    typography: tuned({ body: { size: 1.15, line: 1.72 } }),
+    typography: tuned({ body: { size: 1.16, line: 1.62 } }),
   },
   {
     // Literata — Google's book serif (Play Books). A generous x-height, so 18px body

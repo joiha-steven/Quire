@@ -40,8 +40,36 @@ const ALLOWED = new Map<string, string>([
   ['.search-close', 'the × glyph that closes the search overlay'],
 ])
 
+/**
+ * Rules that take a role's SIZE without its leading and tracking, on purpose.
+ *
+ * A role is three numbers, not one. Taking the size alone is what made the owner's
+ * line-height and letter-spacing settings dead on eight surfaces at once — a figcaption
+ * kept the body's 1.7 leading however the caption role was set, and the whole footnote
+ * block with it. Nothing in review catches that, because the rule LOOKS wired: it names a
+ * role variable.
+ */
+const PARTIAL_OK = new Map<string, string>([
+  ['.subscribe-card h2', 'font-size:inherit — it deliberately takes the card\'s own size'],
+])
+
 type Finding = { file: string; line: number; selector: string; value: string }
+type Partial = { file: string; line: number; selector: string; role: string; missing: string[] }
 const findings: Finding[] = []
+const partials: Partial[] = []
+
+/**
+ * The declaration block a match sits in: from its opening brace to the next `}`.
+ *
+ * Declaration blocks do not nest, so the first `}` after the match ends this one. An
+ * `@media` wrapper is not a problem for the same reason — the match is always inside the
+ * innermost block.
+ */
+function blockFor(body: string, at: number): string {
+  const open = body.lastIndexOf('{', at)
+  const close = body.indexOf('}', at)
+  return open === -1 || close === -1 ? '' : body.slice(open + 1, close)
+}
 
 /**
  * The selector a declaration belongs to.
@@ -65,9 +93,25 @@ for (const file of SHEETS) {
   const source = readFileSync(file, 'utf8')
   for (const match of source.matchAll(/font-size:\s*([^;}]+)/g)) {
     const value = match[1]!.trim()
-    if (/^var\(--fs-[a-z0-9]+\)$/.test(value) || value === 'inherit' || /^[\d.]+em$/.test(value)) {
+    const role = /^var\(--fs-([a-z0-9]+)\)$/.exec(value)?.[1]
+    if (role !== undefined) {
+      // The size is wired. Now the other two thirds of the role: a rule that states one
+      // dimension of a role and inherits the rest is a setting the owner cannot move.
+      const selector = selectorFor(source, match.index)
+      if (PARTIAL_OK.has(selector)) continue
+      const block = blockFor(source, match.index)
+      const missing = [
+        block.includes(`line-height:var(--lh-${role})`) ? '' : `line-height:var(--lh-${role})`,
+        block.includes(`letter-spacing:var(--ls-${role})`) ? '' : `letter-spacing:var(--ls-${role})`,
+      ].filter(Boolean)
+      if (missing.length > 0) {
+        partials.push({
+          file, line: source.slice(0, match.index).split('\n').length, selector, role, missing,
+        })
+      }
       continue
     }
+    if (value === 'inherit' || /^[\d.]+em$/.test(value)) continue
     const selector = selectorFor(source, match.index)
     if (ALLOWED.has(selector)) continue
     findings.push({
@@ -82,7 +126,19 @@ if (findings.length > 0) {
     console.error(`  ${f.file}:${f.line}  ${f.selector || '(unknown selector)'}  font-size:${f.value}`)
   }
   console.error('  Use var(--fs-<role>), or add the selector to ALLOWED with a reason.')
-  process.exit(1)
 }
 
-console.log(`✓ check:type-roles: ok (${SHEETS.length} sheet(s), ${ALLOWED.size} listed exception(s))`)
+if (partials.length > 0) {
+  console.error('✗ check:type-roles: a role taken by its size alone — leading or tracking is dead')
+  for (const p of partials) {
+    console.error(`  ${p.file}:${p.line}  ${p.selector || '(unknown selector)'}  (${p.role})  add ${p.missing.join(' + ')}`)
+  }
+  console.error('  A role is three numbers. Add them, or list the selector in PARTIAL_OK with a reason.')
+}
+
+if (findings.length > 0 || partials.length > 0) process.exit(1)
+
+console.log(
+  `✓ check:type-roles: ok (${SHEETS.length} sheet(s), `
+  + `${ALLOWED.size} literal + ${PARTIAL_OK.size} partial exception(s))`,
+)

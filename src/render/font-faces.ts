@@ -81,13 +81,60 @@ const declare = (f: Face): string =>
  * The faces this page needs: the owner's reading font, plus the chrome font when it is a
  * different family. Inter is always included — it is the fallback `--font-sans` points at
  * when the owner has chosen no chrome font, and the last resort under every other stack.
+ *
+ * JetBrains Mono is always included too, for the same reason and at the same cost: it is
+ * what `--font-mono` resolves to, and `unicode-range` means a DECLARATION is not a
+ * download. A post with no code renders no glyph in the family, so the browser never
+ * fetches the file; a post with code gets the face it asked for instead of whatever
+ * `ui-monospace` happens to be on that machine.
  */
 export function fontFaceCss(fontPreset: string, chromeFont: string): string {
-  const wanted = new Set<string>(['inter', getFontPreset(fontPreset).slug])
+  const wanted = new Set<string>(['inter', 'jetbrains-mono', getFontPreset(fontPreset).slug])
   // 'reading' follows the reading font and 'inter' is already in; neither adds a family.
   if (getChromeFont(chromeFont).sans && chromeFont !== 'reading') wanted.add(chromeFont)
   return [...wanted].flatMap((id) => FACES[id] ?? []).map(declare).join('')
 }
+
+/**
+ * Every family, for the ADMIN only.
+ *
+ * The font picker paints each tile in the font it offers, and the admin declared the
+ * ACTIVE families alone — so five of the eight tiles rendered in a fallback and the owner
+ * chose a typeface from a grid that would not show it to them. A picker that cannot show
+ * its own options is the one surface where the narrow rule is the wrong rule.
+ *
+ * It costs the reader nothing (this never reaches a public page) and the owner nearly
+ * nothing: a declaration is not a download, so a family arrives only on the tab where a
+ * tile actually paints in it.
+ */
+export function allFontFaceCss(): string {
+  return Object.values(FACES).flat().map(declare).join('')
+}
+
+/**
+ * The chrome surfaces that STATE their own letter-spacing.
+ *
+ * Tracking inherits, so `body` alone used to cover the whole chrome. It stopped being
+ * enough the moment each of these rules began naming its own `--ls-<role>` — which they do
+ * because the owner's tracking setting has to reach them (see `check:type`). A rule that
+ * sets the property no longer inherits the correction, so every one of them has to be
+ * listed here.
+ *
+ * Reading surfaces are deliberately ABSENT, and two of them used to be here by accident.
+ * `figcaption` and `.footnotes` sit inside the article and inherit `--font-reading`, so
+ * they are set in the READING face — but with no tracking of their own they inherited the
+ * correction from `body`, which is a mono adjustment applied to a serif. Measured
+ * 2026-07-29: both were carrying -0.05em under a JetBrains Mono chrome while rendering in
+ * Literata. They now take their own `--ls-caption` / `--ls-small`, like the rest of the
+ * article. `.prose`, `.fs-*` and anything carrying `.reading-font` were never in scope.
+ */
+const CHROME_TRACKED = [
+  'body', '.t-small:not(.reading-font)', '.t-body:not(.reading-font)',
+  'header.site .tagline', 'header.site .title', '.deck',
+  'footer.site', '.pager', 'p.tags', '.related', 'aside.series',
+  '.rail-sub', '.preview-note', '.subscribe-card', '#comments',
+  '.code-copy', '.book-title', '.book-count', '.lightbox-caption', '.lightbox-count',
+]
 
 /**
  * Tracking correction for the two mono chrome faces, keyed on `data-chrome-font`.
@@ -100,10 +147,7 @@ export function fontFaceCss(fontPreset: string, chromeFont: string): string {
  * Ported late. It was missing from 2.0 entirely — public and admin — which is why a site set
  * to a mono chrome looked loose next to the frozen tree.
  */
-export const MONO_TRACKING =
-  `html[data-chrome-font="plex-mono"] body,`
-  + `html[data-chrome-font="plex-mono"] .t-small:not(.reading-font),`
-  + `html[data-chrome-font="plex-mono"] .t-body:not(.reading-font){letter-spacing:-0.04em}`
-  + `html[data-chrome-font="jetbrains-mono"] body,`
-  + `html[data-chrome-font="jetbrains-mono"] .t-small:not(.reading-font),`
-  + `html[data-chrome-font="jetbrains-mono"] .t-body:not(.reading-font){letter-spacing:-0.05em}`
+const track = (id: string, em: string): string =>
+  `${CHROME_TRACKED.map((s) => `html[data-chrome-font="${id}"] ${s}`).join(',')}{letter-spacing:${em}}`
+
+export const MONO_TRACKING = `${track('plex-mono', '-0.04em')}${track('jetbrains-mono', '-0.05em')}`

@@ -210,7 +210,11 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
               </div>
             </Card>
             <Card title={t.cardTypography}>
-              <TypographyFields typography={s.typography} onChange={(typography) => update({ typography })} />
+              <TypographyFields
+                typography={s.typography}
+                fontPreset={s.fontPreset}
+                onChange={(typography) => update({ typography })}
+              />
             </Card>
             <Card title={t.cardRendering}>
               <AdvancedFields

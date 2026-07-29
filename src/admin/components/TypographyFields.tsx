@@ -1,9 +1,9 @@
 // Per-role type editor: every text role (h1–h5, body, small, caption, code) has
 // its own size (rem), line-height, and letter-spacing (em) — the full set of CSS
-// vars the site renders from. One reset restores all roles to the tuned defaults.
-// Parent owns state + save.
+// vars the site renders from. One reset restores all roles to the tuned defaults
+// FOR THE CHOSEN READING FONT. Parent owns state + save.
 import type { TypographySettings, TypeRole, TypeStyle } from '@/types'
-import { DEFAULT_TYPOGRAPHY, TYPE_ROLES } from '@/content/themes'
+import { getFontPreset, TYPE_ROLES } from '@/content/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/i18n/admin-i18n'
 import { INSET } from './kit'
@@ -49,15 +49,26 @@ function Cell({
 
 type Props = {
   typography: TypographySettings
+  /** The chosen reading font, so Reset restores ITS setup and not another font's. */
+  fontPreset: string
   onChange: (typography: TypographySettings) => void
 }
 
-export function TypographyFields({ typography, onChange }: Props) {
+export function TypographyFields({ typography, fontPreset, onChange }: Props) {
   const t = useAdminT()
   const setStyle = (role: TypeRole, patch: Partial<TypeStyle>) =>
     onChange({ ...typography, roles: { ...typography.roles, [role]: { ...typography.roles[role], ...patch } } })
   // Reset every role's size/line/spacing; keep the smoothing toggle (Advanced tab).
-  const resetAll = () => onChange({ ...typography, roles: structuredClone(DEFAULT_TYPOGRAPHY.roles) })
+  //
+  // To the CHOSEN FONT's tuning, not DEFAULT_TYPOGRAPHY. Every preset carries a reading
+  // setup tuned for its own face — a serif runs small and wants tighter leading than a
+  // sans, and the two book serifs zero out the sans's negative heading tracking. Reset used
+  // DEFAULT_TYPOGRAPHY unconditionally, which is Inter's setup: an owner reading in
+  // Literata who pressed Reset silently got the sans's numbers, and the only way back was
+  // to notice and re-pick the font tile. `getFontPreset` falls back to Inter, so an
+  // unrecognised id still resets to something sane.
+  const resetAll = () =>
+    onChange({ ...typography, roles: structuredClone(getFontPreset(fontPreset).typography.roles) })
 
   return (
     <div className="space-y-4">

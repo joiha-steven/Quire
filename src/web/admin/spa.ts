@@ -14,7 +14,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Context } from 'hono'
 import type { SiteSettings } from '@/types'
-import { fontFaceCss, MONO_TRACKING } from '@/render/font-faces'
+import { allFontFaceCss, MONO_TRACKING } from '@/render/font-faces'
 import { fontPresetCss, chromeFontCss, themesToCss } from '@/content/themes'
 import { typographyToCss, fontToCss } from '@/content/settings'
 
@@ -65,9 +65,12 @@ const STYLES = '/admin/assets/admin.css'
  */
 function adminStyles(settings: SiteSettings): string {
   return [
-    fontFaceCss(settings.fontPreset, settings.chromeFont),
+    // EVERY family, not just the active two: the Appearance font picker paints each
+    // tile in the font it offers. See allFontFaceCss.
+    allFontFaceCss(),
     `:root{--font-sans:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;`
-    + `--font-reading:var(--font-sans)}`,
+    + `--font-reading:var(--font-sans);`
+    + `--font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace}`,
     `body{font-family:var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif}`,
     themesToCss(settings.themes, settings.themePreset),
     typographyToCss(settings.typography),

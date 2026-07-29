@@ -69,7 +69,8 @@ main{flex:1;padding:3rem 0 1rem}
 
 header.site{padding:1.75rem 0}
 header.site .title{font-family:var(--font-sans);font-weight:600;color:var(--c-heading);
-  text-decoration:none;font-size:var(--fs-h4);line-height:var(--lh-h4)}
+  text-decoration:none;font-size:var(--fs-h4);line-height:var(--lh-h4);
+  letter-spacing:var(--ls-h4)}
 /* width+height on the tag reserve the space, so the header does not jump when the logo
    arrives; the CSS width keeps it responsive and height:auto keeps the ratio. */
 header.site .logo{display:block;height:auto}
@@ -79,7 +80,8 @@ header.site .logo{display:block;height:auto}
 header.site .logo-dark{display:none}
 html.dark header.site .title:has(.logo-dark) .logo{display:none}
 html.dark header.site .logo-dark{display:block}
-header.site .tagline{color:var(--c-meta);font-size:var(--fs-small);margin:.75rem 0 0}
+header.site .tagline{color:var(--c-meta);font-size:var(--fs-small);
+  line-height:var(--lh-small);letter-spacing:var(--ls-small);margin:.75rem 0 0}
 
 /* The reading face for .prose is in prose.css.ts, with the rest of the .prose rules, so the
    editor gets it too. There is deliberately no "article h1" rule: an article IS also the
@@ -89,7 +91,7 @@ article > header h1{color:var(--c-heading);margin:0}
 article > header .t-small{margin:0}
 /* Standfirst: the excerpt, so a long read opens on a sentence rather than a wall. */
 .deck{margin:1rem 0 0;color:var(--c-meta);
-  font-size:var(--fs-h4);line-height:var(--lh-h4)}
+  font-size:var(--fs-h4);line-height:var(--lh-h4);letter-spacing:var(--ls-h4)}
 #post-body{margin-top:2.5rem}
 /* Tags and categories over a rule: the rule is where the article ends. Without it the
    taxonomy reads as one more paragraph. */
@@ -103,11 +105,12 @@ article > header .t-small{margin:0}
    So the label, the titles and the dates are all --fs-small and nothing here competes with
    the article; weight and colour do the separating, which is how a book sets its back
    matter. */
-.related{font-size:var(--fs-small);line-height:var(--lh-small)}
+.related{font-size:var(--fs-small);line-height:var(--lh-small);
+  letter-spacing:var(--ls-small)}
 /* The size is stated even though the block already sets it: an h2 carries a UA default of
    1.5em, so leaving it to inherit made the quiet label the largest thing in the block. */
 .related h2{font-size:var(--fs-small);line-height:var(--lh-small);
-  font-weight:600;color:var(--c-meta);margin:0 0 1.25rem}
+  letter-spacing:var(--ls-small);font-weight:600;color:var(--c-meta);margin:0 0 1.25rem}
 .related ul{list-style:none;padding:0;margin:0}
 .related li + li{margin-top:1rem}
 .related a{font-weight:600;color:var(--c-heading)}
@@ -166,7 +169,8 @@ ${PROSE_CSS}
 .tl-dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--c-meta)}
 .empty{color:var(--c-meta)}
 .pager{display:flex;justify-content:space-between;align-items:center;gap:1rem;
-  border-top:1px solid var(--c-rule);padding-top:1rem;margin-top:1rem;font-size:var(--fs-small)}
+  border-top:1px solid var(--c-rule);padding-top:1rem;margin-top:1rem;
+  font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small)}
 .pager-count{color:var(--c-meta)}
 form.search{display:flex;gap:.5rem;margin:0 0 2rem}
 form.search input{flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);border-radius:.35rem;
@@ -177,7 +181,8 @@ form.search button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radi
    port turned it into a plain rule at the foot of the article, which is the wrong end — the
    point of it is knowing you are in part 3 of 6 BEFORE reading, not after. */
 aside.series{border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem 1.5rem;
-  margin:2rem 0 0;font-size:var(--fs-small);line-height:var(--lh-small)}
+  margin:2rem 0 0;font-size:var(--fs-small);line-height:var(--lh-small);
+  letter-spacing:var(--ls-small)}
 aside.series .series-head{margin:0;color:var(--c-meta)}
 aside.series ol{margin:1rem 0 0;padding-left:1.25rem}
 aside.series li{margin-top:.5rem}
@@ -186,11 +191,13 @@ aside.series li a:hover{color:var(--c-heading)}
 /* The part you are reading is not a link, and it is the one thing in the card set in the
    heading colour: the card answers "where am I" before it answers "what else is there". */
 aside.series li[aria-current]{color:var(--c-heading);font-weight:600}
-p.tags{margin-top:1.5rem;font-size:var(--fs-small);color:var(--c-meta)}
+p.tags{margin-top:1.5rem;font-size:var(--fs-small);line-height:var(--lh-small);
+  letter-spacing:var(--ls-small);color:var(--c-meta)}
 
 figure{margin:2rem 0}
 figure img{display:block;margin:0 auto;border-radius:.25rem}
-figcaption{color:var(--c-meta);font-size:var(--fs-caption);text-align:center;margin-top:.5rem}
+figcaption{color:var(--c-meta);font-size:var(--fs-caption);line-height:var(--lh-caption);
+  letter-spacing:var(--ls-caption);text-align:center;margin-top:.5rem}
 .img-left img{margin-left:0}
 .img-right img{margin-right:0}
 .img-wide{margin-left:calc(-1 * clamp(0px,4vw,4rem));margin-right:calc(-1 * clamp(0px,4vw,4rem))}
@@ -213,11 +220,13 @@ figcaption{color:var(--c-meta);font-size:var(--fs-caption);text-align:center;mar
 /* applyFootnotes already emits an <hr class="fn-rule">; a border-top here as well
    drew TWO lines above the notes. Caught by opening the page, not by reading it. */
 .prose .fn-rule{margin-top:2.5em}
-.footnotes{font-size:var(--fs-small);color:var(--c-meta)}
+.footnotes{font-size:var(--fs-small);line-height:var(--lh-small);
+  letter-spacing:var(--ls-small);color:var(--c-meta)}
 .footnotes ol{padding-left:1.25rem}
 sup.fnref a{text-decoration:none}
 
-footer.site{padding:3rem 0;text-align:center;color:var(--c-meta);font-size:var(--fs-small)}
+footer.site{padding:3rem 0;text-align:center;color:var(--c-meta);
+  font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small)}
 .footer-text{margin:0}
 footer.site a{text-decoration:underline;text-underline-offset:2px}
 footer.site a:hover{color:var(--c-text)}
@@ -292,7 +301,8 @@ html[data-rail=open] .rail{transform:none}
    ::before, so it flows for BOTH rail orientations with no per-side handling. */
 .rail-lead::before{content:"•";font-size:.72em;margin-inline-end:.5em;vertical-align:.12em;
   color:var(--c-meta)}
-.rail-sub{font-size:var(--fs-caption)}
+.rail-sub{font-size:var(--fs-caption);line-height:var(--lh-caption);
+  letter-spacing:var(--ls-caption)}
 .toc-end{margin-top:1rem}
 /* Below the rail breakpoint the ToC is the drawer, and a post with a long index needs the
    whole column: the listing rail is not on this page to share it with. */

@@ -12,8 +12,14 @@ import { readFileSync } from 'node:fs'
 // Every sheet, by the declaration that opens it. This list went stale once already: the
 // public sheet was split in two and renamed, the check kept passing against a constant that
 // no longer existed, and the fourth backtick got through.
+// It went stale a SECOND time: `prose.css.ts` was split out of the public sheet carrying
+// the warning "NO BACKTICKS anywhere below: check:css-literal enforces that" in its own
+// header, and it was never added here. The fifth backtick got through on 2026-07-29, in a
+// comment, around the word `code` — and the check reported ok while the server refused to
+// boot. Splitting a sheet out means adding it here, in the same change.
 const SHEETS: Array<{ file: string; decl: string }> = [
   { file: 'src/web/public.css.ts', decl: 'const BASE_CSS = ' },
+  { file: 'src/web/prose.css.ts', decl: 'export const PROSE_CSS = ' },
   { file: 'src/web/islands.css.ts', decl: 'export const ISLANDS_CSS = ' },
   { file: 'src/web/login.css.ts', decl: 'export const LOGIN_CSS = ' },
 ]
