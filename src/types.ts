@@ -212,6 +212,7 @@ export type SiteSettings = {
   comments: CommentSettings // reader comment system (off by default)
   mcp: McpSettings // MCP server toggle (tokens are managed separately)
   motion: MotionSettings // site-wide motion/animation engine toggle
+  cache: CacheSettings // page cache + shared-cache headers for public HTML
   backups: BackupSettings // Google Drive backup config (secrets live in backup_state)
 }
 
@@ -266,6 +267,16 @@ export type McpSettings = {
 
 // Motion engine: ONE site-wide switch for all UI animation (public + admin). When
 // off (or under prefers-reduced-motion) every motion duration collapses to 0s.
+export type CacheSettings = {
+  /**
+   * On: public HTML is held in the page cache and a shared cache may hold it for a minute.
+   * Off: neither. Both halves move together on purpose — turning off only the in-process
+   * cache leaves a CDN in front of the site still answering with the copy you are trying to
+   * get rid of, which is the exact confusion the switch exists to end.
+   */
+  enabled: boolean
+}
+
 export type MotionSettings = {
   enabled: boolean
   typewriter: boolean // admin editor: custom caret, insert/delete response + key sound

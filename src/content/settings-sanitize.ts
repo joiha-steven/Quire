@@ -2,7 +2,7 @@
 // back-compat shims). No DB, no Blob, no React. settings.ts depends on this ONE
 // WAY (settings -> settings-sanitize, never back) for its getSettings/saveSettings merge.
 
-import type { BackupSettings, CommentSettings, FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, MotionSettings, SeoSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
+import type { BackupSettings, CacheSettings, CommentSettings, FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, MotionSettings, SeoSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
 import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_FONT, TYPE_ROLES, FONT_WEIGHTS } from '@/content/themes'
 
 // Keep only well-formed menu items (label + href both present).
@@ -130,6 +130,11 @@ export function sanitizeComments(input: unknown, fallback: CommentSettings): Com
 
 export function sanitizeMcp(input: unknown, fallback: McpSettings): McpSettings {
   const o = (input ?? {}) as Partial<McpSettings>
+  return { enabled: bool(o.enabled, fallback.enabled) }
+}
+
+export function sanitizeCache(input: unknown, fallback: CacheSettings): CacheSettings {
+  const o = (input ?? {}) as Partial<CacheSettings>
   return { enabled: bool(o.enabled, fallback.enabled) }
 }
 

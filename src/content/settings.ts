@@ -9,7 +9,7 @@ import { one, run } from '@/store/query'
 import { isSiteLang } from '@/locales/langs'
 import { DEFAULT_PRESET_ID, isPresetId, isFontPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, DEFAULT_FONT_PRESET, isChromeFontId, DEFAULT_CHROME_FONT, TYPE_ROLES } from '@/content/themes'
 import {
-  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp, sanitizeMotion,
+  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp, sanitizeMotion, sanitizeCache,
   sanitizeBackups, sanitizeComments, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
 } from '@/content/settings-sanitize'
 
@@ -158,6 +158,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   comments: DEFAULT_COMMENTS,
   mcp: { enabled: false },
   motion: { enabled: true, typewriter: true },
+  // On, because a blog that is fast for readers is the default. The switch exists for the
+  // hour you are changing the look and want to see it, not for permanent use.
+  cache: { enabled: true },
   backups: DEFAULT_BACKUPS,
 }
 
@@ -238,6 +241,7 @@ export async function getSettings(): Promise<SiteSettings> {
       comments: sanitizeComments(stored.comments, DEFAULT_COMMENTS),
       mcp: sanitizeMcp(stored.mcp, DEFAULT_SETTINGS.mcp),
       motion: sanitizeMotion(stored.motion, DEFAULT_SETTINGS.motion),
+      cache: sanitizeCache(stored.cache, DEFAULT_SETTINGS.cache),
       backups: sanitizeBackups(stored.backups, DEFAULT_BACKUPS),
     }
   } catch (error) {
@@ -349,6 +353,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     comments: sanitizeComments(input.comments, current.comments),
     mcp: sanitizeMcp(input.mcp, current.mcp),
     motion: sanitizeMotion(input.motion, current.motion),
+    cache: sanitizeCache(input.cache, current.cache),
     backups: sanitizeBackups(input.backups, current.backups),
   }
   // Persist image refs store-relative (collapse); keep `next` absolute for the client.

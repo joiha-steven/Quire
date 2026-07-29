@@ -47,6 +47,7 @@ import { CommentIntegrations } from './CommentIntegrations'
 import { CloudflareFields } from './CloudflareFields'
 import { ImportFields } from './ImportFields'
 import { ExportFields } from './ExportFields'
+import { CacheFields } from './CacheFields'
 import { SeoFields } from './SeoFields'
 import { RedirectsManager } from './RedirectsManager'
 import { NewsletterFields } from './NewsletterFields'
@@ -275,6 +276,9 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           </Card>
           <Card title={t.backupTitle}>
             <ExportFields backups={s.backups} onChange={(backups) => update({ backups })} />
+          </Card>
+          <Card title={t.cacheTitle}>
+            <CacheFields cache={s.cache} onChange={(cache) => update({ cache })} />
           </Card>
         </div>
       )}

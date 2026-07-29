@@ -7,12 +7,12 @@
 import { getActivity } from '@/server/activity'
 import { lastRunAt } from '@/server/backup'
 import { buildSha } from '@/server/build-info'
-import { getAnalytics, getViewTotals } from '@/analytics/summary'
+import { getDashboardTraffic, getViewTotals } from '@/analytics/summary'
 import { countsByPosts } from '@/comments/comments'
 import { getIndex } from '@/content/posts'
 import { getPageIndex } from '@/content/pages'
 import { getSettings } from '@/content/settings'
-import { listBlobs } from '@/media/blob'
+import { storageStats } from '@/media/storage-stats'
 import { db } from '@/store/db'
 import pkg from '../../../package.json' with { type: 'json' }
 
@@ -70,15 +70,15 @@ export async function dashboardView(): Promise<Record<string, unknown>> {
   const commentsOn = settings.comments.enabled
   const activityOn = settings.features.activityLog
 
-  const [posts, pages, blobs, system, commentCounts, recent, analytics30, viewTotals] =
+  const [posts, pages, storage, system, commentCounts, recent, analytics30, viewTotals] =
     await Promise.all([
       getIndex(),
       getPageIndex(),
-      listBlobs(),
+      storageStats(),
       systemInfo(),
       commentsOn ? countsByPosts() : Promise.resolve({} as Record<string, number>),
       activityOn ? getActivity(6) : Promise.resolve([]),
-      getAnalytics(30, 'day'),
+      getDashboardTraffic(30),
       getViewTotals(),
     ])
 
@@ -97,13 +97,6 @@ export async function dashboardView(): Promise<Record<string, unknown>> {
   const drafts = posts.filter((p) => p.status !== 'published').length
     + pages.filter((p) => p.status !== 'published').length
 
-  // Media blobs split into originals and the derived variants, which are named by
-  // convention; plus the files/ attachments, icons and fonts.
-  const isVariant = (p: string) => /-(?:thumb|\d+)\.(?:avif|webp)$/.test(p)
-  const mediaBlobs = blobs.filter((b) => b.pathname.startsWith('media/')
-    && !b.pathname.endsWith('_index.json'))
-  const variants = mediaBlobs.filter((b) => isVariant(b.pathname)).length
-
   // SEO health: metadata-only signals over PUBLISHED posts. No body scan, so it stays
   // cheap enough to sit on the home page.
   const published = posts.filter((p) => p.status === 'published')
@@ -112,10 +105,10 @@ export async function dashboardView(): Promise<Record<string, unknown>> {
     posts: posts.length,
     pages: pages.length,
     comments: Object.values(commentCounts).reduce((sum, n) => sum + n, 0),
-    originals: mediaBlobs.length - variants,
-    variants,
-    files: blobs.filter((b) => b.pathname.startsWith('files/')).length,
-    totalBytes: blobs.reduce((sum, b) => sum + b.size, 0),
+    originals: storage.originals,
+    variants: storage.variants,
+    files: storage.files,
+    totalBytes: storage.totalBytes,
     categories: tally(posts.flatMap((p) => p.categories)),
     tags: tally(posts.flatMap((p) => p.tags)),
     recent,

@@ -230,6 +230,23 @@ body cache warm, and the full 74-page warm sweep **3,948 ms → 203 ms**.
   slow way. Tested with the table dropped.
 - **`clearCache()` does not touch it.** It is content-addressed; a stale row is inert.
 
+### The switch
+
+Both layers can be turned off together in **Settings → System → Cache**
+(`settings.cache.enabled`), for the hour you are changing the design and want to see what
+you changed. Off means:
+
+- `cached()` neither reads nor **writes** the page cache. Filling it while it is off would
+  hand back an hour-old page the moment it was switched back on.
+- Public HTML goes out `public, no-store` instead of `s-maxage=60`. `no-store`, not
+  `no-cache`: Cloudflare treats `no-cache` as "keep it, revalidate" and keeps answering
+  from the edge, so a switch that sent it would look broken from outside.
+- The warmer returns immediately instead of rendering the archive into a cache nobody reads.
+
+Nothing about Invariant 1 changes: when the cache is on, a write still empties all of it.
+The switch decides whether there is a cache at all, not how it is invalidated. Pinned by
+`src/web/app.test.ts` ("switched off in Settings").
+
 ### The warm, and the CDN purge
 
 `clearCache()` carries a hook list, and `src/index.ts` registers a debounced

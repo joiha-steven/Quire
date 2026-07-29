@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { view } from '@/admin/api'
+import { beginRequest, endRequest } from '@/admin/pending'
 import { useRefreshEpoch } from '@/admin/router'
 
 export type ViewState<T> = {
@@ -31,10 +32,17 @@ export function useView<T>(name: string, query = ''): ViewState<T> {
     let live = true
     setLoading(true)
     setError(null)
+    // The top progress bar reads this counter. Reported here rather than from `loading`,
+    // because `loading` belongs to one page's state and a navigation has two of them
+    // mounted for a moment.
+    beginRequest()
     view<T>(name, query)
       .then((d) => { if (live) setData(d) })
       .catch((e: Error) => { if (live) setError(e.message) })
-      .finally(() => { if (live) setLoading(false) })
+      .finally(() => {
+        endRequest()
+        if (live) setLoading(false)
+      })
     // A page the reader has already navigated away from must not write its result into
     // state: the next page is mounted by then and would flash the previous one's data.
     return () => { live = false }

@@ -117,3 +117,33 @@ The complete implementation record, production corrections, preserved invariants
 - Palette cards must remain readable in every state. Use neutral border/surface hierarchy for selected, available, and hidden palettes; never lower opacity on the entire card or its labels.
 - Backup scheduling and import controls use shared rounded inputs and buttons. Native file-input chrome must stay visually hidden behind an accessible labeled trigger.
 - The light admin canvas is neutral `#f5f5f5`; do not introduce cool blue-gray backgrounds into the application shell.
+
+## Navigation and the progress bar — 2026-07-29
+
+Measured before any code was written, in headless Chromium against a throwaway instance
+seeded to the size of the real blog (70 posts, 40,000 analytics events).
+
+**The first click on any admin route cost 330-390ms; the same route clicked again cost
+23-35ms.** The difference was not data and not work: the CPU was idle for ~300ms of it, and
+the page's own fetch had not started yet. Every page is a `lazy()` import, so a first visit
+suspends; outside a transition React answers a suspension by showing the Suspense fallback,
+and then throttles putting real content back by a fixed 300ms so that a fallback which
+appears is never a flicker.
+
+**The rules that follow from it:**
+
+- **Route changes run inside `startTransition`** (`router.tsx`). The current page stays on
+  screen until the new one is ready. No fallback is shown, so there is no reveal to
+  throttle. The Suspense boundary in `App.tsx` is now reached on the FIRST paint only.
+- **Scrolling to the top belongs after the commit**, not beside the click. During a
+  transition the old page is still the one being looked at.
+- **A navigation must show it is happening.** With the old page held on screen, the bar in
+  `ui/TopProgress.tsx` is the only signal a click did anything. It covers both halves: the
+  router's `pending` and every in-flight `useView`, through the counter in `pending.ts`.
+- **The bar never claims a percentage.** Nothing here knows how far along a fetch is; it
+  eases toward an edge it never reaches, then snaps closed. It honours `data-motion`.
+- **The entry preloads the current route's chunk** before React runs (`main.tsx`), so the
+  chunk downloads alongside the shell round trip instead of after it.
+
+Measured after: Content 355 → 49ms, Media 336 → 59ms, Comments 348 → 43ms, Settings 346 →
+45ms, Analytics 418 → 83ms. Cold load of `/admin` 501 → 329ms.

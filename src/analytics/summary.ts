@@ -111,6 +111,38 @@ export async function getAnalytics(days: number, bucket: Bucket = 'day', topN = 
   }
 }
 
+/**
+ * The four figures the DASHBOARD shows, and only those.
+ *
+ * The dashboard used to call `getAnalytics(30)` and throw ten of its fifteen fields away.
+ * Measured against 40,000 events that cost 70ms of the dashboard's 85ms, for a card with a
+ * sparkline, two totals and two short lists on it. The Analytics PAGE still calls
+ * `getAnalytics`, because it renders all fifteen.
+ */
+export async function getDashboardTraffic(days: number, topN = 10): Promise<{
+  totalViews: number
+  uniqueVisitors: number
+  daily: ReturnType<typeof dailySeries>
+  topReferrers: ReturnType<typeof topReferrers>
+  topCountries: ReturnType<typeof topCountries>
+}> {
+  try {
+    const now = Date.now()
+    const since = now - days * 86_400_000
+    const current = windowCounts(since, null, null)
+    return {
+      totalViews: current.views,
+      uniqueVisitors: current.visitors,
+      daily: dailySeries(bucketRanges(since, now, 'day', reportTz()), null),
+      topReferrers: topReferrers(since, topN, null),
+      topCountries: topCountries(since, topN, null),
+    }
+  } catch (error) {
+    console.error(`[ERROR] analytics.getDashboardTraffic: ${(error as Error).message}`)
+    return { totalViews: 0, uniqueVisitors: 0, daily: [], topReferrers: [], topCountries: [] }
+  }
+}
+
 /** All-time total views per path (`{ "/slug": 12, … }`) for the content tables. */
 export async function getViewTotals(): Promise<Record<string, number>> {
   try {

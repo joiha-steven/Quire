@@ -9,7 +9,10 @@
 // streamed fresh props in; here there is no server render, so it bumps a counter that the
 // page shells depend on, which re-runs their fetch. Same effect, one concept fewer.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  createContext, startTransition, useCallback, useContext, useEffect, useMemo, useState,
+  useTransition,
+} from 'react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 type RouterState = {
@@ -24,6 +27,8 @@ type RouterApi = RouterState & {
   replace: (href: string) => void
   back: () => void
   refresh: () => void
+  /** True while a route change is waiting on its chunk. Drives the top progress bar. */
+  pending: boolean
 }
 
 const RouterContext = createContext<RouterApi | null>(null)
@@ -35,28 +40,53 @@ const readLocation = (): { path: string; search: string } => ({
 
 export function RouterProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<RouterState>(() => ({ ...readLocation(), epoch: 0 }))
+  const [pending, startNavigation] = useTransition()
 
   useEffect(() => {
-    const onPop = () => setState((s) => ({ ...readLocation(), epoch: s.epoch }))
+    const onPop = () => startTransition(() => setState((s) => ({ ...readLocation(), epoch: s.epoch })))
     addEventListener('popstate', onPop)
     return () => removeEventListener('popstate', onPop)
   }, [])
 
+  /**
+   * The route change runs inside a transition, and that is the whole of why the admin stopped
+   * feeling like a reload.
+   *
+   * Every page is a `lazy()` import, so the first visit to one suspends. Outside a transition
+   * React answers a suspension by swapping the subtree for the Suspense fallback — and then
+   * throttles putting the real content back, by a fixed 300ms, so a fallback that appears is
+   * never a flicker. Measured before this change: the first click on any admin route took
+   * 330-390ms, of which ~300ms was that throttle with the CPU idle and the network silent,
+   * and the page's own data fetch could not even START until the throttle let it mount. The
+   * same route clicked again, chunk already resolved, took 23-35ms.
+   *
+   * Inside a transition there is no fallback: React keeps the current page on screen until
+   * the new one is ready. No fallback shown, no reveal to throttle. `pending` is what the
+   * progress bar reads in the meantime.
+   */
   const go = useCallback((href: string, mode: 'push' | 'replace') => {
+    // The URL changes NOW, not when the transition commits. A pending navigation that has
+    // not yet rendered still has to be the address the reader sees and can copy.
     if (mode === 'push') history.pushState(null, '', href)
     else history.replaceState(null, '', href)
-    setState((s) => ({ ...readLocation(), epoch: s.epoch }))
-    // A new page starts at the top. The browser only does this for a real navigation.
-    scrollTo(0, 0)
+    startNavigation(() => setState((s) => ({ ...readLocation(), epoch: s.epoch })))
   }, [])
+
+  // Scrolling belongs AFTER the commit, not beside the click. During a transition the old
+  // page is still the one on screen, and yanking it to the top while the reader is still
+  // looking at it is the jolt this whole change exists to remove.
+  useEffect(() => {
+    scrollTo(0, 0)
+  }, [state.path])
 
   const api = useMemo<RouterApi>(() => ({
     ...state,
+    pending,
     push: (href) => go(href, 'push'),
     replace: (href) => go(href, 'replace'),
     back: () => history.back(),
     refresh: () => setState((s) => ({ ...s, epoch: s.epoch + 1 })),
-  }), [state, go])
+  }), [state, go, pending])
 
   return <RouterContext.Provider value={api}>{children}</RouterContext.Provider>
 }

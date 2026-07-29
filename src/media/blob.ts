@@ -40,6 +40,22 @@ export function expandBlob(s: string): string {
   return expandWith(LOCAL_BASE, s)
 }
 
+// --- Write notifications --------------------------------------------------------------
+
+// Anything derived from the CONTENTS of the store has to know when the store changes, and
+// the two functions below are the only places it can. A listener list rather than a direct
+// call, because the deriving module imports this one and the reverse would be a cycle.
+const writeListeners = new Set<() => void>()
+
+/** Subscribe to "the blob store changed". Currently `media/storage-stats.ts`. */
+export function onBlobWrite(listener: () => void): void {
+  writeListeners.add(listener)
+}
+
+function announceWrite(): void {
+  for (const listener of writeListeners) listener()
+}
+
 // --- IO helpers (server-only; local driver lazy-loaded to keep node:fs off the client) ---
 
 // List every stored binary (pathname + size). Used for site stats and backups.
@@ -56,7 +72,9 @@ export async function uploadFile(
   opts?: { exclusive?: boolean },
 ): Promise<string> {
   try {
-    return (await import('./blob-local')).put(pathname, body, opts)
+    const url = await (await import('./blob-local')).put(pathname, body, opts)
+    announceWrite()
+    return url
   } catch (error) {
     // EEXIST from an exclusive write is an EXPECTED race signal (a concurrent upload
     // claimed this name first) — the caller retries a fresh name, so don't log it.
@@ -76,6 +94,7 @@ export async function readBlob(pathname: string): Promise<Buffer> {
 export async function deleteByPathname(pathname: string): Promise<void> {
   try {
     await (await import('./blob-local')).del(pathname)
+    announceWrite()
   } catch (error) {
     console.error(`[ERROR] blob.deleteByPathname(${pathname}): ${(error as Error).message}`)
     throw error

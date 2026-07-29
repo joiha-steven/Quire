@@ -17,6 +17,7 @@
 
 import { getPublicPosts } from '@/content/posts'
 import { getPublicPages } from '@/content/pages'
+import { getSettings } from '@/content/settings'
 import { isPublicallyVisible } from '@/utils'
 import { pageCache, onFlush } from '@/server/cache'
 import { renderArticle } from '@/web/article'
@@ -37,6 +38,9 @@ let running = false
  */
 export async function warmCache(): Promise<{ warmed: number; ms: number }> {
   const t0 = performance.now()
+  // Nothing to fill when the owner has switched the cache off, and filling it anyway would
+  // leave a full set of pages waiting to be served the moment it comes back on.
+  if (!(await getSettings()).cache.enabled) return { warmed: 0, ms: 0 }
   const posts = (await getPublicPosts()).filter((p) => isPublicallyVisible(p.status, p.date))
   const pages = (await getPublicPages()).filter((p) => p.status === 'published')
   let warmed = 0

@@ -29,6 +29,11 @@ being wrong meant a published post nobody could see. 2.0 removes the problem ins
 managing it: the page cache is one `Map` in one process, so throwing all of it away costs a
 few renders and cannot be wrong.
 
+The owner can switch the cache off entirely (Settings → System, `settings.cache.enabled`),
+which does not weaken this rule: it decides whether there is a cache to clear, never how one
+is invalidated. When it is on, a write still empties all of it. See
+[`performance.md`](performance.md), "The switch".
+
 Note that this is the IN-PROCESS cache only. What a *shared* cache in front of the app may
 do is a separate rule with a separate file, [`src/web/cache-headers.ts`](../src/web/cache-headers.ts),
 because a CDN cannot be told to forget.

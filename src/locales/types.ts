@@ -135,6 +135,10 @@ export type AdminStrings = {
   signOut: string
   clearCache: string
   cacheCleared: string
+  cacheTitle: string
+  cacheEnable: string
+  cacheEnableDesc: string
+  cacheClearDesc: string
   clearCacheFailed: string
   // dashboard
   dashboardTitle: string

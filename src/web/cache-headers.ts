@@ -10,6 +10,7 @@
 // where this is a window.
 
 import type { MiddlewareHandler } from 'hono'
+import { getSettings } from '@/content/settings'
 import { SPECULATION_HEADER } from '@/web/speculation'
 
 /**
@@ -45,7 +46,13 @@ export function cacheHeaders(): MiddlewareHandler {
       return
     }
     if ((c.res.headers.get('content-type') ?? '').includes('text/html')) {
-      c.res.headers.set('cache-control', PUBLIC)
+      // Read only for public HTML, which is the only response this decides anything about.
+      // Putting it above the branches would add a query to every asset and every API call.
+      //
+      // `no-store`, not `no-cache`: Cloudflare treats `no-cache` as "may keep it, must
+      // revalidate" and will still answer from the edge, so the switch would appear to do
+      // nothing from outside. `no-store` is the one that means what it says.
+      c.res.headers.set('cache-control', (await getSettings()).cache.enabled ? PUBLIC : 'public, no-store')
       // Prerender-on-hover, offered on the same responses a shared cache may hold: a public
       // page, 200, HTML. The owner's surfaces are already gone by the branch above, which
       // is the point of setting it here rather than in each renderer.

@@ -7,8 +7,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import LinkExt from '@tiptap/extension-link'
-import Underline from '@tiptap/extension-underline'
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import { TaskList } from '@tiptap/extension-task-list'
 import { TaskItem } from '@tiptap/extension-task-item'
@@ -218,9 +216,12 @@ export function Editor({ initialContent, onChange, onDirty, onPickImage, onPickG
     // active highlights stale and the contextual table-tools row never showing.
     shouldRerenderOnTransaction: true,
     extensions: [
-      StarterKit,
-      Underline,
-      LinkExt.configure({ openOnClick: false }),
+      // StarterKit already ships `link` and `underline` in Tiptap 3. Registering them again
+      // beside it made Tiptap log "Duplicate extension names found: ['link','underline']"
+      // on every editor mount, which is its way of saying two schema entries are fighting
+      // over the same mark. `link` is configured through StarterKit rather than added, and
+      // `underline` needs nothing said about it at all.
+      StarterKit.configure({ link: { openOnClick: false } }),
       CaptionedImage,
       Video,
       Table.configure({ resizable: false }),

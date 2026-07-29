@@ -5,31 +5,86 @@
 // is not the owner, which is the same gate every write route sits behind (Invariant 4) — a
 // check in the client would be decoration.
 
-import { Suspense, lazy, type ReactNode } from 'react'
+import { Suspense, lazy, type ComponentType, type ReactNode } from 'react'
 import { RouterProvider, usePathname } from '@/admin/router'
 import { useView } from '@/admin/useView'
 import { AdminI18nProvider } from '@/admin/components/I18nProvider'
 import { ToastProvider } from '@/admin/ui/Toast'
 import { ThemeProvider } from '@/admin/ui/ThemeProvider'
+import { TopProgress } from '@/admin/ui/TopProgress'
 import { AdminSidebar } from '@/admin/components/AdminSidebar'
 import type { SiteLang } from '@/types'
 
 // The editor pulls in Tiptap and its extensions, which is most of the bundle. Splitting it
 // out means the dashboard, the settings and every table load without paying for an editor
 // nobody has opened.
-const Dashboard = lazy(() => import('@/admin/pages/Dashboard'))
-const Content = lazy(() => import('@/admin/pages/Content'))
-const PostEditor = lazy(() => import('@/admin/pages/PostEditor'))
-const PageEditor = lazy(() => import('@/admin/pages/PageEditor'))
-const Media = lazy(() => import('@/admin/pages/Media'))
-const Comments = lazy(() => import('@/admin/pages/Comments'))
-const Newsletter = lazy(() => import('@/admin/pages/Newsletter'))
-const Analytics = lazy(() => import('@/admin/pages/Analytics'))
-const Log = lazy(() => import('@/admin/pages/Log'))
-const Trash = lazy(() => import('@/admin/pages/Trash'))
-const Settings = lazy(() => import('@/admin/pages/Settings'))
-const Help = lazy(() => import('@/admin/pages/Help'))
-const NotFound = lazy(() => import('@/admin/pages/NotFound'))
+//
+// The loaders are named separately from the `lazy()` wrappers so the first one can be
+// STARTED before React asks for it — see `preloadRoute` below.
+type Loader = () => Promise<{ default: ComponentType }>
+
+const load = {
+  dashboard: () => import('@/admin/pages/Dashboard'),
+  content: () => import('@/admin/pages/Content'),
+  postEditor: () => import('@/admin/pages/PostEditor'),
+  pageEditor: () => import('@/admin/pages/PageEditor'),
+  media: () => import('@/admin/pages/Media'),
+  comments: () => import('@/admin/pages/Comments'),
+  newsletter: () => import('@/admin/pages/Newsletter'),
+  analytics: () => import('@/admin/pages/Analytics'),
+  log: () => import('@/admin/pages/Log'),
+  trash: () => import('@/admin/pages/Trash'),
+  settings: () => import('@/admin/pages/Settings'),
+  help: () => import('@/admin/pages/Help'),
+  notFound: () => import('@/admin/pages/NotFound'),
+} satisfies Record<string, Loader>
+
+const Dashboard = lazy(load.dashboard)
+const Content = lazy(load.content)
+const PostEditor = lazy(load.postEditor)
+const PageEditor = lazy(load.pageEditor)
+const Media = lazy(load.media)
+const Comments = lazy(load.comments)
+const Newsletter = lazy(load.newsletter)
+const Analytics = lazy(load.analytics)
+const Log = lazy(load.log)
+const Trash = lazy(load.trash)
+const Settings = lazy(load.settings)
+const Help = lazy(load.help)
+const NotFound = lazy(load.notFound)
+
+/** Which loader serves a path. The single place the route table's shape is decided. */
+function loaderFor(path: string): Loader {
+  const p = path.replace(/\/+$/, '') || '/admin'
+  if (p === '/admin') return load.dashboard
+  if (p === '/admin/content') return load.content
+  if (p === '/admin/editor' || p.startsWith('/admin/editor/')) return load.postEditor
+  if (p === '/admin/page-editor' || p.startsWith('/admin/page-editor/')) return load.pageEditor
+  if (p === '/admin/media') return load.media
+  if (p === '/admin/comments') return load.comments
+  if (p === '/admin/newsletter') return load.newsletter
+  if (p === '/admin/analytics') return load.analytics
+  if (p === '/admin/log') return load.log
+  if (p === '/admin/trash') return load.trash
+  if (p === '/admin/settings') return load.settings
+  if (p === '/admin/help') return load.help
+  return load.notFound
+}
+
+/**
+ * Start fetching a route's chunk without waiting for React to render it.
+ *
+ * On a cold load the shell blocks on ONE round trip before any page is mounted, and until
+ * that returned nothing had even asked for the page's chunk: measured, the chunk request
+ * left at +151ms when the bundle had been parsed at +40ms. Calling the loader here overlaps
+ * the two. The bundler hands out the same module promise for a repeat call, so the `lazy()`
+ * wrapper below resolves against this one rather than starting a second fetch.
+ */
+export function preloadRoute(path: string): void {
+  void loaderFor(path)().catch(() => {
+    /* the render will surface it; a warm-up must never be the thing that throws */
+  })
+}
 
 /**
  * The route table. Order matters only in that the longest prefix has to be tested first,
@@ -88,6 +143,9 @@ function Shell() {
         <div className="admin-shell min-h-screen bg-neutral-100 md:flex dark:bg-neutral-950">
           <AdminSidebar lang={data.language} signOut={signOut} />
           <Canvas>
+            {/* Reached on the FIRST paint only. Every later route change runs inside a
+                transition, which keeps the current page on screen instead of falling back
+                here — see the note in `router.tsx`. */}
             <Suspense fallback={<div className="py-16 text-center text-sm text-neutral-400">…</div>}>
               <Route />
             </Suspense>
@@ -102,6 +160,7 @@ export function App() {
   return (
     <ThemeProvider>
       <RouterProvider>
+        <TopProgress />
         <Shell />
       </RouterProvider>
     </ThemeProvider>

@@ -98,16 +98,24 @@ export async function renderFeedBody(
   }
 }
 
-/** Serve an HTML route from the page cache, so the cache rule lives in ONE place. */
+/**
+ * Serve an HTML route from the page cache, so the cache rule lives in ONE place.
+ *
+ * The owner can switch the cache off (Settings -> System). Off means neither read nor
+ * WRITE: a cache that keeps filling while it is disabled would hand back an hour-old page
+ * the moment it was switched back on, which is the opposite of what somebody turning it off
+ * is asking for. The shared-cache half of the same switch is in `cache-headers.ts`.
+ */
 export function cached(key: string, render: () => Promise<string | null>) {
   return async (): Promise<Response> => {
-    const hit = pageCache.get(key)
+    const on = (await getSettings()).cache.enabled
+    const hit = on ? pageCache.get(key) : undefined
     if (hit !== undefined) {
       return new Response(hit, { headers: { 'content-type': 'text/html; charset=utf-8' } })
     }
     const html = await render()
     if (html === null) return new Response('Not found', { status: 404 })
-    pageCache.set(key, html)
+    if (on) pageCache.set(key, html)
     return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } })
   }
 }
