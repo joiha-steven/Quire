@@ -79,11 +79,25 @@ html[data-ide-chrome=on] .rail li::before{content:counter(ln);position:absolute;
    ring would be cut in half by its own container. The box grows right by the overhang and
    pads it back, which puts the ring inside the padding box where nothing clips it. */
 html[data-ide-chrome=on] .rail-inner{width:calc(100% + 24px);padding-right:24px}
-/* The active marker moves toward the TEXT. It sits at the row's right edge, which used
-   to be the rail's edge and nothing else - now the ring is out past it, so the hairline
-   read as belonging to the ring rather than to the row it marks. Six pixels in leaves it
-   closer to the words and clear of the circle. */
-html[data-ide-chrome=on] .rail-row[aria-current]::before{right:6px}
+/* The active marker sits at the row's right edge, which used to be the rail's edge and
+   nothing else - now the ring is out past it, so at 0 the hairline read as belonging to
+   the ring rather than to the row it marks. Pulled in, but only 3px: 6px put it close
+   enough to the words to crowd them, which is the opposite complaint. The row's own
+   padding is 14px, so this leaves 11px of air on the text side and 10px to the circle. */
+html[data-ide-chrome=on] .rail-row[aria-current]::before{right:3px}
+/* The article index numbers its HEADINGS and nothing else. Its first row is the post
+   title (a click is "back to the top") and its last is the jump to tags / categories /
+   comments - neither is a line of the piece, and numbering them made the index look one
+   heading longer than the post.
+
+   Keyed on POSITION and on .toc-end, deliberately not on .is-active: the ToC island moves
+   that class to whichever heading you are level with, so a rule hanging off it would drop
+   the number from a different row as you scrolled. */
+html[data-ide-chrome=on] .toc li:first-child,
+html[data-ide-chrome=on] .toc li:has(.toc-end){counter-increment:none}
+html[data-ide-chrome=on] .toc li:first-child::before,
+html[data-ide-chrome=on] .toc li:has(.toc-end)::before{content:none}
+
 /* The tag cloud is a run of words, not a list, so it has no lines to number. */
 html[data-ide-chrome=on] .rail-tags{counter-reset:none}
 `.trim()
