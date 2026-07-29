@@ -6,11 +6,15 @@
 
 import { readEnv } from '@/env'
 import { openDatabases, closeDatabases } from '@/store/db'
+import { ensureBlobStore } from '@/media/blob-local'
 import { flushAnalytics, resetAnalyticsBuffer } from '@/analytics/buffer'
 import { createApp } from '@/web/app'
 
 const env = readEnv()
 openDatabases(env.dataDir)
+// Same reason `openDatabases` creates its directory: a fresh install should come up
+// healthy, not report degraded storage until somebody uploads a file.
+ensureBlobStore()
 
 const app = createApp()
 

@@ -4,7 +4,7 @@
 // session, so the secret is the only thing between an external caller and a maintenance
 // run.
 import { describe, it, expect, beforeEach, afterAll } from 'bun:test'
-import { rmSync } from 'node:fs'
+import { mkdirSync, rmSync } from 'node:fs'
 import { freshDatabase, dropDatabase } from '@/test/db'
 import { db } from '@/store/db'
 import { createApp } from '@/web/app'
@@ -17,15 +17,25 @@ import { payload } from '@/test/api'
 
 const DIR = './.tmp-test-admin-ops'
 const SNAPSHOTS = `${DIR}-snapshots`
+const UPLOADS = `${DIR}-uploads`
 freshDatabase(DIR)
 // Its own directory, so a snapshot taken here is never the real one on a dev machine.
 process.env.BACKUP_DIR = SNAPSHOTS
+// And its own upload store, CREATED. `/api/health` checks that the store is writable, so
+// these tests were passing on the accident that every developer machine has an ./uploads
+// left over from running the app; on a clean checkout the probe answered 503 and two tests
+// failed for a reason that had nothing to do with what they test.
+process.env.STORAGE_LOCAL_DIR = UPLOADS
+mkdirSync(UPLOADS, { recursive: true })
 
 afterAll(() => {
   dropDatabase(DIR)
   delete process.env.CRON_SECRET
   delete process.env.BACKUP_DIR
-  try { rmSync(SNAPSHOTS, { recursive: true, force: true }) } catch { /* ignore */ }
+  delete process.env.STORAGE_LOCAL_DIR
+  for (const d of [SNAPSHOTS, UPLOADS]) {
+    try { rmSync(d, { recursive: true, force: true }) } catch { /* ignore */ }
+  }
 })
 
 /** What the backup routes answer with. Narrow, because only these fields are read here. */

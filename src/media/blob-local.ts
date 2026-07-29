@@ -7,13 +7,33 @@
 // Files are served back over HTTP by app/uploads/[...path]/route.ts under the
 // `/uploads` prefix, which is the same prefix blob.ts uses to build public URLs.
 
-import { promises as fs, createReadStream } from 'node:fs'
+import { promises as fs, createReadStream, mkdirSync } from 'node:fs'
 import { Readable } from 'node:stream'
 import path from 'node:path'
 
 // Resolved once; in the Docker standalone image cwd is /app, so the default maps
 // to /app/uploads — mount a volume there to persist binaries across deploys.
 const DIR = path.resolve(process.env.STORAGE_LOCAL_DIR || './uploads')
+
+/**
+ * Create the store if it is not there yet. Called at boot.
+ *
+ * A fresh install has no `uploads/` until something is uploaded, and `/api/health` checks
+ * that the directory is WRITABLE — so a brand-new instance answered 503 and a reverse proxy
+ * in front of it would refuse to route to it, before anyone had done anything wrong. CI
+ * caught this on a clean checkout; every developer machine already had the directory from
+ * the first time it ran.
+ *
+ * Read-only rather than throwing: a read-only mount is a real deployment, and the health
+ * probe is the right place to report it.
+ */
+export function ensureBlobStore(): void {
+  try {
+    mkdirSync(DIR, { recursive: true })
+  } catch {
+    /* health reports it */
+  }
+}
 
 // Confine every pathname under DIR — a stored ref like `media/x.webp` must never
 // escape via `..` into the rest of the container filesystem.
