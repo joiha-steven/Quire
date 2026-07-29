@@ -11,9 +11,16 @@ import { promises as fs, createReadStream, mkdirSync } from 'node:fs'
 import { Readable } from 'node:stream'
 import path from 'node:path'
 
-// Resolved once; in the Docker standalone image cwd is /app, so the default maps
-// to /app/uploads — mount a volume there to persist binaries across deploys.
-const DIR = path.resolve(process.env.STORAGE_LOCAL_DIR || './uploads')
+// Read at USE, not at import. In the Docker image cwd is /app, so the default maps to
+// /app/uploads — mount a volume there to persist binaries across deploys.
+//
+// It was a module-level `const`, which made the value depend on WHEN this file was first
+// imported. That is invisible in production, where the environment is set before anything
+// loads, and it silently broke a test: `bun test` shares one module registry across files, so
+// a suite that set `STORAGE_LOCAL_DIR` and then imported this got whatever an earlier file
+// had already frozen in — and wrote its fixtures into the repository's own uploads directory.
+// A getenv per file operation is noise next to the I/O it precedes.
+const storeDir = (): string => path.resolve(process.env.STORAGE_LOCAL_DIR || './uploads')
 
 /**
  * Create the store if it is not there yet. Called at boot.
@@ -29,17 +36,18 @@ const DIR = path.resolve(process.env.STORAGE_LOCAL_DIR || './uploads')
  */
 export function ensureBlobStore(): void {
   try {
-    mkdirSync(DIR, { recursive: true })
+    mkdirSync(storeDir(), { recursive: true })
   } catch {
     /* health reports it */
   }
 }
 
-// Confine every pathname under DIR — a stored ref like `media/x.webp` must never
+// Confine every pathname under the store directory — a stored ref like `media/x.webp` must never
 // escape via `..` into the rest of the container filesystem.
 export function resolveSafe(pathname: string): string {
-  const abs = path.resolve(DIR, pathname)
-  if (abs !== DIR && !abs.startsWith(DIR + path.sep)) throw new Error(`Invalid blob path: ${pathname}`)
+  const base = storeDir()
+  const abs = path.resolve(base, pathname)
+  if (abs !== base && !abs.startsWith(base + path.sep)) throw new Error(`Invalid blob path: ${pathname}`)
   return abs
 }
 
@@ -110,6 +118,6 @@ export async function list(): Promise<{ pathname: string; size: number }[]> {
       }
     }
   }
-  await walk(DIR, '')
+  await walk(storeDir(), '')
   return out
 }

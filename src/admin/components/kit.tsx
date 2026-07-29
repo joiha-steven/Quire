@@ -21,6 +21,86 @@ export const PANEL = 'overflow-hidden rounded-xl border border-neutral-200 dark:
 export const PANEL_LIST = `divide-y divide-neutral-200 dark:divide-neutral-800 ${PANEL}`
 export const INSET = 'rounded-xl border border-neutral-200 p-4 dark:border-neutral-800'
 
+// --- One setting ------------------------------------------------------------------------
+//
+// THE RULE, and it is the only one: a setting reads top to bottom as **what it is, what to
+// know about it, then the control**. Never a hint under the control it explains, never a
+// second note style beside the first, never a caller's own idea of the spacing between them.
+//
+// It is a rule because the screens drifted the moment it was left implicit: the font pickers
+// put their hint below the grid, the palette card carried a tinted callout AND a plain
+// paragraph saying related things, and the gap between a label and its control was 0.5, 1 or
+// 2 depending on the file. Reading a settings page meant re-learning where to look in every
+// card.
+//
+// `SETTING_LABEL` and `NOTE` are exported because `ui/Input.tsx` builds the same three parts
+// for a text field and the two must not drift apart.
+export const SETTING_LABEL = 'block text-sm font-medium text-neutral-800 dark:text-neutral-200'
+export const NOTE = 'mt-1 text-xs leading-5 text-neutral-500 dark:text-neutral-400'
+
+/**
+ * One setting whose control is not a plain text field: a picker grid, a switch, a button, a
+ * row of them. Pass the control as children; the label and note are placed for you.
+ *
+ * `inline` is for a boolean: a 24px switch beside its label reads better than one stranded
+ * on its own line, and it keeps a list of fifteen feature toggles scannable. The ORDER is
+ * unchanged — label, note, control — it is only the wrap that differs.
+ */
+export function Setting({
+  label,
+  note,
+  badge,
+  inline = false,
+  children,
+  className = '',
+}: {
+  label?: ReactNode
+  note?: ReactNode
+  badge?: string
+  inline?: boolean
+  children: ReactNode
+  className?: string
+}) {
+  const head = (
+    <div className="min-w-0">
+      {label && (
+        <div className={`${SETTING_LABEL} flex items-center gap-2`}>
+          {label}
+          {badge && <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-normal text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">{badge}</code>}
+        </div>
+      )}
+      {note && <p className={NOTE}>{note}</p>}
+    </div>
+  )
+  if (inline) {
+    return (
+      <div className={`flex items-start justify-between gap-4 ${className}`}>
+        {head}
+        <div className="shrink-0 pt-0.5">{children}</div>
+      </div>
+    )
+  }
+  return (
+    <div className={className}>
+      {head}
+      <div className={label || note ? 'mt-2.5' : ''}>{children}</div>
+    </div>
+  )
+}
+
+/** The gap between two settings inside one card. One number, so no card invents its own. */
+export const SETTING_GAP = 'space-y-5'
+
+/** A labelled group inside a card, for when one card holds two subjects. */
+export function SettingGroup({ title, children }: { title: ReactNode; children: ReactNode }) {
+  return (
+    <div className={SETTING_GAP}>
+      <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">{title}</h3>
+      {children}
+    </div>
+  )
+}
+
 // The status bar both editors put above the form (scheduled-for, unsaved-changes and the
 // like). Tinted rather than white so it reads as a message about the page, not part of it.
 export const NOTICE =

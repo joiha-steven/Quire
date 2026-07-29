@@ -254,10 +254,12 @@ Count when written: 214 items.
 
 - [x] Cookieless. A visitor is a salted hash of IP + UA; the raw UA is never stored
 - [x] Coarse device / browser / OS buckets parsed at insert
-- [ ] Bots, admin and api are skipped **(done)**. The OWNER'S OWN visits are not yet:
-      the frozen tree's handler opens with `if (await requireOwner()) return 204`, and 2.0
-      has no session to ask until M3. Until then an owner reading their own blog is counted
-      as a reader. Recorded here rather than left to be noticed later; it lands with auth
+- [x] Bots, admin and api are skipped, and so is the owner. Closed 2026-07-30, and it went
+      further than parity: the frozen tree only asked for a session, so the owner in a second
+      browser or on their phone still counted. `analytics/exclude.ts` also drops a request
+      from any address a LIVE session was created from (the salted `ip_hash` the sessions
+      table already keeps, so nothing new is stored), and any request from a loopback or
+      private address, which is the box talking to itself
 - [x] Kept forever, no rolling window
 - [x] Pageview beacon; scroll depth; dwell sampled on leave
 - [ ] `⚠` Both beacons are deferred until the document is actually viewed (prerender guard,

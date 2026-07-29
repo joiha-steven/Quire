@@ -6,6 +6,60 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+## 2026-07-30 — one rule for every setting, and the reader gets a progress bar too
+
+Owner, after looking at the live admin: the progress bar and the cache card are not there
+(they were only in git; the box still ran the old bundle), the MCP card is broken, the
+settings screens are scattered and ugly, the public site needs a loading bar too, analytics
+should not count the owner, and add a way to mark a selection as code.
+
+**The MCP card, and why it was two bugs in a shared primitive.** `ui/Button` had neither
+`whitespace-nowrap` nor `shrink-0`, so in a flex row beside three lines of prose the buttons
+were squeezed until their own LABELS wrapped: "Tạo token" across two lines, twice as tall as
+its row. And the button's `min-h-10` sat next to a 28px value box, which is what "the button
+is bigger than the field" was. Both fixed in the primitive, so no other card can repeat them.
+The token table also moved to a full-width card: five columns clipped at the edge of a
+half-width one at every screen size.
+
+**THE RULE: what it is, what to know about it, then the control.** Written into
+[`admin-design.md`](../docs/admin-design.md) and, more importantly, into the primitives —
+`Setting` in `kit.tsx`, and a `note` slot on `Input`/`Textarea`, which took a label and
+nothing else and so left every hint to be hand-placed by its caller. That is exactly how the
+font pickers ended up explaining themselves BELOW the grid and the palette card carried a
+tinted callout and a plain paragraph at two sizes. `ToggleRow` is now `Setting` + `Switch`, so
+a toggle and a field share one label style; `CheckField` replaced the last two raw checkboxes.
+One exception, stated in the doc: a boolean keeps its switch beside the label, because
+stacking fifteen feature toggles makes that list worse, and the ORDER is unchanged.
+
+**Analytics stops counting the owner and the box** ([`exclude.ts`](../src/analytics/exclude.ts)),
+which closes [parity §8](../docs/spec/07-parity.md) and goes past it. The frozen tree only
+asked for a session, so the owner in a second browser still counted. Three exclusions now: a
+live owner session, any address a live session was created from (the salted `ip_hash` the
+sessions table already keeps, so nothing new is stored and no list is maintained by hand), and
+any loopback or private address, which is the box talking to itself. Tested in both directions,
+because too tight looks like a traffic drop rather than a bug.
+
+**A navigation bar for readers too.** The public site is real page loads, so a tap left the
+old page looking untouched. 565 bytes in `core.js` (budget 8,800 → 9,400), and it intercepts
+nothing: it sets one attribute and the stylesheet draws a root pseudo-element from it. The
+150ms delay before it appears is the part worth keeping — `speculation-rules` prerenders on
+hover, so most navigations finish in single digits and a bar shown every time would read as a
+glitch.
+
+**The code button already existed.** Fifth in the selection toolbar, `toggleCode()`, wearing a
+bare backtick the width of a comma next to four letters. It is `</>` now, and every button in
+that bar finally has a tooltip.
+
+**A test I wrote yesterday broke because of one I wrote today.** `blob-local.ts` resolved
+`STORAGE_LOCAL_DIR` at module load, so its value depended on WHEN the file was first imported;
+`bun test` shares a module registry across files, so a new suite that imported the app first
+made the storage-stats suite write its fixtures into the repository's own uploads directory.
+Read at use now. Invisible in production, which is what made it worth fixing rather than
+working around.
+
+Also: put a backtick in a comment in `islands.css.ts` — the file whose own header says that
+ends the template literal and has cost two debugging sessions. Three now.
+
 ## 2026-07-29 (last) — the admin was waiting on nothing, and now says when it is waiting
 
 Owner: the admin feels slow, put a progress bar at the top instead of reloading the page,

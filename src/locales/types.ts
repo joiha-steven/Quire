@@ -207,6 +207,8 @@ export type AdminStrings = {
   tbBold: string
   tbItalic: string
   tbUnderline: string
+  tbStrike: string
+  tbCodeInline: string
   footerContent: string
   footerHint: string
   editorPlaceholder: string

@@ -261,7 +261,10 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
           <Card title={t.cardCloudflare}>
             <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
           </Card>
-          <Card title={t.cardMcp}>
+          {/* Full width: it holds a five-column table, and in half a grid the last column
+              (expiry) was clipped at the card's edge on every screen size. A card carrying a
+              table is not a half-width card. */}
+          <Card title={t.cardMcp} className="xl:col-span-2">
             <McpFields mcp={s.mcp} siteUrl={s.siteUrl} onChange={(mcp) => update({ mcp })} />
           </Card>
         </div>

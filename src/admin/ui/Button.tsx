@@ -16,10 +16,14 @@ const STYLES: Record<Variant, string> = {
   danger: 'bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200',
 }
 
+// `whitespace-nowrap` and `shrink-0` are load-bearing, not tidying. In a flex row beside
+// anything long, a button with neither gets squeezed until its own LABEL wraps: the MCP card
+// shipped "Tạo token" broken across two lines and twice as tall as the row it sat in. A
+// button is a fixed object; it is the text beside it that gives way.
 export function Button({ variant = 'primary', className = '', ...props }: Props) {
   return (
     <button
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${STYLES[variant]} ${className}`}
+      className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${STYLES[variant]} ${className}`}
       {...props}
     />
   )

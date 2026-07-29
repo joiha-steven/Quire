@@ -76,6 +76,8 @@ const ja = {
   tbBold: '太字',
   tbItalic: '斜体',
   tbUnderline: '下線',
+  tbStrike: '取り消し線',
+  tbCodeInline: 'インラインコード',
   footerContent: 'フッター',
   footerHint: '太字・斜体・下線・リンク。{year} と {title} は自動で置換されます。',
   editorPlaceholder: '書き始める...',

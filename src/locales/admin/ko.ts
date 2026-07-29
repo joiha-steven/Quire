@@ -76,6 +76,8 @@ const ko = {
   tbBold: '굵게',
   tbItalic: '기울임',
   tbUnderline: '밑줄',
+  tbStrike: '취소선',
+  tbCodeInline: '인라인 코드',
   footerContent: '푸터',
   footerHint: '굵게, 기울임, 밑줄, 링크. {year}와 {title}은 자동으로 치환됩니다.',
   editorPlaceholder: '작성을 시작하세요...',

@@ -69,7 +69,12 @@ const BUDGET: Record<string, number> = {
   // all 68 posts at once with no easing at all: the .reveal class had been in the markup
   // since M2 and no rule ever matched it, and there was nothing to hand the archive back a
   // page at a time. Both are what the frozen tree does.
-  'core.js': 8_800,
+  // Raised to 9,400 (measured: 9,254) for the navigation bar. The public site is real page
+  // loads, so a tap on a link left the page it was on looking untouched until the next one
+  // arrived; the owner asked for the same signal the admin got. 565 bytes, and it intercepts
+  // nothing — it sets one attribute the stylesheet draws from, and the delay before it does
+  // is what keeps a prerendered navigation from flashing a bar for one frame.
+  'core.js': 9_400,
   // /{slug}: back to top, code copy, lightbox, subscribe, comments, the ToC highlight and
   // book mode. Raised from 8,000 when book mode grew its real chrome — a title bar, a page
   // count and side arrows over a clipped viewport, and a spread measured to exactly two

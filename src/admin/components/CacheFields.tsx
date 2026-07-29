@@ -10,14 +10,18 @@ import type { CacheSettings } from '@/types'
 import { ToggleRow } from '@/admin/ui/Switch'
 import { useAdminT } from './I18nProvider'
 import { CacheButton } from './CacheButton'
-import { PANEL } from './kit'
+import { PANEL, Setting, SETTING_GAP } from './kit'
+
+/** The button chrome of `ui/Button`'s secondary variant. CacheButton takes a class, not a variant. */
+const CLEAR_BUTTON =
+  'inline-flex min-h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700'
 
 export function CacheFields(
   { cache, onChange }: { cache: CacheSettings; onChange: (c: CacheSettings) => void },
 ) {
   const t = useAdminT()
   return (
-    <div className="space-y-3">
+    <div className={SETTING_GAP}>
       <div className={PANEL}>
         <ToggleRow
           label={t.cacheEnable}
@@ -26,8 +30,9 @@ export function CacheFields(
           onChange={(enabled) => onChange({ ...cache, enabled })}
         />
       </div>
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.cacheClearDesc}</p>
-      <CacheButton className="inline-flex items-center gap-2 border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800" />
+      <Setting label={t.clearCache} note={t.cacheClearDesc}>
+        <CacheButton className={CLEAR_BUTTON} />
+      </Setting>
     </div>
   )
 }

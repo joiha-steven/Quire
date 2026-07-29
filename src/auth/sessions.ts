@@ -135,6 +135,23 @@ export function resolveSession(token: string | null | undefined): SessionRow | n
 }
 
 /** The owner's device list. Most recently used first. */
+/**
+ * Was a live session ever created from this address?
+ *
+ * Analytics asks, so the owner's own reading is not counted as a reader's even when there is
+ * no cookie to find (a second browser, a private window, the phone on the desk). It compares
+ * the SALTED hash the table already stores, so answering costs no new stored data and the
+ * raw address still never lands anywhere.
+ */
+export function isSessionIp(ip: string): boolean {
+  if (!ip) return false
+  const row = one<{ n: number }>(
+    `select count(*) as n from sessions where ip_hash = ? and expires_at > ?`,
+    hashIp(ip), nowMs(),
+  )
+  return (row?.n ?? 0) > 0
+}
+
 export function listSessions(userId: number): SessionRow[] {
   return all<DbRow>(
     `select id, user_id, created_at, last_seen_at, expires_at, user_agent, ip_hash

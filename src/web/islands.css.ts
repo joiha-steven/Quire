@@ -33,6 +33,21 @@ export const ISLANDS_CSS = `
 }
 @keyframes read-progress{to{transform:scaleX(1)}}
 
+/* The NAVIGATION bar: shown while the next page is loading, which is a different question
+   from how far down this one the reader is. A pseudo-element on the root, so there is no
+   element to inject and nothing in the markup of a page that is not navigating.
+   Above the reading bar, and the accent rather than the heading colour, so the two are
+   never mistaken for each other on an article. The colour is --c-accent because a public
+   colour comes from a theme token, never a literal. */
+html[data-navigating]::before{content:"";position:fixed;inset:0 auto auto 0;z-index:60;
+  height:2px;width:100%;background:var(--c-accent);transform:translateX(-100%);
+  animation:nav-progress 6s cubic-bezier(.05,.8,.2,1) forwards}
+@keyframes nav-progress{to{transform:translateX(-12%)}}
+/* Motion off kills every animation on the page (see the rule at the foot of this file), so
+   without this the bar would sit at -100% and never be seen. It still SAYS something is
+   happening, it just says it without moving. */
+html[data-motion=off][data-navigating]::before{transform:translateX(-35%)}
+
 .to-top{position:fixed;bottom:1.25rem;right:1.25rem;z-index:40;display:flex;width:2.5rem;height:2.5rem;
   align-items:center;justify-content:center;border:1px solid var(--c-rule);border-radius:999px;
   background:var(--c-bg);color:var(--c-meta);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,color .2s}

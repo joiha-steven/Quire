@@ -9,7 +9,7 @@ import type { ThemePreset } from '@/content/themes'
 import { getPreset } from '@/content/themes'
 import { useAdminT } from './I18nProvider'
 import type { AdminStrings } from '@/i18n/admin-i18n'
-import { INSET } from './kit'
+import { INSET, Setting, SETTING_GAP } from './kit'
 
 type ColorKey = keyof ThemeColors
 
@@ -181,11 +181,14 @@ export function ThemeFields({ presets, themes, defaultId, enabled, onChangeTheme
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">{t.appearanceHint}</p>
-
-      <div className="space-y-2">
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.themePreset}</span>
+    <div className={SETTING_GAP}>
+      {/* THREE notes about the same control used to be spread around it: one above in a
+          larger size, two below in a smaller one. They say what a reader needs before
+          clicking a palette, so they belong together, above, in one voice. */}
+      <Setting
+        label={t.themePreset}
+        note={`${t.appearanceHint} ${t.themePresetHint} ${t.paletteVisibilityHint}`}
+      >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {presets.map((p) => (
             <PresetCard
@@ -202,20 +205,18 @@ export function ThemeFields({ presets, themes, defaultId, enabled, onChangeTheme
             />
           ))}
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.themePresetHint}</p>
-          {editingId !== defaultId && (
+        {editingId !== defaultId && (
+          <div className="mt-3">
             <button
               type="button"
               onClick={() => onSetDefault(editingId)}
-              className="shrink-0 text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+              className="text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
             >
               {t.themeSetDefault}
             </button>
-          )}
-        </div>
-        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.paletteVisibilityHint}</p>
-      </div>
+          </div>
+        )}
+      </Setting>
 
       <ModeBox
         title={t.modeLight}

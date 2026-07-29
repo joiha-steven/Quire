@@ -11,7 +11,7 @@ import { ToggleRow } from '@/admin/ui/Switch'
 import { useToast } from '@/admin/ui/Toast'
 import { formatDateTimeShort } from '@/utils'
 import { useAdminT } from './I18nProvider'
-import { PANEL, TABLE_SCROLL } from './kit'
+import { PANEL, Setting, TABLE_SCROLL } from './kit'
 
 const MAX = 5 // manual tokens only; OAuth-connector tokens are exempt
 
@@ -126,55 +126,45 @@ export function McpFields(
         {/* The endpoint itself. Everything else on this card assumes the owner already knows
             where to point a client, and nothing anywhere told them. */}
         {mcp.enabled && (
-          <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-            <h3 className="text-sm font-semibold">{t.mcpUrlLabel}</h3>
-            <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{t.mcpUrlHint}</p>
-            <div className="mt-2 flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs dark:border-neutral-700 dark:bg-neutral-900">
-                {endpoint}
-              </code>
-              <Button type="button" onClick={() => copy(endpoint, t.mcpUrlCopied)}>{t.mcpCopy}</Button>
-            </div>
+          <div className="border-t border-neutral-200 p-4 dark:border-neutral-800">
+            <Setting label={t.mcpUrlLabel} note={t.mcpUrlHint}>
+              <div className="flex items-center gap-2">
+                {/* `min-h-10` matches the button beside it. Without it the box was 28px next
+                    to a 40px button, which is what "the button is bigger than the field"
+                    was. `min-w-0` is what lets the URL truncate instead of shoving. */}
+                <code className="flex min-h-10 min-w-0 flex-1 items-center truncate rounded-lg border border-neutral-300 bg-neutral-50 px-3 text-xs dark:border-neutral-700 dark:bg-neutral-900">
+                  {endpoint}
+                </code>
+                <Button type="button" variant="secondary" onClick={() => copy(endpoint, t.mcpUrlCopied)}>{t.mcpCopy}</Button>
+              </div>
+            </Setting>
           </div>
         )}
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold">{t.mcpTokensTitle}</h3>
-            <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{t.mcpTokensHint}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => refresh()}
-              className="rounded-lg px-2.5 py-1.5 text-xs text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
-            >
-              {t.mcpRefresh}
-            </button>
+        {/* Label, note, then the controls under them — the same order as every other
+            setting. Side by side these two buttons had nowhere to go but into their own
+            labels: the note beside them is three lines of prose on a narrow card. */}
+        <Setting label={t.mcpTokensTitle} note={t.mcpTokensHint}>
+          <div className="flex flex-wrap items-center gap-2">
             <Button type="button" onClick={generate} disabled={pending || tokens.filter((tk) => !tk.oauth).length >= MAX}>
               {t.mcpGenerate}
             </Button>
+            <Button type="button" variant="ghost" onClick={() => refresh()}>{t.mcpRefresh}</Button>
           </div>
-        </div>
+        </Setting>
 
         {/* The just-created plaintext token, shown ONCE. */}
         {created && (
           <div className="space-y-2 rounded-xl border border-neutral-300 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-800/60">
             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-300">{t.mcpOnceWarning}</p>
             <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs dark:border-neutral-700 dark:bg-neutral-900">
+              <code className="flex min-h-10 min-w-0 flex-1 items-center truncate rounded-lg border border-neutral-300 bg-white px-3 text-xs dark:border-neutral-700 dark:bg-neutral-900">
                 {created}
               </code>
               <Button type="button" onClick={() => copy(created, t.mcpCopied)}>{t.mcpCopy}</Button>
-              <button
-                type="button"
-                onClick={() => setCreated(null)}
-                className="rounded-lg px-2.5 py-1.5 text-xs text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
-              >
-                {t.close}
-              </button>
+              <Button type="button" variant="ghost" onClick={() => setCreated(null)}>{t.close}</Button>
             </div>
           </div>
         )}

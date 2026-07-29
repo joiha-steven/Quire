@@ -147,3 +147,37 @@ appears is never a flicker.
 
 Measured after: Content 355 → 49ms, Media 336 → 59ms, Comments 348 → 43ms, Settings 346 →
 45ms, Analytics 418 → 83ms. Cold load of `/admin` 501 → 329ms.
+
+## The one rule for a setting — 2026-07-30
+
+**A setting reads top to bottom: what it is, what to know about it, then the control.** The
+owner asked for it after finding the screens "scattered", and they were: the font pickers put
+their hint BELOW the grid, the palette card carried a tinted callout and a plain paragraph
+saying related things at two different sizes, and the gap between a label and its control was
+0.5, 1 or 2 depending on which file you opened.
+
+It is enforced by primitives, not by discipline, because discipline is what had already
+failed:
+
+- **`Setting` in `components/kit.tsx`** places the three parts for any control that is not a
+  text field: a picker grid, a switch, a row of buttons. `SETTING_LABEL` and `NOTE` are
+  exported from the same file, and `ui/Input.tsx` builds a text field from them, so a field
+  and a picker cannot drift apart.
+- **`Input`/`Textarea` take a `note`.** They took a label and nothing else, which is why every
+  hint was hand-placed by its caller and no two callers agreed.
+- **`inline` is the one variation**, and only for a boolean: a 24px switch beside its label
+  keeps a list of fifteen feature toggles scannable, and the ORDER is unchanged. `ToggleRow`
+  is `Setting` + `Switch`, so it shares the label and note style rather than repeating it.
+- **`SETTING_GAP`** is the space between two settings in a card. One number.
+- **One control style per kind.** `CheckField` replaced the two raw `<input type="checkbox">`
+  that were left (the palette cards' "show to readers", the SMTP TLS row) and looked like a
+  different application from the switches above them.
+
+**A button is a fixed object; the text beside it gives way.** `ui/Button` carries
+`whitespace-nowrap shrink-0` for that reason: without them, a button in a flex row beside
+anything long is squeezed until its own LABEL wraps. The MCP card shipped "Tạo token" broken
+across two lines, and a Copy button 40px tall beside a 28px field. A read-only value box that
+sits next to a button gets `min-h-10` to match it.
+
+**A card holding a table is not a half-width card.** The MCP token table has five columns and
+its last one was clipped at the card's edge in the two-column grid at every screen size.

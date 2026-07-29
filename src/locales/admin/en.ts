@@ -76,6 +76,8 @@ const en = {
   tbBold: 'Bold',
   tbItalic: 'Italic',
   tbUnderline: 'Underline',
+  tbStrike: 'Strikethrough',
+  tbCodeInline: 'Inline code',
   footerContent: 'Footer',
   footerHint: 'Bold, italic, underline, links. {year} and {title} are replaced live.',
   editorPlaceholder: 'Start writing...',

@@ -7,11 +7,11 @@
 // No PII is stored: `recordView` keeps a salted hash of IP and user-agent, never either
 // one. See `analytics/record.ts`.
 //
-// NOT YET PORTED: the frozen tree opens with `if (await requireOwner()) return 204`, so
-// the owner's own reading is never counted. 2.0 has no session to ask until M3, so for now
-// an owner reading their own blog counts as a reader. Tracked in docs/07-parity.md §8.
+// The owner and the machine are not readers and are not counted — session, IP, or private
+// address. The rule and the reasoning are in `analytics/exclude.ts`.
 
 import type { Context } from 'hono'
+import { isCountableVisit } from '@/analytics/exclude'
 import { recordScroll, recordView } from '@/analytics/record'
 import { clientIp, rateLimited } from '@/server/rate-limit'
 
@@ -33,6 +33,9 @@ export async function handleTrack(c: Context): Promise<Response> {
 
     const ip = clientIp(c.req.raw)
     if (rateLimited(`track:${ip}`, PER_MINUTE)) return c.body(null, 204)
+    // Before the rate limiter's own budget is spent on it, and before anything is parsed
+    // further: the owner and the box are not readers.
+    if (!isCountableVisit(c, ip)) return c.body(null, 204)
 
     const ua = c.req.header('user-agent') ?? ''
     // Buffered in memory (Invariant 7), so neither of these touches the disk on the

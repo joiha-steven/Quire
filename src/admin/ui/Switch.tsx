@@ -1,5 +1,7 @@
 // Shared on/off switch primitives for the settings forms.
 
+import { Setting } from '@/admin/components/kit'
+
 type SwitchProps = { checked: boolean; onChange: (v: boolean) => void }
 
 // The bare toggle.
@@ -17,7 +19,13 @@ export function Switch({ checked, onChange }: SwitchProps) {
   )
 }
 
-// One row inside a bordered list: title (+ optional code badge) + description, switch on the right.
+/**
+ * One row inside a bordered list: label, note, switch.
+ *
+ * Built on `Setting` rather than laid out here, so the label size, the note style and the
+ * gap between them are the ones every other setting uses. It was three hand-written
+ * classes that had already drifted from the fields beside them.
+ */
 export function ToggleRow({
   label,
   desc,
@@ -26,25 +34,44 @@ export function ToggleRow({
   onChange,
 }: SwitchProps & { label: string; desc?: string; badge?: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 p-4">
-      <div>
-        <div className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">
-          {label}
-          {badge && <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">{badge}</code>}
-        </div>
-        {desc && <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{desc}</p>}
-      </div>
+    <Setting label={label} note={desc} badge={badge} inline className="p-4">
       <Switch checked={checked} onChange={onChange} />
-    </div>
+    </Setting>
   )
 }
 
-// Inline labeled field: label left, switch right.
+// A boolean with no note of its own, inside a denser group (the palette cards, a form row).
 export function ToggleField({ label, checked, onChange }: SwitchProps & { label: string }) {
   return (
     <label className="flex cursor-pointer items-center justify-between gap-4">
       <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
       <Switch checked={checked} onChange={onChange} />
+    </label>
+  )
+}
+
+/**
+ * A checkbox, for the two places a boolean sits inside a tight grid where a 44px switch
+ * would not fit: the palette cards' "show to readers", and the SMTP TLS row. Those were
+ * raw `<input type="checkbox">` with browser-default chrome, which is why they looked like
+ * a different application from the switches above them.
+ */
+export function CheckField({
+  label,
+  checked,
+  onChange,
+  disabled = false,
+}: SwitchProps & { label: string; disabled?: boolean }) {
+  return (
+    <label className={`flex items-center gap-2 text-xs ${disabled ? 'cursor-default text-neutral-400 dark:text-neutral-600' : 'cursor-pointer text-neutral-600 dark:text-neutral-300'}`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 shrink-0 rounded border-neutral-300 accent-neutral-900 dark:border-neutral-600 dark:accent-white"
+      />
+      {label}
     </label>
   )
 }

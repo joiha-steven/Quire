@@ -7,6 +7,7 @@
 import type { TypographySettings } from '@/types'
 import { FONT_PRESETS, CHROME_FONTS } from '@/content/themes'
 import { useAdminT } from './I18nProvider'
+import { Setting, SETTING_GAP } from './kit'
 
 export function FontFields({
   value,
@@ -21,7 +22,11 @@ export function FontFields({
 }) {
   const t = useAdminT()
   return (
-    <div className="space-y-4">
+    <div className={SETTING_GAP}>
+      {/* Note ABOVE the grid it explains. It sat below both pickers, which is the exact
+          drift `Setting` exists to stop: the card's own title names this group, so this one
+          needs no label of its own. */}
+      <Setting note={t.fontPresetHint}>
       <div className="grid grid-cols-2 gap-2">
         {FONT_PRESETS.map((f) => {
           const active = f.id === value
@@ -31,7 +36,7 @@ export function FontFields({
               type="button"
               onClick={() => onChange(f.id, f.typography)}
               aria-pressed={active}
-              className={`border px-3 py-2 text-left transition-colors ${
+              className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                 active
                   ? 'border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900'
                   : 'border-neutral-300 text-neutral-700 hover:border-neutral-500 dark:border-neutral-700 dark:text-neutral-300'
@@ -46,9 +51,9 @@ export function FontFields({
           )
         })}
       </div>
-      <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.fontPresetHint}</p>
-      <div className="border-t border-neutral-200 pt-3 dark:border-neutral-800">
-        <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.chromeFontLabel}</p>
+      </Setting>
+      <div className="border-t border-neutral-200 pt-5 dark:border-neutral-800">
+        <Setting label={t.chromeFontLabel} note={t.chromeFontHint}>
         {/* Two columns, matching the reading grid above. It was three, and CHROME_FONTS
             grew to four when JetBrains Mono was added — so the fourth choice sat alone on
             a second row, half the width of the others. */}
@@ -62,7 +67,7 @@ export function FontFields({
                 type="button"
                 onClick={() => onChromeFont(f.id)}
                 aria-pressed={active}
-                className={`border px-2 py-2 text-center text-sm transition-colors ${
+                className={`rounded-lg border px-2 py-2 text-center text-sm transition-colors ${
                   active
                     ? 'border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900'
                     : 'border-neutral-300 text-neutral-700 hover:border-neutral-500 dark:border-neutral-700 dark:text-neutral-300'
@@ -74,7 +79,7 @@ export function FontFields({
             )
           })}
         </div>
-        <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">{t.chromeFontHint}</p>
+        </Setting>
       </div>
     </div>
   )

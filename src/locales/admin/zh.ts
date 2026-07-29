@@ -76,6 +76,8 @@ const zh = {
   tbBold: '加粗',
   tbItalic: '斜体',
   tbUnderline: '下划线',
+  tbStrike: '删除线',
+  tbCodeInline: '行内代码',
   footerContent: '页脚',
   footerHint: '加粗、斜体、下划线、链接。{year} 和 {title} 会自动替换。',
   editorPlaceholder: '开始写作...',

@@ -76,6 +76,8 @@ const de = {
   tbBold: 'Fett',
   tbItalic: 'Kursiv',
   tbUnderline: 'Unterstrichen',
+  tbStrike: 'Durchgestrichen',
+  tbCodeInline: 'Inline-Code',
   footerContent: 'Fußzeile',
   footerHint: 'Fett, kursiv, unterstrichen, Links. {year} und {title} werden live ersetzt.',
   editorPlaceholder: 'Schreiben beginnen...',

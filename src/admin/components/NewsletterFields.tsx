@@ -7,6 +7,7 @@ import Link from '@/admin/router'
 import type { ApiResponse } from '@/types'
 import { Input } from '@/admin/ui/Input'
 import { Button } from '@/admin/ui/Button'
+import { CheckField } from '@/admin/ui/Switch'
 import { useToast } from '@/admin/ui/Toast'
 import { useAdminT } from './I18nProvider'
 
@@ -68,10 +69,9 @@ export function NewsletterFields() {
         <Input label={t.nlSmtpPass} type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder={cfg.hasPass ? '••••••••' : ''} autoComplete="new-password" />
         <Input label={t.nlSmtpFrom} value={cfg.from} onChange={(e) => field('from', e.target.value)} placeholder="Blog <hi@example.com>" />
       </div>
-      <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-        <input type="checkbox" checked={cfg.secure} onChange={(e) => field('secure', e.target.checked)} />
-        {t.nlSmtpSecure}
-      </label>
+      {/* Was a browser-default checkbox, which read as a different application from the
+          switches on every other card. `CheckField` is the shared one. */}
+      <CheckField label={t.nlSmtpSecure} checked={cfg.secure} onChange={(v) => field('secure', v)} />
       {mismatch && <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.nlSmtpTlsMismatch}</p>}
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={save} disabled={busy}>{t.nlSaveSmtp}</Button>

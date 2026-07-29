@@ -76,6 +76,8 @@ const vi = {
   tbBold: 'Đậm',
   tbItalic: 'Nghiêng',
   tbUnderline: 'Gạch dưới',
+  tbStrike: 'Gạch ngang',
+  tbCodeInline: 'Code trong dòng',
   footerContent: 'Chân trang',
   footerHint: 'Đậm, nghiêng, gạch dưới, liên kết. {year} và {title} được thay tự động.',
   editorPlaceholder: 'Bắt đầu viết...',
