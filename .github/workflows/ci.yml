@@ -11,14 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      # Bun, not Node. The runtime IS Bun since 2.0 (ADR 0005), so there is no
+      # package-lock.json for setup-node to cache against — which is exactly how this job
+      # was failing. It never reached a test: it died looking for a lockfile that this
+      # repository has not had since the cutover.
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      # Full offline gate: typecheck + lint + route/filesize/no-any/no-blob/token-bust
-      # guards + the vitest seam net. Needs no backend env.
-      - run: npm run check:all
-      # A production build must succeed with NO backend env (the data layer degrades
-      # to empty) — this catches build-time regressions the check suite can't.
-      - run: npm run build
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      # The full offline gate: typecheck, the static guards (filesize / css / routes / type /
+      # docs) and the test suite. Needs no backend env — SQLite is in-process and every test
+      # opens its own database in a temp directory.
+      - run: bun run check:all
+      # And the standalone executable must still compile. `check:all` proves the code is
+      # correct; this proves it can be shipped.
+      - run: bun run build
