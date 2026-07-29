@@ -503,3 +503,61 @@ measuring: `getChromeFont` falls back to Inter for an unknown id, which is right
 font STACK and wrong for a preload — 44 KB the page never paints a glyph in, and 160 ms of
 LCP. The argument is now `chromeFont: string` with no default, and an id that is not a known
 one preloads nothing.
+
+## 2026-07-29 — two bugs in the round just shipped
+
+**The active marker and the index's slash were fighting over one pseudo-element.** A ToC row
+is `.rail-row` AND `.rail-lead` or `.rail-sub`, and all three wanted `::before`: the bullet,
+the new leading `/`, and the accent hairline marking the row you are level with. The
+marker's empty `content` won and the slash came out painted in the accent colour as a red
+diagonal at the row's right edge, which is what the owner photographed. The marker moves to
+`::after` — four rules. It also fixes a latent version of the same bug in the base chrome,
+where an active parent row had been quietly losing its bullet.
+
+**The header tokens rendered at the BODY size.** `.icon-btn` states no size of its own: it
+was built around a 20px SVG, which does not care, and the moment a WORD went in it inherited
+18px. Five large words spread wide. Measured after: 14.08px, and the whole control row 256px
+instead of sprawling.
+
+And a fourth backtick in a CSS template literal, in a comment quoting `content` with an
+empty string. The server refused to boot. `check:css-literal` catches it; I ran `check:type`
+first and read the wrong green tick.
+
+## 2026-07-29 — where the day ended
+
+Eleven commits after the audit round, `0ae64dc` through `996e133`, all deployed and verified
+at the origin. `check:all` green at 1,056 tests. **No version bump and no tag** — that is the
+owner's call and was not asked for.
+
+What changed, in one list:
+
+- **The IDE chrome went from the rail to the whole page** and then through four rounds of
+  the owner's corrections: `//` on every chrome label, `[...]` on every literal with the
+  brackets a shade lighter than what they hold, `/` for a path, an index column on the
+  related list and the series, and finally `[/tìm] [tối] [lưới] [@email]` in place of the
+  header icons. Every one of them behind the one switch, with both forms in the markup, on
+  the owner's restated condition: **with it off the site is exactly what it was.**
+- **The article's right gutter became a panel** carrying the date, the length, book mode and
+  the taxonomy — desktop only, not sticky, and with a wide image in the first two blocks
+  kept out of it.
+- **A tag now reads as a tag**: hyphenated for display everywhere, untouched underneath.
+- **The render pipeline was measured for the first time** and the answer was 360 ms of
+  `marked` per long post, paid again after every write. The body is content-addressed now:
+  383 ms → 1 ms.
+- **The Cloudflare purge was dead configuration** and is live. **The cache re-fills itself**
+  after a write and on boot. **Responses leave the origin gzipped.**
+- **The chrome font is preloaded**, reversing a documented rule, with three measured
+  configurations behind the reversal.
+
+Six things were found that nobody had reported, and all six are fixed: a deploy left readers
+on an unstyled site for eleven minutes; `book.ts` bound only the first toggle; the ToC's last
+row pointed at an anchor with no box; every phone-width meta line ended on a stray middot;
+`highlight.ts` contained literal NUL bytes that made `grep` and `git diff` refuse to read it;
+and `check:routes-guarded` reported `headers.delete(...)` as an ungated route.
+
+Three new guards and one new check: `check:nul`, the route-path tightening, the body-cache
+tests, and the compression tests.
+
+**Open, unchanged from this morning:** the CI workflow still needs the owner's hand (token
+scope), the instance data is still in `scripts/ops/`, and the seven-day watch on
+`old.manhhung.me` is still running.
