@@ -287,3 +287,42 @@ code field is now set like a code. Checked in a browser at six states, two palet
 widths, which is the whole of what "looks trustworthy" comes down to.
 
 
+
+## 2026-07-29 — the code chrome stopped at the rail
+
+The owner asked what else the IDE switch could do, and named the two places it plainly did
+not reach: the related posts and the comment thread. That was the whole shape of it. An
+article read as source code for two inches of left gutter and then gave up — the series
+head, the tags line, the related list, the sign-up card and the thread below them were all
+furniture and all of them bare.
+
+It is one selector list now, and adding a chrome heading without marking it is a visible
+omission rather than a silent one. What went with it:
+
+- **Counts are bracketed everywhere**, not only in the rail. The sidebar renderer was
+  typing its own parentheses, so the taxonomy read `(7)` three lines under a list that read
+  `[7]` and nothing in the sheet could reconcile them. Both pairs come from CSS now, which
+  is also what keeps the switch reversible.
+- **`[n]` means index, `/` means path.** The owner asked whether the feed's right gutter
+  should take brackets or a slash: it takes the slash, because a year over its months is a
+  hierarchy and every bracket on the site already means "how many". The sticky year reads
+  `2026/` and the month markers under it are the next segment.
+- **Tags and categories became an array literal**, the related posts and the parts of a
+  series took an index column.
+- **Markup gained only what CSS cannot invent**: `.num` round a figure so the digits colour
+  apart from their unit, `.term-list` round a run of terms. Both are invisible with the
+  switch off, which is exactly how a wrapper gets tidied away and takes a feature with it,
+  so both ends are tested.
+
+Found on the way out, and fixed separately: **every deploy that changed the stylesheet left
+readers on an unstyled site for up to eleven minutes.** Public HTML is `s-maxage=60,
+stale-while-revalidate=600`, so a shared cache keeps handing out the previous deploy's page,
+and the only stylesheet that page names is a hash the new process does not have. It was a
+404. Any `/assets/site.<hash>.css` now answers with the current sheet — markup one deploy
+old rendered with CSS one deploy new is a far smaller failure than no CSS at all. Bundles
+keep the strict 404, because stale JS can call into markup that moved.
+
+Checked on a local instance seeded to match the live settings (Vietnamese, JetBrains Mono
+chrome, the switch on, 720px column): eleven posts across two years, a three-part series,
+a paginated archive and an empty term page, in both palettes. The deployed bytes were then
+verified at the origin rather than through the CDN.
