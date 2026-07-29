@@ -60,7 +60,11 @@ function scan(file: string): void {
       // `app.post('/path', ...)`. Only a literal path is matched: a computed one cannot be
       // checked here, and none exist — if one appears, this silently ignoring it would be
       // the wrong outcome, so the loop below reports that case separately.
-      const match = line.match(new RegExp(`\\b(\\w+)\\.${method}\\(\\s*(['\`])([^'\`]*)\\2`))
+      // The literal must LOOK like a route: Hono paths start with `/` (or are `*`). Without
+      // that, `headers.delete('content-length')` in the compression middleware was reported
+      // as an ungated DELETE route — a guard that cries wolf is a guard that gets switched
+      // off, and this one is load-bearing.
+      const match = line.match(new RegExp(`\\b(\\w+)\\.${method}\\(\\s*(['\`])([/*][^'\`]*)\\2`))
       if (match === null) continue
       const [, receiver, , path] = match
       if (gated.has(receiver)) continue

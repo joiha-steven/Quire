@@ -9,7 +9,9 @@ import { marked, type Tokens } from 'marked'
 import { videoEmbed, videoFileUrl } from '@/render/video'
 import { collapseBlob } from '@/media/blob'
 import { highlightCode } from '@/render/highlight'
+import { readRendered, renderKey, writeRendered } from '@/render/render-cache'
 import { prepareFootnotes, applyFootnotes } from '@/render/footnotes'
+import { buildSha } from '@/server/build-info'
 import { slugify } from '@/utils'
 
 const escapeHtml = (s: string) =>
@@ -205,6 +207,31 @@ function buildVideos(html: string): string {
   )
 }
 
+/**
+ * The cache key for a rendered body: everything that can change the output.
+ *
+ * MEASURED on the live box: `marked.parse` alone is 360ms for an 85,000-character post,
+ * and the whole page render was 364ms of which 359ms was this. That cost was paid again by
+ * the next reader after every single write, because `clearCache()` empties the page cache
+ * on any edit anywhere. Content-addressed, it is paid once ever.
+ *
+ * `01-schema.md` used to say only highlighting is cached, "a body cache would have to key
+ * on media variants, theme and locale, which is the invalidation graph Invariant 1 avoids".
+ * Two thirds of that is wrong: the theme is CSS and never reaches this HTML, and the locale
+ * does not either — the body is the author's own words. Media variants are a real input,
+ * and they are IN the key rather than invalidated out of it, which is the same trick the
+ * highlighter already uses and needs no graph.
+ *
+ * The build commit is in the key too, so a deploy that changes any transform below cannot
+ * serve yesterday's HTML out of a cache that has no way to tell. That costs one re-render
+ * per post per deploy, which the cache warmer absorbs in the background. A hand-maintained
+ * version constant would have been free and would eventually have been forgotten.
+ */
+function bodyKey(markdown: string, ready: Set<string>, dims: ImageDims): string {
+  const media = [...dims].map(([k, v]) => `${k}:${v.width}x${v.height}`).sort().join(',')
+  return renderKey('body', buildSha() ?? 'dev', [...ready].sort().join(','), media, markdown)
+}
+
 export async function renderPostContent({
   markdown,
   readyOriginals = new Set(),
@@ -217,9 +244,14 @@ export async function renderPostContent({
   // Intrinsic width/height per collapsed pathname (for CLS-free rendering).
   imageDims?: ImageDims
 }): Promise<string> {
+  const key = bodyKey(markdown, readyOriginals, imageDims)
+  const hit = readRendered(key)
+  if (hit !== null) return hit
   // Pull footnote refs/defs out of the markdown FIRST (references become placeholders
   // that survive marked), then re-insert the <sup> links + list after rendering.
   const fn = prepareFootnotes(markdown)
   const parsed = dedupeHeadingIds(buildVideos(groupGalleries(buildFigures(buildCallouts(await marked.parse(fn.markdown)), readyOriginals, imageDims))))
-  return applyFootnotes(await highlightBlocks(parsed), fn.refs, fn.defs)
+  const html = applyFootnotes(await highlightBlocks(parsed), fn.refs, fn.defs)
+  writeRendered(key, html)
+  return html
 }

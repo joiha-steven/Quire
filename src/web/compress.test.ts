@@ -1,0 +1,66 @@
+// Responses leave the origin compressed.
+//
+// Nothing here ever set `content-encoding`, so every page, stylesheet and bundle went out
+// raw. The reader does not see that — the CDN re-compresses — but the origin-to-edge fetch
+// does, on every cache miss and on every purge this release started issuing.
+
+import { describe, expect, it, afterAll } from 'bun:test'
+import { freshDatabase, dropDatabase } from '@/test/db'
+import { savePost } from '@/content/posts'
+import { createApp } from '@/web/app'
+
+const DIR = './.tmp-test-compress'
+freshDatabase(DIR)
+afterAll(() => dropDatabase(DIR))
+
+const app = createApp()
+const get = (path: string, headers: Record<string, string> = {}): Promise<Response> =>
+  Promise.resolve(app.request(path, { headers }))
+
+const PAST = '2020-01-01T00:00:00.000Z'
+const GZIP = { 'accept-encoding': 'gzip, deflate, br' }
+
+describe('compression', () => {
+  it('gzips a page for a client that asked, and says what it varies on', async () => {
+    await savePost({
+      title: 'Long', status: 'published', date: PAST,
+      content: 'A paragraph of prose.\n\n'.repeat(80),
+    })
+    const res = await get('/long', GZIP)
+    expect(res.headers.get('content-encoding')).toBe('gzip')
+    // Without Vary a shared cache can hand the gzipped body to a client that never asked.
+    expect(res.headers.get('vary')).toContain('Accept-Encoding')
+    // ...and it decodes back to the page. Inflated by hand on purpose: `app.request` hands
+    // back the raw body, where a browser's fetch would have done this itself. That is also
+    // the proof the body really is compressed rather than merely labelled.
+    const raw = new Uint8Array(await res.arrayBuffer())
+    expect(new TextDecoder().decode(Bun.gunzipSync(raw))).toContain('Long')
+  })
+
+  it('sends plain bytes to a client that did not ask', async () => {
+    await savePost({
+      title: 'Plain', status: 'published', date: PAST,
+      content: 'A paragraph of prose.\n\n'.repeat(80),
+    })
+    const res = await get('/plain')
+    expect(res.headers.get('content-encoding')).toBeNull()
+    expect(await res.text()).toContain('Plain')
+  })
+
+  it('leaves a short body alone, where the header costs more than it saves', async () => {
+    const res = await get('/robots.txt', GZIP)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-encoding')).toBeNull()
+    expect((await res.text()).length).toBeLessThan(1024)
+  })
+
+  it('compresses the stylesheet, which is the biggest single asset on the site', async () => {
+    const html = await get('/long').then((r) => r.text())
+    const href = /<link rel="stylesheet" href="([^"]+)">/.exec(html)?.[1] ?? ''
+    const res = await get(href, GZIP)
+    expect(res.headers.get('content-encoding')).toBe('gzip')
+    expect(res.headers.get('content-type')).toContain('text/css')
+    // Still immutable: compressing a response must not disturb what may be cached.
+    expect(res.headers.get('cache-control')).toContain('immutable')
+  })
+})

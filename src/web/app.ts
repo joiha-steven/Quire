@@ -32,6 +32,7 @@ import { handleSearch } from '@/web/search-api'
 import { handleSearchPage } from '@/web/search-page'
 import { cacheHeaders } from '@/web/cache-headers'
 import { securityHeaders } from '@/web/security-headers'
+import { compression } from '@/web/compress'
 import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
 import { siteRoutes } from '@/web/admin/site'
@@ -97,6 +98,10 @@ export function createApp(): Hono {
 
   // ...and the three response headers that cost nothing and are wrong to omit.
   app.use('*', securityHeaders())
+
+  // Nothing here ever sent content-encoding, so every page and every asset left the origin
+  // uncompressed. Outermost of the three, so it sees the finished body of every route.
+  app.use('*', compression())
 
   const home = async (page: number) => {
     const settings = await getSettings()

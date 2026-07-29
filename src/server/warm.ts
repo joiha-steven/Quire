@@ -1,0 +1,90 @@
+// Re-filling the page cache after it is emptied.
+//
+// `clearCache()` throws away every rendered page on ANY write (Invariant 1), and the next
+// reader pays the re-render. That was fine when a render was assumed to cost a fraction of
+// a millisecond. Measured on the live box it is not: an 85,000-character post takes 360ms,
+// almost all of it inside `marked.parse`. The body cache in `render-cache.ts` is the real
+// fix and takes that to a lookup; this is what stops even the cheap re-render landing on a
+// reader rather than on an idle process.
+//
+// It is also what the owner asked for in as many words: edit or change a setting, and the
+// site should clear AND re-fill, not clear and wait to be asked.
+//
+// Deliberately NOT registered by default. `enableBackgroundCache()` is called once by the
+// server entry point, so importing anything here from a test or a script does nothing: a
+// suite that calls `clearCache()` a few hundred times must not render the whole archive a
+// few hundred times, and a CLI must not leave a timer holding the process open.
+
+import { getPublicPosts } from '@/content/posts'
+import { getPublicPages } from '@/content/pages'
+import { isPublicallyVisible } from '@/utils'
+import { pageCache, onFlush } from '@/server/cache'
+import { renderArticle } from '@/web/article'
+import { purgeEdge } from '@/server/edge-cache'
+
+/** Wait this long after the LAST write before warming: a bulk import is one burst. */
+const DEBOUNCE_MS = 3_000
+
+let pending: ReturnType<typeof setTimeout> | null = null
+let running = false
+
+/**
+ * Render every public article back into the page cache.
+ *
+ * Articles only. A listing re-renders in about 6ms because it never touches a body, and
+ * warming 200 taxonomy pages to save 6ms each would cost more than it saves. The home page
+ * is included because it is the one listing everybody lands on.
+ */
+export async function warmCache(): Promise<{ warmed: number; ms: number }> {
+  const t0 = performance.now()
+  const posts = (await getPublicPosts()).filter((p) => isPublicallyVisible(p.status, p.date))
+  const pages = (await getPublicPages()).filter((p) => p.status === 'published')
+  let warmed = 0
+  for (const { slug } of [...posts, ...pages]) {
+    // One at a time, on purpose. The point is to use the idle time BETWEEN requests, and a
+    // Promise.all over seventy 360ms renders would block the loop for the whole burst.
+    const html = await renderArticle(slug)
+    if (html !== null) {
+      pageCache.set(`/${slug}`, html)
+      warmed += 1
+    }
+  }
+  return { warmed, ms: Math.round(performance.now() - t0) }
+}
+
+/** Warm, then purge the edge — in that order, so the CDN refetches into a warm origin. */
+async function warmThenPurge(reason: string): Promise<void> {
+  if (running) return
+  running = true
+  try {
+    const { warmed, ms } = await warmCache()
+    console.log(`cache: warmed ${warmed} page(s) in ${ms}ms (${reason})`)
+    await purgeEdge()
+  } catch (error) {
+    console.error(`[ERROR] warm.warmThenPurge: ${(error as Error).message}`)
+  } finally {
+    running = false
+  }
+}
+
+/**
+ * Start listening for flushes. Called once, from the server entry point.
+ *
+ * The debounce is what makes this safe to hang off a hook that fires on every write: an
+ * import that saves 200 posts calls `clearCache()` 200 times and gets one warm.
+ */
+export function enableBackgroundCache(): void {
+  onFlush(() => {
+    if (pending) clearTimeout(pending)
+    pending = setTimeout(() => {
+      pending = null
+      void warmThenPurge('after a write')
+    }, DEBOUNCE_MS)
+    // The timer must not be the reason the process stays alive at shutdown.
+    pending.unref?.()
+  })
+  // A deploy is a restart, and a restart is an empty page cache and markup that may have
+  // changed under the edge's copy. Both are answered here rather than by remembering to do
+  // something after `systemctl restart`.
+  setTimeout(() => void warmThenPurge('on boot'), 1_000).unref?.()
+}

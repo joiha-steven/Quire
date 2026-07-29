@@ -285,15 +285,24 @@ create table if not exists redirects (
   created_at  integer not null
 );
 
--- ----- render_cache (content-addressed highlighting) --------------------------
--- NEW in 2.0. Shiki is the heaviest dependency on the read path, so it moves to save time
--- and its output is keyed by its own input: there is no invalidation problem, because a
--- changed code block is simply a different key and stale rows are inert. A read miss
--- re-highlights and stores, so a cold database renders correctly and merely slower.
--- Only highlighting is cached, NOT the rendered body: a body cache would have to key on
--- media variants, theme and locale, which is the invalidation graph Invariant 1 avoids.
+-- ----- render_cache (content-addressed rendering) ------------------------------
+-- NEW in 2.0. Everything expensive on the read path that is a PURE FUNCTION OF ITS OWN
+-- INPUT lives here, keyed by that input: there is no invalidation problem, because a change
+-- is simply a different key and stale rows are inert. A read miss re-renders and stores, so
+-- a cold database renders correctly and merely slower. Not emptied by `clearCache()`.
+--
+-- Two producers:
+--   • Shiki highlighting, keyed by lang + theme pair + code.
+--   • The rendered post BODY, keyed by build commit + media facts + markdown.
+--
+-- This comment used to say the body was deliberately NOT cached, because it "would have to
+-- key on media variants, theme and locale". Two thirds of that was wrong — the theme is CSS
+-- and never reaches the body HTML, and neither does the locale — and the third is in the
+-- key rather than invalidated out of it. Measured on the live site 2026-07-29: `marked`
+-- alone took 360ms on an 85,000-character post, and every write anywhere made the next
+-- reader pay it again.
 create table if not exists render_cache (
-  key        text primary key,                -- sha256(lang || '\0' || theme || '\0' || code)
+  key        text primary key,                -- sha256 of the NUL-joined inputs
   html       text not null,
   created_at integer not null
 ) without rowid;

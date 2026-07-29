@@ -327,9 +327,20 @@ database renders correctly and merely slower.
 Write path: a post save pre-warms every block it contains, so the miss case is rare in
 practice and absent after an import.
 
-Only highlighting is cached, deliberately, not the whole rendered body. `marked` is fast
-and a body cache would have to key on media variants, theme and locale, which is exactly
-the kind of invalidation graph Invariant 1 exists to avoid.
+The rendered **body** is in here too, on the same terms: keyed by the build commit, the
+media facts and the markdown. This section used to say the opposite — that only
+highlighting is cached, because "`marked` is fast and a body cache would have to key on
+media variants, theme and locale". `marked` is not fast: **measured on the live site
+2026-07-29 it took 360ms on an 85,000-character post**, which was 359ms of a 364ms page
+render, and `clearCache()` made the next reader pay it again after every write anywhere. Of
+the three inputs, the theme is CSS and never reaches the body HTML, the locale does not
+either, and the media facts are IN the key rather than invalidated out of it — which is the
+same trick the highlighter already used and needs no graph.
+
+The build commit is part of the body key so a deploy that changes any transform in
+`post-content.ts` cannot serve yesterday's HTML out of a cache with no way to tell. That
+costs one re-render per post per deploy, absorbed in the background by the cache warmer
+(`server/warm.ts`).
 
 ## Migrations
 
