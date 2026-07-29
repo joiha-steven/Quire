@@ -103,7 +103,7 @@ html[data-chunked] .post-list article[data-more]{display:none}
 .book-mode-toggle{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;
   text-underline-offset:3px}
 .book-mode-toggle:hover{color:var(--c-heading);text-decoration:underline}
-@media (max-width:767px){.book-mode-toggle{display:none}}
+@media (max-width:767px){.meta-book,.book-mode-toggle{display:none}}
 
 body:has(.book-overlay[open]){overflow:hidden}
 .book-overlay[open]{display:grid}

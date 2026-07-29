@@ -81,8 +81,11 @@ export async function renderArticle(slug: string): Promise<string | null> {
       : ''
     // Desktop and tablet only, hidden by CSS on a narrow screen: two columns of type in
     // a phone-width viewport is worse than one, not better.
+    // The separator is INSIDE the span, so it goes when the button does. It was a bare text
+    // node, which left every phone-width article ending its meta line on a stray middot.
     const book = features.bookMode
-      ? ` · <button type="button" class="book-mode-toggle" data-book-open>${escapeHtml(s.bookMode)}</button>`
+      ? `<span class="meta-book"> · <button type="button" class="book-mode-toggle" data-book-open>${
+        escapeHtml(s.bookMode)}</button></span>`
       : ''
     // `post-meta` is the handle the wide layout hides it by: above the rail breakpoint the
     // same facts are in the right gutter, one per line, and two copies would be two copies.
