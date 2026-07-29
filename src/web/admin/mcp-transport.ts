@@ -47,8 +47,17 @@ class SingleExchange implements Transport {
 
   /** Hand an incoming message to the server and wait for what it sends back. */
   async exchange(message: JSONRPCMessage): Promise<JSONRPCMessage | null> {
+    // A notification carries no `id` and the protocol answers it with nothing. Waiting for
+    // a reply anyway is a DEADLOCK, not merely a wasted await: the promise below is
+    // resolved by `send` or by `close`, `send` never runs for a notification, and `close`
+    // runs in the caller's `finally` — which is unreachable while the caller is still
+    // parked on this line. The connector's very first move after `initialize` is the
+    // `notifications/initialized` notification, so this hung on every connection: the
+    // handshake looked fine, that POST never came back, and the client sat waiting for a
+    // tool list it had not asked for yet.
+    const expectsReply = 'id' in message
     this.onmessage?.(message)
-    return this.reply
+    return expectsReply ? this.reply : null
   }
 }
 

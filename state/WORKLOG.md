@@ -603,3 +603,40 @@ saving was never the point of the change, and the risk is exactly this.
 The lesson is the shape of the bug rather than the bug: a size threshold means a feature can
 work for its small messages and fail for its large ones, so the failure looks like a
 different subsystem entirely.
+
+## 2026-07-29 — the tool list, actually: a notification the transport waited on forever
+
+The entry above is wrong about the cause. Excluding `/api/` from gzip was a real fix for a
+real hazard and it stays, but it was not why the tool list never came: the connector still
+spun, and then Claude reported the server unavailable.
+
+The v1 tree used `mcp-handler`; `src/web/admin/mcp-transport.ts` is the one piece of M3 that
+is a rewrite rather than a port. That is the only thing that differs between a version that
+worked and one that did not, and that is where it was.
+
+`SingleExchange.exchange` awaited a reply for EVERY message. A JSON-RPC notification has no
+`id` and is answered with nothing, so nothing ever resolved that promise. The only other
+thing that resolves it is `close()`, which the handler calls in its `finally` — unreachable
+while the handler is still parked on the await. So a notification did not merely wait, it
+deadlocked the request.
+
+The connector's first move after `initialize` is `notifications/initialized`. Every
+connection therefore completed its handshake, hung on the very next POST, and sat there.
+
+Measured before, with the handshake succeeding on the same connection:
+
+    INIT: {"result":{"protocolVersion":"2025-06-18",
+      "capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"quire",...}}}
+    NOTIFICATION: HUNG after 3013ms
+
+and after: `202` in 4ms. `capabilities.tools` was there the whole time, which retired the
+other hypothesis worth retiring.
+
+The regression test races the request against a timer, because a regression here HANGS, and
+a hanging test that eventually times out says far less than one that names the fault.
+
+Two lessons. The journal showed `POST /api/mcp 200` and I read that as every request being
+answered — a hung request logs nothing at all, and the 200s were the client's retries of the
+requests that DID return. Absence in a log is evidence and I treated it as silence. And when
+a rewritten seam sits between a version that worked and one that does not, read the seam
+first instead of the subsystems around it.

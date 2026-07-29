@@ -96,6 +96,23 @@ describe('the MCP endpoint', () => {
     expect(body.result?.serverInfo?.name).toBe('quire')
   })
 
+  it('answers the notification that follows the handshake, rather than hanging on it', async () => {
+    // A connector's first move after `initialize` is the `notifications/initialized`
+    // notification, and a notification has no `id` and gets no reply. The transport used to
+    // await one anyway, which deadlocked: that POST never came back, so the client never
+    // reached `tools/list` and sat on a spinner until it declared the server unavailable.
+    // Raced against a timer on purpose -- a regression here HANGS, and a hanging test that
+    // eventually times out tells you far less than one that names what went wrong.
+    const token = await mintToken()
+    const answered = await Promise.race([
+      Promise.resolve(rpc(token, { jsonrpc: '2.0', method: 'notifications/initialized' }))
+        .then((r) => r.status),
+      new Promise<string>((r) => setTimeout(() => r('hung'), 3_000)),
+    ])
+    // 202 Accepted with no body: taken, nothing to say back.
+    expect(answered).toBe(202)
+  }, 10_000)
+
   it('lists the tools it registered', async () => {
     const token = await mintToken()
     const res = await rpc(token, { jsonrpc: '2.0', id: 2, method: 'tools/list' })

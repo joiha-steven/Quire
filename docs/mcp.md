@@ -7,6 +7,13 @@
   `lib/` functions the admin routes use — same slug rules, revisions, soft-delete, revalidation,
   activity log. **Off unless the owner enables it** (Admin → Settings → Advanced toggle,
   `settings.mcp.enabled`); `verifyMcpToken` 401s every call while off.
+- **The 2.0 transport is hand-written** (`src/web/admin/mcp-transport.ts`), because `mcp-handler`
+  wraps the SDK for Next's route handlers and could not come along. Stateless: a fresh `McpServer`
+  per request, no session id, no SSE stream. **A message with no `id` is a NOTIFICATION — deliver it
+  and answer 202 immediately, never wait for a reply.** Nothing sends one, so waiting deadlocks the
+  request, and the connector's first move after `initialize` is exactly such a notification
+  (`notifications/initialized`). Symptom when this was wrong: the handshake succeeded, that POST
+  never returned, and the client showed a spinner and then "server is currently unavailable".
 - **Auth = admin-managed tokens + thin OAuth.** Manual tokens are created in the admin (up to 5,
   named, shown ONCE on creation — only the SHA-256 hash is kept in the `mcp_tokens` table; see
   `lib/mcp/tokens.ts`). Every token **expires 180 days after creation** (`expires_at`, set on insert,
