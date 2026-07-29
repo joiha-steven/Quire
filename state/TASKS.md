@@ -10,12 +10,6 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       `bun install --frozen-lockfile && bun run check:all`, plus `bun run build`.
       **A human has to apply this**: the credential in use lacks the `workflow` scope, so a
       push touching that file is rejected. Every CI run is red until then.
-- [ ] **Upload a file through the Docker install once, from the browser.** Everything else
-      about the image is proven (see the 2026-07-29 worklog entry), but the write path was
-      checked as far as `touch` in the volume and `/api/health` reporting the store
-      writable. What that does not cover is sharp writing its variants there under a real
-      upload, which is the operation the EACCES history was actually about. It needs a
-      signed-in session, so it waits for a run with TOTP enrolled.
 - [ ] **Take the instance data back out of `scripts/ops/`.** This repository is PUBLIC and
       its own rule is that no live domain, box path or bucket appears in a tracked file.
       `quire2-backup.sh` and the two nginx vhosts were committed with all three. Make them

@@ -34,15 +34,20 @@ node_modules` before it makes the install resolve the production set for real: 3
 seconds, and it is the kind of line that looks redundant and gets deleted, so the Dockerfile
 says why it is there.
 
-Built and driven on the internal box, because the authoring machine has neither a working
-Docker engine (dead since 2026-06-14, almost certainly the WSL wipe on 2026-07-25) nor Bun.
-Proven, not assumed: the image builds; `/api/health` reports `database` and `storage` true;
-the unprivileged `bun` user writes to a fresh named volume; the home page and `/login`
-render; `/og` returns a 1200x630 PNG, so satori and sharp both survive the prune; `tar`
-spawns from Bun and returns gzip, so the backup path is intact; `bun run user create`
-creates an account through `docker compose exec`; and the account is still there after the
-container is recreated. `check:docs` passes on the post-commit tree. Test stack and images
-removed from the box afterwards.
+Built and driven on two engines, the second one being the authoring machine once its
+Docker was working again. Proven, not assumed: the image builds, from a Linux checkout and
+from the Windows working copy; `/api/health` reports `database` and `storage` true; the home
+page and `/login` render; `/og` returns a 1200x630 PNG, so satori and sharp both survive the
+prune; `tar` spawns from Bun and returns gzip, so the backup path is intact; `bun run user
+create` creates an account through `docker compose exec`; and the account is still there
+after the container is recreated.
+
+The upload path was run as the app runs it, not approximated: sharp capped a 2400px source
+to `ORIGINAL_CAP`, produced the thumbnail and both display widths in webp and avif, and
+`uploadFile` wrote all six into the mounted volume owned by `bun`, which `/uploads` then
+served back with a working byte range. That is the operation the EACCES history was about,
+so it is the one worth doing for real. `check:docs` passes on the post-commit tree. Both
+test stacks, their volumes and their images were removed afterwards.
 
 ## 2026-07-29 (later) — the type settings were half-connected, and the sheet was re-sent every page
 
