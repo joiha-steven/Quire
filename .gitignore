@@ -41,6 +41,7 @@ coverage/
 
 # env files. The committed templates carry no secrets and are tracked.
 .env*
+!.env.docker.example
 !v1/.env.example
 !v1/.env.docker.example
 .deployment-id

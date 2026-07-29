@@ -4,7 +4,9 @@ One process, two SQLite files, one uploads directory, behind a reverse proxy. Th
 database server to provision, no container runtime, no migration command, and no
 third-party account anywhere in the path.
 
-Commands assume Ubuntu/Debian and `root` (or `sudo`). Adjust the paths.
+Commands assume Ubuntu/Debian and `root` (or `sudo`). Adjust the paths. If you would rather
+not install Bun on the host, [Docker](#9-docker-instead-of-systemd) is the same install in
+two commands, and sections 5 and 7 still apply to it.
 
 ```
 Internet → CDN (optional) → nginx (TLS) → 127.0.0.1:3000  quire (systemd)
@@ -44,8 +46,11 @@ Environment only, no config file. The full list is in the
 DATA_DIR=/var/lib/quire/data
 STORAGE_LOCAL_DIR=/var/lib/quire/uploads
 SITE_URL=https://example.com
-AUTH_SECRET=<64 random characters>
 ```
+
+There is no secret to generate. 1.x needed `AUTH_SECRET`; 2.0 creates its own signing
+secrets on first use and stores them in the database ([`src/auth/secret.ts`](../src/auth/secret.ts)),
+because an optional secret is one an install can be left running without.
 
 `SITE_URL` is not optional in practice. Leave it empty and the app derives the origin from
 each request, which behind a proxy means feeds, OG images and password-reset links come out
@@ -150,6 +155,47 @@ systemctl restart quire
 
 Schema changes are applied at boot, inside a transaction. **Take a backup first anyway** —
 see [`backups.md`](backups.md), which also covers getting a copy off the box on a schedule.
+
+## 9. Docker, instead of systemd
+
+Same app, same layout, nothing extra to run beside it. This replaces sections 1, 2, 4 and 8;
+nginx (section 5) and the CDN note (section 7) still apply, and so does taking a backup
+before an upgrade.
+
+```bash
+git clone https://github.com/joiha-steven/Quire.git && cd Quire
+cp .env.docker.example .env          # set SITE_URL, and that is the whole of it
+docker compose up -d --build
+docker compose exec quire bun run user create --username you --email you@example.com
+```
+
+The image builds from source and runs `bun src/index.ts`, which is what the box in section 4
+runs too. It is deliberately NOT the compiled binary: `bun build --compile` does not bundle
+sharp's native module, so a compiled image has to keep a binary and a native addon agreed
+about libc across every base bump, and this way `bun install` resolves sharp for the
+platform like any other package.
+
+Four things worth knowing before you change anything in `docker-compose.yml`:
+
+- **The port is published on `127.0.0.1` on purpose.** Docker writes its own iptables rules,
+  so a plain `3000:3000` reaches the internet even when the host firewall says otherwise.
+- **`DATA_DIR` and `STORAGE_LOCAL_DIR` are set by compose**, after `.env` and therefore
+  winning over it. They are where the volumes are mounted; a `.env` that redefines them
+  points the app at an unmounted directory, where the database it writes disappears with the
+  container.
+- **The volumes are named volumes, not bind mounts.** The container runs unprivileged, and a
+  fresh named volume inherits the image's ownership, which is what makes it writable with no
+  chown at startup. If you bind-mount host directories instead, create them first and give
+  them to UID 1000, or the app comes up reporting degraded storage.
+- **Upgrades are `git pull && docker compose up -d --build`.** The schema is applied at boot
+  as usual. Your content is in the volumes and is not touched by a rebuild.
+
+To get data out without a bind mount, use the backup button in the admin (it hands you both
+databases plus every upload), or `docker compose cp quire:/var/lib/quire/data ./data`.
+
+`bun run import-v1` is the one command that does not work in the container: the importer
+needs a package that only the build stage installs. Run it from a source checkout against
+the same `DATA_DIR`, or `bun install` inside the container first.
 
 ## Coming from Quire 1.x
 

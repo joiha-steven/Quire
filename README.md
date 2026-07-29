@@ -78,6 +78,21 @@ create. Full walkthrough — systemd unit, nginx, cache headers, backups, upgrad
 **[`docs/self-host.md`](./docs/self-host.md)**.
 
 <details>
+<summary><b>🐳 &nbsp;Prefer Docker?</b> &nbsp;— same install, two commands, nothing to link it to</summary>
+
+<br/>
+
+```bash
+cp .env.docker.example .env          # set SITE_URL
+docker compose up -d --build
+docker compose exec quire bun run user create --username you --email you@example.com
+```
+
+One service, two named volumes, no sidecar. The port is published on `127.0.0.1` so a reverse proxy still terminates TLS. Notes on volumes, ownership and upgrades: [`docs/self-host.md`](./docs/self-host.md#9-docker-instead-of-systemd).
+
+</details>
+
+<details>
 <summary><b>🤖 &nbsp;Hand it to an AI agent</b> &nbsp;— Claude, OpenAI Codex, …</summary>
 
 <br/>
@@ -117,11 +132,10 @@ Everything else is configured **in the admin**, not in the environment.
 |---|:---:|---|
 | `DATA_DIR` | ✅ | Directory holding `quire.db` + `analytics.db`. Defaults to `./data` |
 | `SITE_URL` | ✅ | Canonical public URL — feeds, OG images, emails. Empty means "derive per request", which is wrong behind a proxy |
-| `AUTH_SECRET` | ✅ | Signs sessions, preview links and the analytics visitor hash. Any long random string |
 | `STORAGE_LOCAL_DIR` | ◻️ | Where uploads live (`media/`, `files/`), served at `/uploads`. Defaults to `./uploads` |
 | `PORT` | ◻️ | Defaults to `3000` |
 | `CRON_SECRET` | ◻️ | Protects `/api/cron` (scheduled publishing sweep, variant sweep) |
-| `MCP_OAUTH_SECRET` | ◻️ | Signs MCP OAuth codes; falls back to `AUTH_SECRET` |
+| `MCP_OAUTH_SECRET` | ◻️ | Signs MCP OAuth codes. Falls back to a secret the server generates for itself, which is the recommended setting |
 | `ANALYTICS_TZ` | ◻️ | IANA zone the analytics day boundary uses. Defaults to UTC |
 
 SMTP, Turnstile and Cloudflare credentials are entered in **Admin → Settings → Integrations** and stored server-side. Your content lives in `DATA_DIR` + the uploads directory, never in git.

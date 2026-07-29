@@ -6,6 +6,44 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+## 2026-07-29 (later still) — a Docker install, and an environment variable that stopped existing
+
+`Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.env.docker.example`, plus section 9
+of [`self-host.md`](../docs/self-host.md). One service, two named volumes, no sidecar.
+
+The image runs **from source** (`bun src/index.ts`), not the compiled binary, and that is
+the decision worth remembering: `bun build --compile` does not bundle sharp's native module,
+so a compiled image would have to keep a binary and a native addon agreed about libc across
+every base bump. It also matches how the live box runs. Debian slim rather than Alpine for
+the same reason, and because `backup.ts` spawns a real `tar`.
+
+The data directories are created and chowned in the image, before `USER bun`: a fresh named
+volume inherits that ownership, which is what makes an unprivileged container writable with
+no entrypoint script. The frozen tree shipped EACCES on a fresh install twice.
+
+**`AUTH_SECRET` has not existed since the cutover** and both install documents still
+demanded it. 2.0 generates its signing secrets on first use and keeps them in the database
+(`src/auth/secret.ts`); zero references remain in `src/` or `scripts/`. README's table and
+`self-host.md` §3 corrected. `features.md` and `mcp.md` still cite it, and stay on the
+carried-over-docs list in [`TASKS.md`](TASKS.md) rather than being fixed in passing.
+
+**`bun install --production` does not prune an existing `node_modules`.** It compares
+against the lockfile, finds it already satisfied, reports "no changes" and removes nothing,
+so the first image shipped React, Tiptap, Tailwind and TypeScript at 535 MB. `rm -rf
+node_modules` before it makes the install resolve the production set for real: 398 MB, six
+seconds, and it is the kind of line that looks redundant and gets deleted, so the Dockerfile
+says why it is there.
+
+Built and driven on the internal box, because the authoring machine has neither a working
+Docker engine (dead since 2026-06-14, almost certainly the WSL wipe on 2026-07-25) nor Bun.
+Proven, not assumed: the image builds; `/api/health` reports `database` and `storage` true;
+the unprivileged `bun` user writes to a fresh named volume; the home page and `/login`
+render; `/og` returns a 1200x630 PNG, so satori and sharp both survive the prune; `tar`
+spawns from Bun and returns gzip, so the backup path is intact; `bun run user create`
+creates an account through `docker compose exec`; and the account is still there after the
+container is recreated. `check:docs` passes on the post-commit tree. Test stack and images
+removed from the box afterwards.
+
 ## 2026-07-29 (later) — the type settings were half-connected, and the sheet was re-sent every page
 
 Second pass, full report in

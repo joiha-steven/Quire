@@ -1,0 +1,64 @@
+# Quire, self-hosted with Docker. One service. There is nothing to link it to.
+#
+#   cp .env.docker.example .env      # then edit the three values in it
+#   docker compose up -d --build
+#   docker compose exec quire bun run user create --username you --email you@example.com
+#
+# Upgrading is `git pull && docker compose up -d --build`. The schema is applied at boot,
+# inside a transaction, so there is no migration command to remember. Take a backup first
+# anyway (docs/backups.md).
+
+services:
+  quire:
+    build: .
+    restart: unless-stopped
+
+    # Everything the app reads. The three required values live in `.env`; see
+    # `.env.docker.example` for the optional ones.
+    env_file: .env
+
+    # These come AFTER env_file and therefore win. They are the container's own layout,
+    # not preferences: the volumes below are mounted at exactly these paths, and a `.env`
+    # that redefined them would point the app at a directory nothing is mounted on, where
+    # it would happily write a database that vanishes with the container.
+    environment:
+      DATA_DIR: /var/lib/quire/data
+      STORAGE_LOCAL_DIR: /var/lib/quire/uploads
+      PORT: 3000
+
+    # Bound to loopback ON PURPOSE. Quire expects a reverse proxy in front of it for TLS
+    # and for the security headers in docs/self-host.md, and a plain `3000:3000` publishes
+    # the app to the whole internet THROUGH a host firewall: Docker writes its own iptables
+    # rules, so ufw showing "deny" is not the protection it looks like. Serving it directly
+    # is a deliberate edit, not a default.
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    # NAMED volumes, not bind mounts. A fresh named volume inherits the ownership of the
+    # image's directory, which is how the unprivileged `bun` user can write to it with no
+    # entrypoint chown. Point these at host paths and you own that problem: the directories
+    # must already exist and belong to UID 1000. `docker compose cp` and the backup route
+    # both get data out without a bind mount.
+    volumes:
+      - quire-data:/var/lib/quire/data
+      - quire-uploads:/var/lib/quire/uploads
+
+    # `/api/health` checks the two things that actually stop this app serving: the database
+    # answers, and the upload store is writable. It reports 503 rather than failing, which
+    # is the whole point of probing it. curl is not in the image and does not need to be.
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - --eval
+        # Quoted, and it has to be: the `? 0 : 1` carries a colon-space, which YAML reads as
+        # a mapping inside a plain scalar and rejects with "must be a string".
+        - "process.exit((await fetch('http://127.0.0.1:3000/api/health')).ok ? 0 : 1)"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+volumes:
+  quire-data:
+  quire-uploads:

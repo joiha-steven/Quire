@@ -1,0 +1,82 @@
+# syntax=docker/dockerfile:1
+
+# The self-host image: one Bun process, two SQLite files, one uploads directory. There is
+# no database service to link, no migration step and no entrypoint script, because the app
+# applies its own schema at boot and reads its whole configuration from the environment.
+#
+# Three decisions here are deliberate and each one exists to stop this file needing edits
+# later. Read them before "simplifying" any of them away.
+#
+# 1. It runs FROM SOURCE (`bun src/index.ts`), not from the `bun build --compile` binary
+#    that `docs/self-host.md` uses. The binary is smaller, but it is also the one thing in
+#    this project that is fragile across base images: `--compile` bundles sharp's
+#    JavaScript and NOT its native module (see the note in `src/media/files.ts`), so the
+#    image would carry a binary pinned to one libc and a native addon that has to match it,
+#    and every base bump becomes an investigation. From source, sharp stays an ordinary
+#    entry in `node_modules` that `bun install` resolved for this platform. It is also
+#    exactly how the live box runs (see `src/server/build-info.ts`), so the container is
+#    not a second, separately-broken deployment shape.
+#
+# 2. Debian slim, not Alpine. sharp ships prebuilt binaries for glibc and musl separately,
+#    and the musl ones are the less travelled path for no gain that survives a rebuild.
+#    `tar` matters too: `src/server/backup.ts` spawns it for real, so an image without it
+#    has a backup button that fails at the moment you need it. It is part of Debian's
+#    essential set, which is why nothing here installs it.
+#
+# 3. The data directories are created and chowned IN THE IMAGE, before `USER bun`. Docker
+#    seeds a fresh named volume from the image's own directory, ownership included, so the
+#    unprivileged user can write to it on first boot without an entrypoint that chowns at
+#    runtime. The frozen tree shipped EACCES on a fresh install twice; this is the fix that
+#    needs no code. It does NOT extend to bind mounts, which keep the host's ownership:
+#    `docker-compose.yml` uses named volumes for that reason.
+
+# --- build: install everything, produce the bundles, then drop the build-only deps ------
+FROM oven/bun:1-slim AS build
+WORKDIR /app
+
+# Dependencies first, so an edit to `src/` does not re-resolve the whole tree.
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
+COPY tsconfig.json ./
+COPY src ./src
+COPY scripts ./scripts
+
+# Neither output is committed (`.gitignore` ignores every `dist/`), so both are built here:
+# the public island bundles, and the admin SPA with its stylesheet. `build:admin` needs
+# React, Tiptap and the Tailwind CLI, which is the only reason this stage installs them.
+RUN bun run build:assets && bun run build:admin
+
+# Prune to what the SERVER needs, now that the bundles are built.
+#
+# The `rm -rf` is load-bearing and was added after measuring: `bun install --production`
+# against an existing `node_modules` that already matches the lockfile reports "no changes"
+# and removes NOTHING, so the image shipped React, Tiptap, Tailwind and TypeScript and
+# weighed 535 MB. Installing into an empty directory is what actually resolves the
+# production set. It is nearly free, because bun's cache in this stage is already warm.
+RUN rm -rf node_modules && bun install --frozen-lockfile --production
+
+# --- runtime -----------------------------------------------------------------------------
+FROM oven/bun:1-slim
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    DATA_DIR=/var/lib/quire/data \
+    STORAGE_LOCAL_DIR=/var/lib/quire/uploads
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/src ./src
+COPY --from=build /app/scripts ./scripts
+COPY package.json bun.lock tsconfig.json ./
+
+# See note 3 above. Both paths are ENV defaults, so overriding them in compose without
+# mounting something writable there is the one way to get this wrong.
+RUN mkdir -p "$DATA_DIR" "$STORAGE_LOCAL_DIR" && chown -R bun:bun /var/lib/quire
+USER bun
+
+EXPOSE 3000
+
+# `bun:sqlite` is synchronous and single-threaded by design (one writer by construction),
+# so this is one process and never a cluster. Scale the box, not the process count.
+CMD ["bun", "src/index.ts"]
