@@ -60,6 +60,14 @@ working around.
 Also: put a backtick in a comment in `islands.css.ts` — the file whose own header says that
 ends the template literal and has cost two debugging sessions. Three now.
 
+**Deployed, which is what the first complaint actually was.** The box was still running
+`c5216cd`, two days of work behind, so none of yesterday's admin work was on the site the
+owner was looking at. `319c87f` is live: snapshot of both databases taken first (`vacuum
+into`, 27 MB), tarball extracted as the service user, `build-sha` written, service restarted.
+Verified at the origin and then through the CDN, which the boot purge had already cleared:
+`/api/health` ok, 75 pages warmed, and the served `core.<hash>.js` and `site.<hash>.css` both
+carry the new navigation bar.
+
 ## 2026-07-29 (last) — the admin was waiting on nothing, and now says when it is waiting
 
 Owner: the admin feels slow, put a progress bar at the top instead of reloading the page,
