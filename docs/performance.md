@@ -187,3 +187,63 @@ so the owner's surfaces never offer it at all.
 - **Critical path / LCP:** Lighthouse "Network dependency tree" — the chain should be HTML →
   public CSS → (at most) the reading font's language subset(s). No chrome font, no unused
   subset, no admin CSS.
+
+## Rendering — the body cache and the warm
+
+**Measured 2026-07-29, on the live box against a copy of the real database.** The design
+assumed a re-render cost a fraction of a millisecond, which is why `clearCache()` throws
+away every page on any write (Invariant 1) without a second thought. It does not:
+
+| | |
+|---|---|
+| Cold article render | **92–383 ms** across the archive |
+| An 85,000-character post | **364 ms**, of which `renderPostContent` is **359 ms** |
+| Inside that, `marked.parse` | **360 ms** — marked itself, not our renderer or our options: a plain `Marked` with no configuration measures 375 ms on the same input |
+
+So the rendered body is cached in `render_cache` alongside the highlighter, keyed by the
+**build commit + the media facts + the markdown**. Nothing invalidates it: a change is a
+different key. See `docs/spec/01-schema.md` §4 for why the argument against it was wrong.
+
+Measured after, same box, same post: **383 ms → 1 ms** with the page cache cold and the
+body cache warm, and the full 74-page warm sweep **3,948 ms → 203 ms**.
+
+**Three rules for this cache:**
+
+- **The build commit is in the key.** A deploy that changes any transform in
+  `post-content.ts` must not serve yesterday's HTML out of a cache that cannot tell. A
+  hand-maintained version constant would have been free and would eventually be forgotten.
+- **It is never load-bearing.** A read that throws returns null and the page renders the
+  slow way. Tested with the table dropped.
+- **`clearCache()` does not touch it.** It is content-addressed; a stale row is inert.
+
+### The warm, and the CDN purge
+
+`clearCache()` carries a hook list, and `src/index.ts` registers a debounced
+warm-then-purge (`server/warm.ts`). Warm FIRST, purge second, so the edge refetches into a
+warm origin. It runs on boot too, which is what makes a deploy clear the edge without
+anyone remembering to.
+
+**The hooks are registered from the entry point, never from inside `clearCache()`.** A test
+suite flushes several hundred times and must get a plain `Map.clear()`; a CLI must not be
+left holding a timer open.
+
+`purgeEdge()` (`server/edge-cache.ts`) uses `cloudflareApiToken` + `cloudflareZoneId` from
+`integration_keys`. Those keys have been in the schema and in the Admin UI since the import
+and **nothing in 2.0 ever read them** — the port dropped the call and kept the panel.
+Measured through the CDN before writing any code, because a gap has to be real first:
+`cf-cache-status: HIT`, `Age: 165` against `s-maxage=60, stale-while-revalidate=600`.
+Unconfigured is a no-op, which is the normal state of a self-hosted install.
+
+## Compression
+
+`Bun.serve` sends exactly what a handler returns and nothing set `content-encoding`, so the
+stylesheet, every page and every feed left the origin raw. `web/compress.ts` gzips text
+responses over 1 KB when the client asked, and sets `Vary: Accept-Encoding`.
+
+Measured at the origin: the public stylesheet **61,241 → 19,513 bytes**. A reader does not
+see this directly — the CDN re-compresses on its way out — but the origin-to-edge fetch
+does, on every cache miss and on every purge above. It is also what a reader gets if the
+CDN is bypassed or removed.
+
+Binary bodies are left alone: an image, a font or a WebP variant is already compressed and
+gzipping it spends CPU to add bytes.

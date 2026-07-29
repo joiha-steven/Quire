@@ -29,11 +29,6 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       over ([ADR 0012](../docs/decisions/0012-flatten-repo-after-cutover.md)). Repoint each
       citation at the 2.0 module. Mechanical, but it needs the code open beside it, and it
       pairs naturally with the `features.md` split below.
-- [ ] **The app sends no `content-encoding`.** nginx gzips in front of it here, so the live
-      site is fine, but a self-hoster behind something that does not compress serves the
-      HTML uncompressed. Now ~25 KB per post rather than ~65 KB, since the stylesheet moved
-      out of the page — a third of the old exposure, still unwarned. Either compress in the
-      app or say so in `docs/self-host.md`.
 - [ ] **The motion tokens `--dur-fast/base/slow` + `--ease` do not exist in 2.0**, and
       `docs/conventions.md` states using them as a hard rule. Every duration in
       `islands.css.ts` is a literal. Introduce the tokens or delete the rule; the ONE
