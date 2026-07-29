@@ -64,3 +64,13 @@ describe('compression', () => {
     expect(res.headers.get('cache-control')).toContain('immutable')
   })
 })
+
+describe('the machine surfaces are never compressed', () => {
+  it('leaves an /api/ response alone however big it is', async () => {
+    // The MCP connector authorised, stayed connected, and never showed a tool list:
+    // `initialize` is under a kilobyte so it went out raw and the handshake worked, and
+    // `tools/list` is over it so it went out gzipped and the client could not read it.
+    const res = await get('/api/mcp', { ...GZIP, accept: 'application/json' })
+    expect(res.headers.get('content-encoding')).toBeNull()
+  })
+})

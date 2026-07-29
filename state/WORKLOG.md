@@ -585,3 +585,21 @@ is the truth for a direct install with no proxy. Three tests, including the fall
 Measured against the live site before the fix:
 
     {"resource":"http://manhhung.me/api/mcp","authorization_servers":["http://manhhung.me"]}
+
+## 2026-07-29 — the connector connected and never showed a tool list
+
+Same evening, same feature. The OAuth flow completed cleanly — `register` 201, `authorize`
+302, `token` 200, then `POST /api/mcp 200` four times in the journal — so the client was
+talking to the server and being answered. It just never listed a tool.
+
+**The gzip added this afternoon.** `initialize` is under a kilobyte, so it fell below the
+1 KB floor and went out raw, and the handshake worked. `tools/list` is over it, so it went
+out gzipped, and the client reads that body itself rather than through a browser's HTTP
+stack. Connected, and silent.
+
+Nothing under `/api/` is compressed now. They are small payloads read by one caller, the
+saving was never the point of the change, and the risk is exactly this.
+
+The lesson is the shape of the bug rather than the bug: a size threshold means a feature can
+work for its small messages and fail for its large ones, so the failure looks like a
+different subsystem entirely.

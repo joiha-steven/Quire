@@ -29,6 +29,14 @@ export function compression(): MiddlewareHandler {
     await next()
     const res = c.res
     if (res.status !== 200 || res.headers.has('content-encoding')) return
+    // NEVER an API response. This is for documents a browser fetches, and `/api/` is where
+    // the machine surfaces live — the MCP JSON-RPC transport above all, whose client reads
+    // the body itself rather than letting a browser stack decode it. Symptom when this rule
+    // was missing: the connector authorised fine and stayed connected, because `initialize`
+    // is under a kilobyte and went out uncompressed, and then the tool list never arrived,
+    // because `tools/list` is over it and did not. They are small payloads read by one
+    // caller; there is nothing here worth the risk.
+    if (c.req.path.startsWith('/api/')) return
     if (!TEXTUAL.test(res.headers.get('content-type') ?? '')) return
     if (!(c.req.header('accept-encoding') ?? '').includes('gzip')) return
 
