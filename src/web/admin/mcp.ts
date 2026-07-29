@@ -247,7 +247,26 @@ export function mcpOAuthRoutes(): Hono {
   // ----- .well-known metadata -------------------------------------------------
   // How a connector discovers all of the above. Both are CORS-open by protocol.
 
-  const origin = (c: Context): string => new URL(c.req.url).origin
+  /**
+   * The origin a CLIENT reaches this server on — which is not the one the request arrived
+   * with.
+   *
+   * A CDN terminates TLS and forwards to the origin over plain HTTP, so `c.req.url` is
+   * `http://…` and every URL in these two documents came out `http://manhhung.me/...`. A
+   * connector fetches the discovery document over https, reads an issuer on http, and
+   * rejects the pair: RFC 8414 and RFC 9728 both require the issuer to match the origin the
+   * document was served from, exactly. That is the whole of why connecting failed.
+   *
+   * `x-forwarded-proto` is what the proxy says it accepted, and it is trusted for the same
+   * reason the rest of the app trusts this deployment's proxy. Falls back to the request's
+   * own scheme, which is correct for a direct connection with no proxy in front.
+   */
+  const origin = (c: Context): string => {
+    const url = new URL(c.req.url)
+    const proto = c.req.header('x-forwarded-proto')?.split(',')[0]?.trim()
+    if (proto) url.protocol = `${proto}:`
+    return url.origin
+  }
 
   for (const path of ['/.well-known/oauth-protected-resource', '/.well-known/oauth-authorization-server']) {
     app.options(path, () => new Response(null, { status: 204, headers: CORS }))

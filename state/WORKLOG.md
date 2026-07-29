@@ -561,3 +561,27 @@ tests, and the compression tests.
 **Open, unchanged from this morning:** the CI workflow still needs the owner's hand (token
 scope), the instance data is still in `scripts/ops/`, and the seven-day watch on
 `old.manhhung.me` is still running.
+
+## 2026-07-29 — the MCP server advertised itself over http
+
+The owner went to connect a client and it failed. Two things were wrong, and only one of
+them was a bug.
+
+**The admin never shows the endpoint URL.** `McpFields.tsx` is a token manager and nothing
+else, so there is no link to copy: `https://<site>/api/mcp`. That is a gap in the UI, still
+open.
+
+**The discovery documents were served over https and advertised http.** The CDN terminates
+TLS and forwards to the origin in plain HTTP, so `new URL(c.req.url).origin` was
+`http://manhhung.me` and every URL in both `.well-known` documents carried it — the
+resource, the issuer, and the authorize, token and registration endpoints. A connector
+fetches the document over https, reads an issuer on http, and refuses the pair: RFC 8414 and
+RFC 9728 both require the issuer to match the origin the document was served from, exactly.
+That is the whole of why it would not connect.
+
+`origin()` honours `x-forwarded-proto` now and falls back to the request's own scheme, which
+is the truth for a direct install with no proxy. Three tests, including the fallback.
+
+Measured against the live site before the fix:
+
+    {"resource":"http://manhhung.me/api/mcp","authorization_servers":["http://manhhung.me"]}

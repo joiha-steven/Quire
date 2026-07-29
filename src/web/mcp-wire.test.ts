@@ -129,3 +129,36 @@ describe('the MCP endpoint', () => {
     await saveSettings({ mcp: { ...mcp, enabled: true } })
   })
 })
+
+describe('OAuth discovery advertises the origin a CLIENT reaches, not the one it arrived on', () => {
+  // The CDN terminates TLS and forwards to the origin over plain HTTP, so `c.req.url` is
+  // `http://…` and both documents came out advertising `http://manhhung.me/...`. A connector
+  // fetches them over https, reads an issuer on http, and rejects the pair — RFC 8414 and
+  // RFC 9728 both require the issuer to match the origin the document was served from.
+  // That was the whole of why connecting failed.
+  const json = async (path: string, headers: Record<string, string> = {}) => {
+    const res = await app.request(path, { headers })
+    return await res.json() as Record<string, unknown>
+  }
+  const PROXY = { 'x-forwarded-proto': 'https' }
+
+  it('honours x-forwarded-proto in the protected-resource document', async () => {
+    const body = await json('http://manhhung.me/.well-known/oauth-protected-resource', PROXY)
+    expect(body.resource).toBe('https://manhhung.me/api/mcp')
+    expect(body.authorization_servers).toEqual(['https://manhhung.me'])
+  })
+
+  it('honours it in the authorization-server document, on every endpoint', async () => {
+    const body = await json('http://manhhung.me/.well-known/oauth-authorization-server', PROXY)
+    expect(body.issuer).toBe('https://manhhung.me')
+    for (const key of ['authorization_endpoint', 'token_endpoint', 'registration_endpoint']) {
+      expect(String(body[key])).toStartWith('https://manhhung.me/')
+    }
+  })
+
+  it('falls back to the request scheme with no proxy in front', async () => {
+    // A direct install with no CDN sends no such header, and http is then the truth.
+    const body = await json('http://localhost:3000/.well-known/oauth-authorization-server')
+    expect(body.issuer).toBe('http://localhost:3000')
+  })
+})
