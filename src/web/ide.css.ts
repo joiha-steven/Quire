@@ -57,8 +57,14 @@ html[data-ide-chrome=on] .t-small time{color:var(--c-text)}
    nothing else about the rail changes. The active marker stays where the gutter layout
    put it, at the row's right edge, which is now 3.5ch clear of the numbers. */
 html[data-ide-chrome=on] .rail ul{counter-reset:ln}
+/* The gap between a row and its number is the ROW's right padding plus whatever the li
+   reserves, and both were at their defaults - 14px of rail padding under a 3.5ch column,
+   which put the number about 43px from the text it counts and ate a fifth of the rail.
+   An editor's gutter sits right against the code. Pulled to ~1ch of clear air, which
+   still leaves the active marker its own lane. */
+html[data-ide-chrome=on] .rail-row{padding-right:1ch}
 html[data-ide-chrome=on] .rail li{counter-increment:ln;position:relative;
-  padding-right:3.5ch}
+  padding-right:2.4ch}
 /* The SIZE is stated, and it has to be. The counter hangs off the <li>, which sits
    OUTSIDE .rail-row and its .t-small - so it inherited the BODY size and the gutter came
    out larger than the labels it counts. Caption is the role for a figure's label, which
