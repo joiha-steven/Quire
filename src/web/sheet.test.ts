@@ -60,4 +60,20 @@ describe('the public stylesheet', () => {
     expect(res.headers.get('cache-control')).toContain('immutable')
     expect(await res.text()).toContain('.prose')
   })
+
+  it('answers a hash from the PREVIOUS deploy with the current sheet, not a 404', async () => {
+    // HTML is held by a shared cache for up to eleven minutes (s-maxage + swr), so after a
+    // deploy that changes the sheet, real readers are handed the old page — whose only
+    // stylesheet URL this process no longer has. A 404 there is an unstyled site.
+    const res = await get('/assets/site.0000000000.css')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/css')
+    expect(await res.text()).toContain('.prose')
+  })
+
+  it('still refuses a bundle it does not have, because stale JS is a real mismatch', async () => {
+    // The opposite call from the sheet: a bundle from another deploy can call into markup
+    // that moved. Doing nothing beats doing the wrong thing.
+    expect((await get('/assets/core.0000000000.js')).status).toBe(404)
+  })
 })

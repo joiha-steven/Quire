@@ -56,7 +56,29 @@ export function scriptTag(name: string): string {
   return `<script src="${assetPath(name)}" defer></script>`
 }
 
+/**
+ * A stylesheet request whose hash this build does not know — answered with the CURRENT
+ * sheet rather than a 404.
+ *
+ * The reader did not invent that URL. HTML is `s-maxage=60, stale-while-revalidate=600`, so
+ * for up to eleven minutes after a deploy a shared cache hands out the PREVIOUS deploy's
+ * page, and the only stylesheet it names is one this process no longer has. The strict
+ * answer is a 404, and a 404 on the only stylesheet is an unstyled site — which is a worse
+ * failure than a page rendered with CSS one deploy newer than its markup.
+ *
+ * Only the sheet. A stale JS bundle is a genuine mismatch: it can call into markup that
+ * moved, and silently doing nothing is better than doing the wrong thing. CSS degrades the
+ * other way round.
+ *
+ * `immutable` stays honest through this. A client asking for an old hash is by definition
+ * one that has never held those bytes, and once it loads any fresh page it moves to the
+ * current URL and never asks again — so no client can observe a URL changing under it.
+ */
+function staleSheet(path: string): string | null {
+  return /^\/assets\/site\.[a-z0-9]+\.css$/.test(path) ? PUBLIC_CSS : null
+}
+
 /** The bundle served at a request path, or null when nothing matches. */
 export function assetBody(path: string): string | null {
-  return BY_PATH.get(path) ?? null
+  return BY_PATH.get(path) ?? staleSheet(path)
 }
