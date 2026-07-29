@@ -309,7 +309,7 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     const ide = idelines()
     expect(ide).toContain('.icon-btn svg{display:none}')
     expect(ide).toContain('.btn-token{display:inline}')
-    expect(PUBLIC_CSS).toContain('.btn-token{display:none}') // ...and OFF is the default
+    expect(PUBLIC_CSS).toContain('.btn-token{display:none;') // ...and OFF is the default
   })
 
   it('numbers a sub-heading within its parent, not straight through the list', () => {

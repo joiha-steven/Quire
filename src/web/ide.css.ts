@@ -136,10 +136,12 @@ html[data-ide-chrome=on] .tl-year-tag::after{content:"/";margin-left:-.5rem;colo
   html[data-ide-chrome=on] .btn-token{display:inline}
   html[data-ide-chrome=on] .btn-token::before{content:"[";color:var(--c-meta)}
   html[data-ide-chrome=on] .btn-token::after{content:"]";color:var(--c-meta)}
-  /* The 40px square was sized around a 20px glyph. A word needs its own width, and the row
-     needs a real gap once the buttons stop being squares that touch. */
-  html[data-ide-chrome=on] .icon-btn{width:auto;height:auto;padding:.3rem .45rem}
-  html[data-ide-chrome=on] .site-actions{gap:.5rem;margin-right:-.45rem}
+  /* The 40px square was sized around a 20px glyph, and the button states no size of its
+     own — so a WORD in it inherited the 18px BODY size and the row came out as five large
+     words spread wide. The token is caption-sized (islands.css.ts) and the box shrinks to
+     it: this row is the quietest chrome on the page, not a menu bar. */
+  html[data-ide-chrome=on] .icon-btn{width:auto;height:auto;padding:.15rem .2rem}
+  html[data-ide-chrome=on] .site-actions{gap:.4rem;margin-right:-.2rem}
 }
 
 /* THE GUTTER. A counter on the list, ranged right in its own column, exactly as an
@@ -188,7 +190,7 @@ html[data-ide-chrome=on] .rail-inner{width:calc(100% + 24px);padding-right:24px}
    the ring rather than to the row it marks. Pulled in, but only 3px: 6px put it close
    enough to the words to crowd them, which is the opposite complaint. The row's own
    padding is 14px, so this leaves 11px of air on the text side and 10px to the circle. */
-html[data-ide-chrome=on] .rail-row[aria-current]::before{right:3px}
+html[data-ide-chrome=on] .rail-row[aria-current]::after{right:3px}
 /* The article index numbers its HEADINGS and nothing else. Its first row is the post
    title (a click is "back to the top") and its last is the jump to tags / categories /
    comments - neither is a line of the piece, and numbering them made the index look one

@@ -226,7 +226,8 @@ body:has(.book-overlay[open]){overflow:hidden}
 .icon-btn:hover{color:var(--c-heading);background:var(--c-rule)}
 /* The short token beside each icon. Absent unless the IDE chrome is on: with the switch
    off this header is exactly the header it has always been. */
-.btn-token{display:none}
+.btn-token{display:none;font-size:var(--fs-caption);line-height:var(--lh-caption);
+  letter-spacing:var(--ls-caption)}
 
 /* The overlays. Both are dialogs, so Escape and the inert background are the browser's. */
 .overlay[open]{display:flex}

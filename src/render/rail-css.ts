@@ -44,7 +44,7 @@ export function singleRailCss(colWidth: number): string {
     `.rail .rail-tags{justify-content:flex-end}` +
     `.rail li a{justify-content:flex-end}` +
     `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
-    `.rail-row[aria-current]::before{left:auto;right:0}` +
+    `.rail-row[aria-current]::after{left:auto;right:0}` +
     `.rail-toggle,.rail-scrim{display:none}` +
     // The post info panel takes the right gutter: the date, the length, the way into book
     // mode and the taxonomy, one fact per line. It is NOT sticky and its inner box does not
@@ -139,7 +139,7 @@ export function listingRailCss(colWidth: number): string {
     `.rail.rail-left .rail-tags{justify-content:flex-end}` +
     `.rail.rail-left li a{justify-content:flex-end}` +
     `.rail.rail-left .rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
-    `.rail.rail-left .rail-row[aria-current]::before{left:auto;right:0}` +
+    `.rail.rail-left .rail-row[aria-current]::after{left:auto;right:0}` +
     // Right rail — nav, mirrored.
     `.rail.rail-right{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left}` +
     `.rail.rail-right::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;width:1px;background:var(--c-rule);z-index:-1}` +
@@ -147,7 +147,7 @@ export function listingRailCss(colWidth: number): string {
     `.rail.rail-right .rail-tags{justify-content:flex-start}` +
     `.rail.rail-right li a{justify-content:flex-start}` +
     `.rail.rail-right .rail-row{padding-right:0;padding-left:var(--rail-pad)}` +
-    `.rail.rail-right .rail-row[aria-current]::before{right:auto;left:0}` +
+    `.rail.rail-right .rail-row[aria-current]::after{right:auto;left:0}` +
     INNER +
     `.drawer-only{display:none}` +
     `.rail-toggle,.rail-scrim{display:none}}`

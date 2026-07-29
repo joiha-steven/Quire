@@ -309,7 +309,11 @@ html[data-rail=open] .rail{transform:none}
 .rail-row:hover,.rail-tags a:hover{color:var(--c-heading)}
 /* The one accent mark: a hairline beside the row you are already reading. In the drawer it
    sits left of the text; in the gutter the rail flips and it faces the divider. */
-.rail-row[aria-current]::before{content:"";position:absolute;left:0;top:3px;bottom:3px;
+/* ::after, not ::before. A row can be BOTH aria-current and .rail-lead (the bullet) or
+   .rail-sub (the IDE chrome's leading slash), and all of them wanted the SAME
+   pseudo-element: the marker's empty content won, and the slash came out painted in the
+   accent colour as a red diagonal at the row's right edge. Two marks, two elements. */
+.rail-row[aria-current]::after{content:"";position:absolute;left:0;top:3px;bottom:3px;
   width:2px;background:var(--c-accent)}
 /* Counts sit in their own right-aligned column so the labels stay aligned however many
    digits a count carries. The column is exactly as wide as the widest count on the page
