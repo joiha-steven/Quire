@@ -8,6 +8,12 @@
 // rules; because those use the higher-specificity `.rail.rail-left` / `.rail.rail-right`
 // selectors, they win over the layout's single-rail `.rail` rules with no ordering games.
 
+// THE DIVIDERS SIT BEHIND (z-index:-1). Each is a pseudo-element of `.rail`, so it paints
+// AFTER the rail's own children — and a marker inside cannot climb over it, because
+// `.rail-inner` is position:sticky and therefore a stacking context that traps any
+// z-index below it. The IDE chrome's numbered rings sit ON this line, and without this
+// the hairline drew straight through every one of them. Same shape of bug as the feed's
+// spine over the month dots, same fix.
 export const RAIL_W = 250
 export const RAIL_GAP = 40
 export const RAIL_PAD = 14
@@ -32,7 +38,7 @@ export function singleRailCss(colWidth: number): string {
   return (
     `@media (min-width:${at}px){` +
     `.rail{${GUTTER};right:calc(100% + var(--rail-gap));left:auto;text-align:right}` +
-    `.rail::after{content:"";position:absolute;top:0;bottom:0;right:-${DIVIDER}px;width:1px;background:var(--c-rule)}` +
+    `.rail::after{content:"";position:absolute;top:0;bottom:0;right:-${DIVIDER}px;width:1px;background:var(--c-rule);z-index:-1}` +
     INNER +
     `.rail h2,.rail .rail-tags{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail .rail-tags{justify-content:flex-end}` +
@@ -99,7 +105,7 @@ export function listingRailCss(colWidth: number): string {
     `@media (min-width:${at}px){` +
     // Left rail — discovery.
     `.rail.rail-left{${GUTTER};right:calc(100% + var(--rail-gap));left:auto;text-align:right}` +
-    `.rail.rail-left::after{content:"";position:absolute;top:0;bottom:0;right:-${DIVIDER}px;width:1px;background:var(--c-rule)}` +
+    `.rail.rail-left::after{content:"";position:absolute;top:0;bottom:0;right:-${DIVIDER}px;width:1px;background:var(--c-rule);z-index:-1}` +
     `.rail.rail-left h2,.rail.rail-left .rail-tags{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail.rail-left .rail-tags{justify-content:flex-end}` +
     `.rail.rail-left li a{justify-content:flex-end}` +
@@ -107,7 +113,7 @@ export function listingRailCss(colWidth: number): string {
     `.rail.rail-left .rail-row[aria-current]::before{left:auto;right:0}` +
     // Right rail — nav, mirrored.
     `.rail.rail-right{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left}` +
-    `.rail.rail-right::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;width:1px;background:var(--c-rule)}` +
+    `.rail.rail-right::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;width:1px;background:var(--c-rule);z-index:-1}` +
     `.rail.rail-right h2,.rail.rail-right .rail-tags{padding-right:0;padding-left:var(--rail-pad)}` +
     `.rail.rail-right .rail-tags{justify-content:flex-start}` +
     `.rail.rail-right li a{justify-content:flex-start}` +

@@ -79,6 +79,11 @@ html[data-ide-chrome=on] .rail li::before{content:counter(ln);position:absolute;
    ring would be cut in half by its own container. The box grows right by the overhang and
    pads it back, which puts the ring inside the padding box where nothing clips it. */
 html[data-ide-chrome=on] .rail-inner{width:calc(100% + 24px);padding-right:24px}
+/* The active marker moves toward the TEXT. It sits at the row's right edge, which used
+   to be the rail's edge and nothing else - now the ring is out past it, so the hairline
+   read as belonging to the ring rather than to the row it marks. Six pixels in leaves it
+   closer to the words and clear of the circle. */
+html[data-ide-chrome=on] .rail-row[aria-current]::before{right:6px}
 /* The tag cloud is a run of words, not a list, so it has no lines to number. */
 html[data-ide-chrome=on] .rail-tags{counter-reset:none}
 `.trim()
