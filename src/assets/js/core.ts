@@ -9,7 +9,6 @@
 // JavaScript a reader of a listing pays for, and its size is the budget.
 
 import { listing } from './listing'
-import { navProgress } from './nav-progress'
 import { search } from './search'
 import { subscribe } from './subscribe'
 import { rail, theme } from './theme'
@@ -21,4 +20,3 @@ rail()
 search()
 subscribe()
 listing()
-navProgress()

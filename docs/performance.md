@@ -156,26 +156,6 @@ list (or the class won't emit). NEVER put an admin-only utility/chrome rule in `
    payload are the floor; don't chase Lighthouse "legacy/unused JS" inside those vendor
    chunks — Turbopack doesn't strip them via `browserslist`, and they're not on the LCP path.
 
-## Navigation: the bar, and why it waits 150ms
-
-A navigation on the public site is a real page load, so the page being left just sits there
-until the next one arrives. `assets/js/nav-progress.ts` marks the document
-(`html[data-navigating]`) and the stylesheet draws a 2px bar from it as a root
-pseudo-element — no element injected, no markup on a page that is not navigating.
-
-**It intercepts nothing.** The click goes to the browser exactly as before; this is a signal,
-not a router. 565 bytes, which is why `core.js`'s budget moved to 9,400.
-
-**The 150ms delay is the point.** With `speculation-rules` prerendering on hover, a large share
-of navigations finish in single-digit milliseconds, and a bar that appeared for one frame every
-time would read as a glitch. Below 150ms a wait does not feel like a wait, so nothing is shown.
-
-The colour is `--c-accent`, a theme token, and it sits above the reading-progress bar
-(`z-index` 60 against 50) so the two are never mistaken for each other on an article. Motion
-off pins it at a static offset rather than hiding it, because the rule at the foot of
-`islands.css.ts` kills every animation and an un-animated bar at `translateX(-100%)` is an
-invisible one.
-
 ## Navigation: prerender on hover, zero runtime JS
 
 Every public HTML response carries a `Speculation-Rules` header pointing at

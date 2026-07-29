@@ -192,9 +192,15 @@ splitting into two columns so hard".
 
 So a tab is `GRID` holding two `COL` stacks, and the cards are assigned to a side by hand so
 the two come out close in height. Each stack packs independently and there is no row to align
-to. `ONE_COL` (a `max-w-3xl` stack) is for a tab with one card, or one whose cards cannot
-balance: fifteen feature toggles beside a single comments switch is not a two-column layout,
-it is a column and a void.
+to.
+
+**EVERY tab is two columns.** There is no one-column tab, and there was: Site held a single
+card and Reading held fifteen feature toggles beside one comments switch. Two tabs of seven
+behaving differently from the rest reads as a mistake rather than as a choice, which is exactly
+how the owner read it. The answer is to split the CONTENT, not to leave the layout ragged:
+Site is identity plus marks, and Reading is post features plus listing features (with the
+activity log as its own small card, since a record of what the owner changed was never a
+reader feature).
 
 Corollary: **do not widen a card to fix its contents.** Making the MCP card span both columns
 gave its table room and turned it into a wide slab under a two-column tab, which reads as a

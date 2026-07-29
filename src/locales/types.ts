@@ -463,6 +463,9 @@ export type AdminStrings = {
   cardGeneral: string
   cardLayout: string
   cardFeatures: string
+  cardBranding: string
+  cardListing: string
+  cardActivity: string
   // comments
   cardComments: string
   cardFeatured: string

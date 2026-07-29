@@ -6,6 +6,31 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+## 2026-07-30 (last) — every tab is two columns, and the public bar is gone
+
+**No tab is one column any more.** Two of seven behaving differently from the rest reads as a
+mistake rather than as a choice, which is how the owner read it. Fixing it meant splitting the
+CONTENT rather than leaving a layout ragged:
+
+- **Site** was one card holding two questions. Identity (language, title, description, excerpt
+  length) stays in `SiteFields`; the marks (logo, its dark twin, favicon, app icon) are
+  `BrandFields`. The two come out within a card's height of each other.
+- **Reading** was fifteen switches beside one. `FeatureFields` is now three exports: what a
+  reader gets on a POST (9), what they get on the LISTING they arrive from (5), and the
+  activity log — which was never a reader feature at all, and sat in the middle of that list
+  only because there was one list to put it in. Left column: post features. Right: listing,
+  comments, log.
+
+Both splits moved which group RENDERS a key, never the keys themselves, so nothing about the
+stored shape changed. `ONE_COL` is deleted rather than left unused: a constant nothing calls is
+one somebody re-adopts for the wrong reason.
+
+**The public navigation bar is removed**, at the owner's word: it did not show up for them and
+they did not want it. Island, CSS, the call in `core.ts`, the budget bump and the docs section
+all gone; `core.js` is back to 8,689 bytes, byte for byte what it was before the feature. The
+admin's bar stays, and is a different thing: there, a navigation is a transition inside one
+document and the bar is the only signal a click did anything.
+
 ## 2026-07-30 (later) — the two-column layout was the actual complaint
 
 The order rule landed and the screens still looked wrong, because the problem was never the

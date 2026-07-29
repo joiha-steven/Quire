@@ -33,6 +33,7 @@ import { formatTime } from '@/utils'
 import { Card, PageHeader, Tabs, type TabItem } from './kit'
 import { useAdminT } from './I18nProvider'
 import { SiteFields } from './SiteFields'
+import { BrandFields } from './BrandFields'
 import { ThemeFields } from './ThemeFields'
 import { TypographyFields } from './TypographyFields'
 import { FontUpload } from './FontUpload'
@@ -41,7 +42,7 @@ import { AdvancedFields } from './AdvancedFields'
 import { McpFields } from './McpFields'
 import { LayoutMenuFields } from './LayoutMenuFields'
 import { FooterField } from './FooterField'
-import { FeatureFields } from './FeatureFields'
+import { ActivityLogField, ListingFeatureFields, PostFeatureFields } from './FeatureFields'
 import { CommentFields } from './CommentFields'
 import { CommentIntegrations } from './CommentIntegrations'
 import { CloudflareFields } from './CloudflareFields'
@@ -70,8 +71,6 @@ const TAB_IDS: Tab[] = ['site', 'layout', 'reading', 'appearance', 'seo', 'conne
  */
 const GRID = 'grid items-start gap-5 xl:grid-cols-2'
 const COL = 'space-y-5'
-/** One card, or a form that reads better narrow: a measure, not the full 1480px. */
-const ONE_COL = 'max-w-3xl space-y-5'
 
 export function SettingsView({ settings, presets, commentEnv, integrations, posts }: {
   settings: SiteSettings
@@ -143,10 +142,17 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
 
       {/* SITE — what this site IS. Identity only: nothing here moves a pixel. */}
       {tab === 'site' && (
-        <div className={ONE_COL}>
-          <Card title={t.cardGeneral}>
-            <SiteFields s={s} update={update} />
-          </Card>
+        <div className={GRID}>
+          <div className={COL}>
+            <Card title={t.cardGeneral}>
+              <SiteFields s={s} update={update} />
+            </Card>
+          </div>
+          <div className={COL}>
+            <Card title={t.cardBranding}>
+              <BrandFields s={s} update={update} />
+            </Card>
+          </div>
         </div>
       )}
 
@@ -169,18 +175,30 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
 
       {/* READING — what a reader gets on a post, and whether they can reply. */}
       {tab === 'reading' && (
-        <div className={ONE_COL}>
-          <Card title={t.cardFeatures}>
-            <FeatureFields
-              features={s.features}
-              onChange={(features) => update({ features })}
-              relatedCount={s.relatedCount}
-              onRelatedCount={(relatedCount) => update({ relatedCount })}
-            />
-          </Card>
-          <Card title={t.cardComments}>
-            <CommentFields comments={s.comments} onChange={(comments) => update({ comments })} />
-          </Card>
+        <div className={GRID}>
+          <div className={COL}>
+            <Card title={t.cardFeatures}>
+              <PostFeatureFields
+                features={s.features}
+                onChange={(features) => update({ features })}
+                relatedCount={s.relatedCount}
+                onRelatedCount={(relatedCount) => update({ relatedCount })}
+              />
+            </Card>
+          </div>
+          <div className={COL}>
+            <Card title={t.cardListing}>
+              <ListingFeatureFields features={s.features} onChange={(features) => update({ features })} />
+            </Card>
+            <Card title={t.cardComments}>
+              <CommentFields comments={s.comments} onChange={(comments) => update({ comments })} />
+            </Card>
+            {/* Not a reader feature at all: it records what the OWNER changed. It sat in the
+                middle of the reading switches because there was one list to put it in. */}
+            <Card title={t.cardActivity}>
+              <ActivityLogField features={s.features} onChange={(features) => update({ features })} />
+            </Card>
+          </div>
         </div>
       )}
 

@@ -33,22 +33,6 @@ export const ISLANDS_CSS = `
 }
 @keyframes read-progress{to{transform:scaleX(1)}}
 
-/* The NAVIGATION bar: shown while the next page is loading, which is a different question
-   from how far down this one the reader is. A pseudo-element on the root, so there is no
-   element to inject and nothing in the markup of a page that is not navigating.
-   Above the reading bar, which is the only thing it could be confused with, and only ever on
-   screen while a page is on its way. --c-heading rather than --c-accent: the accent of a
-   monochrome palette is very close to the page colour, so the first version was drawn and
-   invisible, which is what "I do not see it" turned out to mean. A theme token either way,
-   never a literal. 3px, because 2px reads as a rendering artefact. */
-html[data-navigating]::before{content:"";position:fixed;inset:0 auto auto 0;z-index:60;
-  height:3px;width:100%;background:var(--c-heading);transform:translateX(-100%);
-  animation:nav-progress 6s cubic-bezier(.05,.8,.2,1) forwards}
-@keyframes nav-progress{to{transform:translateX(-12%)}}
-/* Motion off kills every animation on the page (see the rule at the foot of this file), so
-   without this the bar would sit at -100% and never be seen. It still SAYS something is
-   happening, it just says it without moving. */
-html[data-motion=off][data-navigating]::before{transform:translateX(-35%)}
 
 .to-top{position:fixed;bottom:1.25rem;right:1.25rem;z-index:40;display:flex;width:2.5rem;height:2.5rem;
   align-items:center;justify-content:center;border:1px solid var(--c-rule);border-radius:999px;
