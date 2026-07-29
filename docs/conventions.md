@@ -171,11 +171,16 @@ and no island runs.
 - **Every chrome label is marked, not just the rail's** — the tagline, the series head,
   the related list, the sign-up card, the comment thread, an empty state. One selector
   list, so a new chrome heading that is missed is visibly missed. Tested.
-- **`[n]` means index or count; `/` means path.** Both come from the SHEET, never from a
-  renderer — the round parentheses in the base sheet too, or the switch could not put them
-  back. The feed's gutter year takes the slash because a year over its months is a
-  hierarchy, not a count. Markup supplies only the wrappers CSS cannot invent:
-  `.num` round a figure, `.term-list` round a run of terms. Tested both ends.
+- **`[n]` means literal; `/` means path; a ring means a count in a cloud.** All three come
+  from the SHEET, never from a renderer — the round parentheses in the base sheet too, or
+  the switch could not put them back. Dates, figures, indices and the pager are bracketed,
+  and **the brackets are `--c-meta` while their contents are `--c-text`**: they are
+  punctuation, not the value. The feed's gutter year takes the slash because a year over
+  its months is a hierarchy. The rail's `.term-count` is the one exception and takes a
+  filled ring: a term cloud is a wrapped run of words with no sequence to punctuate, and
+  an outline in `--c-rule` measures 1.16:1 with no divider behind it to break.
+  Markup supplies only the wrappers CSS cannot invent: `.num` round a figure, `.term-list`
+  round a run of terms. Tested both ends.
 - **The rail keeps the alignment it has with the switch off:** ranged right, hugging the
   article, which is what the owner asked for. The line numbers are rings sitting ON the
   rail's divider out past the text, so they cost the rail no width. An earlier pass ranged

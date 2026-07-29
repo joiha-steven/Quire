@@ -262,15 +262,35 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     ]) expect(ide).toContain(label)
   })
 
-  it('brackets every count from the SHEET, so two renderers cannot disagree', () => {
+  it('brackets every literal from the SHEET, so two renderers cannot disagree', () => {
     // The sidebar typed its own parentheses, so the taxonomy read "(7)" three lines under a
     // list that read "[7]". Both pairs come from CSS now — the round ones from the base
     // sheet, the square ones from the switch — which is also what makes it reversible.
     expect(PUBLIC_CSS).toContain('.term-count::before{content:"("}')
     const ide = idelines()
-    for (const count of ['.rail-count::before', '.term-count::before', '.pager-count::before']) {
-      expect(ide).toContain(count)
-    }
+    for (const literal of [
+      '.rail-count::before', '.pager-count::before', '.t-small time::before',
+      '.comment-meta time::before', '.related p::before', '.num::before',
+    ]) expect(ide).toContain(literal)
+  })
+
+  it('sets the brackets a shade lighter than the value they hold', () => {
+    // They are punctuation, not the value. At the same weight as the digits a meta line
+    // reads as a row of boxes rather than as a date followed by two figures.
+    expect(idelines()).toContain('.num::before{content:"[";color:var(--c-meta)}')
+    expect(idelines()).toContain('.num::after{content:"]";color:var(--c-meta)}')
+  })
+
+  it('gives the rail\'s term counts a ring instead, because a cloud has no sequence', () => {
+    // The one count that is NOT bracketed. A term cloud is a wrapped run of words and each
+    // count belongs to the word beside it, so it takes the ring the article index already
+    // uses — brackets would be a third punctuation mark in a 250px column.
+    // The block itself, not `idelines()`: that helper keeps only the lines carrying the
+    // selector, which is what proves the gating and is exactly wrong for reading a body.
+    const ring = /html\[data-ide-chrome=on] \.term-count\{[^}]*}/.exec(PUBLIC_CSS)?.[0] ?? ''
+    expect(ring).toContain('border-radius:50%')
+    expect(ring).toContain('background:var(--c-rule)')
+    expect(idelines()).not.toContain('.term-count::before')
   })
 
   it('gives the archive year a path mark rather than brackets', () => {
