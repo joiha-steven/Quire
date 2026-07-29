@@ -20,9 +20,12 @@ const COL_GAP = 56 // px between the two facing pages
 const FADE_MS = 130 // the spread-to-spread crossfade; 200 (the frozen tree's) read as sluggish
 
 export function book(): void {
-  const toggle = document.querySelector<HTMLButtonElement>('[data-book-open]')
+  // ALL of them. There are two on an article now — the meta line above the title and the
+  // info panel in the right gutter — and exactly one has a box at any width. Binding the
+  // first match left the button dead on whichever layout lost the coin toss.
+  const toggles = [...document.querySelectorAll<HTMLButtonElement>('[data-book-open]')]
   const source = document.querySelector<HTMLElement>('.prose')
-  if (!toggle || !source) return
+  if (toggles.length === 0 || !source) return
 
   let dialog: HTMLDialogElement | null = null
 
@@ -142,5 +145,5 @@ export function book(): void {
     document.fonts?.ready.then(measure)
   }
 
-  toggle.addEventListener('click', open)
+  for (const toggle of toggles) toggle.addEventListener('click', open)
 }

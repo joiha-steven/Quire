@@ -265,8 +265,55 @@ describe('the markup hooks the IDE chrome needs', () => {
       title: 'Termed', content: 'body text here', status: 'published', date: PAST,
       tags: ['one'], categories: ['Two'],
     })
+    // Four, not two: tags and categories, in the article footer AND in the right-gutter
+    // panel. Exactly one of those pairs has a box at any width.
     const html = await get('/termed').then((r) => r.text())
-    expect(html.match(/<span class="term-list">/g)).toHaveLength(2)
+    expect(html.match(/<span class="term-list">/g)).toHaveLength(4)
+  })
+
+  it('puts the same facts in the right gutter, and hides the in-flow pair at that width', async () => {
+    // The panel and the originals are the SAME information twice, and exactly one copy has a
+    // box at any width — so the rule that hides the other has to travel with it. Both are
+    // asserted here because a panel with nothing hidden is the date printed twice, and a
+    // hide with no panel is the date gone.
+    await savePost({
+      title: 'Gutter', content: 'body text here', status: 'published', date: PAST,
+      tags: ['one'], categories: ['Two'],
+    })
+    const html = await get('/gutter').then((r) => r.text())
+    expect(html).toContain('<aside class="post-info')
+    expect(html).toContain('class="t-small text-meta post-meta"')
+    expect(html).toContain('.post-meta,.taxo-rule,.post-taxo{display:none}')
+    // Both copies carry the wrappers the IDE chrome needs, or the panel would be the one
+    // surface on the site where a date is not a literal.
+    expect(html.match(/<span class="term-list">/g)).toHaveLength(4)
+    expect(html.match(/<span class="num">/g)!.length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('anchors the end of the article on its own elements, not on the hidden taxonomy', async () => {
+    // The contents list's last row jumps here. The paragraphs it used to point at are
+    // display:none in the wide layout, and an anchor with no box cannot be scrolled to — so
+    // that row died silently on every desktop until these existed.
+    await savePost({
+      title: 'Anchored', content: 'body text here', status: 'published', date: PAST,
+      tags: ['one'],
+    })
+    const html = await get('/anchored').then((r) => r.text())
+    expect(html).toContain('<span class="anchor" id="post-tags"></span>')
+    expect(html).toContain('<span class="anchor" id="post-categories"></span>')
+  })
+
+  it('stops a wide image noshing into the gutter while it is level with the panel', async () => {
+    // Measured: a post opening on a #wide image printed the panel's tag rows across the
+    // picture. The gutter cannot hold both, and text over a photograph is the worse failure.
+    await savePost({ title: 'Wide', content: 'body text here', status: 'published', date: PAST })
+    expect(await get('/wide').then((r) => r.text()))
+      .toContain(':is(figure.img-wide,.video-wide):nth-child(-n+2){width:100%;margin-right:0}')
+  })
+
+  it('leaves the panel off a static page, which has no date and no taxonomy', async () => {
+    await savePage({ title: 'Colophon', content: 'body text here', status: 'published' })
+    expect(await get('/colophon').then((r) => r.text())).not.toContain('<aside class="post-info')
   })
 
   it('leaves a sidebar count unparenthesised, because the sheet supplies the brackets', async () => {

@@ -171,16 +171,14 @@ and no island runs.
 - **Every chrome label is marked, not just the rail's** — the tagline, the series head,
   the related list, the sign-up card, the comment thread, an empty state. One selector
   list, so a new chrome heading that is missed is visibly missed. Tested.
-- **`[n]` means literal; `/` means path; a ring means a count in a cloud.** All three come
-  from the SHEET, never from a renderer — the round parentheses in the base sheet too, or
-  the switch could not put them back. Dates, figures, indices and the pager are bracketed,
-  and **the brackets are `--c-meta` while their contents are `--c-text`**: they are
-  punctuation, not the value. The feed's gutter year takes the slash because a year over
-  its months is a hierarchy. The rail's `.term-count` is the one exception and takes a
-  filled ring: a term cloud is a wrapped run of words with no sequence to punctuate, and
-  an outline in `--c-rule` measures 1.16:1 with no divider behind it to break.
+- **`[n]` means literal; `/` means path.** Both come from the SHEET, never from a renderer
+  — the round parentheses in the base sheet too, or the switch could not put them back.
+  Dates, figures, indices, counts and the pager are all bracketed, and **the brackets are
+  `--c-meta` while their contents are `--c-text`**: they are punctuation, not the value.
+  The feed's gutter year takes the slash because a year over its months is a hierarchy.
   Markup supplies only the wrappers CSS cannot invent: `.num` round a figure, `.term-list`
-  round a run of terms. Tested both ends.
+  round a run of terms. Tested both ends. (The rail's counts were a filled ring for one
+  deploy, on the argument that a term cloud has no sequence to punctuate. Rejected.)
 - **The rail keeps the alignment it has with the switch off:** ranged right, hugging the
   article, which is what the owner asked for. The line numbers are rings sitting ON the
   rail's divider out past the text, so they cost the rail no width. An earlier pass ranged
@@ -188,6 +186,30 @@ and no island runs.
 - **The gutter is legible** (`--c-meta`, 4.56:1), not a hairline. `--c-rule` measured
   1.16:1 against the page, and a generated counter is still announced by some screen
   readers. What makes a gutter a gutter is where it sits and that its figures are tabular.
+
+## The article's right gutter — the info panel (HARD RULES)
+
+Above the rail breakpoint an article's right gutter carries `.post-info`: the date, the
+length, the way into book mode, then the tags and the categories, **one fact per line**. The
+article header is then the title and the deck alone. `post-info.ts` renders it;
+`singleRailCss` places it.
+
+- **It does NOT scroll with the article** and its box does not scroll internally. A sticky
+  panel rides down the gutter and sits on top of the wide images, which nose out into that
+  same gutter by one rail width. The owner ruled on this directly.
+- **A `#wide` image or video in the first two blocks stays in the column.** Measured: a post
+  opening on one printed the panel's tag rows across the picture. The gutter cannot hold
+  both, and text over a photograph is the worse failure. Two blocks and not one, because the
+  panel runs to six rows and the header is only the `h1` when the deck is off.
+- **The same facts are in the markup twice, and exactly one copy has a box at any width.**
+  Below the breakpoint there is no gutter: the panel is `display:none` and the meta line
+  above the title plus the taxonomy over its rule are what the reader gets, unchanged. Above
+  it, `.post-meta,.taxo-rule,.post-taxo{display:none}`. That rule travels with the panel —
+  a panel with nothing hidden is the date printed twice. (`drawer-only` in the listing
+  sidebar is the same pattern.) `book.ts` therefore binds **every** `[data-book-open]`.
+- **The end-of-article anchors are their own empty `.anchor` elements**, never ids on the
+  taxonomy. An anchor with no box cannot be scrolled to, so ids on the hidden paragraphs
+  killed the contents list's last row on every desktop, silently.
 
 ## Chrome reuse, divider, colour (HARD RULES)
 

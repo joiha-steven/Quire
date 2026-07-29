@@ -22,6 +22,7 @@ import { PUBLIC_SHEET, scriptTag } from '@/web/assets'
 import { ogImageUrl } from '@/render/og'
 import { isPublicallyVisible, clampExcerpt, readingMinutes, toPlainText, wordCount } from '@/utils'
 import { renderDocument, pageStyles } from '@/web/layout'
+import { postInfoPanel, termLinks } from '@/web/post-info'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -40,14 +41,6 @@ async function mediaFacts(): Promise<{ ready: Set<string>; dims: ImageDims }> {
     if (r.width && r.height) dims.set(key, { width: r.width, height: r.height })
   }
   return { ready, dims }
-}
-
-/** Comma-separated term links, as the frozen tree rendered them. Tags read lowercase. */
-function terms(list: string[], kind: 'category' | 'tag', lower = false): string {
-  return list
-    .map((x) => `<a class="link-accent${lower ? ' lower' : ''}" href="/${kind}/${
-      escapeAttr(termSlug(x))}">${escapeHtml(x)}</a>`)
-    .join(', ')
 }
 
 export async function renderArticle(slug: string): Promise<string | null> {
@@ -91,8 +84,10 @@ export async function renderArticle(slug: string): Promise<string | null> {
     const book = features.bookMode
       ? ` · <button type="button" class="book-mode-toggle" data-book-open>${escapeHtml(s.bookMode)}</button>`
       : ''
+    // `post-meta` is the handle the wide layout hides it by: above the rail breakpoint the
+    // same facts are in the right gutter, one per line, and two copies would be two copies.
     header = `<header>
-<p class="t-small text-meta">${category
+<p class="t-small text-meta post-meta">${category
       ? `<a class="link-accent" href="/category/${escapeAttr(termSlug(category))}">${escapeHtml(category)}</a> · `
       : ''}<time datetime="${escapeAttr(post.date)}">${
       escapeHtml(formatDate(post.date, settings.language))}</time>${length}${book}</p>
@@ -122,12 +117,21 @@ export async function renderArticle(slug: string): Promise<string | null> {
     const list = (html: string) => `<span class="term-list">${html}</span>`
     const taxo = [
       post.tags.length
-        ? `<p id="post-tags">${escapeHtml(s.tagLabel)}: ${list(terms(post.tags, 'tag', true))}</p>` : '',
+        ? `<p>${escapeHtml(s.tagLabel)}: ${list(termLinks(post.tags, 'tag', true))}</p>` : '',
       post.categories.length
-        ? `<p id="post-categories">${escapeHtml(s.categoryLabel)}: ${
-          list(terms(post.categories, 'category'))}</p>` : '',
+        ? `<p>${escapeHtml(s.categoryLabel)}: ${
+          list(termLinks(post.categories, 'category'))}</p>` : '',
     ].filter(Boolean).join('')
-    const taxoBlock = taxo ? `<hr><footer class="post-taxo t-small text-meta">${taxo}</footer>` : ''
+    // The anchors are their own empty elements rather than ids on the paragraphs, because
+    // above the rail breakpoint those paragraphs are `display:none` — and an anchor with no
+    // box cannot be scrolled to, so the contents list's last row would have died silently on
+    // every desktop. These two always have a box, and they mark the end of the article
+    // whichever copy of the taxonomy the reader is actually being shown.
+    const anchors = `<span class="anchor" id="${TOC_ANCHORS.tags}"></span>`
+      + `<span class="anchor" id="${TOC_ANCHORS.categories}"></span>`
+    const taxoBlock = taxo
+      ? `${anchors}<hr class="taxo-rule"><footer class="post-taxo t-small text-meta">${taxo}</footer>`
+      : ''
 
     const related = features.related ? await getRelatedPosts(post.slug, settings.relatedCount) : []
     const relatedBlock = related.length
@@ -136,7 +140,9 @@ export async function renderArticle(slug: string): Promise<string | null> {
             + `<p class="t-small text-meta">${escapeHtml(formatDate(r.date, settings.language))}</p></li>`).join('')
         }</ul></section>`
       : ''
-    lead = seriesBox
+    // The right gutter, above the rail breakpoint only. It carries the same facts as the
+    // meta line and the taxonomy, so both of those are hidden at that width.
+    lead = postInfoPanel(post, settings, s) + seriesBox
     footer = taxoBlock + relatedBlock
   }
 

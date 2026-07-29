@@ -55,44 +55,39 @@ html[data-ide-chrome=on] .empty::before{content:"// ";color:var(--c-meta)}
    The brackets are a shade LIGHTER than what they hold. They are punctuation, not the
    value, and at the same weight as the digits a meta line reads as a row of boxes rather
    than as a date followed by two figures. */
+   ONE bracket for every literal, and the term counts are in it too. They were a filled
+   ring for one deploy, on the reasoning that a term cloud has no sequence to punctuate;
+   the owner looked at it and said it was ugly, which settles it. Brackets everywhere is
+   also the simpler rule to hold. */
 html[data-ide-chrome=on] .rail-count,
+html[data-ide-chrome=on] .term-count,
 html[data-ide-chrome=on] .pager-count,
 html[data-ide-chrome=on] .t-small time,
 html[data-ide-chrome=on] .comment-meta time,
 html[data-ide-chrome=on] .related p,
 html[data-ide-chrome=on] .num{color:var(--c-text)}
+html[data-ide-chrome=on] .term-count{opacity:1}
 html[data-ide-chrome=on] .rail-count::before,
+html[data-ide-chrome=on] .term-count::before,
 html[data-ide-chrome=on] .pager-count::before,
 html[data-ide-chrome=on] .t-small time::before,
 html[data-ide-chrome=on] .comment-meta time::before,
 html[data-ide-chrome=on] .related p::before,
 html[data-ide-chrome=on] .num::before{content:"[";color:var(--c-meta)}
 html[data-ide-chrome=on] .rail-count::after,
+html[data-ide-chrome=on] .term-count::after,
 html[data-ide-chrome=on] .pager-count::after,
 html[data-ide-chrome=on] .t-small time::after,
 html[data-ide-chrome=on] .comment-meta time::after,
 html[data-ide-chrome=on] .related p::after,
 html[data-ide-chrome=on] .num::after{content:"]";color:var(--c-meta)}
 
-/* The rail's term counts are the ONE count that is not bracketed, because in the gutter
-   they are not read in sequence with anything: a term cloud is a wrapped run of words and
-   each count belongs to the word beside it. It takes the ring the article index already
-   uses for its line numbers, which is the same shape the feed's year and month markers
-   speak. Brackets would have been a third punctuation mark in a 250px column.
-
-   The row gap opens up under the switch: an 18px ring is taller than the line it sits on,
-   and at the base .25rem the rings in one row touched the words in the next. */
-html[data-ide-chrome=on] .rail-tags{row-gap:.5rem}
-html[data-ide-chrome=on] .term-count{display:inline-flex;align-items:center;
-  justify-content:center;width:18px;height:18px;margin-left:.35rem;vertical-align:middle;
-  border-radius:50%;background:var(--c-rule);color:var(--c-text);opacity:1;
-  font-size:.68em;font-variant-numeric:tabular-nums}
-
 /* A post's tags and categories are a comma-separated run already. In brackets they read
    as the array literal they are: tags: [css, typography]. The label and its colon are
-   the markup's; only the brackets are ours. */
-html[data-ide-chrome=on] .post-taxo .term-list::before{content:"["}
-html[data-ide-chrome=on] .post-taxo .term-list::after{content:"]"}
+   the markup's; only the brackets are ours. Unscoped, because the same run appears in the
+   article footer on a narrow screen and in the right-hand info panel on a wide one. */
+html[data-ide-chrome=on] .term-list::before{content:"[";color:var(--c-meta)}
+html[data-ide-chrome=on] .term-list::after{content:"]";color:var(--c-meta)}
 
 /* Two more lists that were bare: the related posts and the parts of a series. Both are
    indexed rather than counted, so they take the same brackets ranged in their own column

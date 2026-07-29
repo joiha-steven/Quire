@@ -281,16 +281,16 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     expect(idelines()).toContain('.num::after{content:"]";color:var(--c-meta)}')
   })
 
-  it('gives the rail\'s term counts a ring instead, because a cloud has no sequence', () => {
-    // The one count that is NOT bracketed. A term cloud is a wrapped run of words and each
-    // count belongs to the word beside it, so it takes the ring the article index already
-    // uses — brackets would be a third punctuation mark in a 250px column.
-    // The block itself, not `idelines()`: that helper keeps only the lines carrying the
-    // selector, which is what proves the gating and is exactly wrong for reading a body.
-    const ring = /html\[data-ide-chrome=on] \.term-count\{[^}]*}/.exec(PUBLIC_CSS)?.[0] ?? ''
-    expect(ring).toContain('border-radius:50%')
-    expect(ring).toContain('background:var(--c-rule)')
-    expect(idelines()).not.toContain('.term-count::before')
+  it('brackets the rail\'s term counts too, and does not ring them', () => {
+    // They were a filled ring for one deploy, on the reasoning that a term cloud has no
+    // sequence to punctuate. The owner looked at it and said it was ugly, which settles it —
+    // and one bracket for every literal is the simpler rule to hold anyway.
+    expect(idelines()).toContain('.term-count::before')
+    // The whole of what the switch does to it: lift the base sheet's .6 opacity. Anything
+    // more and the ring is back. (`border-radius:50%` alone is no test — the feed's dots and
+    // the index's line numbers are circles too.)
+    const block = /html\[data-ide-chrome=on] \.term-count\{[^}]*}/.exec(PUBLIC_CSS)?.[0] ?? ''
+    expect(block).toBe('html[data-ide-chrome=on] .term-count{opacity:1}')
   })
 
   it('gives the archive year a path mark rather than brackets', () => {

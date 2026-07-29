@@ -102,7 +102,23 @@ article > header .t-small{margin:0}
 #post-body{margin-top:2.5rem}
 /* Tags and categories over a rule: the rule is where the article ends. Without it the
    taxonomy reads as one more paragraph. */
-.post-taxo p{margin:0 0 .25rem;scroll-margin-top:6rem}
+.post-taxo p{margin:0 0 .25rem}
+/* The end-of-article anchors the contents list jumps to. Their own empty elements, because
+   the taxonomy they used to sit on is hidden in the wide layout and an anchor with no box
+   cannot be scrolled to. Zero height, so they cost the flow nothing at either width. */
+.anchor{display:block;height:0;scroll-margin-top:6rem}
+/* The right gutter of an article: the same facts as the meta line and the taxonomy, one per
+   line, placed by singleRailCss above the rail breakpoint. Absent by default — below that
+   breakpoint there is no gutter, and the in-flow originals are what the reader gets. */
+.post-info{display:none}
+.post-info p{margin:0}
+.post-info p + p{margin-top:.35rem}
+/* The taxonomy is a different KIND of fact from the length of the read, so it gets a gap
+   rather than a rule: a second hairline beside the divider would be two lines meeting.
+   NOT .info-terms:first-of-type — every row here is a p, so that matched the DATE and the
+   gap opened in the wrong place. It is the first terms row after a non-terms row. */
+.post-info p:not(.info-terms) + .info-terms{margin-top:1.25rem}
+.post-info .info-terms + .info-terms{margin-top:.25rem}
 /* End-of-article furniture, and it needs its own scale rather than the page's. The link had
    NO size rule at all, so a related title inherited the BODY size: the quietest thing on the
    page (a list of "you might also read") was set as large as the writing, and in the chrome

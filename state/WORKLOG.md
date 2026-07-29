@@ -326,3 +326,46 @@ Checked on a local instance seeded to match the live settings (Vietnamese, JetBr
 chrome, the switch on, 720px column): eleven posts across two years, a three-part series,
 a paginated archive and an empty term page, in both palettes. The deployed bytes were then
 verified at the origin rather than through the CDN.
+
+## 2026-07-29 — the article's right gutter finally has a job
+
+The owner asked whether the tags, the categories, the related posts and the sign-up card
+should move into the empty right gutter of an article. Half of them should. Tags and
+categories are short labels about the file rather than content, which is what a margin is
+for; a related-post title is a long Vietnamese headline that wraps to five lines at 250px
+and stops being marginalia, and the sign-up card is a form that needs the width. The owner
+took that split and added the meta line to it, so the right gutter now carries the date,
+the word count, the reading time, the way into book mode, and then the taxonomy — one fact
+per line, because 250px is too narrow for a run of middots and the wrap lands mid-phrase.
+The article header on a desktop is now the title and the deck, and nothing else.
+
+**It does not scroll with the article**, on the owner's instruction and for a concrete
+reason: a sticky panel would ride down the gutter and sit on top of any wide image, which
+noses out into that same gutter by one rail width.
+
+That turned out not to be enough. A post that OPENS with a `#wide` image printed the panel's
+tag rows straight across the picture — photographed, not reasoned about. So a wide image or
+video in the first two blocks now stays in the column. Two blocks rather than one because
+the panel runs to six rows and the header is only the `h1` when the deck is switched off,
+which puts the second block level with it too. A wide image further down still noses out,
+which was checked separately.
+
+Mobile is unchanged, which was the owner's condition and the reason the same facts are in
+the markup twice: below the breakpoint there is no gutter, the panel is `display:none`, and
+the meta line and the taxonomy sit exactly where they always did. Measured at three widths —
+1584, 1184 and 500 — and at each one precisely one copy has a box, so a screen reader is
+never read the date twice. Two consequences worth remembering:
+
+- `book.ts` bound the FIRST `[data-book-open]`. There are two now and only one has a box, so
+  the button was dead on whichever layout lost the coin toss. It binds all of them.
+- The contents list's last row jumped to `#post-tags`, an id on a paragraph that is now
+  hidden on every desktop — and an anchor with no box cannot be scrolled to, so that row
+  would have died silently. The anchors are their own empty elements at the end of the
+  article now.
+
+Also this round, from the owner: the meta line's date and figures take the same brackets as
+everything else, with **the brackets a shade lighter than what they hold** — they are
+punctuation, not the value, and at equal weight the line reads as a row of boxes. And the
+rail's term counts, which were a filled ring for one deploy on the argument that a term
+cloud has no sequence to punctuate, are brackets again. The owner looked at the ring and
+said it was ugly. One bracket for every literal is the simpler rule anyway.

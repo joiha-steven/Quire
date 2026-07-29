@@ -46,9 +46,28 @@ export function singleRailCss(colWidth: number): string {
     `.rail-row{padding-left:0;padding-right:var(--rail-pad)}` +
     `.rail-row[aria-current]::before{left:auto;right:0}` +
     `.rail-toggle,.rail-scrim{display:none}` +
+    // The post info panel takes the right gutter: the date, the length, the way into book
+    // mode and the taxonomy, one fact per line. It is NOT sticky and its inner box does not
+    // scroll — it stands at the top of the article and leaves with it. A sticky panel would
+    // ride down the gutter and sit on top of the wide images below, which nose out into
+    // that same gutter by one rail width (the rule right underneath this one).
+    `.post-info{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left;` +
+    `padding-left:var(--rail-pad);height:auto}` +
+    `.post-info::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;width:1px;background:var(--c-rule);z-index:-1}` +
+    // Exactly one copy of these facts has a box at any width. Below this breakpoint there is
+    // no gutter, the panel is display:none, and the meta line above the title plus the
+    // taxonomy over its rule are what the reader gets, unchanged.
+    `.post-meta,.taxo-rule,.post-taxo{display:none}` +
     // A "wide" image or video noses right into the freed gutter by one rail width.
     `.prose figure.img-wide,.prose .video-wide{width:calc(100% + var(--rail-w) + var(--rail-gap));max-width:none;margin-left:0;` +
-    `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)))}}`
+    `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)))}` +
+    // ...except in the first two blocks, which are level with the info panel. The gutter
+    // cannot hold both, and a photograph with "Tags: [x]" printed across it is the worse of
+    // the two failures. MEASURED, not guessed: a post opening on a #wide image put the
+    // panel's last two rows inside the picture. Two blocks rather than one because the
+    // panel is up to six rows and the header is only the h1 when the deck is switched off,
+    // which puts the SECOND block level with it too.
+    `.prose > :is(figure.img-wide,.video-wide):nth-child(-n+2){width:100%;margin-right:0}}`
   )
 }
 
