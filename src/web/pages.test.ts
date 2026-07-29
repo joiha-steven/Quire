@@ -247,3 +247,36 @@ describe('the table of contents', () => {
     expect(await get('/about').then((r) => r.text())).not.toContain('<nav class="toc rail"')
   })
 })
+
+// CSS cannot colour half a text node, and it cannot bracket a run of links that has no
+// element around it. Three wrappers exist for the IDE chrome alone, and every one of them
+// is invisible with the switch off — which is exactly how a wrapper gets "tidied away" and
+// takes a feature with it.
+describe('the markup hooks the IDE chrome needs', () => {
+  it('wraps the figures in a meta line and leaves the units bare', async () => {
+    // "1,240 tu - 6 phut doc": the digits are literals and the units are words, so the
+    // digits need their own element to be coloured apart from them.
+    await savePost({ title: 'Numbers', content: 'body text here', status: 'published', date: PAST })
+    expect(await get('/numbers').then((r) => r.text())).toMatch(/<span class="num">\d/)
+  })
+
+  it('wraps the run of tags and of categories, so each can be bracketed as an array', async () => {
+    await savePost({
+      title: 'Termed', content: 'body text here', status: 'published', date: PAST,
+      tags: ['one'], categories: ['Two'],
+    })
+    const html = await get('/termed').then((r) => r.text())
+    expect(html.match(/<span class="term-list">/g)).toHaveLength(2)
+  })
+
+  it('leaves a sidebar count unparenthesised, because the sheet supplies the brackets', async () => {
+    // Typed here, the parentheses could not be swapped for square ones, and the taxonomy
+    // read "(7)" three lines under a list that read "[7]".
+    await savePost({
+      title: 'Counted', content: 'body text here', status: 'published', date: PAST,
+      categories: ['Two'],
+    })
+    const html = await get('/').then((r) => r.text())
+    expect(html).toContain('<span class="term-count">1</span>')
+  })
+})

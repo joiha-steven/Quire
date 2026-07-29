@@ -48,8 +48,9 @@ function card(post: Post, settings: SiteSettings, opts: CardOptions = {}): strin
     : ''
   // The suffix comes from the locale table. It read a hardcoded " min" here, so a
   // Vietnamese blog said "38 min" where every other surface said "38 phút đọc".
+  // The figure is wrapped and the unit is not, so the IDE chrome can set the literal apart.
   const minutes = readingTime && post.readingMinutes
-    ? ` · ${post.readingMinutes} ${escapeHtml(tx.readingSuffix)}`
+    ? ` · <span class="num">${post.readingMinutes}</span> ${escapeHtml(tx.readingSuffix)}`
     : ''
   const Title = opts.lead ? 'h1' : 'h2'
   const size = opts.lead ? 'fs-h1' : 'fs-h2'

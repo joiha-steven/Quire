@@ -79,9 +79,12 @@ export async function renderArticle(slug: string): Promise<string | null> {
     // date, the length of the read, and the way into book mode. It read "14 min" with the
     // word count missing entirely — the suffixes are in the locale table for a reason.
     const category = features.categoryLabel ? post.categories[0] : undefined
+    // The figures are wrapped and the units are not: the IDE chrome sets a literal apart
+    // from the words around it, and it cannot do that to a bare text node.
     const length = features.readingTime
-      ? ` · ${formatCount(wordCount(post.content), settings.language)} ${escapeHtml(s.wordsSuffix)}`
-        + ` · ${readingMinutes(post.content)} ${escapeHtml(s.readingSuffix)}`
+      ? ` · <span class="num">${formatCount(wordCount(post.content), settings.language)}</span>`
+        + ` ${escapeHtml(s.wordsSuffix)}`
+        + ` · <span class="num">${readingMinutes(post.content)}</span> ${escapeHtml(s.readingSuffix)}`
       : ''
     // Desktop and tablet only, hidden by CSS on a narrow screen: two columns of type in
     // a phone-width viewport is worse than one, not better.
@@ -115,10 +118,14 @@ export async function renderArticle(slug: string): Promise<string | null> {
       : ''
     // Tags and categories, each on its own labelled line, over a rule. The rule is the
     // article ending; without it the taxonomy reads as one more paragraph.
+    // The run of terms is wrapped so the IDE chrome can bracket it into an array literal.
+    const list = (html: string) => `<span class="term-list">${html}</span>`
     const taxo = [
-      post.tags.length ? `<p id="post-tags">${escapeHtml(s.tagLabel)}: ${terms(post.tags, 'tag', true)}</p>` : '',
+      post.tags.length
+        ? `<p id="post-tags">${escapeHtml(s.tagLabel)}: ${list(terms(post.tags, 'tag', true))}</p>` : '',
       post.categories.length
-        ? `<p id="post-categories">${escapeHtml(s.categoryLabel)}: ${terms(post.categories, 'category')}</p>` : '',
+        ? `<p id="post-categories">${escapeHtml(s.categoryLabel)}: ${
+          list(terms(post.categories, 'category'))}</p>` : '',
     ].filter(Boolean).join('')
     const taxoBlock = taxo ? `<hr><footer class="post-taxo t-small text-meta">${taxo}</footer>` : ''
 

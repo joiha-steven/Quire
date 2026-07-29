@@ -72,7 +72,9 @@ function termCloud(
     const { attr, cls } = activeBits(l.href, activeHref)
     return `<a class="link-accent t-small${cls}" href="${escapeAttr(l.href)}"${attr}>`
       + escapeHtml(l.label)
-      + (l.count == null ? '' : `<span class="term-count">(${l.count})</span>`)
+      // The parentheses are in the sheet, not here: the IDE chrome swaps them for square
+      // brackets, and a renderer that types them makes that impossible.
+      + (l.count == null ? '' : `<span class="term-count">${l.count}</span>`)
       + '</a>'
   }).join('')
   return `<div><h2>${escapeHtml(title)}</h2>`

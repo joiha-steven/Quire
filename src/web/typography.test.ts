@@ -211,6 +211,10 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
   // The owner's brief: the furniture reads as source code while the reading column stays
   // analogue. The contrast IS the design, which also makes it a taste — so it is a switch,
   // and every rule behind it hangs off one attribute selector.
+  /** Only the lines the switch owns — never the base sheet's, which say different things. */
+  const idelines = () =>
+    PUBLIC_CSS.split('\n').filter((l) => l.includes('data-ide-chrome')).join('\n')
+
   it('gates every rule on the attribute, so nothing leaks when it is off', () => {
     const ide = PUBLIC_CSS.split('\n').filter((l) => l.includes('data-ide-chrome'))
     expect(ide.length).toBeGreaterThan(8)
@@ -243,5 +247,36 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     expect(ide).not.toContain('var(--c-accent)')
     expect(ide).not.toContain('var(--c-link)')
     expect(ide).not.toMatch(/#[0-9a-fA-F]{3,8}/)
+  })
+
+  it('marks EVERY chrome label, not just the rail\'s', () => {
+    // The treatment used to stop at the rail. Everything below it on an article page — the
+    // related list, the sign-up card, the comment thread, the series head — is furniture
+    // too, and it carried none of the marker, which is what the owner saw: a page that
+    // read as source code for two inches and then gave up.
+    const ide = idelines()
+    for (const label of [
+      '.rail h2::before', 'header.site .tagline::before', 'aside.series .series-head::before',
+      '.related h2::before', '.subscribe-card h2::before', '#comments h2::before',
+      '.empty::before',
+    ]) expect(ide).toContain(label)
+  })
+
+  it('brackets every count from the SHEET, so two renderers cannot disagree', () => {
+    // The sidebar typed its own parentheses, so the taxonomy read "(7)" three lines under a
+    // list that read "[7]". Both pairs come from CSS now — the round ones from the base
+    // sheet, the square ones from the switch — which is also what makes it reversible.
+    expect(PUBLIC_CSS).toContain('.term-count::before{content:"("}')
+    const ide = idelines()
+    for (const count of ['.rail-count::before', '.term-count::before', '.pager-count::before']) {
+      expect(ide).toContain(count)
+    }
+  })
+
+  it('gives the archive year a path mark rather than brackets', () => {
+    // The feed's right gutter is a year over its months: a path, not a count. Brackets mean
+    // "index" everywhere else here, and using them for a directory would say the wrong
+    // thing in the one place the site already has a hierarchy to show.
+    expect(idelines()).toContain('.tl-year-tag::after{content:"/"')
   })
 })

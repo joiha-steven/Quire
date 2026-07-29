@@ -27,16 +27,70 @@ export const IDE_CSS = `
    already set in: a clear step darker than the label, and silent. */
 
 /* Labels are comments. The marker is CSS, not markup, so the heading a screen reader
-   and a feed see stays the plain word. */
-html[data-ide-chrome=on] .rail h2::before{content:"// ";color:var(--c-meta)}
+   and a feed see stays the plain word.
 
-/* Counts are literals, bracketed like an index. */
-html[data-ide-chrome=on] .rail-count{color:var(--c-text)}
-html[data-ide-chrome=on] .rail-count::before{content:"["}
-html[data-ide-chrome=on] .rail-count::after{content:"]"}
-html[data-ide-chrome=on] .term-count{color:var(--c-text);opacity:1}
-/* The date and the reading time are literals too; the words between them are not. */
-html[data-ide-chrome=on] .t-small time{color:var(--c-text)}
+   ONE list, covering every chrome label the site has. It used to be the rail alone, and
+   the treatment stopped halfway down the article: the rail said "// Muc luc" and then the
+   related posts, the sign-up card, the comment thread and the series head - all of them
+   furniture, none of them the reader's words - said nothing at all. The tagline is in
+   here because that is exactly what it is: the line under the name that says what this
+   file is for. */
+html[data-ide-chrome=on] .rail h2::before,
+html[data-ide-chrome=on] header.site .tagline::before,
+html[data-ide-chrome=on] aside.series .series-head::before,
+html[data-ide-chrome=on] .related h2::before,
+html[data-ide-chrome=on] .subscribe-card h2::before,
+html[data-ide-chrome=on] #comments h2::before,
+html[data-ide-chrome=on] .empty::before{content:"// ";color:var(--c-meta)}
+
+/* Counts are literals, bracketed like an index — every count, in the same brackets. The
+   rail's own counts were bracketed and the taxonomy's were in ROUND ones, because those
+   came from the markup rather than from here; the pager's "1 / 5" had nothing. The
+   parentheses now come from CSS too, so this can swap them for square without touching a
+   renderer, and switching the chrome off puts them back. */
+html[data-ide-chrome=on] .rail-count,
+html[data-ide-chrome=on] .term-count,
+html[data-ide-chrome=on] .pager-count{color:var(--c-text)}
+html[data-ide-chrome=on] .term-count{opacity:1}
+html[data-ide-chrome=on] .rail-count::before,
+html[data-ide-chrome=on] .term-count::before,
+html[data-ide-chrome=on] .pager-count::before{content:"["}
+html[data-ide-chrome=on] .rail-count::after,
+html[data-ide-chrome=on] .term-count::after,
+html[data-ide-chrome=on] .pager-count::after{content:"]"}
+/* Dates and figures are literals; the words between them are not. That is the whole of
+   the syntax highlighting, and it is why the counts in a meta line are wrapped in markup:
+   "1,240 tu - 6 phut doc" has to be able to set the digits apart from the units. */
+html[data-ide-chrome=on] .t-small time,
+html[data-ide-chrome=on] .comment-meta time,
+html[data-ide-chrome=on] .related p,
+html[data-ide-chrome=on] .num{color:var(--c-text)}
+
+/* A post's tags and categories are a comma-separated run already. In brackets they read
+   as the array literal they are: tags: [css, typography]. The label and its colon are
+   the markup's; only the brackets are ours. */
+html[data-ide-chrome=on] .post-taxo .term-list::before{content:"["}
+html[data-ide-chrome=on] .post-taxo .term-list::after{content:"]"}
+
+/* Two more lists that were bare: the related posts and the parts of a series. Both are
+   indexed rather than counted, so they take the same brackets ranged in their own column
+   — a references panel, not a bulleted list. The series had decimal markers, which is the
+   one place the switch REPLACES something rather than adding to it. */
+html[data-ide-chrome=on] .related ul{counter-reset:rel}
+html[data-ide-chrome=on] .related li{counter-increment:rel;position:relative;padding-left:4ch}
+html[data-ide-chrome=on] .related li::before{content:"[" counter(rel) "]";position:absolute;
+  left:0;top:0;color:var(--c-meta);font-variant-numeric:tabular-nums}
+html[data-ide-chrome=on] aside.series ol{list-style:none;padding-left:0;counter-reset:part}
+html[data-ide-chrome=on] aside.series li{counter-increment:part;position:relative;padding-left:4ch}
+html[data-ide-chrome=on] aside.series li::before{content:"[" counter(part) "]";position:absolute;
+  left:0;top:0;color:var(--c-meta);font-variant-numeric:tabular-nums}
+
+/* The feed's right gutter is a year over its months, which is a PATH and not a count — so
+   it takes a separator rather than brackets. The year is sticky, so exactly one is ever on
+   screen, and the month markers below it read as the next segment: 2026/ ... Thang 6.
+   The tag is a flex row with a .5rem gap, and a pseudo-element is a flex ITEM, so the gap
+   would push the slash a space clear of the digits. The negative margin cancels it. */
+html[data-ide-chrome=on] .tl-year-tag::after{content:"/";margin-left:-.5rem;color:var(--c-meta)}
 
 /* THE GUTTER. A counter on the list, ranged right in its own column, exactly as an
    editor numbers lines. It is decoration, so it is aria-hidden by being generated

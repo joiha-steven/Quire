@@ -165,12 +165,21 @@ and no island runs.
   not look technical. Tested.
 - **Two syntax roles, both from theme tokens.** An editor distinguishes a comment from a
   literal, so: labels are `--c-meta` and carry a `//` marker from CSS (never markup, so the
-  heading a feed and a screen reader see stays the plain word); counts and dates are
-  `--c-accent` and counts are bracketed. No third colour, no hex. Tested.
-- **The rail ranges LEFT in here**, and the row packs `space-between`. In the gutter layout
-  it ranges right so its text hugs the article — correct typography, and exactly wrong for
-  a line-number gutter. `text-align` alone does nothing to a flex item; `justify-content`
-  is what ranges the row.
+  heading a feed and a screen reader see stays the plain word); counts, dates and figures
+  are `--c-text` and counts are bracketed. Never `--c-accent`: this blog's accent is red,
+  so every date read as a link that was not one. No third colour, no hex. Tested.
+- **Every chrome label is marked, not just the rail's** — the tagline, the series head,
+  the related list, the sign-up card, the comment thread, an empty state. One selector
+  list, so a new chrome heading that is missed is visibly missed. Tested.
+- **`[n]` means index or count; `/` means path.** Both come from the SHEET, never from a
+  renderer — the round parentheses in the base sheet too, or the switch could not put them
+  back. The feed's gutter year takes the slash because a year over its months is a
+  hierarchy, not a count. Markup supplies only the wrappers CSS cannot invent:
+  `.num` round a figure, `.term-list` round a run of terms. Tested both ends.
+- **The rail keeps the alignment it has with the switch off:** ranged right, hugging the
+  article, which is what the owner asked for. The line numbers are rings sitting ON the
+  rail's divider out past the text, so they cost the rail no width. An earlier pass ranged
+  the rail left to put a gutter column where an editor puts it, and it was rejected.
 - **The gutter is legible** (`--c-meta`, 4.56:1), not a hairline. `--c-rule` measured
   1.16:1 against the page, and a generated counter is still announced by some screen
   readers. What makes a gutter a gutter is where it sits and that its figures are tabular.

@@ -303,7 +303,12 @@ html[data-rail=open] .rail{transform:none}
 .rail-tags a{color:var(--c-meta)}
 /* Tags are many and short: a wrapped run of plain words, no chips, no boxes. */
 .rail-tags.lower a{text-transform:lowercase}
+/* The brackets are CSS, not markup, so the IDE chrome can swap them for square ones and
+   switching it off puts them back. They used to be typed into the sidebar renderer, which
+   is why the taxonomy read "(7)" while the list beside it read "[7]". */
 .term-count{margin-left:.25rem;opacity:.6;font-variant-numeric:tabular-nums}
+.term-count::before{content:"("}
+.term-count::after{content:")"}
 .rail-row.is-active,.rail-tags a.is-active{font-weight:500;color:var(--c-heading)}
 .rail-tags a.is-active{text-decoration:underline;text-decoration-color:var(--c-accent);
   text-underline-offset:4px}
