@@ -120,17 +120,17 @@ export function allFontFaceCss(): string {
  * sets the property no longer inherits the correction, so every one of them has to be
  * listed here.
  *
- * Reading surfaces are deliberately ABSENT, and two of them used to be here by accident.
- * `figcaption` and `.footnotes` sit inside the article and inherit `--font-reading`, so
- * they are set in the READING face — but with no tracking of their own they inherited the
- * correction from `body`, which is a mono adjustment applied to a serif. Measured
- * 2026-07-29: both were carrying -0.05em under a JetBrains Mono chrome while rendering in
- * Literata. They now take their own `--ls-caption` / `--ls-small`, like the rest of the
+ * Reading surfaces are deliberately ABSENT, and three of them used to be here by
+ * accident. `.deck`, `figcaption` and `.footnotes` sit inside the article and are set in
+ * the READING face — but with no tracking of their own they inherited the correction
+ * from `body`, which is a mono adjustment applied to a serif. Measured 2026-07-29: all
+ * three carried -0.05em under a JetBrains Mono chrome while rendering in Literata. They
+ * take their own `--ls-h4` / `--ls-caption` / `--ls-small` now, like the rest of the
  * article. `.prose`, `.fs-*` and anything carrying `.reading-font` were never in scope.
  */
 const CHROME_TRACKED = [
   'body', '.t-small:not(.reading-font)', '.t-body:not(.reading-font)',
-  'header.site .tagline', 'header.site .title', '.deck',
+  'header.site .tagline', 'header.site .title',
   'footer.site', '.pager', 'p.tags', '.related', 'aside.series',
   '.rail-sub', '.preview-note', '.subscribe-card', '#comments',
   '.code-copy', '.book-title', '.book-count', '.lightbox-caption', '.lightbox-count',

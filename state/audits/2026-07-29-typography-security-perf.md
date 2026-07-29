@@ -215,3 +215,39 @@ locale keys now, filled in all six.
 - **`.to-top` carries no `font-size`** and renders its glyph at the body size where
   `.code-copy` uses `--fs-caption`. Both are icons in hit targets; the inconsistency is
   cosmetic and `check:type` cannot see a rule that sets nothing.
+
+## Postscript — looking at the owner's OWN settings, not a preset
+
+Everything above was measured against seeded settings. The live site's are different, and
+two of the differences matter. Read off `manhhung.me` and reproduced locally:
+
+```
+contentWidth 720 (not the 672 default)      reading Literata · chrome JetBrains Mono · vi
+body 1.13/1.65   small 0.88/1.55   caption 0.81/1.5   code 0.88/1.6   h1 2.0 ls -0.01
+```
+
+**One more face seam, and the most visible one on the site.** `.deck` — the standfirst
+under a post title — is the post's EXCERPT, the same string a list card prints. A card
+prints it in the reading font. The deck had no family of its own, so it fell to
+`--font-sans`: on this blog that is JetBrains Mono. Every post therefore opened with a book
+serif headline and a terminal subtitle, one line apart. Fixed, and it came out of
+`CHROME_TRACKED` with the other two reading surfaces. Same class as the comment body.
+
+**The measure is 76 characters, not 71.** `contentWidth` 720 gives a 656px column; at
+Literata 18.1px that is 76 characters per line, past the 45-75 band and past what any
+measurement in this file assumed. ~690px would land it at 72. The owner's setting, so it is
+reported rather than changed.
+
+**Secondary text is finer than any preset allows.** `small` is 0.88rem against a 1.13rem
+body — a ratio of **0.78**, below the 0.8 floor `web/typography.test.ts` pins for every
+built-in preset, and `caption` is 0.81rem (13.0px). At `--c-meta` that puts the caption,
+the blockquote and the whole chrome at **4.56:1**, a sixteenth of a point above the AA
+minimum. Nothing fails; but the smallest text on the page is also the palest, and a book
+separates secondary matter by size and space while keeping the ink.
+
+**The article page is 290px out of balance.** Ink spans x=102 to x=1048 in a 1440 viewport:
+102px of margin on the left, 392px on the right, because the rail fills the left gutter and
+nothing fills the right. A listing is much closer (102 vs 240) because the year timeline
+occupies the right gutter. The reading column itself is centred to the pixel — it is the
+PAGE that is not. Deliberate (the rail is "type on the page", ADR-level) and therefore the
+owner's call, not a defect to fix silently.

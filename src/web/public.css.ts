@@ -89,8 +89,14 @@ header.site .tagline{color:var(--c-meta);font-size:var(--fs-small);
    come from the type-role classes. */
 article > header h1{color:var(--c-heading);margin:0}
 article > header .t-small{margin:0}
-/* Standfirst: the excerpt, so a long read opens on a sentence rather than a wall. */
-.deck{margin:1rem 0 0;color:var(--c-meta);
+/* Standfirst: the excerpt, so a long read opens on a sentence rather than a wall.
+   It is the AUTHOR'S words — the same string a list card prints — so it is set in the
+   reading face. It was not: with no family of its own it fell to --font-sans, so the same
+   excerpt rendered in Literata on the home page and in JetBrains Mono under the title of
+   the post it belongs to. A book serif headline with a terminal subtitle under it, and the
+   one seam on the page where the two faces touch. Same class as the comment body, which
+   lost its reading face in the port for the same reason. */
+.deck{margin:1rem 0 0;color:var(--c-meta);font-family:var(--font-reading);
   font-size:var(--fs-h4);line-height:var(--lh-h4);letter-spacing:var(--ls-h4)}
 #post-body{margin-top:2.5rem}
 /* Tags and categories over a rule: the rule is where the article ends. Without it the

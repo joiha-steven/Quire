@@ -134,3 +134,17 @@ describe('the mono-chrome tracking correction', () => {
     }
   })
 })
+
+describe('the author\'s own words are set in the reading face', () => {
+  // The deck IS the excerpt: the same string a list card prints, where it has always
+  // rendered in the reading font. Under the title it fell to --font-sans, so a blog with a
+  // mono chrome opened every post with a book-serif headline and a terminal subtitle.
+  it('gives the standfirst the reading family, as the card excerpt has', () => {
+    expect(PUBLIC_CSS).toContain('.deck{margin:1rem 0 0;color:var(--c-meta);font-family:var(--font-reading)')
+  })
+
+  it('keeps the standfirst out of the mono-chrome correction', () => {
+    expect(MONO_TRACKING).not.toContain(' .deck{')
+    expect(MONO_TRACKING).not.toContain(' .deck,')
+  })
+})
