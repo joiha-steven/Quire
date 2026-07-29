@@ -29,17 +29,15 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       over ([ADR 0012](../docs/decisions/0012-flatten-repo-after-cutover.md)). Repoint each
       citation at the 2.0 module. Mechanical, but it needs the code open beside it, and it
       pairs naturally with the `features.md` split below.
-- [ ] **Decide whether 45.8 KB of inlined CSS is the right trade.** Every page carries the
-      whole stylesheet inline: 13.8 KB gzipped of a 29.6 KB page, re-sent on every
-      navigation and never cached. It buys one less round trip on a cold visit. Nothing in
-      `docs/` says this was decided, and it is the largest single lever on repeat reads.
-      Measured 2026-07-29 (`state/audits/2026-07-29-post-cutover.md`).
 - [ ] **The app sends no `content-encoding`.** nginx gzips in front of it here, so the live
-      site is fine, but a self-hoster behind something that does not compress serves 104 KB
-      of HTML per page with no warning. Either compress in the app or say so in
-      `docs/self-host.md`.
-- [ ] **`--font-mono` is referenced in `prose.css.ts` and never defined.** Code always
-      falls through to `ui-monospace`. Define it or drop the reference.
+      site is fine, but a self-hoster behind something that does not compress serves the
+      HTML uncompressed. Now ~25 KB per post rather than ~65 KB, since the stylesheet moved
+      out of the page — a third of the old exposure, still unwarned. Either compress in the
+      app or say so in `docs/self-host.md`.
+- [ ] **The motion tokens `--dur-fast/base/slow` + `--ease` do not exist in 2.0**, and
+      `docs/conventions.md` states using them as a hard rule. Every duration in
+      `islands.css.ts` is a literal. Introduce the tokens or delete the rule; the ONE
+      motion switch (`data-motion`) is real either way.
 - [ ] **Decide how the binary ships, now that `sharp` is a dependency.** Measured
       2026-07-27: `bun build --compile` bundles sharp's JavaScript but NOT its
       `@img/sharp-<platform>` native module, so the compiled binary throws on the first
@@ -105,6 +103,13 @@ nobody has to rediscover them by eye:
       Go documents, was measured once, and the font figure beside it needed correcting.
 
 ## Done
+
+- [x] **The inlined stylesheet, decided and split. DONE 2026-07-29.** 42.6 KB of the 48.7 KB
+      assembled per page was byte-identical everywhere. The static half is now
+      `/assets/site.‹hash›.css`, `immutable`; the settings half stays inline after it.
+      HTML per post 65.0 → 25.4 KB. See `state/audits/2026-07-29-typography-security-perf.md`.
+- [x] **`--font-mono` defined. DONE 2026-07-29.** JetBrains Mono, self-hosted, for both
+      inline and fenced code. The owner chose a real mono over dropping the reference.
 
 - [x] **M4 — cutover. DONE 2026-07-28.** `manhhung.me` serves Quire 2.0; the frozen tree
       moved to `old.manhhung.me` with `noindex`. No reimport was needed (both sides matched

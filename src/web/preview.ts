@@ -15,7 +15,7 @@ import { verifyPreview } from '@/content/preview'
 import { formatDate, t } from '@/i18n/i18n'
 import { renderPostContent } from '@/render/post-content'
 import { renderDocument, pageStyles } from '@/web/layout'
-import { PUBLIC_CSS } from '@/web/public.css'
+import { PUBLIC_SHEET } from '@/web/assets'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -37,8 +37,8 @@ export async function handlePreview(c: Context): Promise<Response> {
 
   const html = renderDocument(
     settings,
-    { title: `${entry.title} · ${settings.title}` },
-    pageStyles(settings, PUBLIC_CSS),
+    { title: `${entry.title} · ${settings.title}`, stylesheet: PUBLIC_SHEET },
+    pageStyles(settings),
     `<div class="wrap">
 <article>
 <p class="preview-note">${escapeHtml(t(settings.language).previewNotice)}</p>

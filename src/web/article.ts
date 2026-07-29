@@ -18,11 +18,10 @@ import { extractHeadings } from '@/utils'
 import { TOC_ANCHORS } from '@/render/toc'
 import { termSlug } from '@/content/taxonomy'
 import { formatCount, formatDate, t } from '@/i18n/i18n'
-import { scriptTag } from '@/web/assets'
+import { PUBLIC_SHEET, scriptTag } from '@/web/assets'
 import { ogImageUrl } from '@/render/og'
 import { isPublicallyVisible, clampExcerpt, readingMinutes, toPlainText, wordCount } from '@/utils'
 import { renderDocument, pageStyles } from '@/web/layout'
-import { PUBLIC_CSS } from '@/web/public.css'
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -250,8 +249,9 @@ export async function renderArticle(slug: string): Promise<string | null> {
         date: post ? formatDate(post.date, settings.language) : undefined,
       }),
       ogType: post ? 'article' : 'website',
+      stylesheet: PUBLIC_SHEET,
     },
-    pageStyles(settings, PUBLIC_CSS),
+    pageStyles(settings),
     // `book-text` is the owner's book-typography switch: indented paragraphs, a tighter
     // lead between them, justified with hyphens once the column is wide enough. It sits on
     // the shell rather than on .prose so the editor and the reading view can share it.

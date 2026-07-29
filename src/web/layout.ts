@@ -27,6 +27,12 @@ export type Head = {
   ogType?: 'article' | 'website'
   /** Rendered verbatim into <head>. Callers pass already-escaped markup. */
   extra?: string
+  /**
+   * The hashed, immutable stylesheet to link BEFORE the inline settings block. Every
+   * public page passes `PUBLIC_SHEET`; the sign-in page passes nothing, because it renders
+   * off its own small sheet and has no cacheable half worth a request.
+   */
+  stylesheet?: string
 }
 
 /** The parts of the document outside `<head>` that a route can vary. */
@@ -50,21 +56,28 @@ const escapeHtml = (s: string) =>
 const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
 
 /**
- * The one stylesheet a reader loads, assembled from the owner's settings.
+ * The part of the sheet that depends on the OWNER'S SETTINGS, inlined into the page.
  *
- * Order is load-bearing: the base sheet first, then the preset fonts, then typography,
- * then the owner's custom font and CSS. Each later layer is allowed to win, and a fresh
- * install with nothing configured still gets a complete sheet.
+ * Order is load-bearing: the fonts first, then the reading column, then the palette and
+ * typography, then the owner's custom font and CSS. Each later layer is allowed to win, and
+ * a fresh install with nothing configured still gets a complete sheet.
+ *
+ * The static half is no longer here. It is `PUBLIC_SHEET`, linked immediately before this
+ * block so the cascade reads exactly as it did when the two were one string — see
+ * `web/assets.ts` for why it was split.
  */
-export function pageStyles(settings: SiteSettings, base: string, extra = ''): string {
+export function pageStyles(settings: SiteSettings, extra = ''): string {
   return [
     // FIRST: a family has to be declared before anything can ask for it by name.
     fontFaceCss(settings.fontPreset, settings.chromeFont),
     // The chrome face, and the reading face's fallback until a preset repoints it. Inter
-    // is the universal base, exactly as in the frozen tree.
+    // is the universal base, exactly as in the frozen tree. --font-mono is the third and
+    // last handle: code, and only code. It is a constant rather than a setting because
+    // there is no code-font picker — the two mono families in CHROME_FONTS are a chrome
+    // choice, which is a different question from what a fenced block is set in.
     `:root{--font-sans:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;`
-    + `--font-reading:var(--font-sans)}`,
-    base,
+    + `--font-reading:var(--font-sans);`
+    + `--font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace}`,
     // The reading column, from the owner's setting. A two-rail listing narrows it by
     // overriding this later in the sheet, which is why it is a variable and not baked in.
     `:root{--shell-w:${settings.contentWidth}px}`,
@@ -122,6 +135,11 @@ export function renderDocument(
     head.image ? meta('og:image', head.image) : '',
     `<meta name="twitter:card" content="${head.image ? 'summary_large_image' : 'summary'}">`,
   ].filter(Boolean).join('')
+  // Before the inline block, because that block is allowed to win: it carries the palette,
+  // the type scale and the owner's own CSS, all of which override the sheet.
+  const sheet = head.stylesheet
+    ? `<link rel="stylesheet" href="${escapeAttr(head.stylesheet)}">`
+    : ''
   const icon = settings.faviconUrl ? `<link rel="icon" href="${escapeAttr(settings.faviconUrl)}">` : ''
   // Without this link the manifest route exists and nothing ever asks for it, so the site
   // is not installable no matter what the route returns.
@@ -138,7 +156,7 @@ export function renderDocument(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(head.title)}</title>
-${description}${canonical}${icon}${manifest}${og}${preloads}
+${description}${canonical}${icon}${manifest}${og}${sheet}${preloads}
 <style>${styles}</style>
 ${head.extra ?? ''}
 </head>

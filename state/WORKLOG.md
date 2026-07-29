@@ -6,6 +6,54 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+## 2026-07-29 (later) — the type settings were half-connected, and the sheet was re-sent every page
+
+Second pass, full report in
+[`audits/2026-07-29-typography-security-perf.md`](audits/2026-07-29-typography-security-perf.md).
+Measured, not read: a specimen post carrying every text role, driven in headless Chromium
+against a throwaway instance.
+
+**Eight surfaces took a type role's SIZE and inherited the rest**, so the owner's
+line-height and letter-spacing did nothing on the figcaption, the footnote block, both code
+forms, the tagline, the footer, the ToC sub-rows and the copy button. Every one of them
+looks wired — the rule names `var(--fs-<role>)` — which is why it was never spotted by
+reading. `check:type` now demands all three, canaried. Adding tracking to chrome rules broke
+the mono-chrome correction first (a rule that states the property stops inheriting it), so
+`MONO_TRACKING` lists them.
+
+**A heading did not belong to its own section.** Top margins scale with the heading, the
+space below with the body, so the two converged as the level dropped and inverted at h5:
+22px above, 25px below. Now 27/11 there and 44/14 at h2.
+
+**`--font-mono` was referenced and never defined**, so inline code came out in Literata and
+a fenced block came out in `ui-monospace`. Owner chose a real mono: JetBrains Mono,
+self-hosted, already shipping for the chrome option. A post with no code downloads none of
+it — `unicode-range` means a declaration is not a download.
+
+**Source Sans 3 ran at 79 characters per line** where the others sit at 70-72, and its note
+had reasoned from a short x-height to "loosen the line", which is backwards. The leading is
+fixed (3.52 → 3.34 x the x-height, against the serifs' 3.31). The MEASURE is not: sizing up
+far enough measured well and failed two pinned tests that tie `small` to body, and those
+tests are right — `small` also sets the chrome. Recorded instead: the measure belongs to
+`contentWidth`, which a preset does not own.
+
+Reset also restored `DEFAULT_TYPOGRAPHY` regardless of the chosen font, and five of the
+eight font tiles in the picker rendered in a fallback face.
+
+**42.6 KB of the 48.7 KB of CSS per page was byte-identical everywhere.** Split at that
+seam: a hashed immutable sheet plus the settings inline after it. HTML per post 65.0 → 25.4
+KB, LCP 132 ms at the origin, CLS 0.
+
+**Security.** `/api/cron` had no rate limit while clearing caches, calling Cloudflare's
+purge API, running sharp and taking backups — open by default, one thread. `/search` ran
+uncached FTS5 uncapped while its API half was capped. The app sent no `nosniff`,
+`X-Frame-Options` or referrer policy (nginx did, which made them one deployment's property).
+`/og` took its same-origin check from the client's `Host` header.
+
+**`check:css-literal` was not scanning `prose.css.ts`**, whose own header says it is. A
+backtick got through during this work and the server refused to boot while the check said
+ok — the second time that list has gone stale.
+
 ## 2026-07-29 — the Go plan is gone, and an audit found dark mode broken in production
 
 Removed `attic/`. [ADR 0004](../docs/decisions/0004-rewrite-in-go-on-sqlite.md) and

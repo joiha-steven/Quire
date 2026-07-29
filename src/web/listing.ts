@@ -9,6 +9,7 @@
 import type { Post } from '@/types'
 import type { SiteSettings } from '@/types'
 import { formatDate, formatMonth, t } from '@/i18n/i18n'
+import type { Dict } from '@/locales/types'
 import { termSlug } from '@/content/taxonomy'
 import type { Paged } from '@/content/paginate'
 
@@ -74,14 +75,14 @@ ${post.excerpt ? `<p class="reading-font mt-3 t-body text-text">${escapeHtml(pos
  * navigation nobody uses and every one of them is a URL a crawler will walk, so this is a
  * deliberate simplification rather than an omission. Recorded in the ledger.
  */
-function pager(paged: Paged<Post>, basePath: string): string {
+function pager(paged: Paged<Post>, basePath: string, tx: Dict): string {
   if (paged.totalPages <= 1) return ''
   const href = (n: number) => (n === 1 ? basePath || '/' : `${basePath}/page/${n}`)
   const prev = paged.page > 1
-    ? `<a rel="prev" href="${escapeAttr(href(paged.page - 1))}">Newer</a>`
+    ? `<a rel="prev" href="${escapeAttr(href(paged.page - 1))}">${escapeHtml(tx.pagerNewer)}</a>`
     : '<span></span>'
   const next = paged.page < paged.totalPages
-    ? `<a rel="next" href="${escapeAttr(href(paged.page + 1))}">Older</a>`
+    ? `<a rel="next" href="${escapeAttr(href(paged.page + 1))}">${escapeHtml(tx.pagerOlder)}</a>`
     : '<span></span>'
   return `<nav class="pager">${prev}<span class="pager-count">${paged.page} / ${paged.totalPages}</span>${next}</nav>`
 }
@@ -169,5 +170,5 @@ export function renderListing(view: ListingView, settings: SiteSettings): string
   const body = view.paged.items
     .map((p, i) => card(p, settings, { lead: lead && i === 0 }))
     .join('\n')
-  return `${head}<div class="post-list">${body}</div>${pager(view.paged, view.basePath)}`
+  return `${head}<div class="post-list">${body}</div>${pager(view.paged, view.basePath, t(settings.language))}`
 }

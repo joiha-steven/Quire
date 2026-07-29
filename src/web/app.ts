@@ -29,7 +29,9 @@ import { handleMarkdown, wantsMarkdown } from '@/web/markdown'
 import { handleManifest } from '@/web/manifest'
 import { handlePreview } from '@/web/preview'
 import { handleSearch } from '@/web/search-api'
+import { handleSearchPage } from '@/web/search-page'
 import { cacheHeaders } from '@/web/cache-headers'
+import { securityHeaders } from '@/web/security-headers'
 import { errorHandler, requestLogger } from '@/web/api'
 import { contentRoutes } from '@/web/admin/content'
 import { siteRoutes } from '@/web/admin/site'
@@ -92,6 +94,9 @@ export function createApp(): Hono {
 
   // What a shared cache may do with a page, in one rule at the door.
   app.use('*', cacheHeaders())
+
+  // ...and the three response headers that cost nothing and are wrong to omit.
+  app.use('*', securityHeaders())
 
   const home = async (page: number) => {
     const settings = await getSettings()
@@ -186,30 +191,8 @@ export function createApp(): Hono {
   })
 
   // ----- search ---------------------------------------------------------------
-  // Server-rendered, and therefore NOT cached: the key would be the query string, which
-  // is unbounded, and a cache an anonymous visitor can fill is a memory leak with a nicer
-  // name. FTS5 makes the read cheap enough that it does not need one.
 
-  app.get('/search', async (c) => {
-    const settings = await getSettings()
-    const q = (c.req.query('q') ?? '').trim().slice(0, 200)
-    const results = q ? await searchPosts(q) : []
-    const body = renderListing({
-      heading: escapeHtml(t(settings.language).search),
-      subheading: q ? `${results.length} result${results.length === 1 ? '' : 's'} for "${q}"` : undefined,
-      paged: { items: results, page: 1, totalPages: 1 },
-      basePath: '/search',
-      empty: q ? t(settings.language).searchEmpty : t(settings.language).searchHint,
-    }, settings)
-    const form = `<form class="search" action="/search" method="get" role="search">
-<input type="search" name="q" value="${escapeHtml(q)}" aria-label="${escapeHtml(t(settings.language).search)}">
-<button type="submit">${escapeHtml(t(settings.language).search)}</button>
-</form>`
-    return c.html(await listingPage({
-      title: `${t(settings.language).search} · ${settings.title}`,
-      body: form + body,
-    }))
-  })
+  app.get('/search', handleSearchPage)
 
   // ----- the analytics beacon -------------------------------------------------
   // Public and unauthenticated by necessity: it is called by every reader's browser. It
@@ -336,11 +319,14 @@ export function createApp(): Hono {
   // hash means the reader is asking for a version this server does not have.
 
   app.get('/assets/:file', (c) => {
-    const body = assetBody(`/assets/${c.req.param('file')}`)
+    const file = c.req.param('file')
+    const body = assetBody(`/assets/${file}`)
     if (body === null) return c.text('Not found', 404)
     return new Response(body, {
       headers: {
-        'content-type': 'text/javascript; charset=utf-8',
+        'content-type': file.endsWith('.css')
+          ? 'text/css; charset=utf-8'
+          : 'text/javascript; charset=utf-8',
         'cache-control': 'public, max-age=31536000, immutable',
       },
     })

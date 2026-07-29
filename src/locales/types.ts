@@ -29,6 +29,9 @@ export type Dict = {
   searchPlaceholder: string
   searchHint: string
   searchEmpty: string
+  searchResults: string
+  pagerNewer: string
+  pagerOlder: string
   tocTitle: string
   tocIndex: string
   categoriesTitle: string

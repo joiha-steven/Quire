@@ -9,14 +9,13 @@ import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { paginate } from '@/content/paginate'
 import { pageCache } from '@/server/cache'
 import { renderDocument, pageStyles } from '@/web/layout'
-import { PUBLIC_CSS } from '@/web/public.css'
 import { renderListing, type ListingView } from '@/web/listing'
 import { renderSidebar } from '@/web/sidebar'
 import { timelineCss } from '@/render/rail-css'
 import { ogCardUrl, siteDomain } from '@/render/og'
 import { chromeLabels, siteFooter, siteHeader } from '@/web/chrome'
 import { getMailStatus } from '@/news/mail'
-import { scriptTag } from '@/web/assets'
+import { PUBLIC_SHEET, scriptTag } from '@/web/assets'
 
 type Posts = ListingView['paged']['items']
 
@@ -51,8 +50,9 @@ export async function listingPage(
       image: ogCardUrl(settings, site, cardTitle === undefined
         ? { title: siteDomain(site), site: settings.description }
         : { title: cardTitle, site: siteDomain(site) }),
+      stylesheet: PUBLIC_SHEET,
     },
-    pageStyles(settings, PUBLIC_CSS, [css, sidebar.css].filter(Boolean).join('\n')),
+    pageStyles(settings, [css, sidebar.css].filter(Boolean).join('\n')),
     // The rail is rendered LAST inside `main`: it is absolutely placed, so DOM order is
     // free, and this way the page heading still leads the document outline.
     `<div class="wrap">

@@ -5,9 +5,12 @@
 //
 // SSRF is the whole risk here. `?bg=` and `?font=` are attacker-controlled URLs that the
 // SERVER fetches, so both are restricted to this site's own origin. Without that, a public
-// URL on the blog becomes a way to probe the machine's network from inside it.
+// URL on the blog becomes a way to probe the machine's network from inside it. "This
+// site's own origin" is SITE_URL when it is configured, NOT the Host header the caller
+// sent — see the note in the handler.
 
 import type { Context } from 'hono'
+import { readEnv } from '@/env'
 import { renderOgCard, type OgCard } from '@/render/og-card'
 
 /** Same-origin only. Anything else, including a malformed URL, is dropped. */
@@ -43,7 +46,15 @@ async function inlineImage(url: string): Promise<string | undefined> {
 export async function handleOg(c: Context): Promise<Response> {
   const url = new URL(c.req.url)
   const q = url.searchParams
-  const origin = url.origin
+  // The configured origin when there is one, and the request's own only as a fallback.
+  //
+  // `c.req.url` is built from the Host header, which the CLIENT sends: with `Host:
+  // 127.0.0.1:9200` the same-origin test below approves `bg=http://127.0.0.1:9200/…`, and
+  // this route then fetches it server-side and paints it into a PNG. That is a request the
+  // caller could not make themselves, which is the whole of SSRF. SITE_URL is read from the
+  // environment rather than from settings, so this route keeps the property that makes it
+  // cheap — it touches no database.
+  const origin = readEnv().siteUrl || url.origin
 
   // Caps mirror the frozen route. They bound the work this endpoint can be asked to do:
   // it is public and uncached upstream, so an unbounded title is an unbounded render.

@@ -21,12 +21,16 @@ import {
 import { maybeRunBackup } from '@/server/backup'
 import { purgeCloudflare } from '@/server/cdn'
 import { clearCache } from '@/server/cache'
+import { clientIp, rateLimited } from '@/server/rate-limit'
 import { logActivity } from '@/server/activity'
 import { fail, json } from '@/web/api'
 import { ownerRouter } from '@/web/guard'
 
 /** WXR is text. Anything larger than this is not an export, it is a mistake or an attack. */
 const MAX_IMPORT_BYTES = 100 * 1024 * 1024
+
+/** Per-IP cap on the cron tick. See the comment at the route for why it needs one. */
+const CRON_PER_MINUTE = 12
 
 /**
  * Constant-time bearer comparison.
@@ -122,6 +126,16 @@ export function publicOpsRoutes(): Hono {
   // live on time, but the newsletter broadcast is always pressed by hand.
 
   app.get('/api/cron', async (c) => {
+    // A cap BEFORE the token check, and the reason is what this route does rather than what
+    // it returns: one call clears the page cache, calls Cloudflare's purge API, runs sharp
+    // over any pending image variants and may take a full backup of both databases and the
+    // uploads tree. On a fresh install CRON_SECRET is unset and the route is open — so it
+    // was an unauthenticated lever on the most expensive work the process can do, on a
+    // runtime with exactly one thread. A scheduler on the tightest sensible cadence spends
+    // one of these a minute; anything past twelve is not a scheduler.
+    if (rateLimited(`cron:${clientIp(c.req.raw)}`, CRON_PER_MINUTE)) {
+      return fail(c, 'Too many requests', 429)
+    }
     // When CRON_SECRET is set, the scheduler sends it as a Bearer token. Unset means open,
     // so the keep-alive still works on a fresh install before anything is configured.
     const secret = process.env.CRON_SECRET

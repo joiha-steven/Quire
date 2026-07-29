@@ -25,6 +25,23 @@ const get = async (path: string): Promise<Response> => app.request(path)
 const PAST = '2020-01-01T00:00:00.000Z'
 const FUTURE = '2099-01-01T00:00:00.000Z'
 
+/** The hashed sheet a page links to. */
+const sheetHref = (html: string): string =>
+  /<link rel="stylesheet" href="([^"]+)">/.exec(html)?.[1] ?? ''
+
+/**
+ * The served stylesheet, fetched the way a browser would.
+ *
+ * The static rules moved out of the page, so an assertion about a CSS rule has to follow
+ * them. Asserting against `PUBLIC_CSS` directly would pass even if the route stopped
+ * serving it.
+ */
+const sheetText = async (): Promise<string> => {
+  await savePost({ title: 'Sheet Probe', content: 'x', status: 'published', date: PAST })
+  const href = sheetHref(await get('/sheet-probe').then((r) => r.text()))
+  return get(href).then((r) => r.text())
+}
+
 beforeEach(() => {
   clearCache()
   for (const t of ['posts', 'pages', 'post_terms', 'post_revisions', 'settings', 'media', 'redirects']) {
@@ -133,7 +150,10 @@ describe('article page', () => {
     // Server-rendered and driven by a scroll-driven CSS animation, so it works with
     // JavaScript off. If it ever moves back into the bundle, this fails.
     expect(html).toContain('<div class="progress" aria-hidden="true">')
-    expect(html).toContain('animation-timeline:scroll(root block)')
+    // The rule lives in the linked sheet now rather than in the page, so the assertion
+    // follows it there. What is being pinned is "no script drives this", not "the bytes
+    // happen to sit in the HTML".
+    expect(await sheetText()).toContain('animation-timeline:scroll(root block)')
   })
 
   it('leaves the progress bar out when the owner has it off', async () => {
@@ -142,15 +162,6 @@ describe('article page', () => {
     await savePost({ title: 'Plain', content: 'body', status: 'published', date: PAST })
     const html = await get('/plain').then((r) => r.text())
     expect(html).not.toContain('class="progress"')
-  })
-
-  it('inlines the stylesheet instead of requesting one', async () => {
-    await savePost({ title: 'Styled', content: 'body', status: 'published', date: PAST })
-    const html = await get('/styled').then((r) => r.text())
-    expect(html).toContain('<style>')
-    expect(html).not.toContain('rel="stylesheet"')
-    expect(html).toContain('--c-bg:') // theme tokens really reached the page
-    expect(html).toContain('--fs-body:') // and so did the typography settings
   })
 
   it('preloads the reading font, since it is the LCP resource', async () => {
@@ -269,8 +280,9 @@ describe('the feed hands itself back a chunk at a time', () => {
     // The class has been on every card since M2; the rule that matches it had not been
     // written, so the cards simply appeared.
     expect(html).toContain('class="reveal"')
-    expect(html).toContain('@keyframes reveal-in')
-    expect(html).toContain('animation-timeline:view()')
+    const sheet = await sheetText()
+    expect(sheet).toContain('@keyframes reveal-in')
+    expect(sheet).toContain('animation-timeline:view()')
   })
 })
 

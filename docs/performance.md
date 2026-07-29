@@ -76,7 +76,32 @@ Hard invariants (also in [`conventions.md`](./conventions.md) typography):
 - Changing which subsets exist? Keep `fontPreloadHrefs` and the `@font-face`
   `unicode-range` blocks (`globals.css`) in sync.
 
-## CSS — two entries; a reader never loads admin CSS
+## CSS — one hashed sheet, plus the settings inline
+
+**Measured 2026-07-29.** The whole stylesheet used to be inlined into every page. That
+removes one round trip on a COLD visit and charges for it on every visit after: of the
+48.7 KB assembled per page, **42.6 KB (13.8 KB gzipped) was byte-identical everywhere**
+and only 6.1 KB (1.7 KB gzipped) actually varied with the owner's settings. Reading three
+articles re-sent 41 KB of gzipped CSS carrying one page's worth of information, and none of
+it could be cached, because it was not a resource.
+
+So the two halves are split at exactly that seam:
+
+| Half | Where | Cost |
+|---|---|---|
+| Static rules (`PUBLIC_CSS`) | `<link rel="stylesheet" href="/assets/site.‹hash›.css">` | one request, `immutable` for a year; the hash changes when the bytes do |
+| Settings (fonts, `--shell-w`, rail geometry, palette, type roles, custom CSS) | inline `<style>`, immediately AFTER the link | ~1.7 KB gzipped per page |
+
+The order is the load-bearing part: the inline block is allowed to WIN, so it has to come
+second, exactly where it sat when the two were one string.
+
+Measured after (origin, `127.0.0.1`, median of three cold loads): HTML per page **60.3 KB
+→ 20.7 KB** on the home page and **65.0 KB → 25.4 KB** on a post; the sheet is discovered
+at ~11 ms and done at ~18 ms; LCP 100 ms home / 132 ms post; CLS 0. A loopback measurement
+cannot price the extra round trip a real network charges on the FIRST visit — that is the
+cost this trade accepts, and it is paid once.
+
+## The two entries — a reader never loads admin CSS
 
 Tailwind v4 scans content globally, so a single stylesheet would ship every admin utility
 (editor, tables, forms) to readers. Split by surface:

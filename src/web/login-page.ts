@@ -45,7 +45,7 @@ function shell(settings: SiteSettings, title: string, body: string): string {
     { title: `${title} · ${settings.title}`, extra: '<meta name="robots" content="noindex">' },
     // An empty base sheet: `pageStyles` still supplies the palette, so the door matches the
     // house, and LOGIN_CSS supplies everything else.
-    `${pageStyles(settings, '')}\n${LOGIN_CSS}`,
+    `${pageStyles(settings)}\n${LOGIN_CSS}`,
     `<div class="login-wrap">${quireLockup()}<main class="login-card">${body}</main>${back}</div>`,
     { scripts: scriptTag('login') },
   )
