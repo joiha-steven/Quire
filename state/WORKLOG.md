@@ -640,3 +640,27 @@ answered — a hung request logs nothing at all, and the 200s were the client's 
 requests that DID return. Absence in a log is evidence and I treated it as silence. And when
 a rewritten seam sits between a version that worked and one that does not, read the seam
 first instead of the subsystems around it.
+
+## 2026-07-29 — the endpoint URL, and the nginx exception put back under git
+
+Two loose ends from the connector work, both about something being known and written
+nowhere.
+
+**The admin never said where to connect.** The MCP card was a toggle and a token manager,
+and a token is useless without an address. It now prints `<site>/api/mcp` with a copy button
+whenever the toggle is on. It prefers `settings.siteUrl` and falls back to the browser's
+origin, because a blank `siteUrl` is resolved from the environment and the admin cannot read
+that; the two agree on any ordinary install, and the fallback is the more useful of them
+when they do not, being reachable by definition.
+
+Looked at rather than assumed: driven headless with a session cookie set over CDP, the card
+renders `https://example.com/api/mcp` under a "Connection URL" heading, and the code box and
+the Copy button share a centre line to the pixel (both 1455).
+
+**The nginx exception was living only on the box.** `scripts/ops/nginx-manhhung.me.conf` is
+tracked and had drifted from what is actually deployed by exactly one block — the
+`/api/mcp/authorize` location added last night so the Approve button works. Moving the box
+would have lost it and the consent screen would have broken again with no clue why. The
+tracked copy is now byte-identical to the live file, and the rule is in `docs/mcp.md`
+alongside the trap that makes it necessary: an `add_header` inside a `location` REPLACES the
+inherited headers instead of adding to them.

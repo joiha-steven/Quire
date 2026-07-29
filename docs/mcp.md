@@ -45,7 +45,17 @@
   (A reconnect mints a new row; the prior one persists until the owner removes it — the admin
   lists/deletes them all.) Codes are HMAC-signed
   (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`. Token CRUD: owner-only
-  `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only).
+  `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only),
+  which also **shows the endpoint URL with a copy button** while the toggle is on — a client has
+  to be pointed somewhere and nothing else on the card says where. It prefers `settings.siteUrl`
+  and falls back to the browser's origin, since a blank `siteUrl` is resolved from the
+  environment, which the admin cannot read.
+- **The consent screen needs an nginx exception**, kept in `scripts/ops/nginx-manhhung.me.conf`:
+  Approving POSTs to `/api/mcp/authorize` and is answered with a 302 to the client's own
+  callback, and a browser enforces `form-action` across a form submission's WHOLE redirect
+  chain — so under `form-action 'self'` the Approve button did nothing, silently. Only that
+  directive is relaxed, and only on that location. **An `add_header` inside a `location`
+  REPLACES the inherited ones**, so all five headers are repeated there.
 - **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
   results via `result.ts`). Content is Markdown verbatim — no HTML conversion. Deletes are soft
   (→ Trash). **`update_post` REPLACES the whole post; `patch_post` merges only the passed fields

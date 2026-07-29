@@ -261,7 +261,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
             <CloudflareFields configured={integrations.cloudflareConfigured} zoneId={integrations.cloudflareZoneId} />
           </Card>
           <Card title={t.cardMcp}>
-            <McpFields mcp={s.mcp} onChange={(mcp) => update({ mcp })} />
+            <McpFields mcp={s.mcp} siteUrl={s.siteUrl} onChange={(mcp) => update({ mcp })} />
           </Card>
         </div>
       )}

@@ -15,8 +15,16 @@ import { PANEL, TABLE_SCROLL } from './kit'
 
 const MAX = 5 // manual tokens only; OAuth-connector tokens are exempt
 
-export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: McpSettings) => void }) {
+export function McpFields(
+  { mcp, siteUrl, onChange }:
+  { mcp: McpSettings; siteUrl: string; onChange: (m: McpSettings) => void },
+) {
   const t = useAdminT()
+  // The address a connector is pointed at. `siteUrl` may be blank, in which case the server
+  // derives it from the environment — which the browser cannot read, so fall back to the
+  // origin the owner is looking at. Those agree on any ordinary install, and the fallback is
+  // the more useful of the two when they do not: it is reachable by definition.
+  const endpoint = `${(siteUrl || window.location.origin).replace(/\/+$/, '')}/api/mcp`
   const { notify } = useToast()
   const [tokens, setTokens] = useState<McpTokenInfo[]>([])
   const [created, setCreated] = useState<string | null>(null) // plaintext shown once
@@ -96,10 +104,10 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
     }
   }
 
-  async function copy(value: string) {
+  async function copy(value: string, message: string) {
     try {
       await navigator.clipboard.writeText(value)
-      notify(t.mcpCopied)
+      notify(message)
     } catch {
       /* clipboard blocked — the value is visible to select manually */
     }
@@ -114,6 +122,21 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
           checked={mcp.enabled}
           onChange={(enabled) => onChange({ ...mcp, enabled })}
         />
+
+        {/* The endpoint itself. Everything else on this card assumes the owner already knows
+            where to point a client, and nothing anywhere told them. */}
+        {mcp.enabled && (
+          <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+            <h3 className="text-sm font-semibold">{t.mcpUrlLabel}</h3>
+            <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{t.mcpUrlHint}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <code className="min-w-0 flex-1 truncate rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs dark:border-neutral-700 dark:bg-neutral-900">
+                {endpoint}
+              </code>
+              <Button type="button" onClick={() => copy(endpoint, t.mcpUrlCopied)}>{t.mcpCopy}</Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -144,7 +167,7 @@ export function McpFields({ mcp, onChange }: { mcp: McpSettings; onChange: (m: M
               <code className="min-w-0 flex-1 truncate rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs dark:border-neutral-700 dark:bg-neutral-900">
                 {created}
               </code>
-              <Button type="button" onClick={() => copy(created)}>{t.mcpCopy}</Button>
+              <Button type="button" onClick={() => copy(created, t.mcpCopied)}>{t.mcpCopy}</Button>
               <button
                 type="button"
                 onClick={() => setCreated(null)}

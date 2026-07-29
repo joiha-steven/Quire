@@ -655,6 +655,9 @@ export type AdminStrings = {
   importDone: string
   mcpEnable: string
   mcpEnableDesc: string
+  mcpUrlLabel: string
+  mcpUrlHint: string
+  mcpUrlCopied: string
   mcpTokensTitle: string
   mcpTokensHint: string
   mcpGenerate: string
