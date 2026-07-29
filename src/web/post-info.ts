@@ -19,7 +19,7 @@
 import type { PostWithContent, SiteSettings } from '@/types'
 import type { Dict } from '@/locales/types'
 import { formatCount, formatDate } from '@/i18n/i18n'
-import { termSlug } from '@/content/taxonomy'
+import { tagText, termSlug } from '@/content/taxonomy'
 import { readingMinutes, wordCount } from '@/utils'
 
 const escapeHtml = (s: string) =>
@@ -36,7 +36,7 @@ const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
 export function termLinks(list: string[], kind: 'category' | 'tag', lower = false): string {
   return list
     .map((x) => `<a class="link-accent${lower ? ' lower' : ''}" href="/${kind}/${
-      escapeAttr(termSlug(x))}">${escapeHtml(x)}</a>`)
+      escapeAttr(termSlug(x))}">${escapeHtml(kind === 'tag' ? tagText(x) : x)}</a>`)
     .join(', ')
 }
 
@@ -58,16 +58,19 @@ export function postInfoPanel(post: PostWithContent, settings: SiteSettings, s: 
     rows.push(`<p><span class="num">${readingMinutes(post.content)}</span> ${
       escapeHtml(s.readingSuffix)}</p>`)
   }
-  if (features.bookMode) {
-    rows.push(`<p><button type="button" class="book-mode-toggle" data-book-open>${
-      escapeHtml(s.bookMode)}</button></p>`)
-  }
   // No category link among the rows even though the meta line carries one: the full list of
-  // categories is three lines further down, and naming the first of them twice in a 250px
+  // categories is two lines further down, and naming the first of them twice in a 250px
   // column reads as a rendering fault rather than as emphasis.
   if (post.tags.length) rows.push(termRow(s.tagLabel, termLinks(post.tags, 'tag', true)))
   if (post.categories.length) {
     rows.push(termRow(s.categoryLabel, termLinks(post.categories, 'category')))
+  }
+  // LAST, and set apart. Everything above it is a fact about the post; this is the one thing
+  // in the panel the reader can DO, so it goes at the foot with air around it rather than
+  // buried between the reading time and the tags. The IDE chrome marks it like a label.
+  if (features.bookMode) {
+    rows.push(`<p class="info-action"><button type="button" class="book-mode-toggle" data-book-open>${
+      escapeHtml(s.bookMode)}</button></p>`)
   }
 
   return `<aside class="post-info t-small text-meta">${rows.join('')}</aside>`

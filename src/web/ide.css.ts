@@ -41,7 +41,13 @@ html[data-ide-chrome=on] aside.series .series-head::before,
 html[data-ide-chrome=on] .related h2::before,
 html[data-ide-chrome=on] .subscribe-card h2::before,
 html[data-ide-chrome=on] #comments h2::before,
-html[data-ide-chrome=on] .empty::before{content:"// ";color:var(--c-meta)}
+html[data-ide-chrome=on] .empty::before,
+/* The one thing in the panel that DOES something rather than states something, so it takes
+   the label's marker rather than a literal's brackets. */
+html[data-ide-chrome=on] .info-action::before{content:"// ";color:var(--c-meta)}
+/* ...except in the comment thread. "Be the first to comment" is an invitation to the
+   reader, not a label on a section, and the owner asked for the marker off it. */
+html[data-ide-chrome=on] #comments .empty::before{content:none}
 
 /* Counts are literals, bracketed like an index — every count, in the same brackets. The
    rail's own counts were bracketed and the taxonomy's were in ROUND ones, because those
@@ -81,6 +87,12 @@ html[data-ide-chrome=on] .t-small time::after,
 html[data-ide-chrome=on] .comment-meta time::after,
 html[data-ide-chrome=on] .related p::after,
 html[data-ide-chrome=on] .num::after{content:"]";color:var(--c-meta)}
+/* Darker inside the info panel than anywhere else, at the owner's ask: the same ink the
+   contents list gives the row you are on. That panel is the only place a desktop reader
+   sees the date and the length, so it has to carry the hierarchy by itself — everywhere
+   else the literal sits in a line that already has a heading over it. */
+html[data-ide-chrome=on] .post-info time,
+html[data-ide-chrome=on] .post-info .num{color:var(--c-heading)}
 
 /* A post's tags and categories are a comma-separated run already. In brackets they read
    as the array literal they are: tags: [css, typography]. The label and its colon are

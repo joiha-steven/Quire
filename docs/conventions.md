@@ -210,6 +210,31 @@ article header is then the title and the deck alone. `post-info.ts` renders it;
 - **The end-of-article anchors are their own empty `.anchor` elements**, never ids on the
   taxonomy. An anchor with no box cannot be scrolled to, so ids on the hidden paragraphs
   killed the contents list's last row on every desktop, silently.
+- **Facts first, the one ACTION last.** Date, length, tags, categories run at one even
+  rhythm; book mode sits at the foot with air above it, in `--c-heading` at 500, and takes
+  the IDE chrome's `//` because it is the only row that does something. Order is tested.
+- **The panel's VALUES are `--c-heading`**, a step darker than the words around them — the
+  same ink the contents list gives the row you are on. It is the only place a desktop
+  reader sees the date and the length, so it carries the hierarchy alone.
+- **The divider carries a dot at the panel's first line.** `--c-rule` measures 1.16:1 and
+  all but vanishes over a run this short; the feed's timeline answers the same problem the
+  same way, so both gutters speak one language.
+- **`article > header .mt-2{margin-top:0}` at this width.** That margin spaced the title
+  away from the meta line, which is no longer there — it was the three columns not lining
+  up. Both rails start their first line at the same `y`; the title now does too.
+
+## Tags — hyphenated for display, untouched underneath (HARD RULE)
+
+`tagText()` in `content/taxonomy.ts` replaces the spaces inside a tag with hyphens
+**everywhere a tag is shown**: the sidebar cloud, the article footer, the info panel, the
+tag archive's own heading. "giao diện" reads as two ordinary words, and a cloud of them
+reads as a sentence with no way to see where one tag ends. Hyphenated, each is one
+unbroken token and the run needs no separator, chip or box.
+
+Display only. The stored term, `termSlug()` and every link keep the real name, so nothing a
+URL, a bookmark or a lookup depends on changes. **Categories are proper names and are never
+hyphenated.** The Vietnamese label is "Tag", not "Thẻ" — the owner reads the translation as
+ambiguous.
 
 ## Chrome reuse, divider, colour (HARD RULES)
 

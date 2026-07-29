@@ -9,6 +9,7 @@ import { all } from '@/store/query'
 import {
   savePost, getPost, updateTerm, getCategories, getTags, getPublicTaxonomy,
 } from '@/content/posts'
+import { tagText, termSlug } from '@/content/taxonomy'
 
 const DIR = './.tmp-test-post-terms'
 freshDatabase(DIR)
@@ -128,5 +129,24 @@ describe('taxonomy listings', () => {
     db().run(`update posts set deleted_at = 1 where slug = 'a'`)
     expect((await getPublicTaxonomy()).tags).toEqual([])
     expect(await getTags()).toEqual([])
+  })
+})
+
+describe('a tag is DISPLAYED hyphenated, and stored as it was typed', () => {
+  // "giao diện" reads as two ordinary words, and a cloud of them ("viết mẫu giao diện hiệu
+  // năng") reads as a sentence with no way to see where one tag ends and the next begins.
+  // Hyphenated, every tag is one unbroken token.
+  it('replaces the spaces inside a tag, and only for display', () => {
+    expect(tagText('giao diện')).toBe('giao-diện')
+    expect(tagText('một hai ba')).toBe('một-hai-ba')
+    expect(tagText('typography')).toBe('typography')
+  })
+
+  it('leaves the stored term and its URL slug alone', async () => {
+    // The whole point of it being display-only: a link, a lookup and an old bookmark all
+    // keep working, because none of them ever sees the hyphenated form.
+    await savePost({ title: 'A', date: PAST, status: 'published', tags: ['giao diện'] })
+    expect((await getPost('a'))?.tags).toEqual(['giao diện'])
+    expect(termSlug('giao diện')).toBe('giao-dien')
   })
 })

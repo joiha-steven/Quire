@@ -113,12 +113,14 @@ article > header .t-small{margin:0}
 .post-info{display:none}
 .post-info p{margin:0}
 .post-info p + p{margin-top:.35rem}
-/* The taxonomy is a different KIND of fact from the length of the read, so it gets a gap
-   rather than a rule: a second hairline beside the divider would be two lines meeting.
-   NOT .info-terms:first-of-type — every row here is a p, so that matched the DATE and the
-   gap opened in the wrong place. It is the first terms row after a non-terms row. */
-.post-info p:not(.info-terms) + .info-terms{margin-top:1.25rem}
-.post-info .info-terms + .info-terms{margin-top:.25rem}
+/* One even rhythm through the facts — the tags and categories used to be set apart and the
+   owner asked for them level with the rest. The ACTION is the only thing set apart, because
+   it is the one row that is not a fact: it does something. */
+.post-info .info-action{margin-top:1.25rem;color:var(--c-heading);font-weight:500}
+/* The VALUES are a step darker than the words around them, the same ink the contents list
+   uses for the row you are on. The panel is the only place a desktop reader sees the date
+   and the length, so it carries the whole hierarchy on its own. */
+.post-info time,.post-info .num{color:var(--c-heading)}
 /* End-of-article furniture, and it needs its own scale rather than the page's. The link had
    NO size rule at all, so a related title inherited the BODY size: the quietest thing on the
    page (a list of "you might also read") was set as large as the writing, and in the chrome

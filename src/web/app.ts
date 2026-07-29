@@ -14,7 +14,7 @@ import { getPublicPosts, searchPosts } from '@/content/posts'
 import { getPublicPages } from '@/content/pages'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { resolveSeries } from '@/content/series'
-import { resolveTerm } from '@/content/taxonomy'
+import { resolveTerm, tagText } from '@/content/taxonomy'
 import { t } from '@/i18n/i18n'
 import { foldAccents } from '@/utils'
 import { renderListing } from '@/web/listing'
@@ -136,9 +136,11 @@ export function createApp(): Hono {
       // "Danh muc: Kinh te" / "The: #edc" — the label, then the term, exactly as the
       // frozen tree reads. A tag lowercases its own name and wears a hash.
       const label = kind === 'category' ? t(settings.language).categoryLabel : t(settings.language).tagLabel
+      // A tag's spaces become hyphens here too, so the archive's own heading matches the
+      // token the reader clicked in the cloud. The stored name and the slug are untouched.
       const term = kind === 'category'
         ? escapeHtml(name)
-        : `<span class="lower">#${escapeHtml(name)}</span>`
+        : `<span class="lower">#${escapeHtml(tagText(name))}</span>`
       const built = await renderFeedBody(posts, page, {
         heading: `${escapeHtml(label)}: ${term}`,
         basePath: `/${kind}/${slug}`,

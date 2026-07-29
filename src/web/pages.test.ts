@@ -290,6 +290,21 @@ describe('the markup hooks the IDE chrome needs', () => {
     expect(html.match(/<span class="num">/g)!.length).toBeGreaterThanOrEqual(4)
   })
 
+  it('puts the panel\'s one action LAST, after the facts', async () => {
+    // Everything above it states something about the post; book mode is the only row that
+    // does something. It sat between the reading time and the tags and the owner moved it
+    // to the foot, so the order is asserted rather than left to whoever edits next.
+    await savePost({
+      title: 'Ordered', content: 'body text here', status: 'published', date: PAST,
+      tags: ['one'], categories: ['Two'],
+    })
+    const panel = /<aside class="post-info[^>]*>([\s\S]*?)<\/aside>/.exec(
+      await get('/ordered').then((r) => r.text()),
+    )?.[1] ?? ''
+    expect(panel).toContain('info-action')
+    expect(panel.indexOf('info-action')).toBeGreaterThan(panel.lastIndexOf('info-terms'))
+  })
+
   it('anchors the end of the article on its own elements, not on the hidden taxonomy', async () => {
     // The contents list's last row jumps here. The paragraphs it used to point at are
     // display:none in the wide layout, and an anchor with no box cannot be scrolled to — so

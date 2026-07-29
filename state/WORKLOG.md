@@ -369,3 +369,39 @@ punctuation, not the value, and at equal weight the line reads as a row of boxes
 rail's term counts, which were a filled ring for one deploy on the argument that a term
 cloud has no sequence to punctuate, are brackets again. The owner looked at the ring and
 said it was ugly. One bracket for every literal is the simpler rule anyway.
+
+## 2026-07-29 — the info panel, second pass, and tags that look like tags
+
+Six corrections from the owner, all of them on the round just shipped.
+
+**The three columns were not level**, and the cause was a margin doing a job that no longer
+existed: the title carried `mt-2` to space it away from the meta line, and the meta line is
+now in the right gutter. Both rails start their first line at the same `y`; the title sat
+8px below them. Measured with a Range rather than a box top, because a 32px title and a 15px
+chrome line have different half-leading and three boxes that start together still look
+ragged. Removed at that width only.
+
+**In the panel:** the values are `--c-heading` now, a step darker than the words around
+them — the same ink the contents list gives the row you are on, which is what the owner
+asked for. The tags and categories lost their extra gap, so the facts run at one even
+rhythm. Book mode moved to the foot with air above it, in `//` and set a little stronger:
+it is the only row in the panel that DOES something rather than states something, and that
+is the reason it is the one row set apart. The order is asserted in a test rather than left
+to whoever edits next.
+
+The owner asked whether a dot on the divider would help. It does: `--c-rule` measures
+1.16:1 against the page and all but vanishes over a run as short as this panel, and the
+feed's timeline already answers exactly that with a dot on a hairline. Both gutters now
+speak one language.
+
+**Tags read as tags.** `tagText()` replaces the spaces inside a tag with hyphens wherever a
+tag is shown — the cloud, the article footer, the panel, the archive heading. The problem
+was real and specific: "viết mẫu giao diện typography hiệu năng" is a sentence, not five
+tags, and there is no way to see where one ends. Hyphenated, each is one unbroken token and
+the run needs no separator, chip or box. Display only: the stored term, the slug and every
+link keep the real name, which is tested from both ends. Categories are proper names and
+are left alone. The Vietnamese label is "Tag" now rather than "Thẻ", which the owner reads
+as ambiguous.
+
+**And the `//` came off the comment invitation.** "Be the first to comment" is addressed to
+the reader; the marker belongs on labels.

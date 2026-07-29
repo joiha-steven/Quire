@@ -13,7 +13,7 @@ import type { MenuItem, SiteSettings } from '@/types'
 import { getPublicPosts, getPublicTaxonomy } from '@/content/posts'
 import { getViewTotals } from '@/analytics/summary'
 import { getSeriesList } from '@/content/series'
-import { termSlug } from '@/content/taxonomy'
+import { tagText, termSlug } from '@/content/taxonomy'
 import { listingRailCss } from '@/render/rail-css'
 import { t } from '@/i18n/i18n'
 
@@ -71,7 +71,9 @@ function termCloud(
   const items = links.map((l) => {
     const { attr, cls } = activeBits(l.href, activeHref)
     return `<a class="link-accent t-small${cls}" href="${escapeAttr(l.href)}"${attr}>`
-      + escapeHtml(l.label)
+      // A tag's spaces become hyphens so each one is a single unbroken token: a cloud of
+      // two-word tags reads as a sentence otherwise, with no way to see where one ends.
+      + escapeHtml(opts.lower ? tagText(l.label) : l.label)
       // The parentheses are in the sheet, not here: the IDE chrome swaps them for square
       // brackets, and a renderer that types them makes that impossible.
       + (l.count == null ? '' : `<span class="term-count">${l.count}</span>`)

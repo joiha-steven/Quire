@@ -293,6 +293,15 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     expect(block).toBe('html[data-ide-chrome=on] .term-count{opacity:1}')
   })
 
+  it('marks the info panel\'s one ACTION, and leaves the comment invitation alone', () => {
+    // Book mode is the only row in the panel that does something rather than states
+    // something, so it takes the label's marker. "Be the first to comment" is an invitation
+    // to the reader rather than a label on a section, and the owner asked for it bare.
+    const ide = idelines()
+    expect(ide).toContain('.info-action::before')
+    expect(ide).toContain('#comments .empty::before{content:none}')
+  })
+
   it('gives the archive year a path mark rather than brackets', () => {
     // The feed's right gutter is a year over its months: a path, not a count. Brackets mean
     // "index" everywhere else here, and using them for a directory would say the wrong

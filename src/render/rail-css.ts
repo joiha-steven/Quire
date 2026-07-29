@@ -54,10 +54,20 @@ export function singleRailCss(colWidth: number): string {
     `.post-info{${GUTTER};left:calc(100% + var(--rail-gap));right:auto;text-align:left;` +
     `padding-left:var(--rail-pad);height:auto}` +
     `.post-info::after{content:"";position:absolute;top:0;bottom:0;left:-${DIVIDER}px;width:1px;background:var(--c-rule);z-index:-1}` +
+    // A node ON that divider, level with the panel's first line. The hairline is --c-rule,
+    // which measures 1.16:1 against the page and all but disappears over a run this short;
+    // the feed's timeline answers exactly that with a dot, so both gutters now speak the
+    // same language. Centred on the 1px line: half the dot back from the line's own centre.
+    `.post-info::before{content:"";position:absolute;left:-${DIVIDER + 3}px;top:.5em;` +
+    `width:7px;height:7px;border-radius:50%;background:var(--c-meta)}` +
     // Exactly one copy of these facts has a box at any width. Below this breakpoint there is
     // no gutter, the panel is display:none, and the meta line above the title plus the
     // taxonomy over its rule are what the reader gets, unchanged.
     `.post-meta,.taxo-rule,.post-taxo{display:none}` +
+    // ...and with the meta line gone, the title's 8px top margin is spacing it away from
+    // nothing. That was the three columns not lining up: both rails start their first line
+    // at the same y and the title sat 8px below them. Measured, then re-measured.
+    `article > header .mt-2{margin-top:0}` +
     // A "wide" image or video noses right into the freed gutter by one rail width.
     `.prose figure.img-wide,.prose .video-wide{width:calc(100% + var(--rail-w) + var(--rail-gap));max-width:none;margin-left:0;` +
     `margin-right:calc(-1 * (var(--rail-w) + var(--rail-gap)))}` +
