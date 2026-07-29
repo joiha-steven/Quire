@@ -54,10 +54,10 @@ delete, restore from trash, the cache switch saved and re-read, and all seven se
 No exceptions, no failed requests, no console errors. One thing worth knowing rather than
 fixing: the content filter matches titles only, not slugs.
 
-Also: **Bun was missing from this machine entirely** since the WSL wipe, so none of the above
-could be measured until it was installed (`C:\dev\_tools\bun`, the machine's portable
-convention). And this file passed its 700-line cap, so the 2026-07-28 entries rolled into
-`worklog/`.
+Also: **Bun was not on this machine's PATH**, so none of the above could be measured until it
+was put there. It turned out to have been installed all along, under the winget package
+directory that nothing adds to PATH. And this file passed its 700-line cap, so the
+2026-07-28 entries rolled into `worklog/`.
 
 ## 2026-07-29 (later still) — a Docker install, and an environment variable that stopped existing
 
