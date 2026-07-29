@@ -69,6 +69,11 @@ html[data-ide-chrome=on] .rail li::before{content:counter(ln);position:absolute;
   top:.05em;right:-23px;width:18px;height:18px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:var(--c-bg);border:1px solid var(--c-rule);color:var(--c-meta);
+  /* Air around the ring, the way the feed's markers get it: their --c-bg mask is a
+     text line tall, so the spine stops well clear of the dot instead of touching it.
+     A ring-sized mask left the hairline running into the border. The shadow paints
+     the same break and costs no layout. */
+  box-shadow:0 0 0 5px var(--c-bg);
   font-size:.62em;font-variant-numeric:tabular-nums;pointer-events:none}
 /* .rail-inner scrolls a long index, and overflow-y:auto clips horizontally too - so the
    ring would be cut in half by its own container. The box grows right by the overhang and
