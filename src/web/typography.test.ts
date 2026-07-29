@@ -229,13 +229,19 @@ describe('the IDE chrome is one switch, and off leaves no trace', () => {
     }
   })
 
-  it('borrows only theme tokens for its two syntax roles', () => {
+  it('borrows only theme tokens for its two syntax roles, and never the accent', () => {
     // An editor distinguishes a comment from a literal. That is the whole palette here:
-    // labels are --c-meta, counts and dates are --c-accent. No third colour, and no hex —
+    // labels are --c-meta, counts and dates are --c-text. No third colour, and no hex —
     // the same rule the rest of the public site follows.
+    //
+    // NOT --c-accent, which it was for one deploy. The accent is seeded from each palette's
+    // link colour, so on a blog whose accent is red every date and count read as a link
+    // that was not one. A syntax colour must not be the colour that means "click me".
     const ide = PUBLIC_CSS.split('\n').filter((l) => l.includes('data-ide-chrome')).join('\n')
-    expect(ide).toContain('var(--c-accent)')
+    expect(ide).toContain('var(--c-text)')
     expect(ide).toContain('var(--c-meta)')
+    expect(ide).not.toContain('var(--c-accent)')
+    expect(ide).not.toContain('var(--c-link)')
     expect(ide).not.toMatch(/#[0-9a-fA-F]{3,8}/)
   })
 })
