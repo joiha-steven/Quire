@@ -192,23 +192,45 @@ appended to the admin bundle by the build (Tailwind cannot import a TypeScript m
    view()` — zero JS on Chromium. The fallback in `core.js` covers ONLY browsers without
    scroll-timeline, and is gated on `motion.enabled`.
 
-## Navigation: prerender on hover, zero runtime JS
+## Navigation: prefetch every link, prerender on hover, zero runtime JS
 
 Every public HTML response carries a `Speculation-Rules` header pointing at
 `/speculation-rules.json` ([`src/web/speculation.ts`](../src/web/speculation.ts), set in
-[`src/web/cache-headers.ts`](../src/web/cache-headers.ts)) with `eagerness: "moderate"`, so
-Chrome prerenders a same-origin link when the reader hovers it. A click then paints an
-already-rendered document. This is the largest perceived-speed win available on a reading
-site and it costs no runtime JS.
+[`src/web/cache-headers.ts`](../src/web/cache-headers.ts)). Two rules, because the two
+speculations do not cost the same thing:
+
+| Rule | Eagerness | Trigger | Cost |
+|---|---|---|---|
+| `prefetch` | `eager` | every matching link on the page | ~20 KB gzipped of HTML, no render |
+| `prerender` | `moderate` | pointer rests on a link ~200ms | a full document plus its JavaScript |
+
+**Why prefetch was added on 2026-07-31.** `moderate` alone starts its work only after a
+200ms hover dwell, which on a normal hover-and-click leaves no time at all: measured from a
+Vietnamese home connection that day, TTFB through the CDN is **~145ms on an edge HIT and
+~185ms on a miss** (against ~65ms straight to the origin, which is in Vietnam — the CDN
+routes VN readers to the `HKG` PoP). The prerender was still in flight when the click landed,
+so readers waited out the whole round trip and the feature looked broken. Prefetch pays that
+round trip *before* the reader decides.
+
+`prerender` stays on `moderate` for the reason it always was: at `eager` a reader who scrolls
+past ten cards has paid for ten full renders. Hover earns that cost; being in the viewport
+does not. The honest cost of `eager` prefetch is a listing pulling ~400 KB it may never use;
+Chrome caps prefetch at fifty documents and drops them under Save-Data.
+
+**Chromium only.** Safari and Firefox ignore Speculation Rules entirely and navigate cold.
+There is no fallback and deliberately so: the only ones available are a JS pjax layer or a
+service worker, and both cost more than the 80ms they would recover here. What helps those
+browsers is shortening the round trip itself, not speculating over it.
 
 **A header, not an inline `<script type="speculationrules">`.** The frozen tree used the
 inline form. 2.0 ships no inline script on the public site, which is what lets the
 recommended CSP omit `unsafe-inline` from `script-src`, and an inline speculationrules block
 is governed by `script-src` like any other. The header keeps both.
 
-Excluded from prerendering: `/admin/*`, `/api/*`, `/uploads/*`, `/preview/*`, `/og*`, plus
-`[rel~=nofollow]` and `[download]` links. The header itself is only set on a public HTML 200,
-so the owner's surfaces never offer it at all.
+Excluded from BOTH rules: `/admin/*`, `/api/*`, `/uploads/*`, `/preview/*`, `/og*`, plus
+`[rel~=nofollow]` and `[download]` links. A prefetch of `/preview` burns a token exactly as a
+prerender does. The header itself is only set on a public HTML 200, so the owner's surfaces
+never offer it at all.
 
 > This shipped on 2026-07-29 and was absent before then, while both this file and
 > `spec/04-frontend.md` described it as present. What the port DID carry over was

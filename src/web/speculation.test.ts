@@ -21,22 +21,37 @@ describe('the rules document', () => {
     expect(res.headers.get('content-type')).toBe('application/speculationrules+json')
   })
 
-  it('prerenders on hover, and never the paths where a speculative GET is not free', async () => {
-    const rules = await (await app.request('/speculation-rules.json')).json() as {
-      prerender: { eagerness: string; where: { and: unknown[] } }[]
-    }
-    const rule = rules.prerender[0]!
-    expect(rule.eagerness).toBe('moderate')
+  // The two eagerness values are the feature. `moderate` prefetch would reintroduce the
+  // 200ms hover dwell this was changed to escape, and `eager` prerender would render every
+  // card a reader scrolls past — so both are pinned, in both directions.
+  it('prefetches every link eagerly, and prerenders only on hover', async () => {
+    const rules = await rulesDocument()
+    expect(rules.prefetch[0]!.eagerness).toBe('eager')
+    expect(rules.prerender[0]!.eagerness).toBe('moderate')
+  })
 
-    const json = JSON.stringify(rule.where)
-    for (const excluded of ['/admin/*', '/api/*', '/uploads/*', '/preview/*', '/og*']) {
-      expect(json).toContain(excluded)
+  it('never speculates on the paths where a GET is not free, under EITHER rule', async () => {
+    const rules = await rulesDocument()
+    // Both, not just prerender: a prefetch of /preview burns a token exactly as a prerender
+    // does, and it is the cheap rule that now points at every link on the page.
+    for (const rule of [...rules.prefetch, ...rules.prerender]) {
+      const json = JSON.stringify(rule.where)
+      for (const excluded of ['/admin/*', '/api/*', '/uploads/*', '/preview/*', '/og*']) {
+        expect(json).toContain(excluded)
+      }
+      // The author's own markup, honoured: a nofollow or a download link is not a page.
+      expect(json).toContain('[rel~=nofollow]')
+      expect(json).toContain('[download]')
     }
-    // The author's own markup, honoured: a nofollow or a download link is not a page.
-    expect(json).toContain('[rel~=nofollow]')
-    expect(json).toContain('[download]')
   })
 })
+
+type Rule = { eagerness: string; where: { and: unknown[] } }
+
+async function rulesDocument(): Promise<{ prefetch: Rule[]; prerender: Rule[] }> {
+  return await (await app.request('/speculation-rules.json')).json() as
+    { prefetch: Rule[]; prerender: Rule[] }
+}
 
 describe('the header', () => {
   it('is on a public page, and points at the document', async () => {
