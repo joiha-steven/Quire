@@ -11,7 +11,7 @@ import { uploadImages } from '@/admin/upload-client'
 import { Editor, type EditorApi } from './Editor'
 import { PageSettings, type PageDraft } from './PageSettings'
 import { MediaLibrary } from './MediaLibrary'
-import { useLocalDraft } from './useLocalDraft'
+import { useLocalAutosave, useLocalDraft, useUnsavedGuard } from './useLocalDraft'
 import { useAdminT } from './I18nProvider'
 import { CARD, NOTICE } from './kit'
 
@@ -128,29 +128,14 @@ export function PageForm({ initial, contentWidth, typewriterEffects }: Props) {
     [doPersist],
   )
 
-  // Local (offline) autosave: stash unsaved edits in localStorage every few
-  // seconds. Crucially this NEVER writes to the server, so editing a published
-  // page can't push half-finished text live — only Save/Publish does that.
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (!dirtyRef.current) return
-      const content = editorApi.current?.getMarkdown() ?? contentRef.current
-      saveLocal({ ...draftRef.current, content })
-    }, 8_000)
-    return () => clearInterval(id)
-  }, [saveLocal])
-
-  // Warn before leaving with unsaved changes.
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (dirtyRef.current) {
-        e.preventDefault()
-        e.returnValue = ''
-      }
-    }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
-  }, [])
+  // Local (offline) autosave, same contract as the post editor: localStorage only, never the
+  // server, so editing a published page cannot push half-finished text live.
+  useLocalAutosave(
+    () => dirtyRef.current,
+    () => ({ ...draftRef.current, content: editorApi.current?.getMarkdown() ?? contentRef.current }),
+    saveLocal,
+  )
+  useUnsavedGuard(() => dirtyRef.current)
 
   async function handleSave(status: PageDraft['status'], successMsg: string) {
     if (status === 'published' && !draftRef.current.title.trim()) {

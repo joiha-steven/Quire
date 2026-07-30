@@ -4,6 +4,24 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Now
 
+- [ ] **A setting for the autosave interval, and a way to SEE the autosave.** Asked for
+      2026-07-30, default 2 minutes. The feature is not missing (1.x was local-only too, and
+      says so in its own comment; 2.0 snapshots every 8 seconds and now also on hide) but it is
+      invisible and its interval is a constant. Two parts, and the second is the one to think
+      about:
+      1. `AUTOSAVE_MS` in `admin/components/useLocalDraft.ts` becomes a setting. The chain is
+         `types.ts` → `content/settings.ts` default + sanitizer (`clampNumber`) →
+         `AdvancedFields.tsx` (which already owns the editor's motion toggles) → the six admin
+         locale files → `web/admin/views.ts`, which already passes `contentWidth` and
+         `typewriterEffects` into both editors. A LOWER bound matters: at a 2-minute interval
+         the hide-flush is what keeps work safe, so do not remove it.
+      2. The status bar says `saving` / `savedAt` / `unsaved`, and never says the work is held
+         locally, which is why the feature reads as absent. Give it a "kept locally at HH:MM"
+         state.
+      Do NOT turn this into a server autosave without deciding it deliberately: the header of
+      `useLocalDraft.ts` rejects one on the grounds that it cannot help when the network is what
+      dropped, and that on an already-published post it would push half-finished edits live.
+      That reasoning still holds.
 - [ ] **Consolidate the remaining HTML escapers.** The hazard this task was written for has
       already fired once and is fixed: `search-page.ts` reflected the query into `value="…"`
       through a three-replacement escaper and produced a live event handler

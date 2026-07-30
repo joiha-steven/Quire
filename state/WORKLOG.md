@@ -7,6 +7,38 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-30 (last) — the editor stopped losing work to a scroll gesture
+
+Reported: a hard downward scroll in the post editor reloads the page. Confirmed as the
+browser's own pull-to-refresh, which is a navigation nobody asked for, on the one screen in
+this project where a navigation costs work. There is nothing above the top of an editor to
+pull towards, so the admin now sets `overscroll-behavior-y: contain` and the gesture does
+nothing. Measured in a phone-emulated browser with a real session: `contain` on both `html`
+and `body`.
+
+**The local snapshot only ran on a timer, and that was the actual loss.** Every eight seconds,
+and a reload took whatever had been typed since. `beforeunload` does not reliably fire on a
+mobile reload, so it was never going to be the net. The snapshot is now flushed on `pagehide`,
+on a `visibilitychange` to hidden, and on unmount, with the interval as a floor rather than the
+whole mechanism. Measured: type, hide the page well inside the eight seconds, and a snapshot
+that did not exist a moment earlier is on disk.
+
+Both editors carried their own copy of that effect and their own `beforeunload` handler, so
+the fix would have been written twice and drifted once. They are `useLocalAutosave` and
+`useUnsavedGuard` in `useLocalDraft.ts` now: 19 lines added across the two forms against 48
+removed, and PostForm back under the 400-line rule it had just crossed.
+
+**On autosave itself, the answer is not what it looked like.** The report was that 1.x had it
+and the port lost it. It did not: `v1/src/components/admin/PostForm.tsx` says in its own
+comment that "autosave is local-only, never server", which is exactly what 2.0 does. What 2.0
+lacks is not the feature but a way to SEE it and a way to change its interval, and the reason
+it is local-only is written at the top of `useLocalDraft.ts`: a server autosave cannot help
+when the network is what dropped, and on an already-published post it would push half-finished
+edits live. That is a decision worth keeping, so the configurable interval is filed as its own
+task rather than smuggled in behind a bug fix.
+
+check:all exits 0, 1121 pass.
+
 ## 2026-07-30 (last) — the admin's progress bar drew itself twice per click
 
 The owner reported it and it was exactly right, which the source alone would not have told

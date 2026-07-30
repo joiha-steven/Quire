@@ -30,9 +30,20 @@
   --c-meta: #85858c;
   --c-rule: #27272a;
 }
+/* `overscroll-behavior-y: contain` is the important half, and it is here because of a real
+   loss of work: on a phone, scrolling hard at the top of the editor triggers the browser's
+   pull-to-refresh, the page RELOADS, and whatever was typed since the last local snapshot is
+   gone. The gesture is not a navigation the author asked for, and there is nothing above the
+   top of an editor to pull towards. `contain` stops the refresh and the scroll chaining
+   while leaving ordinary scrolling exactly as it was. Admin only: the reading site wants the
+   browser's normal behaviour. */
+html {
+  overscroll-behavior-y: contain;
+}
 body {
   margin: 0;
   font-family: var(--font-sans);
+  overscroll-behavior-y: contain;
 }
 
 /* Editor preview: the TipTap editor has no .gallery wrapper (grouping happens on

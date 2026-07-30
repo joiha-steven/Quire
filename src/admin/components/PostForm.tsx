@@ -12,7 +12,7 @@ import { Editor, type EditorApi } from './Editor'
 import { PostSettings, type Draft } from './PostSettings'
 import { MediaLibrary } from './MediaLibrary'
 import { TimeMachine } from './TimeMachine'
-import { useLocalDraft } from './useLocalDraft'
+import { useLocalAutosave, useLocalDraft, useUnsavedGuard } from './useLocalDraft'
 import { useAdminT } from './I18nProvider'
 import { CARD, NOTICE } from './kit'
 
@@ -191,29 +191,15 @@ export function PostForm({ initial, allCategories, allTags, allSeries, contentWi
     [doPersist],
   )
 
-  // Local (offline) autosave: stash unsaved edits in localStorage every few
-  // seconds. Crucially this NEVER writes to the server, so editing a published
-  // post can't push half-finished text live — only Save/Publish does that.
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (!dirtyRef.current) return
-      const content = editorApi.current?.getMarkdown() ?? contentRef.current
-      saveLocal({ ...draftRef.current, content })
-    }, 8_000)
-    return () => clearInterval(id)
-  }, [saveLocal])
-
-  // Warn before leaving with unsaved changes.
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (dirtyRef.current) {
-        e.preventDefault()
-        e.returnValue = ''
-      }
-    }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
-  }, [])
+  // Local (offline) autosave: stash unsaved edits in localStorage on a timer AND whenever the
+  // page is hidden or left. It NEVER writes to the server, so editing a published post cannot
+  // push half-finished text live; only Save/Publish does that. The hook carries the reasoning.
+  useLocalAutosave(
+    () => dirtyRef.current,
+    () => ({ ...draftRef.current, content: editorApi.current?.getMarkdown() ?? contentRef.current }),
+    saveLocal,
+  )
+  useUnsavedGuard(() => dirtyRef.current)
 
   async function handleSave(status: Draft['status'], successMsg: string) {
     if (status === 'published' && !draftRef.current.title.trim()) {
