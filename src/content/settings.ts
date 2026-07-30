@@ -143,7 +143,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   excerptLength: 50,
   ideChrome: false,
   customCss: '',
-  footer: '© {year} {title} · [powered by Quire Blog](https://github.com/joiha-steven/Quire)',
+  footer: '© {year} {title} · [powered by Quire Blog](https://github.com/joiha-steven/quire-blog)',
   menu: [],
   featured: [],
   mostViewedCount: 3,

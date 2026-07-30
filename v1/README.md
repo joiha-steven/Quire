@@ -82,7 +82,7 @@ Two ways to stand up your own blog — **pick one**. Both run entirely on **your
 **Fully self-contained.** The stack bundles **PostgreSQL + PostgREST** (your database) and stores binaries on the **local filesystem**, plus a cron sidecar. Everything runs on your host; only Google sign-in reaches the internet. Data lives in `./data/postgres` (text) + `./data/uploads` (binaries) — back up those two folders.
 
 ```bash
-git clone https://github.com/joiha-steven/Quire.git && cd Quire
+git clone https://github.com/joiha-steven/quire-blog.git && cd quire-blog
 cp .env.docker.example .env.docker
 node scripts/docker/gen-keys.mjs >> .env.docker   # DB password + JWT secret + service key
 # then fill AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, AUTHORIZED_EMAIL, SITE_URL, CRON_SECRET
@@ -176,7 +176,7 @@ MCP tokens and the Google Drive backup connection are **created in the admin**, 
 ## 🧑‍💻 Run locally (dev)
 
 ```bash
-git clone https://github.com/joiha-steven/Quire.git && cd Quire
+git clone https://github.com/joiha-steven/quire-blog.git && cd quire-blog
 npm install
 docker compose up -d db rest        # a local Postgres + PostgREST just for dev
 cp .env.example .env.local          # fill in the values above (point POSTGREST_URL at the dev PostgREST)

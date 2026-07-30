@@ -126,7 +126,7 @@ Not adjectives. Recorded from the network on a **cold load of the live site**, w
 **You need:** [Bun](https://bun.sh) 1.3 or newer, and a machine you can point a domain at. That is the whole list — no database server, no Node, no Docker unless you want it.
 
 ```bash
-git clone https://github.com/joiha-steven/Quire.git && cd Quire
+git clone https://github.com/joiha-steven/quire-blog.git && cd quire-blog
 bun install
 bun run build:assets                # bundles the islands + the admin
 DATA_DIR=./data SITE_URL=https://example.com bun src/index.ts
@@ -218,7 +218,7 @@ SMTP, Turnstile and Cloudflare credentials are entered in **Admin → Settings �
 ## 🧑‍💻 Run locally (dev)
 
 ```bash
-git clone https://github.com/joiha-steven/Quire.git && cd Quire
+git clone https://github.com/joiha-steven/quire-blog.git && cd quire-blog
 bun install
 bun run dev                         # http://localhost:3000
 bun run user create --username me --email me@example.com   # then sign in at /login

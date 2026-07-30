@@ -4,7 +4,7 @@
 
 **Please do not open a public issue for security problems.**
 
-Report privately through GitHub's **[Report a vulnerability](https://github.com/joiha-steven/Quire/security/advisories/new)**
+Report privately through GitHub's **[Report a vulnerability](https://github.com/joiha-steven/quire-blog/security/advisories/new)**
 (Security → Advisories on this repo). If that is unavailable, open a minimal public
 issue asking a maintainer to make private contact — without any exploit detail.
 

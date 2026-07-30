@@ -7,7 +7,7 @@
 import Link from '@/admin/router'
 import type { ReactNode } from 'react'
 
-export const REPO = 'https://github.com/joiha-steven/Quire'
+export const REPO = 'https://github.com/joiha-steven/quire-blog'
 export const doc = (p: string) => `${REPO}/blob/main/${p}`
 
 export const A =

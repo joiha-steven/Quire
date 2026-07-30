@@ -30,7 +30,7 @@ chown -R quire:quire /var/lib/quire
 
 ```bash
 curl -fsSL https://bun.sh/install | bash        # as the quire user
-git clone https://github.com/joiha-steven/Quire.git /home/quire/app
+git clone https://github.com/joiha-steven/quire-blog.git /home/quire/app
 cd /home/quire/app && bun install && bun run build:assets && bun run build:admin
 ```
 
@@ -196,7 +196,7 @@ nginx (section 5), the CDN note (section 7) and **the cron ticks (section 8)** s
 and so does taking a backup before an upgrade.
 
 ```bash
-git clone https://github.com/joiha-steven/Quire.git && cd Quire
+git clone https://github.com/joiha-steven/quire-blog.git && cd quire-blog
 cp .env.docker.example .env          # set SITE_URL, and that is the whole of it
 docker compose up -d --build
 docker compose exec quire bun run user create --username you --email you@example.com
