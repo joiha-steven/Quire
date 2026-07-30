@@ -20,11 +20,7 @@ import type { PostWithContent, SiteSettings } from '@/types'
 import type { Dict } from '@/locales/types'
 import { formatCount, formatDate } from '@/i18n/i18n'
 import { tagText, termSlug } from '@/content/taxonomy'
-import { readingMinutes, wordCount } from '@/utils'
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml, readingMinutes, wordCount } from '@/utils'
 
 /**
  * Comma-separated term links, as the frozen tree rendered them. Tags read lowercase.

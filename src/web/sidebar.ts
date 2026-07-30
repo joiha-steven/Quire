@@ -16,10 +16,7 @@ import { getSeriesList } from '@/content/series'
 import { tagText, termSlug } from '@/content/taxonomy'
 import { listingRailCss } from '@/render/rail-css'
 import { t } from '@/i18n/i18n'
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml } from '@/utils'
 
 /** Curated posts shown in the "Featured" block. */
 const FEATURED_MAX = 5

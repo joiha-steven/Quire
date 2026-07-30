@@ -12,13 +12,25 @@ import { highlightCode } from '@/render/highlight'
 import { readRendered, renderKey, writeRendered } from '@/render/render-cache'
 import { prepareFootnotes, applyFootnotes } from '@/render/footnotes'
 import { buildSha } from '@/server/build-info'
-import { slugify } from '@/utils'
+import { escapeAttr, slugify } from '@/utils'
 
-const escapeHtml = (s: string) =>
+/**
+ * Body TEXT escaping, and it is frozen at three replacements by the golden gate.
+ *
+ * `docs/spec/03-golden.md` makes the rendered article body a hard equality check against
+ * Quire 1.x: "if an article body differs by one byte, a template was ported wrong. There is
+ * nothing to review and nothing to accept." The frozen tree escaped `& < >` here, so an
+ * escaped-for-display raw HTML block renders `class="danger"` and not `class=&quot;danger&quot;`.
+ * Both are safe and both LOOK identical to a reader; only one of them is the same bytes.
+ *
+ * So this is NOT the canonical `escapeHtml` and must not be "upgraded" into it. It carries its
+ * own name for exactly that reason: the hazard this codebase already shipped was two functions
+ * called `escapeHtml` with different strengths, one of which reflected a search query into an
+ * attribute. Attributes in this file go through the canonical `escapeAttr`, which does escape
+ * quotes, so nothing here depends on this being weak.
+ */
+const escapeBodyText = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-// Escape a string for use inside a double-quoted HTML attribute.
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
 
 // Drop dangerous schemes (javascript:/data:/vbscript:) — marked v5+ no longer
 // sanitizes URLs. Strip control chars first so `java\tscript:` can't slip through.
@@ -49,7 +61,7 @@ marked.use({
   renderer: {
     // Raw HTML tokens (block + inline) -> shown as visible text, never executed.
     html(token: Tokens.HTML | Tokens.Tag) {
-      return escapeHtml(token.raw)
+      return escapeBodyText(token.raw)
     },
     // H2/H3 slug ids for ToC anchors; duplicates de-duped in dedupeHeadingIds
     // (kept in sync with extractHeadings).

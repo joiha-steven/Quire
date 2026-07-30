@@ -60,6 +60,19 @@ export function singleRailCss(colWidth: number): string {
     // same language. Centred on the 1px line: half the dot back from the line's own centre.
     `.post-info::before{content:"";position:absolute;left:-${DIVIDER + 3}px;top:.5em;` +
     `width:7px;height:7px;border-radius:50%;background:var(--c-meta)}` +
+    // A SECOND node on the same divider, level with the action row. The panel is a column of
+    // facts and then one row that DOES something, and it is already set apart by space alone;
+    // the dot is what says the gap is deliberate rather than a rhythm that slipped.
+    //
+    // ::after, NOT ::before: the IDE chrome puts its `//` marker on this row's ::before, and
+    // two marks fighting over one pseudo-element is a bug this project has already shipped
+    // once, on the rail rows. The offset carries `--rail-pad` because this dot is positioned
+    // against the ROW, which starts at the panel's content edge, where the panel's own dot is
+    // positioned against the panel and starts at its padding edge.
+    `.post-info .info-action{position:relative}` +
+    `.post-info .info-action::after{content:"";position:absolute;` +
+    `left:calc(-${DIVIDER + 3}px - var(--rail-pad));top:.5em;` +
+    `width:7px;height:7px;border-radius:50%;background:var(--c-meta)}` +
     // Exactly one copy of these facts has a box at any width. Below this breakpoint there is
     // no gutter, the panel is display:none, and the meta line above the title plus the
     // taxonomy over its rule are what the reader gets, unchanged.

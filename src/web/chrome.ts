@@ -13,9 +13,7 @@ import type { SiteSettings } from '@/types'
 import { t } from '@/i18n/i18n'
 import { renderInlineMarkdown, expandFooterTokens } from '@/render/inline-md'
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml } from '@/utils'
 
 /**
  * Inline SVG rather than an icon font: no extra request, and it inherits `currentColor`.

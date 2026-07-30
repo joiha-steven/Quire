@@ -24,9 +24,7 @@ import { isPublicallyVisible, clampExcerpt, readingMinutes, toPlainText, wordCou
 import { renderDocument, pageStyles } from '@/web/layout'
 import { postInfoPanel, termLinks } from '@/web/post-info'
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml } from '@/utils'
 
 /**
  * Media facts the renderer needs: which originals have responsive variants, and the

@@ -16,7 +16,7 @@ import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { resolveSeries } from '@/content/series'
 import { resolveTerm, tagText } from '@/content/taxonomy'
 import { t } from '@/i18n/i18n'
-import { foldAccents } from '@/utils'
+import { escapeHtml, foldAccents } from '@/utils'
 import { renderListing } from '@/web/listing'
 import { cached, listingPage, notFoundPage, renderFeedBody } from '@/web/listing-page'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
@@ -56,9 +56,6 @@ import {
   handleEnrol, handleEnrolDone, handleLogin, handleLoginPage, handleLogout,
   handleTwoFactor, handleTwoFactorPage,
 } from '@/web/auth-routes'
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /**
  * The admin shell, for the owner, or a redirect to sign in.

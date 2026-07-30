@@ -7,6 +7,49 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-30 (last) — the admin's progress bar drew itself twice per click
+
+The owner reported it and it was exactly right, which the source alone would not have told
+anyone: the bar is keyed on a run counter, and a new key replays the animation from the left.
+
+Measured before touching it, headless with an owner session and 4x CPU throttle, watching every
+animation frame for a NEW bar element:
+
+    39ms  bar appears        <- the route transition
+   102ms  bar appears AGAIN  <- new element, animation restarts at the left edge
+   103ms  bar marked done
+   439ms  bar removed
+
+The cause is a SEAM. A navigation is two halves owned by different things: React resolving the
+route's chunk (a transition) and the new page asking for its data (an effect, which by
+definition runs after the commit). For the few frames between them nothing is in flight, `busy`
+goes false, and the bar took that literally: it marked itself done, then a new key restarted it.
+`pending.ts` says in its own header that the bar has to cover both halves. It did; it just
+believed the gap between them.
+
+Fixed by giving the falling edge a 120ms grace, and by only bumping the run counter when the bar
+was NOT already on screen. Re-measured on three routes: one appearance, one finish, no restart.
+Content 33/320/659, settings 62/442/773, analytics 43/292/620.
+
+**The escapers, finished.** The ten remaining private copies now import the canonical pair, so
+the weak three-replacement variant cannot be reached for by accident. One exception, and it is
+deliberate: `render/post-content.ts` keeps a local text escaper, renamed `escapeBodyText` so it
+can never be confused with `escapeHtml`. The golden gate is a byte-for-byte equality check
+against 1.x and `docs/spec/03-golden.md` states there is "nothing to review and nothing to
+accept"; the canonical escaper turns `class="danger"` into `class=&quot;danger&quot;` inside an
+escaped-for-display raw HTML block, which renders identically and is not the same bytes. So the
+renderer's output is frozen and the comment says why, rather than re-baselining a fixture to
+make a tidy-up pass. Attributes in that file already go through the canonical `escapeAttr`.
+
+**A second node on the article's right divider**, level with the reading-mode row, because the
+panel is a column of facts and then one row that DOES something and the space alone did not say
+so. `::after`, not `::before`: the IDE chrome owns that row's `::before` for its `//` marker, and
+two marks fighting over one pseudo-element is a bug this project shipped once already on the rail
+rows. Measured rather than eyeballed: both dots land at x=1071 on a divider line at x=1074,
+same 7px, same `--c-meta`.
+
+check:all exits 0, 1096 pass.
+
 ## 2026-07-30 (later) — a reflected XSS on the public search page
 
 Found while consolidating the HTML escapers, which is the one thing on the audit's list that

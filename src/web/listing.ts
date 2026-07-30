@@ -12,10 +12,7 @@ import { formatDate, formatMonth, t } from '@/i18n/i18n'
 import type { Dict } from '@/locales/types'
 import { termSlug } from '@/content/taxonomy'
 import type { Paged } from '@/content/paginate'
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml } from '@/utils'
 
 const yearOf = (iso: string) => iso.slice(0, 4)
 const monthOf = (iso: string) => iso.slice(0, 7)

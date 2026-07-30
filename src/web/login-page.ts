@@ -24,10 +24,7 @@ import { renderDocument, pageStyles } from '@/web/layout'
 import { LOGIN_CSS } from '@/web/login.css'
 import { quireLockup } from '@/web/brand'
 import { scriptTag } from '@/web/assets'
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml } from '@/utils'
 
 /** `{n}` style interpolation, the same shape the admin strings already use. */
 const fill = (template: string, values: Record<string, string | number>): string =>

@@ -51,9 +51,7 @@ export type Shell = {
 /** `backToTop` -> `data-back-to-top`. The inverse of the browser's `dataset` mapping. */
 const dataAttr = (key: string) => `data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-const escapeAttr = (s: string) => escapeHtml(s).replace(/"/g, '&quot;')
+import { escapeAttr, escapeHtml } from '@/utils'
 
 /**
  * The part of the sheet that depends on the OWNER'S SETTINGS, inlined into the page.

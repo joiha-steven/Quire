@@ -25,9 +25,7 @@ import { clearCache } from '@/server/cache'
 import { logActivity } from '@/server/activity'
 import { fail, json } from '@/web/api'
 import { owner, ownerRouter, param } from '@/web/guard'
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+import { escapeHtml } from '@/utils'
 
 const body = async <T>(c: Context): Promise<Partial<T>> =>
   (await c.req.json().catch(() => ({}))) as Partial<T>
