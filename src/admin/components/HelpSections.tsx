@@ -98,15 +98,14 @@ export function ServerSection() {
     <Anchor id="server">
       <Card title="Server, backups &amp; upgrades">
         <ul className={UL}>
-          <li>Runs entirely on <b>your own server</b>: PostgreSQL + PostgREST for text, the local filesystem for images. Native or Docker, no cloud account.</li>
+          <li>Runs entirely on <b>your own server</b>: two SQLite files for content and analytics, the local filesystem for images. Native or Docker, no cloud account.</li>
           <li><C>/api/health</C> reports the database and the storage directory separately — point your uptime monitor at it. Boot fails fast on a missing required setting.</li>
-          <li><b>Backups</b>: full snapshots (database + every file) to Google Drive, on a schedule, with restore. Settings → Integrations.</li>
+          <li><b>Backups</b>: scheduled snapshots (both databases + every file) written to your own disk, plus a download-now archive. Settings → System → Backups.</li>
           <li>Upgrades apply <b>tracked SQL migrations</b>, so a schema change runs once and only once.</li>
         </ul>
         <Links>
-          <Ext href={doc('docs/self-host-native.md')}>Self-host guide</Ext>
+          <Ext href={doc('docs/self-host.md')}>Self-host guide</Ext>
           <Ext href={doc('docs/backups.md')}>Backups</Ext>
-          <Ext href={doc('CHECKLIST.md')}>Deploy checklist</Ext>
         </Links>
       </Card>
     </Anchor>

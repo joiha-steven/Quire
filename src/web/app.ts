@@ -28,7 +28,7 @@ import { handleUpload } from '@/web/uploads'
 import { handleMarkdown, wantsMarkdown } from '@/web/markdown'
 import { handleManifest } from '@/web/manifest'
 import { handlePreview } from '@/web/preview'
-import { handleSearch } from '@/web/search-api'
+import { handleSearch, handleSearchIndex } from '@/web/search-api'
 import { handleSearchPage } from '@/web/search-page'
 import { cacheHeaders } from '@/web/cache-headers'
 import { securityHeaders } from '@/web/security-headers'
@@ -211,21 +211,7 @@ export function createApp(): Hono {
 
   app.get('/api/search', handleSearch)
 
-  // The client-side search index: slug, title, date and accent-folded terms for every
-  // public post. PUBLIC, and it carries nothing a reader could not read by browsing the
-  // site — no drafts, no bodies. 404 when search is switched off, so a disabled feature
-  // does not leave an endpoint quietly answering.
-  app.get('/api/search/index', async (c) => {
-    const { features } = await getSettings()
-    if (!features.search) return c.json({ error: 'Search disabled' }, 404)
-    const posts = await getPublicPosts()
-    return c.json(posts.map((p) => ({
-      slug: p.slug,
-      title: p.title,
-      date: p.date,
-      terms: foldAccents([p.title, p.tags.join(' '), p.categories.join(' ')].join(' ')),
-    })))
-  })
+  app.get('/api/search/index', handleSearchIndex)
   app.get('/api/comments', handleCommentsGet)
   app.post('/api/comments', handleCommentsPost)
   // Reader sign-in, which is not the owner's: it grants a filled-in name and a skipped
@@ -372,7 +358,12 @@ export function createApp(): Hono {
       if (!enabled(settings)) return c.text('Not found', 404)
       const [posts, pages] = await Promise.all([getPublicPosts(), getPublicPages()])
       const body = build({ posts, pages, settings, site: resolveSiteUrl(settings) })
-      return new Response(body, { headers: { 'content-type': type } })
+      // These sent no cache-control at all, so every feed reader's poll and every crawler
+      // hit came all the way to the origin and rebuilt the document. Five minutes, and a
+      // write purges the zone anyway, so a subscriber never waits on the window.
+      return new Response(body, {
+        headers: { 'content-type': type, 'cache-control': 'public, s-maxage=300, stale-while-revalidate=600' },
+      })
     })
   }
 

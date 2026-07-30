@@ -103,3 +103,27 @@ describe('the first tab stop on every public page', () => {
     expect(html).toContain('<main id="content"')
   })
 })
+
+describe('what a shared cache is told about the machine-readable surfaces', () => {
+  // These sent no cache-control at all, so every poll rebuilt the document at the origin.
+  it('lets the edge hold the feeds', async () => {
+    for (const path of ['/feed.xml', '/sitemap.xml', '/robots.txt', '/llms.txt']) {
+      const res = await get(path)
+      expect(res.status).toBe(200)
+      expect(res.headers.get('cache-control')).toContain('s-maxage=300')
+    }
+  })
+
+  // The blanket rule refuses a shared cache anything under /api. This is the one thing
+  // under there that is public by design, and it was being rebuilt on every request.
+  it('lets the edge hold the public search index', async () => {
+    const res = await get('/api/search/index')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('cache-control')).toContain('s-maxage=300')
+  })
+
+  it('still refuses the edge everything else under /api', async () => {
+    const res = await get('/api/search?q=published')
+    expect(res.headers.get('cache-control')).toBe('private, no-store')
+  })
+})
