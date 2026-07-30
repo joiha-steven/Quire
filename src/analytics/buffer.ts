@@ -107,5 +107,3 @@ export function resetAnalyticsBuffer(): void {
 }
 
 export const pendingAnalytics = (): number => events.length + scrolls.length
-
-export const analyticsBufferLimits = { FLUSH_MS, MAX_ROWS } as const

@@ -522,9 +522,10 @@
   light/dark toggle). The Appearance tab still sets the site's **default palette** + which palettes
   readers may switch between (`settings.enabledPalettes`), with a note (`themeAdminNote`) explaining
   this. The DEFAULT palette (`themePreset`) is always shown (its checkbox is locked) so the set is
-  never empty. `enabledPaletteOptions()` filters the public `PaletteToggle` (renders `null` when ≤1
-  option). The no-FOUC script ignores a stored palette that is no longer enabled (falls back to the
-  default). Disabled palettes stay fully editable — visibility ≠ customization. Sanitizer
+  never empty. The frozen tree filtered a public `PaletteToggle` through
+  `enabledPaletteOptions()`; 2.0 ships no reader-facing palette switcher, so that helper went with
+  the component and `settings.enabledPalettes` is read by the theme island alone. The no-FOUC
+  script ignores a stored palette that is no longer enabled (falls back to the default). Disabled palettes stay fully editable — visibility ≠ customization. Sanitizer
   (`sanitizeEnabledPalettes`): known ids only, preset order, default forced in; a missing field
   (legacy settings) = all on. Pinned by `settings-sanitize.test.ts`.
 - Tabs lay cards out `grid lg:grid-cols-2 items-start` (explicit columns, NOT CSS `columns`).
@@ -537,14 +538,14 @@ Text-only reader comments, **off by default** (`settings.comments.enabled`). Ide
 manual (name + email + optional website, optionally behind Cloudflare Turnstile) or a signed-in
 Google account.
 
-- **Instant, never cached — by design.** The post page stays ISR/static; the comment block is a
-  CLIENT island (`Comments.tsx`; the composer + sign-in buttons live in `CommentForm.tsx`) that
-  fetches `/api/comments?post=<slug>` with `no-store`. The route sets `fetchCache = 'force-no-store'`
-  so its DB read is LIVE. A new comment is POSTed and shown **optimistically** — rendered with the
-  SAME `renderCommentMarkdown` the server uses (no content drift) and overlaid via
-  `mergeOptimisticComments` (`lib/comment-tree.ts`, tested) — then an authoritative REFETCH replaces
-  it and clears the overlay (a failed POST removes the optimistic comment + shows the error). **No
-  `revalidatePath` ever runs for a comment.** The live count comes from the same fetch + overlay.
+- **Instant, never cached — by design.** The page itself is cached; the comment block is an
+  island (`assets/js/comments.ts`) that fetches `/api/comments?post=<slug>`, and that route is
+  refused a shared cache like everything under `/api`, so its read is always live. A new comment
+  is POSTed and the thread is then RE-READ, which is what makes it appear. There is no optimistic
+  overlay: 2.0 dropped the one the frozen tree had, along with `mergeOptimisticComments`, because
+  a refetch is drift-free by construction where an overlay has to keep a second renderer in step
+  with the server's. A failed POST leaves the form filled and prints the server's own message.
+  Nothing invalidates the page cache for a comment.
 - **Limited markdown (`comment-md.ts`):** only `**bold**` / `*italic*`. The source is HTML-escaped
   FIRST, then only `<strong>/<em>/<br>` are injected — no user tag, link, image, or script survives
   (mirrors Invariant 5). Hard cap 1000 chars (server + client).

@@ -1,4 +1,4 @@
-// `import-v1`: one-way importer from Quire 1.x. See v2/docs/05-importer.md.
+// `import-v1`: one-way importer from Quire 1.x. See docs/spec/05-importer.md.
 //
 //   bun run import-v1 --postgrest URL --token TOKEN --uploads DIR --out FILE [flags]
 //

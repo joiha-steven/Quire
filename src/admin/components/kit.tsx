@@ -91,16 +91,6 @@ export function Setting({
 /** The gap between two settings inside one card. One number, so no card invents its own. */
 export const SETTING_GAP = 'space-y-5'
 
-/** A labelled group inside a card, for when one card holds two subjects. */
-export function SettingGroup({ title, children }: { title: ReactNode; children: ReactNode }) {
-  return (
-    <div className={SETTING_GAP}>
-      <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">{title}</h3>
-      {children}
-    </div>
-  )
-}
-
 // The status bar both editors put above the form (scheduled-for, unsaved-changes and the
 // like). Tinted rather than white so it reads as a message about the page, not part of it.
 export const NOTICE =

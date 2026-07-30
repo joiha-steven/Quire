@@ -222,11 +222,19 @@ another.
 - `turndown-plugin-gfm` ships no types, so there is a hand-written 12-line declaration
   rather than a dependency on a community `@types` package that has to survive a decade.
 
-## Not moved yet
+## Nothing left to move
 
-- **`backup/*` (6 routes)** and `lib/{backup,gdrive,backup-state}.ts`. The Google Drive
-  round trip cannot be exercised without a real OAuth client and refresh token.
-- **The MCP transport (`/api/mcp`) and its tools.** `mcp-handler` is Next-specific, so
-  Streamable HTTP has to be wired to the SDK directly. A rewrite, not a port.
-- **The admin SPA itself**, and `Turnstile` — the last unported island, which lands with
-  the comment form's configuration.
+All four of the items this section used to list shipped in M3 (2026-07-28), and the section
+went stale rather than being deleted, which made it the last thing in the repository still
+claiming the port was unfinished:
+
+- **`backup/*`** landed as `server/backup.ts` plus `GET /api/backup/export`. It does NOT
+  round-trip through Google Drive: snapshots are written to `BACKUP_DIR` on the owner's own
+  disk, which is what removed the OAuth problem rather than solving it. See `docs/backups.md`.
+- **The MCP transport** is `src/mcp/` (nine files) wired through `web/mcp-wire.ts`, on the
+  SDK directly. A rewrite, as expected.
+- **The admin SPA** is `src/admin/`, 68 components across 12 pages.
+- **Turnstile** is `auth/turnstile.ts` plus the `assets/js/turnstile.ts` island.
+
+The port is closed. `LEDGER-M1.md` and `LEDGER-M2.md` are the earlier milestones and are
+consistent as they stand.

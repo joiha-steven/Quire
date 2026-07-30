@@ -1,6 +1,7 @@
 # SQLite schema and the Postgres mapping
 
-Source of truth for the current shape: `scripts/schema.sql` (612 lines, Postgres).
+Source of truth for the current shape: [`src/store/schema.sql`](../../src/store/schema.sql).
+The Postgres original is `v1/scripts/schema.sql` (612 lines), kept for comparison only.
 This document records every decision needed to express it in SQLite, and why.
 
 ## Global conventions
@@ -218,7 +219,8 @@ quotes and double any internal quote. A test fixture set of hostile queries goes
 
 ## 3. The six SQL functions
 
-`scripts/schema.sql` and the analytics migrations define six plpgsql functions:
+`v1/scripts/schema.sql` and the analytics migrations define six plpgsql functions (Postgres
+only: 2.0 keeps this logic in TypeScript, never in SQL):
 `analytics_summary`, `analytics_page`, `analytics_totals`, `analytics_channel`,
 `analytics_facet`, `restore_tables`. All six move into `src/analytics` and
 `src/store`. The first three carry the weight; the next two are helpers of them.

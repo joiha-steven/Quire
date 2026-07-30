@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `npm run check:all` exits 0
+- [ ] `bun run check:all` exits 0
 - [ ] Behaviour change → test added in the same commit
-- [ ] Behaviour change → docs updated (CLAUDE.md / docs/* / ARCHITECTURE.md / README.md)
+- [ ] Behaviour change → docs updated (CLAUDE.md / docs/* / README.md)
 - [ ] Follows the house rules (simplicity, surgical scope, invariants, UI/i18n conventions)

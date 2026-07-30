@@ -124,15 +124,3 @@ export function setTotpSecret(id: number, secret: string | null): void {
 export function setTotpLastStep(id: number, step: number): void {
   run(`update users set totp_last_step = ? where id = ?`, step, id)
 }
-
-export function updateProfile(id: number, input: { username?: string; email?: string }): void {
-  const row = rowById(id)
-  if (row === null) return
-  run(
-    `update users set username = ?, email = ?, updated_at = ? where id = ?`,
-    input.username?.trim() ?? row.username,
-    input.email?.trim() ?? row.email,
-    nowMs(),
-    id,
-  )
-}

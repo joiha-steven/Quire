@@ -150,12 +150,12 @@ export function liveOnly(table: string): string {
 }
 
 /**
- * Timestamps are INTEGER milliseconds since epoch, UTC, everywhere. These two exist so no
- * call site invents its own convention, and so a search for "Date.now()" in the data layer
- * finds nothing.
+ * Timestamps are INTEGER milliseconds since epoch, UTC, everywhere. This exists so no call
+ * site invents its own convention, and so a search for "Date.now()" in the data layer finds
+ * nothing. A `toDate` counterpart sat here unused: nothing in the data layer wants a Date
+ * object, because the timezone logic lives in TypeScript and takes the integer.
  */
 export const nowMs = (): number => Date.now()
-export const toDate = (ms: number | null): Date | null => (ms === null ? null : new Date(ms))
 
 /**
  * The public types (`Post.date`, `MediaItem.uploadedAt`, ...) carry ISO 8601 strings and

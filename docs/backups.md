@@ -57,8 +57,19 @@ whether or not anyone remembers.
 | `quire.db`, `analytics.db` | `VACUUM INTO` a temporary file, then `tar -czf` | **Never a file copy.** A live SQLite database has a write-ahead log, and copying the file can capture a torn state that only reveals itself on restore |
 | `uploads/` | `rclone sync` with `--backup-dir` | A deleted or overwritten file stays recoverable for 7 days instead of vanishing on the next run |
 
-`.env` is deliberately NOT in the backup. It holds the session secret and the SMTP
-password; a copy of it off the box is a second place to lose them from.
+`.env` is deliberately NOT in the backup, and in 2.0 that costs nothing: it holds the port,
+the data directory and the site URL, all of which are reconstructed by following
+[`self-host.md`](./self-host.md). The two secrets it used to hold are not there any more —
+the session signing secret is generated INTO the database (`auth/secret.ts`) and the SMTP
+password lives in Settings, so both are inside the snapshot already. A restore therefore
+brings its own sessions and its own mail server back with it.
+
+> The service name and paths below (`quire2`, `/var/lib/quire2`) are **this installation's**,
+> because they are the defaults compiled into the script that runs on this box.
+> [`self-host.md`](./self-host.md) uses the generic `quire` and `/var/lib/quire`. Reading both
+> and mixing them gives you a backup pointed at a directory that does not exist; take the
+> names from whichever one you actually followed. Making the script read them from an env file
+> instead is an open task in [`state/TASKS.md`](../state/TASKS.md).
 
 ## Schedule and retention
 
