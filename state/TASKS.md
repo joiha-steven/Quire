@@ -44,10 +44,6 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       cites `scripts/schema.sql` (it is `src/store/schema.sql`); `scripts/checks/file-size.ts`
       and `scripts/import-v1.ts` still say `v2/` in their first line. Four ADRs do too, and
       those are append-only, so leave them.
-- [ ] **Tests for the two untested modules that do arithmetic and send mail**:
-      `analytics/aggregate.ts` (the dashboard's aggregation join, next to the timezone work)
-      and `comments/comment-notify.ts` (its own SQL plus the self-notify suppression). Neither
-      is referenced by any test file.
 - [ ] **Take the instance data back out of `scripts/ops/`.** This repository is PUBLIC and
       its own rule is that no live domain, box path or bucket appears in a tracked file.
       `quire2-backup.sh` and the two nginx vhosts were committed with all three. Make them

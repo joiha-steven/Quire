@@ -5,6 +5,107 @@ append-only, never retro-edited. Everything from the freeze of 1.5.0 through M3.
 
 The entries after this point are in [`../WORKLOG.md`](../WORKLOG.md).
 
+## 2026-07-29 — the header controls, the index nesting, and the chrome font
+
+Three from the owner, with one condition restated: **the IDE style applies only when the
+switch is on. With it off the site is exactly what it was.** Everything below honours that
+the same way the info panel does — both forms are in the markup and the sheet decides which
+one has a box.
+
+**The header controls.** Four round line-art glyphs were the last thing on the page still
+speaking the language of a phone app. With the switch on they become
+`[/tìm] [tối] [lưới] [@email]`, brackets from the sheet as every other literal on the site.
+Only from 640px up: five words are far wider than five 40px squares and would wrap the
+header on a phone, so below that the icons stay.
+
+**The index nesting was wrong in two ways at once.** It said "sub-heading" with a smaller
+size and a bullet on the PARENT, and at a glance neither reads — the two sizes are close and
+the bullet sits at the far end of a right-ranged row. And the numbers ran 1..12 straight
+through, so a sub-heading of section 2 was numbered 7 and looked like a section. A child is
+a path segment now: same size and weight, a leading `/`, and numbered within its parent
+(`2.1`).
+
+That took `counter-set` rather than `counter-reset`. A reset on the parent row creates a new
+counter instance scoped to that row and its following siblings, and the children go on
+reading the outer one — measured, the index ran `1.1 1.2 2.3 2.4 2.5 3.6` before the fix.
+
+**The chrome font is preloaded now, and the rule that said never to has been reversed.**
+That rule was written when the chrome font was Inter and the fallback a system sans, so the
+swap was barely visible. It is a monospace on any site that picks one, and the header, the
+meta line and both rails all re-flow when it lands. Measured at the origin, cold, 4x CPU
+throttle, median of five runs:
+
+| | LCP | CLS |
+|---|---|---|
+| no chrome preload | 472 ms | 0.0004 on four runs of five |
+| chrome face preloaded | **472 ms** | **0 on all five** |
+| Inter preloaded by mistake | 632 ms | 0.0004 |
+
+Free in LCP, and it removes the shift. The third row is the trap and I walked into it while
+measuring: `getChromeFont` falls back to Inter for an unknown id, which is right for the
+font STACK and wrong for a preload — 44 KB the page never paints a glyph in, and 160 ms of
+LCP. The argument is now `chromeFont: string` with no default, and an id that is not a known
+one preloads nothing.
+
+## 2026-07-29 — two bugs in the round just shipped
+
+**The active marker and the index's slash were fighting over one pseudo-element.** A ToC row
+is `.rail-row` AND `.rail-lead` or `.rail-sub`, and all three wanted `::before`: the bullet,
+the new leading `/`, and the accent hairline marking the row you are level with. The
+marker's empty `content` won and the slash came out painted in the accent colour as a red
+diagonal at the row's right edge, which is what the owner photographed. The marker moves to
+`::after` — four rules. It also fixes a latent version of the same bug in the base chrome,
+where an active parent row had been quietly losing its bullet.
+
+**The header tokens rendered at the BODY size.** `.icon-btn` states no size of its own: it
+was built around a 20px SVG, which does not care, and the moment a WORD went in it inherited
+18px. Five large words spread wide. Measured after: 14.08px, and the whole control row 256px
+instead of sprawling.
+
+And a fourth backtick in a CSS template literal, in a comment quoting `content` with an
+empty string. The server refused to boot. `check:css-literal` catches it; I ran `check:type`
+first and read the wrong green tick.
+
+## 2026-07-29 — where the day ended
+
+Eleven commits after the audit round, `0ae64dc` through `996e133`, all deployed and verified
+at the origin. `check:all` green at 1,056 tests. **No version bump and no tag** — that is the
+owner's call and was not asked for.
+
+What changed, in one list:
+
+- **The IDE chrome went from the rail to the whole page** and then through four rounds of
+  the owner's corrections: `//` on every chrome label, `[...]` on every literal with the
+  brackets a shade lighter than what they hold, `/` for a path, an index column on the
+  related list and the series, and finally `[/tìm] [tối] [lưới] [@email]` in place of the
+  header icons. Every one of them behind the one switch, with both forms in the markup, on
+  the owner's restated condition: **with it off the site is exactly what it was.**
+- **The article's right gutter became a panel** carrying the date, the length, book mode and
+  the taxonomy — desktop only, not sticky, and with a wide image in the first two blocks
+  kept out of it.
+- **A tag now reads as a tag**: hyphenated for display everywhere, untouched underneath.
+- **The render pipeline was measured for the first time** and the answer was 360 ms of
+  `marked` per long post, paid again after every write. The body is content-addressed now:
+  383 ms → 1 ms.
+- **The Cloudflare purge was dead configuration** and is live. **The cache re-fills itself**
+  after a write and on boot. **Responses leave the origin gzipped.**
+- **The chrome font is preloaded**, reversing a documented rule, with three measured
+  configurations behind the reversal.
+
+Six things were found that nobody had reported, and all six are fixed: a deploy left readers
+on an unstyled site for eleven minutes; `book.ts` bound only the first toggle; the ToC's last
+row pointed at an anchor with no box; every phone-width meta line ended on a stray middot;
+`highlight.ts` contained literal NUL bytes that made `grep` and `git diff` refuse to read it;
+and `check:routes-guarded` reported `headers.delete(...)` as an ungated route.
+
+Three new guards and one new check: `check:nul`, the route-path tightening, the body-cache
+tests, and the compression tests.
+
+**Open, unchanged from this morning:** the CI workflow still needs the owner's hand (token
+scope), the instance data is still in `scripts/ops/`, and the seven-day watch on
+`old.manhhung.me` is still running.
+
+
 ## 2026-07-29 — the MCP server advertised itself over http
 
 The owner went to connect a client and it failed. Two things were wrong, and only one of
