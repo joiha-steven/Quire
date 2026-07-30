@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## 2026-07-31 — the mobile sidebar stopped panning
+
+**The drawer scrolled sideways by 32px on every phone, and two separate mistakes had to line
+up for it.** `.rail` asks for `overflow-y:auto` so a long index can scroll. A box that names
+one axis and leaves the other alone does not get `visible` on the other — the used value
+computes to `auto` — so the drawer had been a horizontal scroller all along, waiting for
+something inside it to be a pixel too wide.
+
+The IDE chrome then supplied the pixel. Its line-number ring hangs 23px outside a rail row, on
+the gutter rail's divider hairline, and `.rail-inner` was widened by 32px and padded back so
+the gutter's own scroller could not clip it. Both of those are facts about the **desktop**
+rail: below 640px the rail is a drawer with no divider and no inner scroller, and `rail-css.ts`
+injects that scroller inside the same breakpoint. Ungated, the overhang put a 291px box inside
+a 259px one. The whole IDE rail block is now behind `@media (min-width:640px)`, which is where
+the header already drops its tokens, and `.rail` spells out `overflow-x:hidden` so no future
+rule can teach it to pan again.
+
+Measured, not eyeballed: `nav.toc.rail` reported `clientWidth 299` against `scrollWidth 331`
+before, and no horizontal scroller at all after, at 360, 390 and 414px. The page itself never
+overflowed, which is why this survived the mobile pass in 2.0.0 — `documentElement.scrollWidth`
+was 390 the whole time and the panning was one element deep.
+
+**Also:** four new demo images in the README, rebuilt from real screenshots of a seeded
+English instance and composed in HTML so they regenerate from a command. The dashboard shot
+is what surfaced the activity-row overlap fixed in 2.0.0.
+
 ## 2026-07-30 — Quire 2.0.0
 
 **Stable.** The beta said it had run one site for one owner for a little over a day, and that

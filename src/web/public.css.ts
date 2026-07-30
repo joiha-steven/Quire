@@ -314,8 +314,12 @@ footer.site a:hover{color:var(--c-text)}
 /* Mobile FIRST: the rail is a slide-out drawer opened from the header menu button. The
    injected geometry promotes it into the gutter above the breakpoint. ONE piece of DOM
    serves both, which is why there is no second copy of the sidebar to keep in step. */
+/* overflow-x is spelled out, and it is not decoration. A box with overflow-y:auto and no
+   overflow-x computes overflow-x to auto as well, so the drawer became a horizontal
+   scroller the moment anything inside it was a pixel too wide - which is how a gutter rule
+   meant for the desktop rail taught every phone to pan the sidebar 32px sideways. */
 .rail{position:fixed;top:0;bottom:0;left:0;z-index:40;width:min(300px,84vw);
-  overflow-y:auto;overscroll-behavior:contain;padding:4.5rem 1.25rem 2rem;
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:4.5rem 1.25rem 2rem;
   background:var(--c-bg);border-right:1px solid var(--c-rule);
   transform:translateX(-100%);transition:transform .25s ease}
 html[data-rail=open] .rail{transform:none}

@@ -168,6 +168,15 @@ html[data-ide-chrome=on] .tl-year-tag::after{content:"/";margin-left:-.5rem;colo
    the owner asked for the opposite, so the GUTTER moves to the far right instead and
    nothing else about the rail changes. The active marker stays where the gutter layout
    put it, at the row's right edge, which is now 3.5ch clear of the numbers. */
+/* EVERYTHING BELOW IS GUTTER-ONLY, and the gutter starts at 640px.
+   Under it the rail is not a gutter at all, it is a slide-out drawer: no divider hairline
+   for a ring to sit on, and no .rail-inner scroller for an overhang to rescue, because
+   rail-css.ts injects that scroller inside the same breakpoint. Ungated, these rules made
+   the DRAWER pan sideways by 32px on every phone - the overhang widened .rail-inner to
+   calc(100% + 32px) inside a 259px box, and .rail sets overflow-y:auto, which computes
+   overflow-x to auto whether or not anyone asked for it. The header already drops the
+   tokens below this width for its own reasons; the rail drops its gutter here. */
+@media (min-width:640px){
 html[data-ide-chrome=on] .rail ul{counter-reset:ln}
 /* The number sits in a small ring ON the rail's divider, the same language the feed's
    year and month markers already speak: a node on a hairline. It costs the rail NO
@@ -244,4 +253,5 @@ html[data-ide-chrome=on] .toc li:has(.rail-sub){counter-increment:h3}
 html[data-ide-chrome=on] .toc li:has(.rail-sub)::before{content:counter(h2) "." counter(h3);
   width:30px;right:-29px;border-radius:999px}
 html[data-ide-chrome=on] .toc .rail-inner{width:calc(100% + 32px);padding-right:32px}
+}
 `.trim()

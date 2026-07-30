@@ -90,6 +90,14 @@ Not adjectives. Recorded from the network on a **cold load of the live site**, w
 - **Fonts are self-hosted and subset per language**, preloaded only for the language you're serving. Pinning the `opsz` axis took this site's preload set from 97.6 KB to **46.2 KB**.
 - **Scroll-driven CSS** does the reveal and the reading progress bar — no script, off the main thread, and it degrades to "visible" rather than blank.
 
+<div align="center">
+
+<img src="docs/demo-mobile.jpg" alt="The blog index, a post, and the sidebar drawer, all on a phone" width="900">
+
+<sub>None of that is for a benchmark. It is for the reader on a four-year-old phone who wanted four hundred words.</sub>
+
+</div>
+
 ---
 
 ## 🤔 Why this, and not the obvious alternatives
@@ -102,6 +110,14 @@ Not adjectives. Recorded from the network on a **cold load of the live site**, w
 | **vs.&nbsp;rolling&nbsp;your&nbsp;own** | The unglamorous parts are done and tested: TOTP auth, sessions, image variants, feeds, OG images, redirects, soft-delete, revisions, backups, WordPress import, i18n in six languages |
 
 **And the part that is genuinely unusual:** Quire ships a remote **MCP** server, so an AI agent can write and publish to your live site through the same rules the admin uses — and the whole project is built to be *operated* by one. Every rule that matters is a check the build enforces, not a convention someone has to remember.
+
+<div align="center">
+
+<img src="docs/demo-admin.jpg" alt="The Quire admin dashboard, and the appearance settings showing six colour palettes and four reading fonts" width="900">
+
+<sub>Palettes, reading fonts, type scale, layout, menu — settings, not code. There are **no hardcoded sizes or colours** in the reader's stylesheet, and a build check fails if one appears.</sub>
+
+</div>
 
 ---
 
