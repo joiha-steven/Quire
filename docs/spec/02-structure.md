@@ -4,39 +4,50 @@ Replaces the Go plan's package spec.
 
 ## Layout
 
+The 2.0 implementation sits at the REPOSITORY ROOT; the frozen Next tree is under `v1/`
+([ADR 0012](../decisions/0012-flatten-repo-after-cutover.md)).
+
 ```
-v2/
-  package.json
-  src/
-    index.ts              boot: env check, schema apply, Hono app, listen
-    server/
-      app.ts              Hono instance, middleware chain, router groups
-      owner.ts            the owner-gated router group (Invariant 4)
-      errors.ts           typed error pages + logging with timing
-      cache.ts            the whole cache (see below)
-    content/              posts, pages, revisions, slugs, taxonomy, series, scheduled
-    media/                media, files, blob, image variants (sharp)
-    render/               markdown (marked), footnotes, toc, video, inline-md, og
-    comments/             tree, tombstones, markdown subset, notify
-    news/                 subscribers, mail, broadcast, send log, email builders
-    analytics/            record, aggregate, timezone buckets, ua buckets
-    auth/                 password, TOTP, sessions, recovery codes (06-auth.md)
-    mcp/                  MCP server, tokens, OAuth DCR
-    store/
-      db.ts               the two connections + PRAGMAs
-      schema.sql          embedded, applied at boot
-      migrations/
-    api/                  61 route handlers, one file per resource
-    web/                  public routes + Hono JSX views
-    i18n/                 6 locales, moved verbatim from src/locales
-    cli/                  import-v1, db inspect, user set-password
-  admin/                  the React SPA, moved from src/components/admin
+package.json
+src/
+  index.ts              boot: env, open the databases, build the app, listen
+  env.ts                the environment contract, read once at boot
+  web/
+    app.ts              the Hono instance, the middleware chain, every route
+    guard.ts            ownerRouter(), the owner-gated router group (Invariant 4)
+    api.ts              JSON helpers, the error handler, the request logger
+    admin/              the owner-gated API groups + the admin shell
+    *.css.ts            the hand-written stylesheets (04-frontend.md)
+  server/
+    cache.ts            the in-process page cache (see below)
+    edge-cache.ts       purgeEdge(), the Cloudflare purge behind it
+    scheduled.ts warm.ts redirects.ts rate-limit.ts activity.ts backup.ts
+  content/              posts, pages, revisions, slugs, taxonomy, series, settings
+  media/                media, files, blob, image variants (sharp)
+  render/               markdown (marked), footnotes, toc, video, inline-md, og
+  comments/             tree, tombstones, markdown subset, notify
+  news/                 subscribers, mail, broadcast, send log, email builders
+  analytics/            record, aggregate, timezone buckets, ua buckets
+  auth/                 password, TOTP, sessions, recovery codes (06-auth.md)
+  mcp/                  MCP server, tokens, OAuth DCR
+  store/
+    db.ts               the two connections + PRAGMAs
+    schema.sql          embedded, applied at boot
+    schema-analytics.sql
+    migrations.sql      one FILE, not a directory
+  import/               reads a live 1.x instance (05-importer.md)
+  admin/                the React SPA, ported from the frozen src/components/admin
   assets/
-    css/                  hand-written public.css (no Tailwind)
-    js/                   core.js, post.js, listing.js + lazy chunks
-  golden/
-  docs/
+    js/                 core, post, listing + the lazy islands
+    static/             fonts and icons
+  i18n/ locales/        6 locales
+scripts/                build, checks/, ops/, import-v1.ts, user.ts, drive.ts
+golden/
+docs/
 ```
+
+There is no `src/api/` and no `src/cli/`. Route handlers live beside the views in
+`src/web/`, and the command-line entry points are plain scripts under `scripts/`.
 
 ## Mapping from `src/lib`
 
@@ -49,16 +60,16 @@ files, about 6,500 lines. It keeps its tests.
 | `db.ts` | `store/db.ts` | rewritten: `@supabase/postgrest-js` to `bun:sqlite`. 132 call sites across 28 files follow |
 | `posts` `pages` `revisions` `media` `files` `settings` `comments` `subscribers` `newsletter-log` `analytics` `activity` `redirects` `series` `integration-keys` `backup-state` | matching folder | query bodies rewritten, signatures and semantics unchanged |
 | `revalidate.ts` | `server/cache.ts` | collapses to one function, see below |
-| `api.ts` | `server/errors.ts` + `server/owner.ts` | `requireOwner()` becomes router-group membership |
+| `api.ts` | `web/api.ts` + `web/guard.ts` | `requireOwner()` becomes router-group membership |
 | `auth.ts` `auth-shared.ts` | `auth/` | rewritten, see 06-auth.md |
-| `gdrive.ts` `backup.ts` | deleted / reduced | litestream replaces the Drive path (parity exception #1) |
+| `gdrive.ts` `backup.ts` | deleted / reduced | the Drive path goes (parity exception #1); what replaced it is in [`../backups.md`](../backups.md) |
 | `highlight.ts` | `render/highlight.ts` | **runs at save time** into the content-addressed `render_cache` (01-schema.md §4); the read path looks up and self-heals on a miss |
 | `rate-limit.ts` | `server/rate-limit.ts` | unchanged, extended for login (06-auth.md) |
 
 ## Caching: the biggest simplification
 
-Today: ISR page cache plus a tagged Data Cache plus `lib/revalidate.ts` computing a
-`revalidatePath` superset per write, pinned by a test because it is easy to
+The frozen tree: an ISR page cache plus a tagged Data Cache plus `lib/revalidate.ts`
+computing a `revalidatePath` superset per write, pinned by a test because it is easy to
 under-purge.
 
 In Quire 2.0 it is one in-process `Map` of rendered HTML, and **every write clears all
@@ -93,16 +104,16 @@ needed:
 
 ## Route mapping
 
-**Public (`src/web`, Hono JSX):** `/`, `/page/:n`, `/:slug`, `/category/:slug`
-(+`/page/:n`), `/tag/:slug` (+`/page/:n`), `/series/:slug`, `/search`, `/preview/:slug`,
-`/feed.xml`, `/sitemap.xml`, `/sitemaps.xml`, `/robots.txt`, `/llms.txt`,
-`/manifest.webmanifest`, `/og`, `/uploads/*`, `/.well-known/*`, `/api/md/:slug`.
+**Public (`src/web`):** `/`, `/page/:n`, `/:slug`, `/category/:slug` (+`/page/:n`),
+`/tag/:slug` (+`/page/:n`), `/series/:slug`, `/search`, `/preview/:slug`, `/feed.xml`,
+`/sitemap.xml`, `/robots.txt`, `/llms.txt`, `/manifest.webmanifest`, `/og`, `/uploads/*`,
+`/.well-known/*`, `/api/md/:slug`. Server-rendered HTML built as strings, not JSX.
 
-**Admin (`admin/`):** one route, `/admin/*`, serving the embedded SPA shell. Routing
-inside it stays client-side. 14 pages, unchanged.
+**Admin (`src/admin`):** one route, `/admin/*`, serving the embedded SPA shell. Routing
+inside it stays client-side. 13 pages, unchanged.
 
-**API (`src/api`):** the 61 existing routes, same paths, same shapes. Split into two
-router groups:
+**API:** the existing routes, same paths, same shapes, registered in `src/web/` beside
+the views rather than in a directory of their own. Split into two router groups:
 
 - **public**: `track`, `search`, `subscribe`, `comments` (POST), `newsletter/open`,
   `newsletter/unsubscribe`, `mcp/*`, `health`

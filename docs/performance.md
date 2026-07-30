@@ -1,7 +1,7 @@
 > Split from CLAUDE.md — the **resource-loading law**: how fonts, CSS, and JS reach a
 > reader. One rule set, applied system-wide (every language, every font preset, every
-> uploaded font). Touching the root layout, `lib/themes.ts` font helpers, the stylesheet
-> entries, or adding a client island? Read this first. The *why* is in
+> uploaded font). Touching `src/web/layout.ts`, the font helpers in `src/content/themes.ts`,
+> the `src/web/*.css.ts` sheets, or adding an island? Read this first. The *why* is in
 > [`v1/ARCHITECTURE.md`](../v1/ARCHITECTURE.md) "Resource loading" — the reasoning was
 > written for the Next implementation and carried over to 2.0 unchanged.
 
@@ -21,8 +21,8 @@ the title always paints instantly in a fallback and the web font swaps in. `<lin
 rel="preload">` exists ONLY to remove that one swap on the LCP title — so we preload exactly
 the file(s) that paint it, and nothing else.
 
-**The rule — one place, `fontPreloadHrefs(fontPreset, language, hasCustomFont)` in
-`lib/themes.ts`, called once in `app/layout.tsx`:**
+**The rule — one place, `fontPreloadHrefs(fontPreset, language, hasCustomFont, chromeFont)`
+in `src/content/themes.ts`, called once in `src/web/layout.ts`:**
 
 | Case | Preload |
 |---|---|
@@ -36,7 +36,7 @@ the file(s) that paint it, and nothing else.
 
 `scripts/subset-font-axes.py` (needs `pip install fonttools brotli`) rewrites the bundled
 files: `wght` clamped to 400-700, **`opsz` pinned to 18**. Run it after replacing any font
-file, and keep the `@font-face` `font-weight` range in `globals.css` truthful.
+file, and keep the `@font-face` `font-weight` range in `src/render/font-faces.ts` truthful.
 
 The `opsz` axis doubled the two book serifs. Literata carries 42% fewer glyphs than Inter
 yet was 2.2× its size, entirely because `gvar` must store deltas for every glyph across
@@ -53,7 +53,7 @@ That last row is the whole point: production runs Literata with `language: vi`, 
 preload is `literata-latin` **plus** `literata-vietnamese`, and this change takes **51 KB**
 off the critical path.
 
-> ⚠️ **Measure production, not a local build.** `.env.local` points at a dev database whose
+> ⚠️ **Measure production, not a local build.** A local `.env` points at a dev database whose
 > `settings` row differs from the live one. During this work a local build reported the
 > preset as Inter with `lang="en"`, which is not what the site serves. Anything that depends
 > on `settings` (font preset, language, palette, enabled features) must be read off the box:
@@ -63,12 +63,13 @@ Narrowing the range instead was measured and is not competitive (`12-24` still c
 58 KB). 18 was chosen by rendering 14/18/24 side by side: body copy is 18px, so pinning at
 18 leaves the body **identical** to what `font-optical-sizing: auto` produced, and body is
 where reading time goes. The cost is a 36px title rendering in the 18pt design, slightly
-heavier than before. `font-optical-sizing: auto` stays in `globals.css` because an
+heavier than before. `font-optical-sizing: auto` stays in the public sheet because an
 uploaded custom font can still have the axis.
 
 Hard invariants (also in [`conventions.md`](./conventions.md) typography):
-- **Self-hosted only.** No `next/font/google`, no build/runtime fetch to Google (broke
-  offline/CI). Files in `public/fonts/`, subset `-latin` / `-latin-ext` / `-vietnamese`.
+- **Self-hosted only.** No runtime or build-time fetch to Google (it broke offline/CI).
+  Files in `src/assets/static/fonts/`, served at `/fonts/*` by `src/web/static.ts`, subset
+  `-latin` / `-latin-ext` / `-vietnamese`.
 - **Never preload `latin-ext` or a specific weight.** Built-in reading fonts are variable
   (one file per subset carries every weight); `latin-ext` glyphs are rare and load on demand.
 - **Never preload the chrome font**, in any config. (Regression to watch: a "no swap flash
@@ -87,8 +88,8 @@ Hard invariants (also in [`conventions.md`](./conventions.md) typography):
   Free in LCP, and it removes the shift. The third row is the trap: `getChromeFont` falls
   back to Inter for an unknown id, which is right for the font STACK and costs 160 ms as a
   preload. `chromeFont: 'reading'` preloads nothing extra — it is the reading face again.
-- Changing which subsets exist? Keep `fontPreloadHrefs` and the `@font-face`
-  `unicode-range` blocks (`globals.css`) in sync.
+- Changing which subsets exist? Keep `fontPreloadHrefs`, the `@font-face` `unicode-range`
+  blocks (`src/render/font-faces.ts`) and the served file list (`src/web/static.ts`) in sync.
 
 ## CSS — one hashed sheet, plus the settings inline
 
@@ -153,46 +154,43 @@ copy-code button that was invisible on touch, a faint scrim behind the drawer, a
 `env(safe-area-inset-*)` offsets. Nothing in it matches above 639px, so the desktop keeps
 the geometry it was measured into — verified by measuring the same element at both widths.
 
-## The two entries — a reader never loads admin CSS
+## The two sheets — a reader never loads admin CSS
 
-Tailwind v4 scans content globally, so a single stylesheet would ship every admin utility
-(editor, tables, forms) to readers. Split by surface:
+The split is now by implementation, not by a scanner's `@source` list, which is what
+[ADR 0008](./decisions/0008-hand-written-css-no-tailwind-public.md) bought:
 
-- **`app/globals.css`** — PUBLIC, loaded on every page by the root layout. `@import
-  "tailwindcss" source(none)` + explicit `@source` for the public tree only (`(blog)`,
-  `components/{blog,theme,ui}`, the shared error views, root layout). Holds shared runtime
-  tokens/fonts/`.prose` (loaded on admin too, so defined once).
-- **`app/admin/admin.css`** — ADMIN, loaded only by `admin/layout.tsx`. `@source` the admin
-  tree (`admin/**`, `components/admin`) + admin-only chrome (`.ProseMirror`, `.admin-canvas`,
-  typewriter caret, colour picker).
-- **`app/theme.css`** — the compile-time tokens BOTH entries need (`@custom-variant dark`,
-  `@theme inline`), imported by each so both compile the same token utilities.
+- **Public** — hand-written `src/web/*.css.ts`, assembled into `PUBLIC_CSS` and served as
+  the one hashed sheet above. No Tailwind, no scanner, so an admin utility cannot leak into
+  it by accident.
+- **Admin** — `src/admin/admin.css`, the only Tailwind in the project, compiled by
+  `scripts/build-admin.ts` and served under `/admin/assets/*`. A reader never requests that
+  path, so its size is the owner's problem alone.
 
-**Rule:** a new PUBLIC route/component using a new utility → extend `globals.css`'s `@source`
-list (or the class won't emit). NEVER put an admin-only utility/chrome rule in `globals.css`.
+`PROSE_CSS` is the one sheet both need, so it is defined once in `src/web/prose.css.ts` and
+appended to the admin bundle by the build (Tailwind cannot import a TypeScript module).
+
+**Rule:** an admin-only rule never goes in a `src/web/*.css.ts` sheet.
 
 ## JS — ship only what's used, only when it's used
 
-1. **Feature-gate every island.** An island (and its JS) renders ONLY when its feature/data
-   is present: `features.toc && <Toc/>`, `imageUrls.length > 0 && <Lightbox/>`,
-   `palettes.length > 1 && <PaletteToggle/>`, `showComments && …`. A feature the owner turned
-   off ships zero client JS.
-2. **Lazy-load below-the-fold islands.** Wrap in `next/dynamic` + an `IntersectionObserver`
-   so the chunk fetches only as it nears the viewport (see `CommentsLazy` → defers the
-   comment island **and** its `next-auth/react` dependency). The page stays static/ISR.
-3. **Heavy libs stay off the reader.** `@tiptap`/ProseMirror, `shiki`, `turndown`, and
-   `marked` are admin-only or run server-side (Shiki highlights at render → zero client JS).
-   Never import them into a public/client component.
+1. **Two bundles, and a budget in a test.** `core.js` on every public page, `post.js` added
+   on an article; `scripts/build-assets.ts` builds both from `src/assets/js/` and FAILS the
+   build when either passes the byte budget written beside it. There is no framework
+   baseline to hide inside, which is the point of the whole rewrite.
+2. **Every island gates itself on its own DOM hook** and returns immediately when it is
+   absent — `toc()` on `.toc`, `lightbox()` on the images, `comments()` on the block. A
+   feature the owner turned off renders no markup, so its island costs one failed
+   `querySelector`. Nothing is feature-gated at build time, because there is nothing to
+   split.
+3. **Heavy libs stay off the reader.** `@tiptap`/ProseMirror, `shiki`, `turndown` and
+   `marked` are admin-only or run server-side (Shiki highlights at save time into
+   `render_cache` → zero client JS). Never import one from `src/assets/js/`.
 4. **No third-party analytics/tag JS on the reader.** Built-in cookieless analytics only
-   (`Track`/`ScrollDepth` → `/api/track`). (Edge injections — e.g. Cloudflare Web Analytics
-   / Bot JS Detections — are a dashboard concern, not code, and are redundant here.)
-5. **Scroll-reveal is pure CSS first.** `.reveal` cards ease in via `animation-timeline: view()`
-   (globals.css) — zero JS on Chromium. `RevealFallback` (an IntersectionObserver island, gated
-   on `motion.enabled`) covers ONLY browsers without scroll-timeline (Safari/Firefox); the root
-   layout arms `data-reveal-js` pre-paint just there, so Chromium never ships or runs its JS.
-6. **The framework baseline** (react-dom + Next App Router, ~130 KB gzip) and the RSC flight
-   payload are the floor; don't chase Lighthouse "legacy/unused JS" inside those vendor
-   chunks — Turbopack doesn't strip them via `browserslist`, and they're not on the LCP path.
+   (`track.ts` → `/api/track`). (Edge injections — e.g. Cloudflare Web Analytics / Bot JS
+   Detections — are a dashboard concern, not code, and are redundant here.)
+5. **Scroll-reveal is pure CSS first.** `.reveal` cards ease in via `animation-timeline:
+   view()` — zero JS on Chromium. The fallback in `core.js` covers ONLY browsers without
+   scroll-timeline, and is gated on `motion.enabled`.
 
 ## Navigation: prerender on hover, zero runtime JS
 
@@ -220,22 +218,21 @@ so the owner's surfaces never offer it at all.
 
 > **RULE: a prerendered page runs its JavaScript at speculation time.** Any island that
 > writes, measures time, or beacons **on mount** must be wrapped in `whenActivated()`
-> (`lib/prerender.ts`), which defers it to the `prerenderingchange` event. A discarded
-> prerender never activates, so the work never happens.
+> (`src/assets/js/activation.ts`), which defers it to the `prerenderingchange` event. A
+> discarded prerender never activates, so the work never happens.
 >
-> `Track` and `ScrollDepth` are already wrapped: without it, one hover would record a
-> pageview for a page nobody opened, and `ScrollDepth`'s dwell timer would count the
+> The tracking beacon and the dwell timer are already wrapped: without it, one hover would
+> record a pageview for a page nobody opened, and the dwell timer would count the
 > speculation wait as reading time. Analytics rows are kept forever, so this class of bug
 > is not self-correcting. Adding a new on-mount side effect? Wrap it.
 
 ## Verify (no browser needed)
 
-- **Reader CSS/JS size:** `npm run build`, then read `.next/static/chunks/*.css` (public entry
-  should carry zero `admin-canvas`/`ProseMirror`) and diff the post page's `<script>`/`<link>`
-  set against the framework baseline.
-- **What a reader loads:** `npm run start`, fetch a post, extract `<script src>` + `<link
-  rel=stylesheet>`; confirm no admin chunk, no `next-auth` in the initial set, correct font
-  preloads for the site language.
+- **Reader JS size:** `bun run build:assets` prints each bundle's bytes against its budget
+  and exits non-zero when one is over. That is the check; there is nothing to diff by hand.
+- **What a reader loads:** `bun run start`, fetch a post, extract `<script src>` + `<link
+  rel=stylesheet>`; confirm one sheet, `core.js` + `post.js` and nothing else, and the
+  correct font preloads for the site language.
 - **Critical path / LCP:** Lighthouse "Network dependency tree" — the chain should be HTML →
   public CSS → (at most) the reading font's language subset(s). No chrome font, no unused
   subset, no admin CSS.
@@ -315,10 +312,11 @@ means the weaker one keeps being reached for.
 stylesheet, every page and every feed left the origin raw. `web/compress.ts` gzips text
 responses over 1 KB when the client asked, and sets `Vary: Accept-Encoding`.
 
-Measured at the origin: the public stylesheet **61,241 → 19,513 bytes**. A reader does not
-see this directly — the CDN re-compresses on its way out — but the origin-to-edge fetch
-does, on every cache miss and on every purge above. It is also what a reader gets if the
-CDN is bypassed or removed.
+Measured at the origin when it shipped, on the un-minified sheet: **61,241 → 19,513 bytes**.
+The sheet is smaller now — the minifier above took it to **30,811 raw / 6,519 compressed** —
+but the ratio is the point. A reader does not see this directly, since the CDN re-compresses
+on its way out, but the origin-to-edge fetch does, on every cache miss and on every purge
+above. It is also what a reader gets if the CDN is bypassed or removed.
 
 Binary bodies are left alone: an image, a font or a WebP variant is already compressed and
 gzipping it spends CPU to add bytes.

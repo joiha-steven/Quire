@@ -112,8 +112,15 @@ export function Overview(props: Props) {
         ) : (
           <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
             {recent.slice(0, 6).map((entry) => (
-              <li key={entry.id} className="grid gap-2 py-3 text-sm sm:grid-cols-[120px_minmax(0,1fr)_auto]">
-                <span className={entry.action === 'error' ? 'font-medium text-neutral-900 dark:text-white' : 'text-neutral-500'}>{entry.action}</span>
+              // 180px, not 120px, and the action truncates. An action is a dotted identifier
+              // with nothing to wrap on, and the long ones overran the old track and painted
+              // on top of the detail beside them — `auth.recovery.regenerated` measured 176px
+              // against 120px of column. The grid is on the ROW, so each row sizes its own
+              // tracks: a content-sized column would fix the overlap and then stagger the
+              // detail edge from row to row. A fixed track keeps the list aligned, and the
+              // truncate is the backstop for whatever action name gets added next.
+              <li key={entry.id} className="grid gap-2 py-3 text-sm sm:grid-cols-[180px_minmax(0,1fr)_auto]">
+                <span className={`truncate ${entry.action === 'error' ? 'font-medium text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>{entry.action}</span>
                 <span className="truncate text-neutral-700 dark:text-neutral-300">{entry.detail}</span>
                 <time className="text-xs text-neutral-400">{formatDateTimeShort(entry.at)}</time>
               </li>

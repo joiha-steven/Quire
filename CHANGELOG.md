@@ -1,5 +1,190 @@
 # CHANGELOG
 
+## 2026-07-30 — Quire 2.0.0
+
+**Stable.** The beta said it had run one site for one owner for a little over a day, and that
+nothing was known to be broken but nothing had been proven either. Since then the whole project
+has been audited end to end — design, performance, and correctness — by measuring the running
+site rather than reading the source. That audit found one live security hole, one rendering
+rule that had never applied, and a mobile failure no amount of source reading would have
+revealed. All three are fixed and verified in production. That is the difference between
+beta.1 and 2.0.0.
+
+### The shape of it
+
+One process, two SQLite files, a directory of uploads. Clone it, `bun install`, run
+`bun src/index.ts` behind a reverse proxy, and the install is done. There is no database server
+to provision, no migration step (the schema is applied at boot inside a transaction), no
+container runtime, and no third-party account anywhere in the path. Docker is one service and
+two volumes, with no sidecar.
+
+| | |
+|:---|:---|
+| **Runtime** | Bun + Hono. One process, single-threaded, so exactly one writer by construction: no pool, no mutex, no busy-retry |
+| **Content** | `quire.db` and `analytics.db`, joined with `ATTACH` where needed. Timestamps are integer milliseconds UTC everywhere; timezone logic lives in TypeScript, never in SQL |
+| **Public pages** | Server-rendered HTML plus three hand-written island scripts. **No framework reaches a reader** |
+| **Admin** | A React 19 SPA, route-split, served only to the owner. React and the editor cannot leak onto a reading page |
+| **Uploads** | The local filesystem, with AVIF and WebP variants built on save |
+
+The seams are enforced rather than remembered. `bun run check:all` runs the type checker over
+three projects, **six static guards** and **1,121 tests**. The guards fail the build on: a file
+over 400 lines, a hardcoded size in the reader's stylesheet (or a type role that sets a size
+without its leading and tracking), a backtick or an unopened comment inside a CSS template
+literal, a NUL byte in a source file, a stale documentation link, and **any write route
+registered outside the owner-gated router group** — the last one caught a forgotten
+`/api/auth/enrol/done` the first time it ran.
+
+### What a reader actually downloads
+
+Measured from the network on a cold load of the live site, not estimated from the markup:
+
+| | Home | A post |
+|:---|---:|---:|
+| Requests | **11** | **12** |
+| Total | **139 KB** | **140 KB** |
+| of&nbsp;which&nbsp;fonts | 86 KB | 86 KB |
+| HTML | 22 KB | 18 KB |
+| CSS | 7.6 KB | 7.6 KB |
+| JavaScript | **4.4 KB** | **9.7 KB** |
+| Third-party&nbsp;requests | **0** | **0** |
+
+Everything except the HTML is content-hashed and `immutable` for a year, so a second page view
+costs about **23 KB**. The reading fonts are 62% of a first visit, and that is a deliberate
+trade: they are self-hosted, subset per language and `opsz`-pinned, because typography is the
+product on a reading site.
+
+The JavaScript figure is the one worth staring at. A listing page ships 4.4 KB — the analytics
+beacon, the theme control, the search trigger and the mobile drawer — and an article adds the
+table of contents, the lightbox, the code-copy button and book mode for another 5 KB. Each
+bundle has a **byte budget the build enforces**, so a feature that overruns it fails the build
+instead of quietly costing every reader.
+
+Where the speed comes from:
+
+- **One in-process page cache**, cleared completely on any write, so the invalidation rule is
+  one line long and cannot rot. A miss is a sub-millisecond SQLite read plus a render.
+- **A content-addressed render cache** in SQLite for markdown and syntax highlighting: the
+  input IS the key, so there is no invalidation problem at all. It took long-post rendering
+  from 383 ms to 1 ms, and it now prunes itself from the hourly tick.
+- **The public stylesheet is minified before it is hashed.** It was 65,645 bytes of which
+  34,438 were comment text, because these sheets are commented the way the code is. The prose
+  stays in the `.ts` file; the wire gets 30,811 bytes, **6.5 KB compressed against 20.9 KB**.
+- **Reading-font subsets are preloaded by language**, with `latin-ext` left lazy behind
+  `unicode-range` and the chrome face preloaded only when it is a self-hosted family that
+  reflows the page. Pinning the `opsz` axis took the preload set this site actually serves
+  from **97,588 bytes to 46,212** — 51 KB off the critical path, measured.
+- **Origin compression, edge caching, and prerender-on-hover** through a `Speculation-Rules`
+  header rather than an inline script, so the public site ships no inline script at all and the
+  recommended CSP can keep refusing `unsafe-inline`.
+- **Scroll-driven CSS animations** for the card reveal and the reading progress bar: no script,
+  off the main thread, and triple-gated so they can only ever hide content where they can also
+  reveal it.
+
+### Since the beta
+
+**A live reflected XSS, found and closed.** `web/search-page.ts` had grown a private
+`escapeHtml` that escaped `& < >` and nothing else, and it interpolated the reader's query into
+`value="…"`. So `/search?q=" onfocus=alert(1) autofocus x="` came back as a working event
+handler on a public page, from a link anybody could send. Escaping `<` meant a script tag could
+not be injected; the unescaped quote was all it took. Both files that put a value in an
+attribute through a weak escaper now use the canonical pair from `utils.ts`, which escapes both
+quote forms, and `escapeAttr` is exported as a named alias so a call site reads as the context
+it writes into. Two regression tests assert on the attribute's own quote count rather than on
+the payload's text.
+
+**A mobile layout that scrolled sideways, and the cause was not CSS.** Every public miss
+returned `text/plain`, and a plain-text body carries no viewport meta, so a phone laid two words
+out at the default 980px desktop width and let the reader pan. Measured at 390px: an unknown
+slug reported a 980px document while every real page reported 390. The strings for a proper 404
+page had been sitting in all six locales since the port with nothing rendering them. Every HTML
+miss is now a page in the site shell.
+
+**A rule that had never applied since the feature shipped.** Minifying the stylesheet surfaced a
+paragraph in `ide.css.ts` with a closing `*/` and no opener: a browser read the prose as a
+selector, failed, and discarded the rule that followed it — seven selectors meant to darken every
+count and date under the IDE chrome. `check:css-literal` counts comment delimiters now.
+
+**Mobile, measured at 360, 390 and 414 px and in landscape.** The search form was missing the
+`min-width: 0` its sibling form had, so the input would not shrink and pushed the button's
+border off-screen. Drawer rows went from 22px to 43px, the tag cloud to 37px, footer links to
+35px. Form controls are floored at 16px on phone widths, because below that iOS zooms the page
+on focus, and confirmed still 14.08px at desktop width so the floor does not leak. Copy-code is
+visible under `@media (hover:none)`, the drawer has a scrim, `100dvh` sits beside `100vh`, and
+the safe-area insets are honoured. All of it lives in a fourth sheet, `mobile.css.ts`, appended
+last and matching nothing above 639px.
+
+**The editor stops losing work.** A hard downward scroll triggered the browser's pull-to-refresh
+and reloaded the page; the admin sets `overscroll-behavior-y: contain` now. The local snapshot
+ran only on an 8-second timer, and `beforeunload` does not reliably fire on a mobile reload, so
+it was never the safety net it looked like: it is flushed on `pagehide`, on a
+`visibilitychange` to hidden, and on unmount.
+
+**Contrast, discovery and keyboard.** `.term-count` measured 2.26:1 and failed AA at any size,
+visible only with the IDE chrome switched off — so the site the owner saw was never the one
+shipping the failure. Book mode's meta colour was 3.30:1 on its paper and is 4.93:1 now.
+`/feed.xml` answered correctly with nothing on the site pointing at it; there is a
+`rel="alternate"` link. A skip link is the first tab stop on every public page, and one
+`:focus-visible` ring replaces the `outline: none` that had made the sign-up field the only
+control where keyboard focus vanished.
+
+**Admin.** The top progress bar drew itself twice per click: a navigation has two halves, the
+route's chunk resolving and then the new page asking for its data, and the bar took the few
+frames between them literally, marked itself done and restarted from the left. Measured at
+39 ms and again at 102 ms; now one sweep. Toasts are announced to a screen reader and carry a
+glyph, since success and failure had been inverted black and white and nothing else. The
+`danger` button variant was byte-identical to `primary`, which made "Delete forever" the loudest
+control on its screen. On the dashboard, an activity row gave its action a flat 120px column and
+no way to shrink, so the long names — `auth.recovery.regenerated` measures 176px — ran out of
+their track and painted on top of the detail beside them.
+
+**Correctness and cleanup.** `safeNext` rejected `//host` but not `/\host`, which browsers
+normalise into a protocol-relative URL and follow off-site. A second Cloudflare purge
+implementation with no request timeout was deleted and its three callers repointed. `og.ts` no
+longer trusts a `Host` header when `SITE_URL` is unset, and both of its fetches are bounded. The
+render cache was insert-only with nothing ever deleting; it prunes in bounded batches, with no
+`VACUUM`, because the database runs in WAL. Feeds and the public search index stop rebuilding at
+the origin on every hit. A dead module, five dead exports, four orphaned routes and two unused
+dependencies are gone, and the two modules that did arithmetic and sent mail — the analytics
+aggregation and the comment-reply notifier — have tests for the first time.
+
+### Moving from Quire 1.x
+
+Everything about *running* it changed; nothing about *using* it did. The full breaking list is
+in the 2026-07-29 entry below; the short version:
+
+- **Sign-in is yours.** Google and NextAuth are gone: username + password (argon2id) + required
+  TOTP + ten single-use recovery codes. `bun run user create` makes the account.
+- **No database server.** `POSTGREST_URL` / `POSTGREST_TOKEN` no longer exist; `DATA_DIR` holds
+  both database files.
+- **Four environment variables matter.** Everything else is entered in the admin.
+- **Import your 1.x content** with `bun run import-v1`, which reads a running 1.x over
+  PostgREST. What was deliberately not carried over, with reasons, is in
+  [`docs/spec/07-parity.md`](docs/spec/07-parity.md): Google Drive backup, numbered pagination,
+  the reader-facing palette switcher, grid-view thumbnails.
+
+The rewrite was a **port, not a reimplementation**
+([ADR 0005](docs/decisions/0005-rewrite-in-bun-hono-sqlite.md)). Roughly 6,500 lines of logic
+and every test moved unchanged, and the article renderer is held byte-for-byte against 1.x by a
+golden corpus that treats one differing byte as a porting mistake, with nothing to review and
+nothing to accept.
+
+### Known gaps
+
+- **The compiled binary is not the shipping path yet.** `bun run build` produces `dist/quire`,
+  one file, but `bun build --compile` does not bundle `sharp`'s native module, so it throws the
+  first time it resizes an image. Run from source, which is what the live site does. Tracked in
+  `state/OPEN_QUESTIONS.md`.
+- No in-app restore, by design: restoring replaces database files the process holds open. Backup
+  is a one-click download from the admin plus an off-box cron job. See
+  [`docs/backups.md`](docs/backups.md).
+- Numbered pagination is prev/next only; the reader-facing palette switcher and grid-view
+  thumbnails were not ported.
+- The autosave interval is a constant, and the editor never says the work is being held locally.
+  Both are filed in `state/TASKS.md`.
+- Ten renderers still declare a private HTML escaper. Every attribute interpolation in them was
+  verified to use the strong `escapeAttr`, so what is left is tidying rather than a hole, and the
+  article renderer's text escaper is deliberately frozen by the golden gate.
+
 ## 2026-07-29 — Quire 2.0 beta (v2.0.0-beta.1)
 
 The first tagged 2.0. The rewrite has been serving `manhhung.me` since 2026-07-28; this is

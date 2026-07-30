@@ -23,41 +23,40 @@ author's personal instance. Near-term tracks:
 2. Publish from a **Markdown note app** (Obsidian, then Craft).
 3. Optional **AI assist** in the editor (titles, tags, drafting, images).
 
-Long horizon: a **free multi-tenant SaaS** at `quire.app`
-(see Phase 7). The whole point of the SaaS is the *opposite* of lock-in - it is "the
-same open-source app, hosted for you", and any blog exports to a single snapshot that
-re-installs on a native or Docker stack with one button. Hosted is a
-convenience, never a trap.
+**There is no long horizon beyond that, and that is a decision.** A free multi-tenant SaaS
+at `quire.app` was fully specified and then abandoned
+([ADR 0002](../docs/decisions/0002-no-saas-single-instance.md)); Phase 7 below is kept as
+history, not as direction.
 
-## Architecture fit (why this is mostly additive)
+## Architecture fit (why the remaining work is additive)
 
-Verified against the code: the runtime is a plain Node/Docker stack, nothing
-platform-locked:
+Re-verified against the code after the 2.0 rewrite
+([ADR 0005](../docs/decisions/0005-rewrite-in-bun-hono-sqlite.md)). Nothing here is
+platform-locked, and the base is smaller than it was:
 
-- `sharp` does all image work (runs natively on Node).
-- ISR + `revalidatePath`, the OG route, NextAuth and Markdown (gray-matter) all run
-  under `next start` / standalone output.
-- Text content lives in **Postgres via PostgREST** — the app uses only the REST
-  layer, so a deploy bundles **Postgres + PostgREST**
-  (self-hosted); binaries are store-relative on the local filesystem
-  (`collapseBlob`/`expandBlob`), so a binary ref is just a path resolved against the
-  local store.
+- **One process.** Bun + Hono, no framework on the reader's path, no database server and no
+  sidecar to keep running. A deploy is one compiled binary plus a reverse proxy.
+- **Two SQLite files** hold every word, and `bun:sqlite` is synchronous on a single-threaded
+  runtime, so there is exactly one writer by construction: no pool, no mutex, no busy-retry.
+- **Binaries stay store-relative on the local filesystem** (`collapseBlob` / `expandBlob`), so
+  a stored reference is a path resolved against whatever store is configured. That is what
+  keeps the Phase 1 storage adapter a driver swap rather than a migration.
+- **`sharp` and `satori`** do the image and OG work, both offloaded off the event loop by
+  their own libraries.
 
-> **Done (2026-06-21, P1.5):** migrated all text from the old no-DB `_index.json` +
-> `.md`-on-disk model to Postgres (`src/lib/db.ts`, self-hosted via PostgREST).
-> Binaries stay on the local filesystem. The Phase 1 storage adapter below now
-> concerns the BINARY store only.
+> **History:** the pre-2.0 tree ran Next.js on Postgres via PostgREST, itself migrated in
+> 2026-06 from an `_index.json` + Markdown-on-disk model. Both are gone. What that
+> implementation was and why is in [`v1/ARCHITECTURE.md`](../v1/ARCHITECTURE.md).
 
-So the roadmap is feature work on a sound base, not a rewrite.
+So what is left below is feature work on a sound base, not a rewrite.
 
 ## Decisions locked
 
 - **No lock-in (hard principle).** Portability is a first-class feature, not an
-  afterthought. A blog's full state is one portable snapshot (the existing Backup
-  `.tar.gz` = `db.json` + all binaries + manifest), and that same format is the import
-  path on every target. The SaaS must always offer one-button export to self-host, with
-  no proprietary data trapped server-side. Transparency over retention - never hold a
-  user's content hostage.
+  afterthought. A blog's full state is one portable snapshot — the admin's one-click export
+  is both database files plus every upload — and that same archive is the import path on
+  every target. Nothing about the storage format is proprietary: it is SQLite and a folder
+  of files, readable without this application at all.
 - **Storage is pluggable.** Binaries live on the local filesystem today; an S3-
   compatible driver (MinIO / Cloudflare R2 / Backblaze) is planned behind the same
   interface.
@@ -74,18 +73,19 @@ So the roadmap is feature work on a sound base, not a rewrite.
 - **Local filesystem** (single volume, served under `/uploads`) ✅
 - **S3-compatible** (MinIO / R2 / B2) — *still planned*; same interface, drop-in driver
 
-Public-URL resolution was the main work: the local driver serves files via
-`app/uploads/[...path]/route.ts`. The S3 driver is later reused per-tenant in the SaaS
-as "bring your own bucket" (Phase 7).
+Public-URL resolution was the main work: in 2.0 the local driver serves files from
+`src/web/uploads.ts`, with range requests and a mime allowlist. Because every stored
+reference is store-relative, an S3 driver is a driver swap and not a data migration.
 
 ### Phase 2 — Docker `[shipped — self-contained stack]`
 - `output: 'standalone'` + `Dockerfile` + `docker-compose.yml` (app + db + rest + cron). ✅
   The image builds with **no backend env** (data layer degrades to empty), so it is
   portable; env is supplied at runtime via `.env.docker`.
-- **Self-contained:** bundled **Postgres + PostgREST** + local FS store — `POSTGREST_URL`
-  points straight at it, no gateway in between. `scripts/docker/gen-keys.mjs` mints DB
-  password + JWT. ✅
-- Cron: a sidecar pings `/api/cron` hourly. ✅
+- **Self-contained, and much smaller since 2.0:** ONE service, two named volumes, no
+  sidecar. The database sidecars this phase was built around (Postgres + PostgREST, their
+  generated keys, `POSTGREST_URL`) went away with the rewrite; a container now holds the
+  same binary a native install runs. ✅
+- Cron: the hourly tick runs in-process. ✅
 - *Still planned:* a GitHub Action that builds + publishes a versioned image to GHCR on
   each release tag, so updating is `docker compose pull && up -d`; optional bundled MinIO
   once the S3 driver lands.
@@ -126,7 +126,7 @@ Independent of Phases 1–4 — could be done first as a quick win.
 > `/admin/comments` moderation page. The design below is what shipped.
 
 Reader comments with **no third-party login** (giscus was rejected for exactly this —
-it forces a GitHub account). Fully self-hosted on the existing Postgres,
+it forces a GitHub account). Fully self-hosted in the same SQLite file as the posts,
 owner-moderated, spam-guarded by **Cloudflare Turnstile**. A `features.comments` toggle
 gates the whole thing (re-added; removed when the giscus spike was dropped).
 
@@ -143,9 +143,10 @@ gates the whole thing (re-added; removed when the giscus spike was dropped).
   field and the **Turnstile** widget.
 - `POST /api/comments` → verify Turnstile (server-side `siteverify`) + honeypot empty +
   per-IP rate-limit → insert as `pending`. Reader sees "awaiting moderation".
-- Only `approved` rows render. **Keep the post page SSG** by loading comments through a
-  small client component (`GET /api/comments?slug=`) instead of server-reading them —
-  the article HTML stays ISR/static; comments hydrate after.
+- Only `approved` rows render. The article HTML stays **cacheable** because comments are
+  not in it: an island fetches `GET /api/comments?post=` after load, and that route is
+  refused a shared cache like everything under `/api`, so the thread is always live while
+  the page around it is served from cache.
 
 **Moderation (admin):**
 - New `/admin/comments` page (force-dynamic): pending + approved lists, newest first,
@@ -167,7 +168,17 @@ gates the whole thing (re-added; removed when the giscus spike was dropped).
 **i18n:** form labels, validation/awaiting-moderation messages, and the moderation UI
 go through `src/locales/` (+ admin) like everything else.
 
-### Phase 7 — Multi-tenant SaaS `[planned, needs Docker (Phases 1-2)]`
+### Phase 7 — Multi-tenant SaaS `[❌ ABANDONED 2026-07-26]`
+
+**Do not propose `tenant_id` again.** This direction was fully specified and then dropped
+by [ADR 0002](../docs/decisions/0002-no-saas-single-instance.md): Quire is one instance for
+its author, and every line below is written against a data layer (Postgres via PostgREST,
+RLS, `service_role`) that no longer exists — 2.0 is one process over two SQLite files.
+
+The plan is kept rather than deleted, for the same reason the superseded ADRs are: knowing
+this was seriously worked through, and what it would have cost, is cheaper than re-running
+the argument in six months. Everything from here to the end of this phase is **history, not
+direction**.
 
 A **free, hosted** Quire Blog at `quire.app`: same open-source app, run for you. Built
 only AFTER Docker ships, so every hosted blog has a guaranteed eject path - hosted is a
@@ -225,10 +236,12 @@ grows with users - the free tier holds almost indefinitely.
 
 ## Accepted limitations (current design)
 
-- Single author (one `AUTHORIZED_EMAIL`) per instance. No multi-user / roles in the
-  self-host build - multi-tenant arrives only in the SaaS (Phase 7), which lifts this.
-- List/taxonomy pages load ALL posts' metadata in one Postgres query (`getIndex`), then
-  paginate in memory — fine into the low thousands of posts; DB-level pagination would be
-  needed well beyond that.
-- Related-posts box on other posts can lag up to the ISR window after a new post
-  (see CLAUDE.md caching notes); the "Clear all cache" button is the instant fix.
+- **Single owner, permanently.** One account, no roles, no second author. This is the
+  design ([ADR 0002](../docs/decisions/0002-no-saas-single-instance.md)), not a gap waiting
+  to be filled, and the SaaS that would have lifted it is abandoned.
+- List and taxonomy pages read every post's metadata and paginate in memory. Fine into the
+  low thousands of posts on SQLite; past that it wants a real `limit`/`offset`.
+- The page cache is flushed **entirely** on any write, so nothing can be stale, but a burst
+  of writes re-renders more than it strictly must. That trade is deliberate: see
+  [`docs/spec/02-structure.md`](../docs/spec/02-structure.md), and do not reintroduce
+  targeted invalidation without a measurement that says it matters.

@@ -21,7 +21,8 @@
   `getTrashedX`, `emptyXTrash`. The Trash page server-loads all four lists; `TrashView` (4 tabs)
   acts via **`POST /api/trash`** `{ kind, action: restore|purge|empty, ids? }` (owner-gated) then
   `router.refresh()`. **Nothing auto-purges** — permanent removal is manual (per-item or Empty
-  trash). Restores revalidate the item's surfaces; media/file purges `revalidateEverything()`.
+  trash). Restore and purge are writes like any other, so each clears the whole page cache
+  (Invariant 1); there is no per-surface invalidation to get wrong.
 - Adding a mutating trash action → log it (activity actions `*.restore` / `*.purge` /
   `trash.empty`) and keep the i18n keys in sync.
 
@@ -47,13 +48,15 @@
   are duplicated into the right rail's drawer (`.drawer-only`), giving the order menu → most viewed →
   featured → categories → tags. Assembled in `ListingSidebar` (two `<Rail className="rail-left|rail-right">`
   reusing `IndexBlock`/`CategoryCloud`/`TagCloud`); the geometry (per-page breakpoint + column width + right-rail mirror)
-  is injected from `lib/rail-css.ts` (`singleRailCss` for the layout's default/post ToC rail,
+  is injected from `src/render/rail-css.ts` (`singleRailCss` for the layout's default/post ToC rail,
   `listingRailCss` for the two rails — the latter uses higher-specificity `.rail.rail-left|right` so it
   wins without ordering games). Each block self-hides when empty. **Post/page reading views show ONLY the
   `toc`** in a single left rail (full width; the free right gutter stays for wide images). Below the rail
   breakpoint the drawer opens from the **header menu button** (`RailToggle`, mobile only; self-hides on
   pages with no rail) — no separate header dropdown. Menu + most-viewed count + featured are edited in
-  **Admin → Settings → Site → Layout & menu**; `getViewTotals` uses a GET rpc so the pages stay ISR.
+  **Admin → Settings → Site → Layout & menu**; `getViewTotals` (`src/analytics/summary.ts`) reads
+  `analytics.db` directly and returns `{}` on any error, so a broken analytics database costs the
+  block, not the page.
 - **Infinite scroll** (`infiniteScroll`, off by default): on every listing (home / category / tag) the
   feed reveals posts on scroll instead of paginating, and a **date timeline** fills the right gutter. The
   whole published list is handed to the `InfiniteListing` client island as light metadata (no bodies), so
@@ -77,14 +80,16 @@
 - **Lead post** (`leadPost`): the newest post on home page 1 takes the `h1` role, the rest stay `h2`.
   Sizes come from the type roles, so the display size is an Admin → Appearance setting, not CSS.
 - **Category label** (`categoryLabel`) and **standfirst** (`deck`, the excerpt under a post title).
-- `/search` — **two layers:** a lean local index (`{slug,title,date,terms}`, instant +
-  accent-insensitive) merged with `GET /api/search?q=` (Postgres FTS over title + BODY via
-  `searchPosts` `.textSearch('search', …, {config:'simple'})`). **NOTE:** `simple` is accent-
-  *sensitive* — accent-insensitivity comes from the local layer only. Header search =
-  `SearchOverlay` (modal); the `/search` route stays for deep links / no-JS.
-- Post page: `ReadingProgress`, `BackToTop`, `Toc`, `RelatedPosts` (`getRelatedPosts`: shared
-  tags ×2 + categories). Blog routes show a themed skeleton while loading (`(blog)/loading.tsx` +
-  `.skeleton`, motion-engine-gated).
+- `/search` — **two layers:** a lean local index (`GET /api/search/index`, `{slug,title,date,terms}`,
+  instant + accent-insensitive) merged with `GET /api/search?q=` (SQLite FTS5 over title + BODY via
+  `searchPosts`, `posts_fts match ?` joined back to live published rows). **NOTE:** FTS5 is accent-
+  *sensitive* — accent-insensitivity comes from the local layer only. The header search is a
+  `<dialog>` overlay opened by `src/assets/js/search.ts`; the `/search` route stays for deep links
+  and no-JS.
+- Post page: back-to-top, ToC and related posts (`getRelatedPosts`: shared tags ×2 + categories).
+  The reading-progress bar is CSS (`animation-timeline: scroll()`), not an island. There is no
+  loading skeleton: a page is rendered on the server and sent in one piece, so there is nothing to
+  stream into.
 - `Toc` shows whenever a post has headings OR an in-page jump (`showToc` in the page; renders
   nothing otherwise). When the post MIXES levels (H2 + H3), top-level rows get `.rail-lead` (a bigger
   `•` dot marker via `::before`) and child rows get `.rail-sub` (smaller, no dot) — so it reads as a
@@ -96,22 +101,23 @@
   present tags/categories/comments labels (comments prefixed with their server-rendered count) and
   jumps to the first existing section via `TOC_ANCHORS` + `scroll-mt-24` targets. Collapsible on
   every viewport — pinned in the desktop gutter, and on mobile it shares the sidebar drawer (opened
-  from the header menu button `RailToggle`), outside-tap/Escape-dismissable. Solid `bg-bg`;
-  `PostContent` assigns slug ids. Phones get wider side gutters (`px-8 sm:px-5`) for the reading text.
-- **GOTCHA:** the global unlayered `hr { margin:0 }` beats Tailwind margin utilities — put
-  divider spacing on a wrapper div, not on the `<hr>`.
-- **Heading ids are de-duped** (2nd `foo` → `foo-2`): `dedupeHeadingIds` (PostContent) and
-  `extractHeadings` (utils) run the SAME counter over H2/H3 in document order — change one, change
-  both or the ToC anchors break.
-- **Link hrefs are sanitized** (`safeHref` in PostContent drops `javascript:`/`data:`/`vbscript:`)
+  from the header menu button, mobile only), outside-tap/Escape-dismissable. Solid page background;
+  `post-content.ts` assigns slug ids. Phones get wider side gutters for the reading text.
+- **Heading ids are de-duped** (2nd `foo` → `foo-2`): `dedupeHeadingIds`
+  (`src/render/post-content.ts`) and `extractHeadings` (`src/utils.ts`) run the SAME counter over
+  H2/H3 in document order — change one, change both or the ToC anchors break.
+- **Link hrefs are sanitized** (`safeHref` in `post-content.ts` drops `javascript:`/`data:`/`vbscript:`)
   — marked v5+ no longer does. Raw HTML in markdown is already escaped (the `html` renderer →
   `escapeHtml`), so `<script>`/`<img onerror>` render as visible text.
-- **Draft preview:** `/preview/[slug]?key=<hmac>` (force-dynamic + `fetchCache='force-no-store'`
-  so it's never stale, noindex); `previewToken` = HMAC(slug, `AUTH_SECRET`). The editor's
-  "Preview draft" button saves pending edits first, then opens the URL in a new tab. Separate
-  route keeps `/[slug]` SSG + published-only.
+- **Draft preview:** `/preview/:slug?key=<hmac>` (`src/web/preview.ts`), sent
+  `cache-control: no-store` and `x-robots-tag: noindex, nofollow`, and never entered in the page
+  cache. `previewToken` = HMAC(slug, `serverSecret('preview-link')`) — **not** `AUTH_SECRET`,
+  which left with next-auth and, while the code still read it, silently keyed every token with
+  the empty string. The editor's "Preview draft" button saves pending edits first, then opens the
+  URL in a new tab. The separate route is what keeps `/:slug` published-only, with no branch in it
+  that a token could reach.
 
-## Editor (Admin → editor) — `components/admin/Editor.tsx`
+## Editor (Admin → editor) — `src/admin/components/Editor.tsx`
 
 - StarterKit + underline, inline code, bullet/numbered/**task** lists (GFM `- [ ]`), quote,
   code block, hr, link, captioned image, GFM tables, video. `tiptap-markdown` serializes all.
@@ -139,13 +145,17 @@
   every 8s while dirty — NEVER to the server, so editing a *published* post can't push
   half-finished text live; only Save/Publish writes to the server. On return, a snapshot that
   outlived its session (crash / closed tab / dropped connection clears nothing) surfaces a
-  "restore / discard" bar; a successful server save clears it. `beforeunload` still warns.
+  "restore / discard" bar; a successful server save clears it. **The interval alone lost work**:
+  an over-scroll at the top of the editor on a phone triggers pull-to-refresh and the page
+  RELOADS, and `beforeunload` does not reliably fire there — so `useLocalAutosave` also flushes on
+  `pagehide`, on a `visibilitychange` to hidden, and on unmount. `beforeunload` remains the
+  courtesy warning on top, not the safety net.
 - Gallery insert adds all picked images in ONE `insertContent` (a per-image loop leaves only the
   last — `setImage` selects the node it inserts, so the next insert replaces it).
 - Time machine: each overwrite snapshots the prior version (`revisions.ts`, keeps 3); restore
   loads it into the editor (non-destructive — current version is snapshotted on next save).
 
-## Scheduled publishing — `lib/scheduled.ts`, `api/cron`, `lib/utils.ts` (`isScheduled`)
+## Scheduled publishing — `src/server/scheduled.ts`, `/api/cron`, `src/utils.ts` (`isScheduled`)
 
 - **How to schedule:** set a FUTURE publish date and hit Publish. There is no separate
   `scheduled` status — a post is "scheduled" whenever it is `published` with a date still in
@@ -155,35 +165,33 @@
 - **Editor cue:** with a future date the Publish button reads **Schedule**, its toast says
   **Scheduled**, a "Scheduled for <local time>" note shows under the date field, and the live
   "View post" link is hidden (the URL 404s until it goes live). "Preview draft" still works.
-- **Going live on time:** a future post would surface within the 1h ISR window on its own, but
-  `sweepScheduled` (in `api/cron`) makes it punctual — it finds posts that crossed their time
-  within a bounded lookback (`newlyLive`, a pure `(since, now]` window) and runs one
-  `purgeAndWarm` so the edge 404 is flushed and the origin re-warmed. The **5-min publish tick**
-  (`/api/cron?publish=1`, short lookback) does this and nothing else; the **hourly** tick sweeps
-  a ~65-min window as a backstop. No watermark is stored — an overlapping purge is an idempotent
-  superset. Cron cadence: `docker-compose.yml` (bundled) / `docs/self-host-native.md` (crontab).
+- **Going live on time:** `sweepScheduled` (called from `/api/cron`) is what makes it punctual —
+  it finds posts that crossed their time within a bounded lookback (`newlyLive`, a pure
+  `(since, now]` window) and, when any did, calls `clearCache()`, which warms the origin and
+  purges the edge behind it. The **5-min publish tick** (`/api/cron?publish=1`,
+  `PUBLISH_TICK_LOOKBACK_MS` = 6 min) does this and nothing else; the **hourly** tick sweeps
+  `HOURLY_LOOKBACK_MS` = 65 min as a backstop and also finalizes image variants, prunes
+  `render_cache` and expired sessions, and takes a snapshot when one is due. No watermark is
+  stored — an overlapping purge is an idempotent superset. Nothing inside the process calls
+  `/api/cron`: an external scheduler has to, and setting one up is
+  [`self-host.md`](self-host.md) §8.
 
-## URL redirects — `lib/redirects.ts`, `middleware.ts`, Admin → Settings → SEO
+## URL redirects — `src/server/redirects.ts`, Admin → Settings → SEO
 
 - **What:** owner-managed 301 (permanent) / 302 (temporary) redirects, plus an automatic
   301 whenever a post/page slug is renamed (so existing links + search results survive a
   move). Rows live in the `redirects` table (`source` unique, `destination`, `permanent`).
-- **Resolved in middleware, on purpose.** `middleware.ts` matches the request path against
-  the redirect map and returns a REAL HTTP `NextResponse.redirect(dest, 301|302)` before any
-  render. A page-level `redirect()` can't be used: under the `(blog)` route (which has a
-  `loading.tsx`) Next downgrades a post-stream redirect to a 200 client meta-refresh — the
-  same reason the `/page/1 → base` redirect lives in middleware. The map is read from
-  PostgREST with a plain (edge-safe) `fetch` — NOT the node-only `db()` client — and cached
-  in-process for 60s (self-hosted middleware is one long-lived Node process), so the hot path
-  is a `Map.get`. Fail-open: a fetch error never blocks a request. The matcher runs on every
-  path except `/_next` and `/uploads`.
+- ⚠ **The rows are stored and nothing serves them yet.** Request-time resolution is a parity
+  item that has not landed ([`spec/07-parity.md`](spec/07-parity.md) §2), so a redirect created
+  in the admin — or auto-created by a rename — does not currently redirect a visitor. The
+  frozen tree resolved it in Next's `middleware.ts`; Hono has no reason it cannot be ordinary
+  middleware, and the stored rows do not change when it is added.
 - **Live content always wins.** Saving a post/page at slug X deletes any redirect whose
   `source` is `/X` (`clearRedirectForPath`), so a live URL is never shadowed by a stale
-  redirect and a rename-back (A→B then B→A) can't create a self-loop. A new redirect applies
-  within the 60s cache TTL.
+  redirect and a rename-back (A→B then B→A) cannot create a self-loop.
 - **Admin:** a Redirects card (list + add + delete) in Settings → SEO. `source` is normalized
   (leading slash, no query/trailing slash); `destination` is a path or an absolute http(s) URL;
-  a self-redirect is rejected. CRUD via owner-gated `api/redirects` (+ `api/redirects/[id]`).
+  a self-redirect is rejected. CRUD via the owner-gated `/api/redirects` (+ `/:id`).
 
 ## Newsletter — `lib/subscribers.ts`, `lib/mail.ts`, `lib/newsletter-log.ts`, `api/subscribe`, `api/newsletter/*`, `api/broadcast`, Admin → Newsletter
 
@@ -276,8 +284,8 @@
 ## Admin Help — `/admin/help`, `HelpGuide` + `HelpSections` + `HelpTables`
 
 - The in-admin manual. **Body copy is ENGLISH by design** (it mirrors the repo docs, which are
-  canonical); only the nav label + page title come from `adminT`. Pure server components — zero
-  client JS on the page.
+  canonical); only the nav label + page title come from `adminT`. It is a lazily loaded route in
+  the admin SPA like any other, so a reader of the public site never fetches it.
 - Shape: a numbered **first-five-minutes** path (the order a new blog is actually set up in, each
   step a link), a **jump index** of chips, the reference **sections**, then two lookup **tables**.
   The index is kept in the same order the sections render, so a chip's position predicts where it
@@ -294,7 +302,7 @@
 - **Adding a feature? Add it here too** — the page is the only place a non-technical owner learns
   the feature exists.
 
-## Footnotes + music embeds — `lib/footnotes.ts`, `lib/video.ts`, `PostContent.tsx`
+## Footnotes + music embeds — `src/render/footnotes.ts`, `src/render/video.ts`, `src/render/post-content.ts`
 
 - **Footnotes:** `text[^id]` + `[^id]: definition`. `prepareFootnotes` (pre-marked) pulls the
   definitions out and swaps each reference for a private-use placeholder (so marked leaves it
@@ -302,7 +310,7 @@
   placeholders into `<sup class="fnref">` links and appends `<section class="footnotes"><ol>`
   with back-links. Numbered by first reference; a `[^x]` in a fenced code block is masked and
   ignored; a ref with no def stays literal; an unreferenced def is dropped. Definition text →
-  `renderInlineMarkdown` (escaped). CSS: `.fnref` / `.footnotes` / `.fn-back` in `globals.css`.
+  `renderInlineMarkdown` (escaped). CSS: `.fnref` / `.footnotes` / `.fn-back` in `src/web/public.css.ts`.
 - **Spotify / Apple Music:** `videoEmbed` recognizes `open.spotify.com/{track,album,playlist,
   episode,show}/…` and `music.apple.com/<cc>/{album,playlist,song,music-video}/…` and returns
   the official `/embed` URL. `buildVideos` renders these as an `audio-embed` (fixed 175px frame)
@@ -312,41 +320,41 @@
 - **Intentionally NOT supported:** X / Instagram / gist embeds (need third-party widget scripts
   + CSP allowances).
 
-## Callouts + copy-code — `PostContent.tsx` (`buildCallouts`), `CodeCopy.tsx`
+## Callouts + copy-code — `src/render/post-content.ts` (`buildCallouts`), `src/assets/js/code-copy.ts`
 
 - **Callouts:** write a blockquote whose first line is `[!NOTE]` / `[!TIP]` / `[!WARNING]` /
   `[!IMPORTANT]` / `[!CAUTION]`. `buildCallouts` (a post-process on marked's HTML) rewrites it to
   `<div class="callout callout-<type>">` with a bold label; an unknown `[!FOO]` or a plain quote
   is untouched. Styling is monochrome (accent left-border + label) to stay on the palette — no
-  semantic colours. CSS in `globals.css` (`.callout`, `.callout-label`).
-- **Copy-code:** the `CodeCopy` client island (mounted on the post/page when the body has a code
-  fence) attaches a "Copy" button to every `.prose pre` on mount (Shiki renders the code
-  server-side, so the button is added client-side; idempotent across client navigations).
-- **Deferred:** footnotes (the renderer escapes raw HTML → needs a `marked` extension) and X /
-  Instagram / gist embeds (need third-party widget scripts + CSP allowances).
+  semantic colours. CSS in `src/web/public.css.ts` (`.callout`, `.callout-label`).
+- **Copy-code:** `codeCopy()` in `post.js` attaches a "Copy" button to every `.prose pre`. Shiki
+  highlights server-side at save time, so the button is the one part that has to be added in the
+  browser.
+- **Deferred:** X / Instagram / gist embeds (need third-party widget scripts + CSP allowances).
 
-## Per-post SEO + cover + dateModified — `posts` columns, `[slug]/page.tsx`, `JsonLd.tsx`
+## Per-post SEO + cover + dateModified — `posts` columns, `src/web/article.ts`
 
 - **`meta_title` / `meta_description`** override the `<title>`, meta description, and OG/Twitter
   card when set (else post title + excerpt). Set in the editor's SEO section.
 - **`cover_image`** is a visible hero at the top of the post AND the OG image fallback (ahead of
   the SEO-only `featured_image`). Distinct roles: featured = social-only/hidden, cover = shown.
-- **Real `dateModified`**: `articleSchema` emits `updated_at` (was a placeholder = `datePublished`);
-  the meta line shows "Updated <date>" only when `updated_at` is >24h after `date` (so a save right
-  after publishing adds no noise). All three read through `posts.ts` rowToMeta (`updatedAt` etc.).
+- **Real `dateModified`**: the meta line shows "Updated <date>" only when `updated_at` is >24h after
+  `date` (so a save right after publishing adds no noise). Read through `posts.ts` `rowToMeta`
+  (`updatedAt` etc.). The JSON-LD half of this is **not ported** — see
+  [`seo-pwa.md`](seo-pwa.md).
 
-## Series / collections — `lib/series.ts`, `components/blog/SeriesBox.tsx`, `/series/[slug]`
+## Series / collections — `src/content/series.ts`, `/series/:slug`
 
 - **A series is a name + order on the post**, not a table: the `series` (text) and
   `series_order` (int) columns on `posts`. A post belongs to at most one series. Assign it in
   the editor (Settings panel: a Series field with a datalist of existing names + an Order
   number shown once a series is set). `getAllSeriesNames` feeds the autocomplete (incl. drafts).
-- **Ordering** (`orderSeries`, pure — in `lib/series-order.ts`, the client/edge-safe module so
-  the db-free logic can be imported by client components): `series_order` ascending, then date
+- **Ordering** (`orderSeries`, pure — in `src/content/series-order.ts`, kept db-free so both the
+  server and the admin can import it): `series_order` ascending, then date
   ascending — so a series reads oldest-to-newest / lowest-order-first. `getSeriesForPost(slug)`
   returns the ordered PUBLIC siblings + the current index (a draft/scheduled part never shows).
-- **Series box** (`SeriesBox.tsx`) renders at the top of a post when its series has >1 public
-  part: a `Part n/total` line linking to `/series/[slug]` and the ordered list of parts (current
+- **Series box** (`src/web/article.ts`) renders at the top of a post when its series has >1 public
+  part: a `Part n/total` line linking to `/series/:slug` and the ordered list of parts (current
   part highlighted, not linked). Colours are theme tokens only (`border-rule`, `text-meta`,
   `text-heading`, `link-accent`).
 - **Admin management** (Content → **Series** tab, `SeriesManager.tsx`): every series (incl.
@@ -355,43 +363,43 @@
   `series`+`series_order`, posts untouched) / **reorder** parts with up-down arrows. Each action
   POSTs `/api/series` (`updateSeries` / `reorderSeries`, owner-gated) then `router.refresh()`.
   `series_order` is otherwise set per-post in the editor's Settings panel.
-- **`/series/[slug]`** lists a series in order via `BlogListing` (which preserves the given
-  order — it only paginates). Slug derived with `slugify` and reverse-resolved by
-  `resolveSeries` (like categories/tags). ISR-cached; an admin save purges via
-  `revalidatePath('/','layout')`.
+- **`/series/:slug`** lists a series in the owner's order and is never paginated: a series is read
+  front to back and is not a timeline. Slug derived with `slugify` and reverse-resolved by
+  `resolveSeries` (like categories/tags). Held in the page cache like every other public page, so
+  an admin save empties it along with everything else (Invariant 1).
 
-## Book reading mode — `components/blog/BookMode.tsx`, `features.bookMode`
+## Book reading mode — `src/assets/js/book.ts`, `features.bookMode`
 
 - **What:** an opt-in "Chế độ đọc sách" link on the post meta line (after the reading time)
   opens the article as a **fullscreen two-column book spread**, paged horizontally with the
   arrow keys / on-screen arrows and a soft fade between spreads. Gated by `features.bookMode`
-  (default **on**; toggle in Admin → Settings → Features). **Posts only** (rendered in the post
-  branch of `[slug]/page.tsx`).
-- **Not the Fullscreen API.** A fixed overlay (`.book-overlay`, `body.book-open` locks scroll)
-  covers the viewport, so **desktop and iPad behave identically** and there are no Safari
-  fullscreen quirks. Hidden below the iPad width (`@media (max-width: 767px)`), so mobile never
-  shows it. **Always sepia** — the overlay overrides the theme colour tokens to a warm-paper
-  palette regardless of the site theme / dark mode; closing restores the page's own tokens.
-- **`#read` deep link.** The reader is driven by the URL hash: the toggle is a real
-  `<a href="#read">`, `…/slug#read` opens book mode on load, and Back closes it (the hash sits in
-  history). ESC / ✕ `replaceState` the hash away. A **drop cap** opens the first paragraph.
-- **How it paginates:** the reader **clones** the already-rendered `#post-body` markup (Shiki
-  highlight, images, footnotes intact — no re-render, cloned images forced `loading=eager`
-  since later columns sit off-screen), flows it into a CSS `column-width` element sized so the
-  spread is exactly as wide as the site's content column (`#post-body` width) at a fixed page
-  height, and reads `scrollWidth` to count columns → spreads = `ceil(cols / 2)`. The overlay
-  carries `book-text`, so the reading view's first-line indent + justified margins apply.
-  **Wide images (`figure.img-wide`) render at column width here** — the desktop gutter-widening
-  (`singleRailCss`) is neutralised in `book.css`, so a wide image behaves like a normal one and
-  never spills into the next column/page. Advancing
-  translates the flow by two columns and crossfades. Recomputes on resize + once webfonts
-  settle (`document.fonts.ready`). Base page keeps normal scroll, so **SEO / a11y / find-in-page
-  are untouched** (book mode is pure client enhancement).
+  (default **on**; toggle in Admin → Settings → Features). **Posts only** (the toggle is emitted
+  from the post branch of `src/web/article.ts`).
+- **Not the Fullscreen API — a `<dialog>`.** Escape, focus trapping and the inert background come
+  from the browser instead of from this file, so **desktop and iPad behave identically** and there
+  are no Safari fullscreen quirks. Scroll is locked with `body:has(.book-overlay[open])`. Hidden
+  below the iPad width (`@media (max-width: 767px)`), so mobile never shows it. **Always paper**
+  — the `::backdrop` and the overlay's own tokens are a warm-paper palette regardless of the site
+  theme or dark mode; closing restores the page's own tokens.
+- **Opened from `[data-book-open]`,** and ALL matches are bound: an article carries two toggles
+  (the meta line above the title and the info panel in the right gutter) and exactly one has a box
+  at any given width, so binding only the first left the button dead on whichever layout lost.
+  A **drop cap** opens the first paragraph (`.book-flow.prose > p:first-child::first-letter`).
+- **How it paginates:** the reader **clones** the already-rendered `.prose` markup (Shiki
+  highlight, images, footnotes intact — no re-render), flows it into a CSS `column-width` element
+  sized so the spread is exactly as wide as the site's content column at a fixed page height, and
+  reads `scrollWidth` to count columns → spreads = `ceil(cols / 2)`. The flow is itself `.prose`,
+  so the reading view's indents and justification apply unchanged. **Wide images
+  (`figure.img-wide`) render at column width here**, so a wide image never spills into the next
+  column. Advancing is one `scrollLeft` assignment plus a 130 ms crossfade — the browser has
+  already done the pagination, and re-implementing it is how this becomes a measurement loop that
+  fights the layout engine. Recomputes on resize. The base page keeps normal scroll, so **SEO,
+  a11y and find-in-page are untouched**.
 - **Media** stays column-width (no full-bleed) and is capped to one page height (`--book-page-h`)
   with `break-inside: avoid`, so images/code/tables never overflow a spread. `--font-reading`
   drives the body; all colours are theme tokens. Respects `prefers-reduced-motion` (no fade).
 
-## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `lib/video.ts`
+## Library: Videos tab + self-hosted video — `VideoLibrary.tsx`, `src/render/video.ts`
 
 - The Library page has THREE tabs (`LibraryTabs.tsx`, the shared kit `Tabs`): **Images**
   (media library), **Videos**, **Files**. The Images grid has a **toolbar** (`MediaToolbar.tsx`):
@@ -421,7 +429,7 @@
   fails at the edge, not in the app. For long/heavy video, a platform embed
   (unlisted YouTube/Vimeo) is still the better tool: transcoding + adaptive bitrate.
 
-## Admin UI kit — `components/admin/kit.tsx`
+## Admin UI kit — `src/admin/components/kit.tsx`
 
 - ONE source of truth for shared admin chrome so no page hand-rolls its own (radius /
   padding / shadow / header size used to drift): `Card` (canonical `CARD` surface),
@@ -429,7 +437,7 @@
   `Tabs` (`underline` for Settings + `segment` for Content/Analytics, one component),
   `StatCard`, `EmptyState`, and table tokens (`TableFrame` / `THEAD` / `TROW`). Admin is
   monochrome by design — the kit uses the neutral scale, not public theme tokens.
-- **Admin canvas:** `<main>` in the admin layout carries `.admin-canvas` (globals.css) — a flat,
+- **Admin canvas:** `<main>` in the admin layout carries `.admin-canvas` (`src/admin/admin.css`) — a flat,
   quiet neutral surface (one fill per light/dark mode); the sidebar + cards sit on solid surfaces
   above it. (The editorial redesign replaced the old dotted-grid canvas — see
   `docs/admin-design.md`.)
@@ -450,15 +458,17 @@
 
 ## Activity log + Overview (Admin)
 
-- **Activity log:** every mutating route does `after(() => logActivity(action, detail))`
-  (post/page CRUD, media/file/icon/font, settings, taxonomy, cache.clear, backup.*). Gated by
-  `features.activityLog`. Admin → Log (force-dynamic, latest 200, Clear). **Adding a mutating
-  route → log it too.**
-- **Error log (same table):** `logError` (`lib/api.ts`) — called from every route catch — also
-  schedules `after(() => logActivityError("METHOD /path", message))`, recording an `error`-action
-  entry (gated by the same toggle). So unexpected server failures show up in the log, rendered with
-  a red badge in `ActivityLog.tsx`. Only genuine errors land here (validation 400s use `fail()`, not
-  `logError`).
+- **Activity log:** every mutating route calls `logActivity(action, detail)` (post/page CRUD,
+  media/file/icon/font, settings, taxonomy, cache.clear, backup.*). Gated by
+  `features.activityLog`. Admin → Log (`getActivity`, latest 200 newest-first, Clear).
+  **Adding a mutating route → log it too.** The frozen tree wrapped these in Next's `after()`;
+  there is no equivalent here and none is needed — the promise is simply not awaited and the
+  runtime keeps running.
+- **Error log (same table):** `errorHandler()` in `src/web/api.ts` — the one handler every route
+  falls through to — calls `logActivityError("METHOD /path", message)`, recording an
+  `error`-action entry (gated by the same toggle). So unexpected server failures show up in the
+  log, rendered with a red badge in `ActivityLog.tsx`. Only genuine errors land here (validation
+  400s use `fail()`).
 - **Overview (`Overview.tsx`):** the admin home. A header with a **New post** action, five **stat
   cards** — Posts / Pages / Comments / Images / Storage (each links to its section; Comments = sum of
   `countsByPosts()` when comments are on) — then the **dashboard widgets** (`DashboardWidgets.tsx`): a
@@ -470,12 +480,12 @@
   a one-line **system footer** — DB reachability · storage · a **View site** link, from `getSystemInfo()`.
 - **The editorial redesign** removed the old home-page duplicate cards (SEO health, traffic sources,
   quick-actions row, taxonomy breakdown, and the rich system panel) — that data lives on its own pages
-  now; only the compact footer remains. See `docs/admin-design.md`. (`admin/page.tsx` still
-  passes the `seo`/`sources` props, now unused by `Overview`.)
+  now; only the compact footer remains. See `docs/admin-design.md`. (`Overview` still declares the
+  `seo`/`sources` props, now unused.)
 - **Help / Guide:** Admin → Help (`/admin/help`, `HelpGuide.tsx`) — a concise, sectioned index (writing,
   settings, self-host, Cloudflare, cache/ops, MCP) linking out to the repo docs. **Content is English by
-  design** (canonical, like the docs); only the nav label + title are localized (`navHelp`). Pure server
-  component, no client JS. Add a section here (not a new i18n dump) when a subsystem needs owner guidance.
+  design** (canonical, like the docs); only the nav label + title are localized (`navHelp`).
+  Add a section here (not a new i18n dump) when a subsystem needs owner guidance.
 - **Analytics:** Admin → Analytics (24h/7d/30d/1y); a View column on the content tables
   (`getViewTotals`). The **overview** shows five headline metrics — views, visitors (with
   **period-over-period trend** + a **new-vs-returning** split), **avg time on page** (dwell), avg
@@ -490,34 +500,40 @@
   - **Timezone:** time buckets are truncated in `ANALYTICS_TZ` (an IANA zone, e.g.
     `Asia/Ho_Chi_Minh`; defaults to UTC) so "days" line up with local midnight, not UTC.
   - **Audience** columns (`device`/`browser`/`os`) are **coarse UA buckets** parsed at insert
-    (`lib/ua.ts`) — the raw user-agent is never stored, so no fingerprint (same stance as the salted
-    visitor hash). **Dwell** = ms on the page before leaving, sampled by `ScrollDepth` alongside the
-    scroll depth.
-  - The engagement / channel / audience / drill-down sections need the **`2026-07-22-analytics-v2`**
-    migration (on top of `2026-06-25-analytics-deepening`); until applied the data layer falls back
-    to the base shape and those sections stay hidden. Detail in the data-layer map (`analytics.ts`).
+    (`src/analytics/ua.ts`) — the raw user-agent is never stored, so no fingerprint (same stance as
+    the salted visitor hash). **Dwell** = ms on the page before leaving, beaconed by
+    `src/assets/js/track.ts` alongside the scroll depth.
+  - There is no migration gate on any of this in 2.0: `src/store/schema-analytics.sql` states the
+    final shape and is applied at boot, so every section is present on a fresh install. The
+    engagement / channel / audience / drill-down queries live in `src/analytics/`
+    (`summary.ts`, `aggregate.ts`, `channel.ts`, `page.ts`).
 
 ## Settings (Admin → settings) — `SettingsView.tsx`
 
-- **ONE form, ONE save button, FIVE task-based tabs** (`site | content | appearance | seo |
-  integrations`; tab state not persisted, but `?tab=` deep-links — the Drive-connect redirect lands
-  on `integrations`). One `useState<SiteSettings>` → one PUT `/api/settings`.
-- **Footer is owner-editable** (Site tab, under Layout): `settings.footer` is limited inline markdown
-  (`lib/inline-md.ts` — **bold / italic / underline / link** only, escape-first like `comment-md`,
-  link hrefs protocol-checked) authored via `FooterField` (textarea + B/I/U/Link toolbar + live
-  preview). `{year}`/`{title}` tokens expand at render. The public layout renders it in `<footer
-  class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
-- Controlled field groups (no own state/save), per tab: **Site** `SiteFields`/`LayoutMenuFields`;
-  **Content** `FeatureFields`/`CommentFields`+`CommentKeys` + `ImportFields` (WordPress import — a
-  one-time content tool, full-width below the two-column row); **Appearance** `ThemeFields` (left) +
-  the type stack `FontFields` (built-in `fontPreset` picker + `chromeFont` selector)/`FontUpload`/
-  `TypographyFields`/`AdvancedFields` (Rendering card: font smoothing + the **Motion** engine toggle
-  → `settings.motion.enabled` + the editor **Typewriter feedback** option → `settings.motion.typewriter`)
-  on the right, with **custom-CSS** full-width below; **SEO** `SeoFields` (full-width — a lone card no
-  longer sits in a half-empty 2-col grid); **Integrations** external services only — `BackupFields` +
-  `McpFields` + `CloudflareFields`. `McpFields` is the EXCEPTION to "no own
-  state/save": the MCP enable toggle flows through the settings form, but its token manager has its
-  own `/api/mcp/tokens` API (plaintext shown once).
+- **ONE form, ONE save button, SEVEN task-based tabs** (`site | layout | reading | appearance |
+  seo | connections | system`; tab state not persisted, but `?tab=` deep-links). Each tab answers
+  exactly one question and prints that question under itself — [ADR 0011](decisions/0011-settings-regrouped-into-seven.md)
+  is the argument. One `useState<SiteSettings>` → one PUT `/api/settings`.
+- **Footer is owner-editable** (Layout tab): `settings.footer` is limited inline markdown
+  (`src/render/inline-md.ts` — **bold / italic / underline / link** only, escape-first like
+  `comment-md`, link hrefs protocol-checked) authored via `FooterField` (textarea + B/I/U/Link
+  toolbar + live preview). `{year}`/`{title}` tokens expand at render. The public layout renders it
+  in `<footer class="site-footer">`; default keeps the "© {year} {title} · powered by Quire Blog" line.
+- Controlled field groups (no own state/save), per tab: **Site** (identity only, nothing here moves
+  a pixel) `SiteFields` + `BrandFields`; **Layout** `LayoutMenuFields` + `FooterField`; **Reading**
+  `PostFeatureFields` + `ListingFeatureFields` + `CommentFields` + `ActivityLogField`;
+  **Appearance** `ThemeFields` + custom CSS on the left, the type stack `FontFields` (built-in
+  `fontPreset` picker + `chromeFont` selector) / `FontUpload` / `TypographyFields` /
+  `AdvancedFields` (Rendering card: font smoothing, IDE chrome, the **Motion** engine toggle →
+  `settings.motion.enabled`, and the editor **Typewriter feedback** option →
+  `settings.motion.typewriter`) on the right; **Search & URLs** `SeoFields` + `RedirectsManager`
+  (an old address is a search-engine concern before it is anything else); **Connections**
+  `NewsletterFields` + `CloudflareFields` + `CommentIntegrations` + `McpFields` — every credential
+  here is written to the server and never read back, which is why these cards show status rather
+  than values; **System** `ImportFields` (the one-time WordPress importer, a tool rather than a
+  setting) + `CacheFields` + `ExportFields`. `McpFields` is the EXCEPTION to "no own state/save":
+  the MCP enable toggle flows through the settings form, but its token manager has its own
+  `/api/mcp/tokens` API (plaintext shown once).
 - **Palette is FRONTEND-ONLY now** — the admin chrome no longer carries a `PaletteToggle` (only the
   light/dark toggle). The Appearance tab still sets the site's **default palette** + which palettes
   readers may switch between (`settings.enabledPalettes`), with a note (`themeAdminNote`) explaining
@@ -532,7 +548,7 @@
 - **Save calls `router.refresh()`** so the admin shell + public header reflect the change
   immediately.
 
-## Comments — `lib/comments.ts`, `components/blog/Comments.tsx`
+## Comments — `src/comments/`, `src/web/comments.ts`, `src/assets/js/comments.ts`
 
 Text-only reader comments, **off by default** (`settings.comments.enabled`). Identity is either
 manual (name + email + optional website, optionally behind Cloudflare Turnstile) or a signed-in
@@ -556,7 +572,7 @@ Google account.
 - **Sign-in, in 2.0** (`src/web/comment-auth.ts`, `src/comments/{commenter,google-oauth}.ts`,
   [ADR 0013](decisions/0013-google-sign-in-for-commenters.md)): `next-auth` is gone, so a
   commenter is a signed `__Host-` cookie rather than a session row — 30 days, HMAC over name +
-  address + expiry, no table. The client id and secret are entered in **Settings → Comments**.
+  address + expiry, no table. The client id and secret are entered in **Settings → Connections**.
   A signed-in comment takes its identity from the cookie and IGNORES the request body, records
   `provider = 'google'` and skips Turnstile. Turning the toggle off stops trusting cookies
   already issued, rather than waiting for them to lapse.
@@ -575,31 +591,28 @@ Google account.
 - **Abuse:** manual comments only accept a published, visible post + a per-IP in-memory rate limit
   (6/min). The same IP (+ country) is persisted on the row (`author_ip`/`author_country`) for admin
   moderation — admin-only, NEVER sent to the public comment tree.
-- **Integration keys live in the ADMIN, not (just) env (`lib/integration-keys.ts`).** Turnstile
-  keys are SECRETS, kept in the server-only `integration_keys` table (single row), set via
-  Admin → Settings (`CommentKeys.tsx` → owner-gated `POST /api/comments/keys`) — NEVER in
-  `settings.data`. An env var of the same name is a fallback. `getCommentEnv()` (async) reports which
-  integrations are usable (booleans) + the public Turnstile site key. Google stays env-only (it's
-  also the owner's admin sign-in — putting it in the admin would deadlock the owner's own login).
-- **Cloudflare Turnstile (`lib/turnstile.ts`, `Turnstile.tsx`).** Toggle `settings.comments.turnstile`;
-  **enforced only when the toggle is on AND a Turnstile secret exists**, so toggling on without keys
-  never locks out commenting (the admin row shows a "needs keys" badge + the key inputs appear right
-  below). The manual form gates the comment box **behind the Turnstile pass**; the POST verifies the
-  token server-side via siteverify (fail closed). Tokens are single-use → the form re-arms after each post.
-- **Google login (`auth.ts`).** Toggles `settings.comments.googleAuth`.
-  NextAuth config is a FUNCTION so the provider reads keys at runtime: Google from env. This runs
-  in Node only — the **edge middleware reads
-  the JWT directly via `getToken`** (`auth-shared.ts` holds the pure `isAuthorized`), so the
-  database client never enters the edge bundle. The session carries `name` + `provider` (`next-auth.d.ts`
-  augments `Session`/`JWT`). The island resolves the viewer client-side via `/api/auth/session` (the
-  post page is static): signed in → "Commenting as …" + a plain box (no name/email/Turnstile); else
-  sign-in buttons (`signIn` from `next-auth/react`). The POST **trusts the session** (`getCommenter()`)
-  for a logged-in commenter. A signed-in commenter is NOT an admin — `isAuthorized` still gates
-  `/admin` to `AUTHORIZED_EMAIL` only.
-- **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path
-  (middleware + `check:routes`); `/api/comments/[id]` DELETE stays owner-gated.
+- **Integration keys live in the ADMIN, not (just) env (`src/store/integration-keys.ts`).**
+  Turnstile AND Google keys are SECRETS, kept in the server-only `integration_keys` table (single
+  row), set via Admin → Settings → Connections (owner-gated `POST /api/comments/keys`) — NEVER in
+  `settings.data`. An env var of the same name is a fallback. `getCommentEnv()`
+  (`src/comments/comment-env.ts`) reports which integrations are usable (booleans) + the public
+  Turnstile site key; no secret is ever sent to a client. Saving the pair calls `clearCache()`,
+  because a cached page carries the old site key and the old "draw the Google button" flag.
+- **Cloudflare Turnstile (`src/auth/turnstile.ts`, `src/assets/js/turnstile.ts`).** Toggle
+  `settings.comments.turnstile`; **enforced only when the toggle is on AND a Turnstile secret
+  exists**, so toggling on without keys never locks out commenting (the admin row shows a "needs
+  keys" badge + the key inputs appear right below). The manual form gates the comment box **behind
+  the Turnstile pass**; the POST verifies the token server-side via siteverify (fail closed).
+  Tokens are single-use → the form re-arms after each post.
+- **Google sign-in for commenters** is `settings.comments.googleAuth` and is described in the
+  bullet above — the OAuth flow is `src/comments/google-oauth.ts` and the identity is a signed
+  cookie, not a session row. **A signed-in commenter is never an owner**: the two are separate
+  cookies, separate code paths, and the admin gate is `ownerRouter()` alone.
+- **Routes:** `/api/comments` (GET list + POST create) is the ONLY public-exempt comment path, and
+  it is listed with its reason in `scripts/checks/routes-guarded.ts`; `DELETE /api/comments/:id`
+  stays owner-gated.
 
-## WordPress import — `lib/wordpress-import.ts`, Admin → Settings → Content
+## WordPress import — `src/import/wordpress.ts`, Admin → Settings → System
 
 - **One-click import** from a WordPress export (`Tools → Export → All content` = a WXR `.xml`).
   `ImportFields` uploads the file (multipart) to owner-gated `POST /api/import/wordpress`.
@@ -609,7 +622,7 @@ Google account.
   alt). Categories/tags split by `@_domain`, `Uncategorized` dropped; dates via `wp:post_date_gmt`;
   status `publish`→`published` else `draft`; excerpt from `excerpt:encoded` or `deriveExcerpt`.
 - **The route persists** via `savePost`/`savePage` — new content is ADDED, a slug that collides with
-  existing content gets a numeric suffix (nothing overwritten). One `revalidateEverything()` at the
+  existing content gets a numeric suffix (nothing overwritten). One `clearCache()` at the
   end; logged as `import.wordpress`. **Images keep their source URLs** (not rehosted).
-- `turndown`/`turndown-plugin-gfm`/`fast-xml-parser` are runtime deps; turndown is in
-  `serverExternalPackages` (its Node DOM shim). Max upload 100MB; non-WXR files are rejected.
+- `turndown`/`turndown-plugin-gfm`/`fast-xml-parser` are runtime deps. Max upload 100MB; non-WXR
+  files are rejected.

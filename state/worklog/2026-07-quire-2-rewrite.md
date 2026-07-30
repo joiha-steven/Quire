@@ -5,6 +5,62 @@ append-only, never retro-edited. Everything from the freeze of 1.5.0 through M3.
 
 The entries after this point are in [`../WORKLOG.md`](../WORKLOG.md).
 
+## 2026-07-29 — the cache, measured rather than assumed
+
+The owner asked for a performance pass and, separately, for editing a post or deploying to
+actually clear the cache. Both turned out to be the same problem, and both were worse than
+anyone had written down.
+
+**A cold article render is 92 to 383ms, not the fraction of a millisecond the design
+assumed.** Profiled on the live box against a copy of the real database: for an
+85,000-character post `renderPostContent` is 359ms of a 364ms page render, and inside that
+`marked.parse` alone is 360ms. It is marked itself, not our renderer or our options — a
+plain `Marked` with no configuration is the same 375ms. Every write anywhere empties the
+page cache (Invariant 1), so that cost landed on the next reader, every time.
+
+So the rendered body joins the highlighter in `render_cache`, content-addressed: keyed by
+the build commit, the media facts and the markdown. `01-schema.md` argued against exactly
+this — "a body cache would have to key on media variants, theme and locale, which is the
+invalidation graph Invariant 1 avoids" — and two thirds of that was wrong. The theme is CSS
+and never reaches the body HTML; neither does the locale. The media facts are real, and they
+are IN the key rather than invalidated out of it, which is the trick the highlighter was
+already using. The build commit is in there so a deploy that changes a transform cannot
+serve yesterday's HTML out of a cache with no way to tell.
+
+**The Cloudflare purge was dead configuration.** `cloudflareApiToken` and `cloudflareZoneId`
+have been in `integration_keys`, in the schema and in the Admin UI since the import, and
+nothing in 2.0 ever read them: the port dropped the call and kept the panel. Measured
+through the CDN before the fix, `cf-cache-status: HIT` with `Age: 165` against
+`s-maxage=60, stale-while-revalidate=600` — the edge really does hold this site's HTML, so
+an edit stayed out there for up to eleven minutes. `purgeEdge()` now exists and is called.
+Unconfigured is a no-op, which is the normal state of a self-hosted install and of every
+test.
+
+**And the cache re-fills itself.** `clearCache()` grew a hook list; the server entry point
+registers a debounced warm-then-purge, so a burst of writes gets one pass and an import that
+saves 200 posts does not warm 200 times. Warm first, purge second, so the edge refetches
+into a warm origin. It also runs on boot, which is what makes a deploy clear the edge
+without anyone remembering to do it. The hooks are registered from `index.ts` and not from
+`clearCache()` itself, so a test suite that flushes several hundred times gets a plain
+`Map.clear()` and nothing else.
+
+**Responses now leave the origin gzipped.** Nothing ever set `content-encoding`: the 61 KB
+stylesheet, every page and every feed went out raw on each origin fetch. Text only, over
+1 KB only, and `Vary: Accept-Encoding` with it.
+
+Two things found on the way that were not on anyone's list:
+
+- **`highlight.ts` contained literal NUL bytes.** The cache key was built as
+  `${lang}\0${theme}\0${code}` with the separators typed as actual NUL characters instead of
+  the escape. Nothing broke at runtime, which is why it survived; the damage was to the
+  tools. `grep` reported the file as binary and refused to search it, `git diff` showed
+  `Bin 3642 -> 2947 bytes` instead of a diff, and an exact-match edit against text copied
+  out of the file silently failed to apply. There is a `check:nul` now.
+- **`check:routes-guarded` matched `headers.delete('content-length')`** in the new
+  compression middleware and reported it as an ungated DELETE route. A route path in Hono
+  starts with `/`; the guard now requires that. A guard that cries wolf is a guard that gets
+  switched off, and this one is load-bearing.
+
 ## 2026-07-29 — the header controls, the index nesting, and the chrome font
 
 Three from the owner, with one condition restated: **the IDE style applies only when the

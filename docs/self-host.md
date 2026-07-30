@@ -5,7 +5,7 @@ database server to provision, no container runtime, no migration command, and no
 third-party account anywhere in the path.
 
 Commands assume Ubuntu/Debian and `root` (or `sudo`). Adjust the paths. If you would rather
-not install Bun on the host, [Docker](#9-docker-instead-of-systemd) is the same install in
+not install Bun on the host, [Docker](#10-docker-instead-of-systemd) is the same install in
 two commands, and sections 5 and 7 still apply to it.
 
 ```
@@ -26,16 +26,24 @@ mkdir -p /var/lib/quire/{data,uploads}
 chown -R quire:quire /var/lib/quire
 ```
 
-## 2. Build the binary
+## 2. Get the code and build the assets
 
 ```bash
 curl -fsSL https://bun.sh/install | bash        # as the quire user
 git clone https://github.com/joiha-steven/Quire.git /home/quire/app
-cd /home/quire/app && bun install && bun run build
+cd /home/quire/app && bun install && bun run build:assets && bun run build:admin
 ```
 
-`bun run build` compiles everything — server, admin bundle, island JS, assets — into
-`dist/quire`. That single file is what runs; the repository is only needed to build it.
+**Quire runs from source: `bun src/index.ts`.** The checkout is the deployment, not a build
+input. `build:assets` produces the island bundles and `build:admin` the admin SPA; both are
+read from disk at runtime, so they have to exist before the service starts.
+
+> **`bun run build` also exists and produces a single `dist/quire` binary. Do not deploy it
+> yet.** `bun build --compile` bundles sharp's JavaScript but not its
+> `@img/sharp-<platform>` native module, so the binary comes up fine and then throws on the
+> first image resize — an upload, a variant sweep, an OG card. How the binary should ship is
+> the one open question left from the rewrite
+> ([`state/OPEN_QUESTIONS.md`](../state/OPEN_QUESTIONS.md)).
 
 ## 3. Configure
 
@@ -72,13 +80,17 @@ Type=simple
 User=quire
 WorkingDirectory=/home/quire/app
 EnvironmentFile=/home/quire/app/.env
-ExecStart=/home/quire/app/dist/quire
+ExecStart=/home/quire/.bun/bin/bun src/index.ts
 Restart=always
 RestartSec=2
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+`WorkingDirectory` is load-bearing: the app resolves its bundles and static files relative
+to the checkout, so the unit must start inside it. Use the absolute path to `bun` —
+systemd has no login shell and will not find it on `PATH`.
 
 ```bash
 systemctl daemon-reload && systemctl enable --now quire
@@ -146,21 +158,42 @@ nothing.
 When verifying anything, request the origin directly (`curl localhost:3000/...` on the
 box), not the public URL.
 
-## 8. Upgrading
+## 8. The cron ticks
+
+**Nothing inside the process schedules anything.** `/api/cron` is the entry point and an
+external scheduler has to call it, or scheduled posts never go live on time, image variants
+are never finalized, expired sessions and `render_cache` rows accumulate, and the on-box
+snapshots in [`backups.md`](backups.md) never run.
+
+```cron
+*/5 * * * *  curl -fsS -H "Authorization: Bearer $CRON_SECRET" 'http://127.0.0.1:3000/api/cron?publish=1' >/dev/null
+17  * * * *  curl -fsS -H "Authorization: Bearer $CRON_SECRET" 'http://127.0.0.1:3000/api/cron' >/dev/null
+```
+
+The five-minute tick only flips due posts live; the hourly one does everything else. Set
+`CRON_SECRET` in the environment — the route is **open when it is unset**, and it is the most
+expensive lever in the process. It is rate-limited to 12 calls a minute regardless.
+
+Add `&purge=1` to a one-off call after a deploy to clear the CDN.
+
+## 9. Upgrading
 
 ```bash
-cd /home/quire/app && git pull && bun install && bun run build
+cd /home/quire/app && git pull && bun install && bun run build:assets && bun run build:admin
 systemctl restart quire
 ```
+
+Re-run both builds, not just `git pull`: the island bundles and the admin SPA are build
+outputs, and a restart that skips them serves yesterday's JavaScript against today's HTML.
 
 Schema changes are applied at boot, inside a transaction. **Take a backup first anyway** —
 see [`backups.md`](backups.md), which also covers getting a copy off the box on a schedule.
 
-## 9. Docker, instead of systemd
+## 10. Docker, instead of systemd
 
-Same app, same layout, nothing extra to run beside it. This replaces sections 1, 2, 4 and 8;
-nginx (section 5) and the CDN note (section 7) still apply, and so does taking a backup
-before an upgrade.
+Same app, same layout, nothing extra to run beside it. This replaces sections 1, 2, 4 and 9;
+nginx (section 5), the CDN note (section 7) and **the cron ticks (section 8)** still apply,
+and so does taking a backup before an upgrade.
 
 ```bash
 git clone https://github.com/joiha-steven/Quire.git && cd Quire

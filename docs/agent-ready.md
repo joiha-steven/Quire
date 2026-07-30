@@ -13,24 +13,32 @@ already exists.
 
 | Path | What | Route |
 |---|---|---|
-| `/[slug]` + `Accept: text/markdown` | Post/page as raw **Markdown** (the source, not a conversion). Browsers (Accept: text/html) get HTML unchanged. | `next.config.ts` rewrite → `api/md/[slug]/route.ts` |
-| `/.well-known/mcp/server-card.json` | MCP Server Card: serverInfo, transport endpoint, auth pointers | `app/.well-known/mcp/server-card.json/route.ts` |
-| `/.well-known/api-catalog` | API Catalog (RFC 9727, `application/linkset+json`) → MCP + card + llms + health | `app/.well-known/api-catalog/route.ts` |
-| `/.well-known/oauth-authorization-server` | OAuth AS metadata (RFC 8414) | `app/.well-known/oauth-authorization-server/route.ts` |
-| `/.well-known/oauth-protected-resource` | OAuth protected-resource metadata (RFC 9728) | `app/.well-known/oauth-protected-resource/route.ts` |
-| `/auth.md` | Human/agent-readable auth + registration guide (Markdown) | `app/auth.md/route.ts` |
-| `/robots.txt` | Bot policy **+ `Content-Signal`** (contentsignals.org) | `app/robots.txt/route.ts` |
-| Homepage `Link:` header | RFC 8288 links → api-catalog, MCP card, llms, sitemap, feed | `next.config.ts` `headers()` |
-| `/llms.txt` `/sitemap.xml` `/feed.xml` | Content index / sitemap / RSS (SEO features) | see `seo-pwa.md` |
+| `/:slug` + `Accept: text/markdown` | Post/page as raw **Markdown** (the source, not a conversion). Browsers (`Accept: text/html`) get HTML unchanged. | `src/web/markdown.ts` (`wantsMarkdown`), negotiated in `src/web/app.ts` |
+| `/api/md/:slug` | The same document at an explicit path | `src/web/markdown.ts` |
+| `/.well-known/oauth-authorization-server` | OAuth AS metadata (RFC 8414) | `src/web/admin/mcp.ts` |
+| `/.well-known/oauth-protected-resource` | OAuth protected-resource metadata (RFC 9728) | `src/web/admin/mcp.ts` |
+| `/api/mcp` | The MCP transport itself | `src/web/admin/mcp-transport.ts`, see [`mcp.md`](./mcp.md) |
+| `/llms.txt` `/sitemap.xml` `/feed.xml` | Content index / sitemap / RSS | see [`seo-pwa.md`](./seo-pwa.md) |
 
-Shared helpers for the `.well-known` JSON docs (permissive CORS + cacheable JSON +
-`APP_VERSION`) live in `lib/well-known.ts`. New public read routes must be allow-listed
-in BOTH `middleware.ts` (`isPublicApi`) and `scripts/checks/routes-guarded.mjs`.
+The negotiation lives in the router rather than in a config file, which is the only place
+it can be read next to the route it affects. Both `.well-known` documents answer `OPTIONS`
+and send permissive CORS, because a connector's browser half fetches them cross-origin.
+
+A new public read route is owner-gated by default; making it public means adding it to
+`PUBLIC_WRITES` in `scripts/checks/routes-guarded.ts` **with the reason**, or the build
+fails ([`spec/02-structure.md`](spec/02-structure.md)).
+
+## Not carried into 2.0 yet
+
+These existed in the frozen tree and are unchecked parity items
+([`spec/07-parity.md`](spec/07-parity.md) §9). Do not describe them as present:
+`/.well-known/mcp/server-card.json`, `/.well-known/api-catalog` (RFC 9727), `/auth.md`,
+the homepage RFC 8288 `Link:` header, and the `Content-Signal` line in `robots.txt`.
 
 ## ⚠️ Reverse-proxy requirement — `/.well-known/*` must reach the app
 
-The OAuth/MCP discovery routes are served by Next, so a proxy in front MUST forward
-`/.well-known/*` to the app, not serve it from disk. A CloudPanel/nginx vhost ships a
+The OAuth/MCP discovery routes are served by the app, so a proxy in front MUST forward
+`/.well-known/*` to it rather than serve it from disk. A CloudPanel/nginx vhost ships a
 `location ~ /.well-known { … }` block (for ACME) with **no `proxy_pass`** — it swallows
 ALL `/.well-known/*` and returns a disk 404, so discovery silently breaks. Narrow it to
 `location ^~ /.well-known/acme-challenge/` so everything else falls through to the
@@ -39,10 +47,11 @@ in the ops repo / memory.
 
 ## Content-usage policy (Content-Signal)
 
-`robots.txt` declares `search=yes, ai-train=yes, ai-input=yes` — matching the existing
-AI-friendly stance (the AI bots are allow-listed and `/llms.txt` is served). It's a
-constant in `app/robots.txt/route.ts`; change it there if the policy should differ (or
-promote it to a setting when per-instance control is wanted).
+The frozen tree's `robots.txt` declared `search=yes, ai-train=yes, ai-input=yes`, matching
+the AI-friendly stance that `/llms.txt` also expresses. **2.0's `renderRobots`
+(`src/web/feeds.ts`) does not emit it** — see the parity list above. When it comes back it
+belongs beside the rest of the robots body, and it is a good candidate for a setting rather
+than a constant.
 
 ## Not implemented (deliberate)
 

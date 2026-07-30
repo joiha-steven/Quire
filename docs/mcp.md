@@ -44,8 +44,9 @@
   re-auths across the 180-day boundary), and an admin delete is final unless the owner re-authorizes.
   (A reconnect mints a new row; the prior one persists until the owner removes it — the admin
   lists/deletes them all.) Codes are HMAC-signed
-  (`MCP_OAUTH_SECRET` → falls back to `AUTH_SECRET`) in `lib/mcp/auth.ts`. Token CRUD: owner-only
-  `/api/mcp/tokens` (+ `/[id]`); UI in `components/admin/McpFields.tsx` (cap counts manual only),
+  (`MCP_OAUTH_SECRET` → falls back to `serverSecret('mcp-oauth')`, generated into the database;
+  `AUTH_SECRET` is gone) in `src/mcp/auth.ts`. Token CRUD: owner-only
+  `/api/mcp/tokens` (+ `/:id`); UI in `src/admin/components/McpFields.tsx` (cap counts manual only),
   which also **shows the endpoint URL with a copy button** while the toggle is on — a client has
   to be pointed somewhere and nothing else on the card says where. It prefers `settings.siteUrl`
   and falls back to the browser's origin, since a blank `siteUrl` is resolved from the
@@ -56,9 +57,11 @@
   chain — so under `form-action 'self'` the Approve button did nothing, silently. Only that
   directive is relaxed, and only on that location. **An `add_header` inside a `location`
   REPLACES the inherited ones**, so all five headers are repeated there.
-- **Tools** (`lib/mcp/tools.ts` posts/pages/taxonomy, `tools-library.ts` media/files/settings;
-  results via `result.ts`). Content is Markdown verbatim — no HTML conversion. Deletes are soft
-  (→ Trash). **`update_post` REPLACES the whole post; `patch_post` merges only the passed fields
-  over the current post (body preserved)** — use it to change just the title/tags/categories/etc. **`update_settings` exposes only a safe allowlist (title/description/showDescription)** —
-  the zod inputSchema IS the allowlist, so sensitive settings can't be written over MCP. `get_settings`
-  reads all. **Adding a tool that mutates → revalidate + `logActivity` like the admin routes.**
+- **Tools** (`src/mcp/tools.ts` posts/pages/taxonomy, `src/mcp/tools-library.ts`
+  media/files/settings; results via `src/mcp/result.ts`). Content is Markdown verbatim — no HTML
+  conversion. Deletes are soft (→ Trash). **`update_post` REPLACES the whole post; `patch_post`
+  merges only the passed fields over the current post (body preserved)** — use it to change just
+  the title/tags/categories/etc. **`update_settings` exposes only a safe allowlist
+  (title/description/showDescription)** — the zod inputSchema IS the allowlist, so sensitive
+  settings can't be written over MCP. `get_settings` reads all. **Adding a tool that mutates →
+  `clearCache()` + `logActivity` like the admin routes.**

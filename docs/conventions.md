@@ -75,9 +75,10 @@
   category/tag headings + draft preview; list cards (`PostCard`) = H2; brand wordmark = `.fs-h4`.
   Only fixed public size left: the 404 numeral.
 - **No hardcoded letter-spacing on public text either — tracking comes from `--ls-<role>`.** The
-  `.fs-h*`/`.t-*` classes already emit `letter-spacing: var(--ls-<role>)`, so NEVER add Tailwind
-  `tracking-tight`/`tracking-*` on a public heading/title: it overrides the owner's tuned value and
-  the Admin letter-spacing control stops working. (`grep -rE "tracking-" src/app/\(blog\) src/components/blog` must stay empty.)
+  `.fs-h*`/`.t-*` classes already emit `letter-spacing: var(--ls-<role>)`, so NEVER write a literal
+  `letter-spacing` on a public heading or title: it overrides the owner's tuned value and the Admin
+  letter-spacing control stops working. The one sanctioned exception is the mono-chrome tracking
+  correction in `src/render/font-faces.ts`, which corrects a FACE, not a role.
 - **Reading-optimized defaults.** Restrained, monotonic heading scale (h1 2.0 → h5 1.0),
   18px body at ~1.7 leading. Two claims that used to sit here were measured on 2026-07-29
   and are not true: h5 (1.0rem = 16px) renders BELOW body (1.125rem = 18px), and the
@@ -92,9 +93,10 @@
   size while the space below was a fixed multiple of the BODY's, so the two converged as
   the level dropped and inverted at h5 — 22px above, 25px below. Measured after the fix:
   h2 44/14, h3 36/11, h4 32/11, h5 27/11.
-- **Inter is self-hosted** (`public/fonts/inter-{latin,latin-ext,vietnamese}.woff2`,
-  variable, declared via `@font-face` + `unicode-range` in `globals.css`; `--font-inter:'Inter'`
-  there). **No `next/font/google`** — it fetched at build, which broke offline/CI builds. The OG
+- **Inter is self-hosted** (`src/assets/static/fonts/inter-{latin,latin-ext,vietnamese}.woff2`,
+  variable, declared via `@font-face` + `unicode-range` in `src/render/font-faces.ts`, which is
+  also where `--font-inter` is set). **Never fetch a font from Google** at build or at runtime —
+  it broke offline and CI builds, and it is the reason all of these are in the tree. The OG
   route self-hosts the same Inter separately as `.woff` (Satori can't decode woff2). To update
   Inter, re-drop the woff2 files. **Which font files are `<link rel=preload>`-ed is one
 system-wide rule** (`fontPreloadHrefs` → `docs/performance.md`): only the LCP title's reading
@@ -110,20 +112,14 @@ font, only the site language's subset(s), never the chrome font or an uploaded c
   family + `faces[]` per weight 400/500/600/700, uploaded via `FontUpload` → `/api/files/font`,
   stored at `files/font-<weight>-<ms>`, store-relative) overrides `--font-reading` —
   one `@font-face` per weight because faux-bold is disabled (`font-synthesis-weight: none`).
-  `/og` renders Inter + the custom font (`lib/og.ts` `?font=`). Empty = bundled Inter.
+  `/og` renders Inter + the custom font (`src/web/og.ts` `?font=`). Empty = bundled Inter.
 - **Admin chrome does NOT follow the reader's type settings** — it uses Tailwind's standard
   scale (a fixed design scale); only the admin editor `.prose` mirrors the reader. Don't wire
   admin chrome to `--fs-*`.
 - Editor exposes H1–H5; `marked` renders `####`/`#####` → `h4`/`h5`.
-- **Two stylesheet entries so a reader never downloads admin CSS.** `globals.css` (root
-  layout, every page) is Tailwind-scoped to the PUBLIC tree only — `@import "tailwindcss"
-  source(none)` + explicit `@source` for `(blog)`, `components/{blog,theme,ui}`, the shared
-  error views, and the root layout. `admin/admin.css` (admin layout only) scopes Tailwind to
-  `admin/**` + `components/admin` and holds admin-only chrome (editor `.ProseMirror` rules,
-  `.admin-canvas`/`.admin-shell`, typewriter caret, colour picker). The compile-time tokens
-  BOTH entries need (`@custom-variant dark`, `@theme inline`) live in `theme.css`, imported by
-  each. **Adding a public route/component that uses a NEW utility → extend `globals.css`'s
-  `@source` list** or it won't emit. Never put admin-only utilities/chrome in `globals.css`.
+- **A reader never downloads admin CSS.** The public sheets are hand-written and the admin's is
+  the only Tailwind in the project; the rule and the seam live in
+  [`performance.md`](./performance.md) "The two sheets".
 
 ## Book mode is ONE number, fixed by the owner (HARD RULE)
 
@@ -276,14 +272,15 @@ ambiguous.
 - **The sidebar rail never moves the reading column.** `.rail` is absolutely placed inside
   `.with-rail` (which wraps the content, not the header, so the rail's first line is level with
   the article's first line) and sticks on scroll. Its breakpoint is COMPUTED from `contentWidth`
-  in `(blog)/layout.tsx` — a media query cannot read a CSS variable — so a wider column simply
+  in `src/render/rail-css.ts` — a media query cannot read a CSS variable — so a wider column simply
   keeps the rail hidden for longer. Below it the SAME DOM becomes a slide-out drawer opened by the
   header menu button (`RailToggle`, mobile only — flips `<html data-rail>`; the drawer + scrim react
   in CSS; the layout hides the button above the breakpoint via `.rail-toggle`). The rail carries the
   site menu at its top (`SidebarMenu`) — the header has no separate menu dropdown. In the gutter the
   rail is type on the page: no border, no shadow, no background.
-- **Built-in fonts (`fontPreset`).** Four self-hosted families in `FONT_PRESETS` (lib/themes.ts):
-  Inter, Source Sans 3, Literata, Source Serif 4 — each declared per unicode-range in globals.css,
+- **Built-in fonts (`fontPreset`).** Four self-hosted families in `FONT_PRESETS`
+  (`src/content/themes.ts`): Inter, Source Sans 3, Literata, Source Serif 4 — each declared per
+  unicode-range in `src/render/font-faces.ts`,
   so a family downloads ONLY when the chosen preset uses it. Each preset carries the typography
   TUNED for it; picking a font in Admin → Appearance drops that setup into the editable roles (still
   owner-owned). Preload tracks the chosen font. A preset may also set `readingBold` (the serifs use
@@ -293,13 +290,14 @@ ambiguous.
   body + title, list cards, comment body, the editor `.prose`) and is what `fontPresetCss` /
   `fontToCss` point (custom upload wins). `--font-sans` is the system-chrome face (dates/reading-time,
   related/taxonomy, header, footer, rail, admin), driven INDEPENDENTLY by the `chromeFont` selector
-  (`CHROME_FONTS` in lib/themes.ts, Admin → Appearance): `inter` (default, no override) · `reading`
-  (points `--font-sans` at `--font-reading` so the chrome follows the reading font) · `plex-mono`
-  (self-hosted IBM Plex Mono — a "code" chrome while the body stays readable; declared per
-  unicode-range in globals.css, two static weights range-mapped 400/600, preloaded when active).
+  (`CHROME_FONTS` in `src/content/themes.ts`, Admin → Appearance): `inter` (default, no override) ·
+  `reading` (points `--font-sans` at `--font-reading` so the chrome follows the reading font) ·
+  `plex-mono` (self-hosted IBM Plex Mono — a "code" chrome while the body stays readable; declared
+  per unicode-range in `src/render/font-faces.ts`, two static weights range-mapped 400/600,
+  preloaded when active).
   `chromeFontCss` emits the override LAST in the layout (after the reading font resolves); the legacy
   boolean `fontChromeInter` migrates on read (`false` → `reading`). Layout also stamps
-  `<html data-chrome-font>`; a globals rule uses `[data-chrome-font="plex-mono"]` to pull the wide
+  `<html data-chrome-font>`; a rule in `font-faces.ts` uses `[data-chrome-font="plex-mono"]` to pull the wide
   mono chrome in by `-0.04em` (on `body`/`.t-small`/`.t-body` — the reader's `.prose`/`.fs-*` keep
   their own tracking, other chrome fonts keep default). Apply reading text with the `reading-font`
   class (`.prose` sets it).
@@ -337,46 +335,54 @@ ambiguous.
   volume and must ignore IME composition, modifiers/navigation, paste, and held-key repeats.
 - **Cheap properties only** (`opacity`/`transform`/colour) so motion never causes CLS or jank; entrance
   effects must default to fully-visible (e.g. `.reveal` is gated behind `@supports (animation-timeline)`
-  + `data-motion='on'`) so unsupported browsers / motion-off never hide content. Page nav cross-fade =
-  Next `experimental.viewTransition` + `::view-transition-*(root)` CSS (progressive; cuts where unsupported).
+  + `data-motion='on'`) so unsupported browsers / motion-off never hide content. There is no page-nav
+  cross-fade in 2.0: cross-document View Transitions were considered and not shipped
+  ([`spec/04-frontend.md`](spec/04-frontend.md)).
 
 ## Scripts — `scripts/`
 
-`node --env-file=.env.local scripts/<name>.mjs [--dry]` — idempotent.
+`bun scripts/<name>.ts` — idempotent. Every one of them is a `package.json` script too, and
+that is the name to use: `bun run build:assets`, `bun run check:all`, `bun run user`,
+`bun run import-v1`, `bun run shot`, `bun run drive`. Node is not in the toolchain
+([ADR 0005](decisions/0005-rewrite-in-bun-hono-sqlite.md)).
 
-- **`schema.sql`** — full Postgres schema (15 tables + the `schema_migrations` ledger + indexes + `posts.search` tsvector +
-  RLS + the analytics RPCs). Run ONCE on a fresh Postgres database. NOT run by the app;
-  transcribed from the live schema — **keep it in sync when you change tables/RPCs.**
-- **WordPress import is now an in-app feature** (Admin → Settings → Integrations →
-  `lib/wordpress-import.ts`), NOT a script. The old `import-wordpress`/`fix-import-captions` CLIs
-  were removed. `turndown`/`turndown-plugin-gfm`/`fast-xml-parser` are now runtime **dependencies**
-  (the importer uses them).
-- **Vercel/Supabase-cloud era scripts are GONE** (2026-07): `scripts/legacy/*`,
-  `migrate-to-supabase.mjs`, `copy-blob-store.mjs`, `collapse-stored-urls.mjs` all operated on the
-  retired Vercel-Blob `_index.json`/`.md` model and imported `@vercel/blob`, which is no longer a
-  dependency (they could not even run). History lives in git/CHANGELOG if ever needed.
+- **The schema is not a script.** `src/store/schema.sql` and `src/store/schema-analytics.sql`
+  are embedded and applied at boot; `src/store/migrations.sql` is one file, not a directory.
+  Nothing has to be run by hand on a fresh install.
+- **WordPress import is an in-app feature** (Admin → Settings → Integrations →
+  `src/import/wordpress.ts`), NOT a script. `turndown`, `turndown-plugin-gfm` and
+  `fast-xml-parser` are runtime **dependencies** because the importer uses them.
+- **`scripts/checks/`** holds the static guards `check:all` runs — `file-size`, `css-literal`,
+  `no-nul`, `routes-guarded`, `type-roles`, `docs`. A new load-bearing rule that a test cannot
+  hold belongs here, not in a comment.
 
 ## Docs & releases — keep current
 
 On any behavior change, update the matching doc in the SAME change (Working principle #3):
-- **CLAUDE.md** = rules / data-layer / caching / gotchas. **ARCHITECTURE.md** = overview
-  + why. **CHANGELOG.md** = one entry per user-facing change. **CHECKLIST.md** = pre-deploy
-  steps. **README.md** = setup + features. **ROADMAP.md** = direction.
+- **CLAUDE.md** = a router, and nothing else. **`docs/`** = how it works now, one rule in one
+  file. **`docs/decisions/`** = why, append-only. **CHANGELOG.md** = one entry per user-facing
+  change. **README.md** = setup + features. **`state/ROADMAP.md`** = direction. The frozen
+  tree's `ARCHITECTURE.md` and `CHECKLIST.md` moved with it and are now
+  [`v1/ARCHITECTURE.md`](../v1/ARCHITECTURE.md) and [`v1/CHECKLIST.md`](../v1/CHECKLIST.md);
+  neither describes 2.0.
 - **README is the canonical install/usage doc — keep it current.** Its **two install paths**
   (1️⃣ do-it-yourself, 2️⃣ hand-to-an-AI-agent) + the **MCP "let an agent write & publish"** section
   + the **env-var table** must be updated in the SAME change whenever setup/deploy/env/auth/MCP/backup
   behavior changes (new/renamed env var, a new owner setup step, a changed redirect URI, etc.).
   Never let the README drift from how the app is actually installed and run.
 - Keep personal/instance values (credentials, the live domain) OUT of tracked
-  files — `.env.local` only.
+  files — the gitignored `.env` only.
 - **Audits** (`state/audits/`): a full review per `state/audits/README.md` → dated `state/audits/YYYY-MM-DD-<scope>.md`;
   read the latest first so a pass starts from the last clean line.
-- **Versioning (owner's rule — do NOT auto-bump):** the version is currently **`1.5.x`**. Each change
-  bumps the patch `x`, a running counter with no semver meaning. The minor (`1.0` → … → `1.5`) moves
-  only when the owner asks — NEVER raise it (or `→ 2.0`) on your own. A code change bumps `x`;
-  pure-docs may skip. On a bump, also update the **README title** version:
-  `` # **quire**blog `v1.5.x` `` (centered header, top of README).
-- **Cutting a release:** `x` already current; `npm run build` + `npm run check:all` exit 0; push `main`;
-  `gh release create v1.5.<x> --title "v1.5.<x> - <tagline>" --notes "…"`.
-  Version lives in exactly three tracked places — `package.json`, the README title, and this
-  line; a CHANGELOG entry heading carries it too. Grep the old number before tagging.
+- **Versioning (owner's rule — do NOT auto-bump):** the version is **`2.0.0`**, released
+  2026-07-30. From 2.0 onward the number is **semver and means something**, which is the change
+  from the 1.5.x era where `x` was a running counter: MAJOR for a break in how the thing is
+  installed or run, MINOR for a feature, PATCH for a fix. **Never bump any of the three on your
+  own** — a release is the owner's call, and so is the number. Ship the work, write the
+  CHANGELOG entry under an "Unreleased" heading, and ask.
+- **Cutting a release** (only when asked): `bun run check:all` exits 0 and `bun run build`
+  produces the binary; the CHANGELOG entry is written and dated; push `main`; then
+  `gh release create v<version> --title "v<version> — <tagline>" --notes-file <file>`.
+  The version lives in exactly **three** tracked places — `package.json`, the README title
+  (`# **quire**blog  <version>`), and this line — plus the CHANGELOG entry heading. Grep the
+  old number before tagging; a stale one in the README is the usual miss.

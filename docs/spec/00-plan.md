@@ -162,8 +162,9 @@ quire/
   v1/                               Next.js, FROZEN
 ```
 
-At M4, in a single commit: `git mv` the Next tree into `legacy/` (or delete it, git keeps
-the history), promote `v2/*` to the root, switch the deploy script.
+That swap happened in a single commit on 2026-07-28. The Next tree went to `v1/` rather
+than the `legacy/` this section originally proposed, and the deploy now tars from the
+repository root.
 
 ## Freeze policy
 

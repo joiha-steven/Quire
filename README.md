@@ -1,6 +1,6 @@
 <div align="center">
 
-# **quire**blog &nbsp;`2.0`
+# **quire**blog &nbsp;`2.0.0`
 
 **An AI-operated personal blog platform. Self-hosted, no cloud lock-in.**
 Write and publish from a clean multilingual admin — or hand the keys to an AI agent and let it write, publish, and even deploy for you.
@@ -15,13 +15,15 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 ![MCP](https://img.shields.io/badge/MCP-ready-7c3aed)
 ![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)
 
-[**🌐 Live demo**](https://manhhung.me) · [**Get your own copy**](#-get-your-own-copy) · [**Let an AI run it**](#-let-an-ai-agent-write--publish-mcp) · [**How it works**](./docs/spec/02-structure.md) · [**Roadmap**](./state/ROADMAP.md) · [**License**](#-license)
+[**🌐 Live demo**](https://manhhung.me) · [**Get your own copy**](#-get-your-own-copy) · [**Speed, measured**](#-fast-and-here-are-the-numbers) · [**Let an AI run it**](#-let-an-ai-agent-write--publish-mcp) · [**How it works**](./docs/spec/02-structure.md) · [**Changelog**](./CHANGELOG.md) · [**License**](#-license)
 
 <sub>The demo at **manhhung.me** is the author's personal blog — a live instance to see the *platform* in action, not a content showcase (ignore what it says, look at how it works).</sub>
 
 <br/>
 
-<img src="docs/demo.jpg" alt="Quire Blog admin dashboard and reading view" width="900">
+<img src="docs/demo.jpg" alt="A Quire post open in the reading view, the same post in the admin editor, and the blog's index on a phone" width="900">
+
+<sub>The reading view, the editor, and the same site on a phone.</sub>
 
 </div>
 
@@ -29,9 +31,13 @@ Write and publish from a clean multilingual admin — or hand the keys to an AI 
 
 ## ✨ What it is
 
-An **open-source** (MIT), single-owner blog built for people who just want to **write** — and to **own the whole stack**. No SaaS, no vendor lock-in, and as of 2.0, **no infrastructure either**: one process, two SQLite files, a directory of uploads. The public site is cached in-process so it loads **insanely fast on mobile and desktop**, and it's tuned around **readable typography** — a clean reading experience first. Everything is **easy to tweak from the admin** (palettes, type, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
+An **open-source** (MIT), single-owner blog built for people who just want to **write** — and to **own the whole stack**. No SaaS, no vendor lock-in, and as of 2.0, **no infrastructure either**: one process, two SQLite files, a directory of uploads.
+
+A reading page ships **4.4 KB of JavaScript and no third-party requests at all** ([the rest of the numbers](#-fast-and-here-are-the-numbers)), because the public site is server-rendered HTML with a few hand-written islands and a cache that lives in the process. The whole thing is tuned around **readable typography** — the reading experience is the product — and everything is **adjustable from the admin** (palettes, type scale, menu, fonts) with **no hardcoded values** anywhere, so you make it yours without touching code.
 
 All the writing happens in a polished `/admin` (or over MCP). No git push to publish, no CMS to wrangle.
+
+> **2.0.0 is stable**, released 2026-07-30 and running the demo above. It followed a full audit of design, performance and correctness done by *measuring the running site* rather than reading the source — the findings, and everything that changed since 1.x, are in the [changelog](./CHANGELOG.md).
 
 | Area | What you get |
 |:---|:---|
@@ -48,22 +54,66 @@ All the writing happens in a polished `/admin` (or over MCP). No git push to pub
 | 📬&nbsp;**Newsletter** | own-SMTP sign-up (double opt-in) · unsubscribe · subscriber admin · broadcast new posts on publish · comment-reply notifications — Nodemailer, no lock-in |
 | 📱&nbsp;**PWA** | installable, launches standalone |
 | 🔐&nbsp;**Auth** | your own username + password (argon2id) · **TOTP required** · 10 single-use recovery codes · host-scoped `__Host-` session cookie · no third-party identity provider in the login path |
-| 🚀&nbsp;**Deploy** | **one compiled binary** behind any reverse proxy. No database server, no container runtime, no cloud account |
+| 🚀&nbsp;**Deploy** | **one process** behind any reverse proxy — `bun src/index.ts`, or Docker if you prefer. No database server, no sidecar, no cloud account |
 
 > Built on **Bun** + **Hono**, content in **SQLite**, binaries on the **local filesystem**. The admin is a React 19 SPA; the public site ships **no framework at all** — server-rendered HTML plus a few small islands.
 
 **Who it's for** — one person who wants a fast, good-looking, **fully self-owned** blog on their own server, and likes the idea of letting an AI agent help run it.
 **Not for** — multi-author teams needing roles and editorial workflows. Quire is single-owner by design.
 
+<div align="center">
+
+<img src="docs/demo-reading.jpg" alt="A post in book mode, laid out in two columns on paper with a drop cap, beside the same post in the dark theme" width="900">
+
+<sub>**Book mode** — an opt-in, fullscreen two-column reader — and the dark theme. Both are the reading typography, not a filter laid over it.</sub>
+
+</div>
+
+---
+
+## ⚡ Fast, and here are the numbers
+
+Not adjectives. Recorded from the network on a **cold load of the live site**, which is what a first-time reader on a phone actually pays:
+
+| | Home | A post | |
+|:---|---:|---:|:---|
+| **Requests** | 11 | 12 | |
+| **Total&nbsp;transferred** | **139 KB** | **140 KB** | of which 86 KB is the reading fonts |
+| **JavaScript** | **4.4 KB** | **9.7 KB** | hand-written islands, no framework |
+| **CSS** | 7.6 KB | 7.6 KB | one hashed, minified, immutable sheet |
+| **Third-party&nbsp;requests** | **0** | **0** | no CDN script, no font host, no tracker |
+| **Repeat&nbsp;visit** | ~23 KB | ~23 KB | everything but the HTML is cached for a year |
+
+- **Every bundle has a byte budget the build enforces.** A feature that overruns it fails the build instead of quietly costing every reader forever.
+- **The page cache is one `Map`, cleared entirely on any write** — so the invalidation rule is one line and cannot rot. A miss is a sub-millisecond SQLite read plus a render.
+- **Markdown and syntax highlighting are content-addressed in SQLite**: the input *is* the key, so there is nothing to invalidate. Long-post rendering went from 383 ms to 1 ms.
+- **Fonts are self-hosted and subset per language**, preloaded only for the language you're serving. Pinning the `opsz` axis took this site's preload set from 97.6 KB to **46.2 KB**.
+- **Scroll-driven CSS** does the reveal and the reading progress bar — no script, off the main thread, and it degrades to "visible" rather than blank.
+
+---
+
+## 🤔 Why this, and not the obvious alternatives
+
+| | |
+|:---|:---|
+| **vs.&nbsp;a&nbsp;hosted&nbsp;platform** | Your writing lives in two SQLite files on your disk. No account, no plan, no export button to hope still works. MIT-licensed, so nobody can take it away or change the terms |
+| **vs.&nbsp;WordPress** | No PHP, no MySQL, no plugin surface to patch. One process and one binary. The whole reader path ships 4 KB of JavaScript |
+| **vs.&nbsp;a&nbsp;static&nbsp;site&nbsp;generator** | You get an actual admin: write, upload, schedule and publish from the browser or your phone, with search, comments, a newsletter and analytics built in. No rebuild, no deploy, no git push to publish a typo fix |
+| **vs.&nbsp;rolling&nbsp;your&nbsp;own** | The unglamorous parts are done and tested: TOTP auth, sessions, image variants, feeds, OG images, redirects, soft-delete, revisions, backups, WordPress import, i18n in six languages |
+
+**And the part that is genuinely unusual:** Quire ships a remote **MCP** server, so an AI agent can write and publish to your live site through the same rules the admin uses — and the whole project is built to be *operated* by one. Every rule that matters is a check the build enforces, not a convention someone has to remember.
+
 ---
 
 ## 🚀 Get your own copy
 
+**You need:** [Bun](https://bun.sh) 1.3 or newer, and a machine you can point a domain at. That is the whole list — no database server, no Node, no Docker unless you want it.
+
 ```bash
 git clone https://github.com/joiha-steven/Quire.git && cd Quire
 bun install
-bun run build                       # -> dist/quire, a single executable
-DATA_DIR=./data SITE_URL=https://example.com ./dist/quire
+bun run build:assets                # bundles the islands + the admin
+DATA_DIR=./data SITE_URL=https://example.com bun src/index.ts
 ```
 
 Then point a reverse proxy with TLS at the port (default `3000`) and create your account:
@@ -76,6 +126,13 @@ That is the whole install. There is no database to provision, no migration step 
 (the schema is applied at boot, inside a transaction), and no third-party account to
 create. Full walkthrough — systemd unit, nginx, cache headers, backups, upgrades — in
 **[`docs/self-host.md`](./docs/self-host.md)**.
+
+> [!NOTE]
+> `bun run build` also produces a single compiled executable at `dist/quire`, and it is
+> genuinely one file — but `bun build --compile` does not bundle `sharp`'s native module, so
+> that binary throws the first time it resizes an image. Until that is solved, **run from
+> source**, which is what the live site does. Same command either way, and nothing else about
+> the deployment changes.
 
 <details>
 <summary><b>🐳 &nbsp;Prefer Docker?</b> &nbsp;— same install, two commands, nothing to link it to</summary>
@@ -162,9 +219,10 @@ the test suite; offline, no credentials, no services. Contributing rules are in
 | Path | |
 |---|---|
 | `src/` | The live implementation: Bun + Hono + SQLite |
-| `docs/` | How it works, and why. [`docs/spec/`](./docs/spec/README.md) is the build plan, [`docs/decisions/`](./docs/decisions/README.md) the decision record |
+| `docs/` | How it works, and why. [`docs/spec/`](./docs/spec/README.md) is the build plan, [`docs/decisions/`](./docs/decisions/README.md) the decision record — including the ones that were reversed, and why |
 | `state/` | Where things stand now: roadmap, tasks, worklog, audits |
-| `golden/` | The rendering contract — fixtures plus the frozen tree's output for each |
+| `golden/` | The rendering contract: fixtures plus 1.x's output for each. One differing byte fails the build |
+| `scripts/checks/` | The six guards `bun run check:all` runs. A write route registered outside the owner-gated group fails the build, and so does a hardcoded font size in the reader's stylesheet |
 | `v1/` | **Quire 1.5.0**, the Next.js + PostgreSQL implementation this replaced on 2026-07-28. Frozen, security patches only |
 
 ---

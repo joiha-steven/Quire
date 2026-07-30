@@ -26,22 +26,23 @@ This is strictly stronger than what the Go plan could have achieved, and it is c
 
 ## Layout
 
+`golden/` sits at the repository root. What was built is the corpus half:
+
 ```
-v2/golden/
-  capture.ts          crawls Quire v1, writes references
-  compare.ts          renders with Quire 2.0, diffs
+golden/
+  capture-corpus.ts   renders each fixture with the FROZEN renderer, writes v1/corpus/
   corpus/             hand-written markdown edge cases
-  v1/                 captured reference output (git-tracked, it is the contract)
-    body/<slug>.html
-    meta/<slug>.json
-    og/<slug>.png
-    feed.xml  sitemap.xml  llms.txt  ...
-  accepted.yaml       should stay EMPTY. An entry here is a bug report, not a decision
-  report.html         generated diff report
+  v1/corpus/          captured reference HTML (git-tracked, it is the contract)
 ```
 
-`v1/` is committed. Regenerating it is a reviewed change, because it silently moves the
-goalposts.
+The gate itself is [`src/render/golden.test.ts`](../../src/render/golden.test.ts): every
+fixture, byte-identical, in `bun test`. The crawl-and-diff half described below —
+`capture.ts` against a running 1.x instance, `compare.ts`, `accepted.yaml`, `report.html`
+— was **planned and not built**; the corpus proved sufficient and the URL crawl was never
+needed.
+
+`golden/v1/corpus/` is committed. Regenerating it is a reviewed change, because it
+silently moves the goalposts.
 
 ## Capture
 

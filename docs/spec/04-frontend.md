@@ -41,9 +41,10 @@ Reasons, in order:
 Tailwind is **kept for the admin SPA**, where its churn is contained behind a build that
 only the owner's browser sees.
 
-Delivery: `public.css` is small enough to **inline into the document head**, so an
-article page makes zero blocking stylesheet requests. `book.css` stays route-specific and
-lazy.
+Delivery, as SHIPPED: the sheet is served as one hashed, immutable
+`/assets/site.‹hash›.css` and only the settings-dependent half is inlined after it. This
+section originally specified inlining the whole thing; measurement said otherwise, and the
+reasoning is in [`../performance.md`](../performance.md) "CSS — one hashed sheet".
 
 Conventions from `docs/conventions.md` carry over unchanged and are now easier to hold:
 theme tokens only, one typeface, no hardcoded sizes, one divider style, no all-caps.
@@ -169,7 +170,7 @@ already exist on the server.
 happens to be wrapped in Next. So it is extracted, not rewritten.
 
 ```
-1. Move src/components/admin + src/app/admin  ->  v2/admin/
+1. Move src/components/admin + src/app/admin  ->  src/admin/
 2. Replace the Next-isms:
      next/link       -> <a> or the router's Link      (29 sites, all files)
      next/navigation -> a small client router          (30 sites)
@@ -187,7 +188,7 @@ handling. All of it keeps working because none of it is touched.
 The editor features that must not regress are therefore not a risk register entry any
 more; they are existing code:
 
-- Autosave to `localStorage` immediately, server every 5 seconds when dirty
+- Autosave to `localStorage` only, **never to the server** — see [`../features.md`](../features.md)
 - Crash recovery offering a newer local draft
 - Conflict detection warning instead of overwriting
 - Revision history (SQLite makes rows cheap, so raising the limit past 3 is now a product
@@ -201,9 +202,11 @@ because it is the highest-value cleanup left in the admin.
 
 ## Building
 
-- **Public JS: no bundler.** Three hand-written files with no dependencies and no imports
-  between them, minified by `bun build --minify` as a one-liner, or shipped as-is. There
-  is no module graph to manage.
-- **Public CSS: no build.** One hand-written file, inlined at render.
-- **Admin: `bun build`**, output committed or built in CI. The admin is the only part of
-  the project with a build step, and that is the whole point of keeping it separate.
+- **Public JS: `bun run build:assets`.** Three entry points (`core`, `post`, `login`) built
+  from `src/assets/js/` as minified **IIFE** bundles — not ESM: they are injected as classic
+  `<script src defer>`, so three ESM bundles put every top-level declaration on the global
+  scope and stamped on each other. Each bundle has a byte BUDGET the build fails on.
+- **Public CSS: no build.** Hand-written `src/web/*.css.ts`, assembled and minified once at
+  module init.
+- **Admin: `bun run build:admin`.** The admin is the only part of the project with a real
+  build step, and that is the whole point of keeping it separate.

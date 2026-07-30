@@ -25,13 +25,15 @@ this directory.
 
 ## Two things to know before trusting a file path here
 
-**1. Some of these were written against the frozen tree.** `features.md`, `conventions.md`,
-`performance.md`, `seo-pwa.md`, `agent-ready.md` and `mcp.md` predate the rewrite. Their
-RULES are current — 2.0 follows them, that was the whole point of a port — but where one
-cites a file, the file is `v1/src/…` unless it says otherwise. Refreshing those citations
-against the 2.0 tree is tracked in [`../state/TASKS.md`](../state/TASKS.md) and is not
-done. Until it is, read the rule here and find the code through
-[`../CLAUDE.md`](../CLAUDE.md)'s debug router.
+**1. These were written against the frozen tree and have now been refreshed.**
+`features.md`, `conventions.md`, `performance.md`, `seo-pwa.md`, `agent-ready.md` and
+`mcp.md` predate the rewrite. Their RULES were always current — 2.0 follows them, that was
+the whole point of a port — and their file citations were swept against the 2.0 tree for
+the 2.0.0 release. Where 2.0 has NOT carried something over, the file now says so in place
+rather than describing the frozen behaviour; those gaps are the unchecked items in
+[`spec/07-parity.md`](spec/07-parity.md). If you find a citation that still points at
+`v1/src/…` without saying it means to, that is a bug — fix it, and find the code through
+[`../CLAUDE.md`](../CLAUDE.md)'s debug router meanwhile.
 
 **2. `spec/` is the plan, not a description.** It was written before and during the build
 and it says what 2.0 *should* do. Where it disagrees with the code, the code won.

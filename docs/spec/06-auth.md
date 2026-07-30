@@ -150,7 +150,7 @@ quire user create --username hung --email hung@...
 quire user set-password --username hung
 ```
 
-Implemented as `bun run user <create|set-password|list>` (`v2/scripts/user.ts`).
+Implemented as `bun run user <create|set-password|list>` (`scripts/user.ts`).
 
 The password is read from stdin, never from an argument, so it does not land in shell
 history. On a TTY it is read in raw mode with no echo; when stdin is a pipe it is read once
