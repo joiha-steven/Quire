@@ -72,9 +72,6 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       and then never reads it, so the literal alias shipped in the alert payload anyway.
       Note the worklog is a more complete map of the box than `scripts/ops/` is (user, ports,
       firewall rule, cert scope), and it is append-only, so decide on both together.
-- [ ] **Seven days of observation** before removing `old.manhhung.me`. Cutover was
-      2026-07-28. Keep the frozen tree runnable for 3 to 6 months after that against a
-      read-only copy, so "did we lose something?" stays answerable by comparison.
 - [ ] **The 30-flow headless tour** the M3 gate asked for. Every admin page has been opened
       in a real browser and checked by eye, and the archive, the MCP handshake and each view
       endpoint have tests — but the scripted tour that drives thirty flows end to end does

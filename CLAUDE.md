@@ -6,10 +6,10 @@ repository root is the implementation that serves the live site.
 **Zero personal data in this repo.** Real credentials live only in the gitignored `.env`;
 never commit them. Personal and instance facts are not tracked in git.
 
-> `v1/` is the **frozen Next.js implementation**, replaced on 2026-07-28 (ADR 0012). It
-> still runs, on its own host, as an archive for comparison. It accepts security patches
-> only and its rules are in [`v1/CLAUDE.md`](./v1/CLAUDE.md). Read it freely when checking
-> what the old behaviour was. Do not edit it for that purpose.
+> `v1/` is the **retired Next.js implementation**, replaced on 2026-07-28 (ADR 0012) and
+> shut down on 2026-07-31. It runs nowhere and takes no patches, security included: it is
+> kept as a readable record of the old behaviour, and [`v1/CLAUDE.md`](./v1/CLAUDE.md) says
+> what that means. Read it freely for that. Do not edit it.
 
 ## This file is a ROUTER. It restates nothing.
 

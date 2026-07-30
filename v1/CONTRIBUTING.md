@@ -1,3 +1,9 @@
+> **ARCHIVE: this belongs to the retired 1.x tree.** It describes the Next.js + PostgreSQL
+> setup as it stood when that tree was frozen on 2026-07-26, and 1.x now takes no changes
+> at all, so nothing here is a way into the project. The live implementation is Bun + Hono
+> + SQLite at the repository root; its rules are in [`../CLAUDE.md`](../CLAUDE.md). Kept
+> because it records how 1.x was developed.
+
 # Contributing to Quire
 
 Thanks for helping. Quire values small, correct, well-scoped changes.

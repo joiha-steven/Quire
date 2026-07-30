@@ -1,3 +1,8 @@
+> **ARCHIVE: the pre-deploy checklist of the retired 1.x tree.** It is not run any more.
+> 1.x was shut down on 2026-07-31 and deploys nowhere, so this is a record of what was
+> checked before a 1.x release, not a procedure. The gate for the live implementation is
+> `bun run check:all` plus [`../CLAUDE.md`](../CLAUDE.md).
+
 # Pre-deploy Checklist
 
 ## Code

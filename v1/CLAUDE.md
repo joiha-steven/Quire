@@ -1,8 +1,8 @@
 @AGENTS.md
 
-# Quire Blog 1.5.0 — the frozen Next.js tree
+# Quire Blog 1.5.0, the retired Next.js tree
 
-> ## FROZEN and REPLACED — this tree accepts security patches only
+> ## RETIRED: not running, not maintained, not patched
 >
 > **Quire 2.0 took over the live site on 2026-07-28** ([ADR 0012](../docs/decisions/0012-flatten-repo-after-cutover.md)).
 > It is a single **Bun + Hono + SQLite** process and it lives at the repository ROOT: read
@@ -10,16 +10,21 @@
 > Plan: [`docs/spec/00-plan.md`](../docs/spec/00-plan.md) · Decision: [ADR 0005](../docs/decisions/0005-rewrite-in-bun-hono-sqlite.md).
 > (A Go rewrite was planned first and never built: [ADR 0004](../docs/decisions/0004-rewrite-in-go-on-sqlite.md).)
 >
-> **This file's rules apply to `v1/` only.**
+> **The last instance of this tree was shut down on 2026-07-31**, three days after cutover,
+> with a verified database dump taken first. It now runs nowhere, so the "keep it as a
+> running archive to compare against" half of [ADR 0003](../docs/decisions/0003-freeze-v1-rewrite-as-v2.md)
+> is spent. Comparing against it means starting it yourself from this tree.
 >
-> Rules for this tree from 2026-07-26 ([ADR 0003](../docs/decisions/0003-freeze-v1-rewrite-as-v2.md)):
-> - Security patches only. No new features, no refactors, no dependency bumps beyond CVEs.
-> - Version stays at **1.5.0**. Do not bump.
-> - It still runs, on its own host, as an archive to compare 2.0 against. It is not the
->   product any more, and it is not a fallback anyone should be planning around.
-> - Read it freely when checking what the old behaviour was. Do not edit it for that purpose.
-> - **One agreed exception (M0), already shipped:** font axes, the CSS split, and
->   Speculation Rules. See [`../docs/performance.md`](../docs/performance.md).
+> **Nothing lands here any more, security patches included.** Version stays at **1.5.0**.
+> Do not bump it, do not fix it, do not port a 2.0 change back into it, and do not plan a
+> fallback around it. The one agreed exception under ADR 0003 (M0: font axes, the CSS split
+> and Speculation Rules) shipped before the freeze and closed the list.
+>
+> **What this tree is FOR: reading.** It is the record of what the old behaviour was, and
+> answering that is the only reason to open it. Everything below is preserved as it stood on
+> the day it was frozen, which makes the file a description, not a set of instructions:
+> the routers and the debug tables still point you at the right code, but no procedure in
+> here is meant to be carried out.
 
 Public, open-source blog platform. **Zero personal data in this repo.** Real credentials
 live only in the gitignored `.env.local` (native) or `.env.docker` (Docker); never commit

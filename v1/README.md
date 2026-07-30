@@ -1,13 +1,16 @@
-> ## ARCHIVE — Quire 1.5.0, the frozen Next.js implementation
+> ## ARCHIVE: Quire 1.5.0, the retired Next.js implementation
 >
 > **This is not the current product.** [Quire 2.0](../README.md) — Bun + Hono + SQLite —
 > replaced it on 2026-07-28 ([ADR 0012](../docs/decisions/0012-flatten-repo-after-cutover.md))
 > and lives at the repository root.
 >
-> This tree still runs, on its own hostname, as an archive to compare 2.0 against. It
-> accepts **security patches only**; its version stays at 1.5.0. Everything below described
-> it accurately on the day it was frozen and has been left alone, apart from repairing the
-> links that the move broke. Rules for working in here: [`CLAUDE.md`](./CLAUDE.md).
+> The last instance of this tree was **shut down on 2026-07-31**. It runs nowhere, it is
+> **unsupported**, and it takes no patches of any kind; its version stays at 1.5.0.
+> Everything below described it accurately on the day it was frozen and has been left alone,
+> apart from repairing the links that the move broke, so read the setup instructions as a
+> record of how it worked rather than as a suggestion. It is kept because the old behaviour
+> stays answerable while the code is readable. Rules for reading it:
+> [`CLAUDE.md`](./CLAUDE.md).
 
 <div align="center">
 

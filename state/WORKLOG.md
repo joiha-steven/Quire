@@ -7,6 +7,26 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-31 (latest): 1.x is switched off, and the docs stop saying otherwise
+
+The last 1.x instance was shut down three days after cutover, and the plan it was running
+under is dead with it. The plan had been to keep the old tree serving on its own hostname
+for three to six months as a live comparison target. In twelve days it took six hits while
+holding roughly 660MB of RAM across the app, Postgres and PostgREST, so the comparison was
+being paid for and not used. The application and PostgREST units were disabled, the
+database was masked rather than merely disabled (disabled leaves it `enabled-runtime` and a
+reboot brings it back), and both old hostnames were dropped from the proxy. A `pg_dump`
+plus a plain-SQL copy were taken first and verified readable, so the tree can be brought up
+again from data rather than from hope. The old package and its data directory were left on
+disk on purpose.
+
+Five documents still told a reader that `v1/` was running and taking security patches:
+both `CLAUDE.md` routers, both `README.md` files, and `SECURITY.md`. All five now say
+retired and unsupported. The one that mattered most is `SECURITY.md`, which was promising
+a fix to anyone reporting a 1.x flaw. The observation task in `TASKS.md` that this
+supersedes is gone. Nothing in `v1/` itself was touched: it is a record, and editing it to
+say it is a record is how a record stops being one.
+
 ## 2026-07-31 (later) — one branch, and the local directory matches the repository
 
 The owner's call on the two branches left over from the rename cleanup: delete both.

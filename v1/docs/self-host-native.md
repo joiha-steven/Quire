@@ -1,3 +1,8 @@
+> **ARCHIVE: this installs the retired 1.x stack.** 1.x was shut down on 2026-07-31 and
+> receives no fixes, security ones included, so do not stand up a new instance from these
+> steps. To self-host the current implementation, read
+> [`../../docs/self-host.md`](../../docs/self-host.md). Kept as a record of how 1.x ran.
+
 # Native self-host (no Docker)
 
 Run Quire directly on a Linux server: **PostgreSQL** + **PostgREST** + the **Next.js app**

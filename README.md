@@ -239,7 +239,7 @@ the test suite; offline, no credentials, no services. Contributing rules are in
 | `state/` | Where things stand now: roadmap, tasks, worklog, audits |
 | `golden/` | The rendering contract: fixtures plus 1.x's output for each. One differing byte fails the build |
 | `scripts/checks/` | The six guards `bun run check:all` runs. A write route registered outside the owner-gated group fails the build, and so does a hardcoded font size in the reader's stylesheet |
-| `v1/` | **Quire 1.5.0**, the Next.js + PostgreSQL implementation this replaced on 2026-07-28. Frozen, security patches only |
+| `v1/` | **Quire 1.5.0**, the Next.js + PostgreSQL implementation this replaced on 2026-07-28 and shut down on 2026-07-31. Retired and unsupported, kept as a readable record of the old behaviour |
 
 ---
 

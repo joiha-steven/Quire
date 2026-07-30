@@ -58,7 +58,11 @@ Stated so a report can say which of these is wrong, which is more useful than a 
 
 Fixes land on `main`. Please test against the latest `main` before reporting.
 
-`v1/` in this repository is **Quire 1.5.0**, the frozen Next.js + PostgreSQL implementation
-that 2.0 replaced on 2026-07-28. It accepts security patches only. Its trust model was
-different in one important way: the owner signed in with Google and was identified by
-`AUTHORIZED_EMAIL`. If you are reporting against a 1.x deployment, say so.
+`v1/` in this repository is **Quire 1.5.0**, the Next.js + PostgreSQL implementation that
+2.0 replaced on 2026-07-28. The last instance of it was shut down on 2026-07-31, and it is
+now **unsupported**: it is kept as a readable record of the old behaviour and receives no
+fixes, security ones included. Its trust model differed in one important way, so read it
+with that in mind: the owner signed in with Google and was identified by
+`AUTHORIZED_EMAIL`. A finding against 1.x is still worth sending if 2.0 inherited the same
+flaw, but say which tree you tested, because a 1.x-only issue will be documented rather
+than patched.
