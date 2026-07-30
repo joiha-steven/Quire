@@ -55,13 +55,6 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
       `systemctl stop quire2` stops nothing. Also `backups.md` still says `.env` holds the
       session secret and the SMTP password; in 2.0 the signing secret is generated into the
       database (`auth/secret.ts`) and SMTP lives in the admin.
-- [ ] **Stale citations left by the flatten.** `.github/pull_request_template.md` asks for
-      `npm run check:all` and cites a root `ARCHITECTURE.md` that does not exist;
-      `scripts/port/LEDGER.md` still lists the backup routes, the MCP transport, the admin SPA
-      and Turnstile as "not moved yet" when all four shipped in M3; `docs/spec/01-schema.md`
-      cites `scripts/schema.sql` (it is `src/store/schema.sql`); `scripts/checks/file-size.ts`
-      and `scripts/import-v1.ts` still say `v2/` in their first line. Four ADRs do too, and
-      those are append-only, so leave them.
 - [ ] **Take the instance data back out of `scripts/ops/`.** This repository is PUBLIC and
       its own rule is that no live domain, box path or bucket appears in a tracked file.
       `quire2-backup.sh` and the two nginx vhosts were committed with all three. Make them

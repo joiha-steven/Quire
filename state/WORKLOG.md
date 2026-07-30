@@ -7,6 +7,29 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-31 (last): a contributor has somewhere to land
+
+Putting the archive banner on `v1/CONTRIBUTING.md` left the repository with no contributing
+guide at all, which is a worse state than the wrong one it replaced: the only copy taught
+`npm ci` and a Docker Postgres to anyone who found it. `CONTRIBUTING.md` now exists at the
+root and is a router like the rest of the layer, so it states no rule twice: it says what
+Quire is, that `v1/` is closed to changes, where each kind of rule lives, that done means
+`check:all` at 0, and that a change under `src/render` or `src/web` answers to the golden
+gate as well. README's "run locally" now points at it.
+
+Checking its claims retired a task rather than adding one. **"Stale citations left by the
+flatten" is gone from `TASKS.md`: all four of its claims are false now.** The pull-request
+template already asks for `bun run check:all` and cites no root `ARCHITECTURE.md`;
+`scripts/port/LEDGER.md` records the backup routes, the MCP transport, the admin SPA and
+Turnstile as landed; `docs/spec/01-schema.md` cites `v1/scripts/schema.sql`, with the prefix,
+for the Postgres original it means; and neither `scripts/checks/file-size.ts` nor
+`scripts/import-v1.ts` says `v2/` any more. The `v2/` path left in `LEDGER.md`'s own header
+stays: `scripts/port/` is append-only, which is why `check:docs` skips it.
+
+One contradiction found and deliberately not resolved, because it needs the code open:
+`docs/README.md` says the `v1/src/…` citations were swept for the 2.0.0 release, while
+`TASKS.md` and `CLAUDE.md` both still call that work outstanding. One of the three is wrong.
+
 ## 2026-07-31 (latest): 1.x is switched off, and the docs stop saying otherwise
 
 The last 1.x instance was shut down three days after cutover, and the plan it was running

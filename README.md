@@ -225,7 +225,8 @@ bun run user create --username me --email me@example.com   # then sign in at /lo
 ```
 
 `bun run check:all` must pass before any change is done — typecheck, the static guards, and
-the test suite; offline, no credentials, no services. Contributing rules are in
+the test suite; offline, no credentials, no services. Start at
+[`CONTRIBUTING.md`](./CONTRIBUTING.md), which routes to the house rules in
 [`CLAUDE.md`](./CLAUDE.md).
 
 ---
