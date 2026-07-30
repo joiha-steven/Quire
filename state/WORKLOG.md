@@ -7,6 +7,42 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-30 — deployed: 1942a63 is live on manhhung.me
+
+Seven commits, one release. `check:all` green at 1121 before the tar, and the box's
+`build-sha` matches HEAD.
+
+The runbook's trap earned its place again: `src/admin/dist` had **119 files** on the box and
+should have 30, because tar does not delete and `spa.ts` reads the whole directory into RAM at
+boot. Both dist trees were removed before extracting rather than diffed, which is safe here
+precisely because they are build outputs the tarball carries in full.
+
+Verified at the ORIGIN first, never through the CDN:
+
+| | |
+|---|---|
+| `/` · `/api/health` · `/admin` · a missing slug | 200 · 200 · 302 · 404 |
+| the reflected-XSS payload | `value="&quot; onfocus=…"`, quotes escaped, inert |
+| a missing slug | `text/html`, `private, no-store`, carries `width=device-width` |
+| the served stylesheet | 30,811 bytes, **zero** comment characters |
+
+Then `/api/cron?purge=1` for the edge, because the stylesheet hash changed, and the same
+checks through Cloudflare: the public page links `site.116u94xf2r.css` and it arrives at
+**6,519 bytes compressed against the 20,903 it was this morning**. The feed link, the skip
+link and the un-dimmed term counts are all in the live HTML.
+
+The original complaint, measured on the live site at 390px, on the six pages that mattered:
+
+    /khong-co-trang-nay-abc   viewport 390  scrollWidth 390  scrollsSideways false
+    /tag/lego                 viewport 390  scrollWidth 390  scrollsSideways false
+    /page/2                   viewport 390  scrollWidth 390  scrollsSideways false
+    /search?q=lego            viewport 390  scrollWidth 390  scrollsSideways false
+    /                         viewport 390  scrollWidth 390  scrollsSideways false
+    a post                    viewport 390  scrollWidth 390  scrollsSideways false
+
+The first three reported a 980px document this morning. No version bump and no tag: that is
+the owner's call and was not asked for.
+
 ## 2026-07-30 (last) — the editor stopped losing work to a scroll gesture
 
 Reported: a hard downward scroll in the post editor reloads the page. Confirmed as the
