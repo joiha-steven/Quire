@@ -7,6 +7,30 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-31 — the repository is `quire-blog`, and every link says so
+
+Renamed `joiha-steven/Quire` to `joiha-steven/quire-blog` on GitHub, for one name across the
+project. GitHub redirects the old path indefinitely, so nothing broke at the moment of the
+rename — which is exactly why the references needed chasing anyway: a link that only resolves
+through a redirect is a link nobody notices is stale.
+
+Nine files carried the old path: the clone commands in `README.md` and `docs/self-host.md`,
+the security-advisory links in `SECURITY.md` and the issue-template config, `REPO` in the
+admin help kit, and the default footer in `src/content/settings.ts`. The frozen `v1/` tree
+held the same four strings and got them too. `check:all` green at 1125 tests.
+
+The live instance had its own copy in the settings blob, which no code change would have
+reached: the footer pointed at `/quire`. Updated in place (`/root/quire-settings-backup-2026-07-31.json`
+holds the row as it was) and confirmed rendered at the origin.
+
+Deployed `3e5544d`. Origin checks `/` 200, `/api/health` 200, `/admin` 302, dist trees back at
+30 and 3. This time the old dist trees were **moved** to `/tmp/quire-old-dist` rather than
+removed, which is the safer half of the same runbook step and leaves a way back. Purged.
+
+Still open, and deliberately not touched: `origin/codex/ui-review` (merged into main, pure
+leftover) and `origin/preview/facelift` (five unmerged mockup commits from 2026-07-10). Both
+sit in a public repository. Deleting someone's branches is their call, not the cleanup's.
+
 ## 2026-07-31 — deployed: 010b577 is live on manhhung.me
 
 Two commits, the 2.0.0 release and the drawer fix. `check:all` green at 1125 before the tar.
@@ -433,260 +457,3 @@ into`, 27 MB), tarball extracted as the service user, `build-sha` written, servi
 Verified at the origin and then through the CDN, which the boot purge had already cleared:
 `/api/health` ok, 75 pages warmed, and the served `core.<hash>.js` and `site.<hash>.css` both
 carry the new navigation bar.
-
-## 2026-07-29 (last) — the admin was waiting on nothing, and now says when it is waiting
-
-Owner: the admin feels slow, put a progress bar at the top instead of reloading the page,
-let me switch the cache off from the admin, and look for anything else broken. Measured
-first, in headless Chromium against a throwaway instance seeded to the size of the real blog
-(70 posts, 140 comments, 40,000 analytics events; the size came from the PUBLIC sitemap, not
-from production).
-
-**The first click on any admin route cost 330-390ms and the CPU was idle for ~300ms of it.**
-Every page is a `lazy()` import, so a first visit suspends; outside a transition React shows
-the Suspense fallback and then throttles the reveal by a fixed 300ms. The page's own fetch
-could not start until that let it mount, so two waits ran back to back. The same route
-visited again cost 23-35ms, which is what said it was not the data.
-
-Route changes now run in `startTransition`, so the current page stays on screen, no fallback
-appears and there is nothing to throttle. **Content 355 → 49ms, Media 336 → 59, Comments 348
-→ 43, Settings 346 → 45, Analytics 418 → 83.** Cold `/admin` 501 → 329ms, helped further by
-preloading the route chunk from `main.tsx` before React runs rather than after the shell
-round trip returns.
-
-Holding the old page on screen removes the only signal a click did anything, so
-`ui/TopProgress.tsx` is the new one. It covers the router's transition AND every in-flight
-`useView`, through a counter in `pending.ts`, because a navigation is both.
-
-**The dashboard spent 80ms computing figures it discarded and 734ms walking the disk.**
-`getAnalytics(30)` returns fifteen fields; the dashboard renders five, so it asks for those
-five now. `listBlobs()` walked the whole upload tree, one `stat` per file, on every load:
-5,120 files on the measuring machine. Cached in `media/storage-stats.ts` and invalidated by
-blob writes rather than by `clearCache()`, because saving a post cannot change how many
-files are on disk. **dashboardView 376 → 16ms.**
-
-**The cache switch** (Settings → System) turns off both layers at once: the page cache stops
-being read AND written, and public HTML goes out `public, no-store` rather than
-`s-maxage=60`. Both, because switching off only the in-process half leaves Cloudflare
-answering with the copy you are trying to be rid of. `no-store` rather than `no-cache` for
-the same reason. The warmer returns immediately instead of rendering the archive into a
-cache nobody reads.
-
-**Bug found by driving it:** both editors registered `link` and `underline` beside
-StarterKit, which ships them in Tiptap 3. Tiptap logged "Duplicate extension names found"
-on every mount, meaning two schema entries for one mark. `link` is configured through
-StarterKit now and `underline` needs nothing said about it.
-
-Audited the rest by driving it rather than reading it: 13 pages opened, then retitle-and-save,
-delete, restore from trash, the cache switch saved and re-read, and all seven settings tabs.
-No exceptions, no failed requests, no console errors. One thing worth knowing rather than
-fixing: the content filter matches titles only, not slugs.
-
-Also: **Bun was not on this machine's PATH**, so none of the above could be measured until it
-was put there. It turned out to have been installed all along, under the winget package
-directory that nothing adds to PATH. And this file passed its 700-line cap, so the
-2026-07-28 entries rolled into `worklog/`.
-
-## 2026-07-29 (later still) — a Docker install, and an environment variable that stopped existing
-
-`Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.env.docker.example`, plus section 9
-of [`self-host.md`](../docs/self-host.md). One service, two named volumes, no sidecar.
-
-The image runs **from source** (`bun src/index.ts`), not the compiled binary, and that is
-the decision worth remembering: `bun build --compile` does not bundle sharp's native module,
-so a compiled image would have to keep a binary and a native addon agreed about libc across
-every base bump. It also matches how the live box runs. Debian slim rather than Alpine for
-the same reason, and because `backup.ts` spawns a real `tar`.
-
-The data directories are created and chowned in the image, before `USER bun`: a fresh named
-volume inherits that ownership, which is what makes an unprivileged container writable with
-no entrypoint script. The frozen tree shipped EACCES on a fresh install twice.
-
-**`AUTH_SECRET` has not existed since the cutover** and both install documents still
-demanded it. 2.0 generates its signing secrets on first use and keeps them in the database
-(`src/auth/secret.ts`); zero references remain in `src/` or `scripts/`. README's table and
-`self-host.md` §3 corrected. `features.md` and `mcp.md` still cite it, and stay on the
-carried-over-docs list in [`TASKS.md`](TASKS.md) rather than being fixed in passing.
-
-**`bun install --production` does not prune an existing `node_modules`.** It compares
-against the lockfile, finds it already satisfied, reports "no changes" and removes nothing,
-so the first image shipped React, Tiptap, Tailwind and TypeScript at 535 MB. `rm -rf
-node_modules` before it makes the install resolve the production set for real: 398 MB, six
-seconds, and it is the kind of line that looks redundant and gets deleted, so the Dockerfile
-says why it is there.
-
-Built and driven on two engines, the second one being the authoring machine once its
-Docker was working again. Proven, not assumed: the image builds, from a Linux checkout and
-from the Windows working copy; `/api/health` reports `database` and `storage` true; the home
-page and `/login` render; `/og` returns a 1200x630 PNG, so satori and sharp both survive the
-prune; `tar` spawns from Bun and returns gzip, so the backup path is intact; `bun run user
-create` creates an account through `docker compose exec`; and the account is still there
-after the container is recreated.
-
-The upload path was run as the app runs it, not approximated: sharp capped a 2400px source
-to `ORIGINAL_CAP`, produced the thumbnail and both display widths in webp and avif, and
-`uploadFile` wrote all six into the mounted volume owned by `bun`, which `/uploads` then
-served back with a working byte range. That is the operation the EACCES history was about,
-so it is the one worth doing for real. `check:docs` passes on the post-commit tree. Both
-test stacks, their volumes and their images were removed afterwards.
-
-## 2026-07-29 (later) — the type settings were half-connected, and the sheet was re-sent every page
-
-Second pass, full report in
-[`audits/2026-07-29-typography-security-perf.md`](audits/2026-07-29-typography-security-perf.md).
-Measured, not read: a specimen post carrying every text role, driven in headless Chromium
-against a throwaway instance.
-
-**Eight surfaces took a type role's SIZE and inherited the rest**, so the owner's
-line-height and letter-spacing did nothing on the figcaption, the footnote block, both code
-forms, the tagline, the footer, the ToC sub-rows and the copy button. Every one of them
-looks wired — the rule names `var(--fs-<role>)` — which is why it was never spotted by
-reading. `check:type` now demands all three, canaried. Adding tracking to chrome rules broke
-the mono-chrome correction first (a rule that states the property stops inheriting it), so
-`MONO_TRACKING` lists them.
-
-**A heading did not belong to its own section.** Top margins scale with the heading, the
-space below with the body, so the two converged as the level dropped and inverted at h5:
-22px above, 25px below. Now 27/11 there and 44/14 at h2.
-
-**`--font-mono` was referenced and never defined**, so inline code came out in Literata and
-a fenced block came out in `ui-monospace`. Owner chose a real mono: JetBrains Mono,
-self-hosted, already shipping for the chrome option. A post with no code downloads none of
-it — `unicode-range` means a declaration is not a download.
-
-**Source Sans 3 ran at 79 characters per line** where the others sit at 70-72, and its note
-had reasoned from a short x-height to "loosen the line", which is backwards. The leading is
-fixed (3.52 → 3.34 x the x-height, against the serifs' 3.31). The MEASURE is not: sizing up
-far enough measured well and failed two pinned tests that tie `small` to body, and those
-tests are right — `small` also sets the chrome. Recorded instead: the measure belongs to
-`contentWidth`, which a preset does not own.
-
-Reset also restored `DEFAULT_TYPOGRAPHY` regardless of the chosen font, and five of the
-eight font tiles in the picker rendered in a fallback face.
-
-**42.6 KB of the 48.7 KB of CSS per page was byte-identical everywhere.** Split at that
-seam: a hashed immutable sheet plus the settings inline after it. HTML per post 65.0 → 25.4
-KB, LCP 132 ms at the origin, CLS 0.
-
-**Security.** `/api/cron` had no rate limit while clearing caches, calling Cloudflare's
-purge API, running sharp and taking backups — open by default, one thread. `/search` ran
-uncached FTS5 uncapped while its API half was capped. The app sent no `nosniff`,
-`X-Frame-Options` or referrer policy (nginx did, which made them one deployment's property).
-`/og` took its same-origin check from the client's `Host` header.
-
-**`check:css-literal` was not scanning `prose.css.ts`**, whose own header says it is. A
-backtick got through during this work and the server refused to boot while the check said
-ok — the second time that list has gone stale.
-
-## 2026-07-29 — the Go plan is gone, and an audit found dark mode broken in production
-
-Removed `attic/`. [ADR 0004](../docs/decisions/0004-rewrite-in-go-on-sqlite.md) and
-[0005](../docs/decisions/0005-rewrite-in-bun-hono-sqlite.md) already carry the decision,
-the reversal and the salvage record, which is the part that stops the argument being
-re-run; the specs described a program nobody will ever build. Amendment appended to 0012.
-
-Then a first pass over 2.0 — full report in
-[`audits/2026-07-29-post-cutover.md`](audits/2026-07-29-post-cutover.md). Three fixes,
-all of them measured with headless Chromium rather than read out of source.
-
-**The bundles shared a global scope.** Built as ESM, injected as plain `<script src defer>`
-— a classic script, so every top-level declaration is global. `core.js` and `post.js` both
-declared a helper the minifier named `h`, post.js loaded second, and clicking Dark called
-the toggle button as if it were a function. The theme was written to localStorage first, so
-it looked fine after a reload, which is why it survived cutover. `format: 'iife'`, 11 bytes
-a bundle. Nothing could have caught it: every test in `src/assets/js` imports the
-TypeScript, and the shipped artifact had no test. It has one now.
-
-**Form controls did not inherit the page font** — the second Tailwind-preflight reset to go
-missing, one day after the first. "Sao chép" and "Lên đầu trang" were painting in the UA
-font at 12px/normal on a site whose rule is one typeface and no hardcoded sizes.
-
-**Admin tables were clipped on a phone.** The card is `overflow-hidden` for its corners and
-that was the only box, so the analytics table's last column sat past the viewport edge with
-nothing to scroll. Fixed in the shared `TableFrame` and the four components that hand-roll
-the same wrapper.
-
-The admin was driven on a throwaway instance built from a `VACUUM INTO` snapshot, so no
-admin request touched production. 925 tests.
-
-## 2026-07-29 — the code chrome stopped at the rail
-
-The owner asked what else the IDE switch could do, and named the two places it plainly did
-not reach: the related posts and the comment thread. That was the whole shape of it. An
-article read as source code for two inches of left gutter and then gave up — the series
-head, the tags line, the related list, the sign-up card and the thread below them were all
-furniture and all of them bare.
-
-It is one selector list now, and adding a chrome heading without marking it is a visible
-omission rather than a silent one. What went with it:
-
-- **Counts are bracketed everywhere**, not only in the rail. The sidebar renderer was
-  typing its own parentheses, so the taxonomy read `(7)` three lines under a list that read
-  `[7]` and nothing in the sheet could reconcile them. Both pairs come from CSS now, which
-  is also what keeps the switch reversible.
-- **`[n]` means index, `/` means path.** The owner asked whether the feed's right gutter
-  should take brackets or a slash: it takes the slash, because a year over its months is a
-  hierarchy and every bracket on the site already means "how many". The sticky year reads
-  `2026/` and the month markers under it are the next segment.
-- **Tags and categories became an array literal**, the related posts and the parts of a
-  series took an index column.
-- **Markup gained only what CSS cannot invent**: `.num` round a figure so the digits colour
-  apart from their unit, `.term-list` round a run of terms. Both are invisible with the
-  switch off, which is exactly how a wrapper gets tidied away and takes a feature with it,
-  so both ends are tested.
-
-Found on the way out, and fixed separately: **every deploy that changed the stylesheet left
-readers on an unstyled site for up to eleven minutes.** Public HTML is `s-maxage=60,
-stale-while-revalidate=600`, so a shared cache keeps handing out the previous deploy's page,
-and the only stylesheet that page names is a hash the new process does not have. It was a
-404. Any `/assets/site.<hash>.css` now answers with the current sheet — markup one deploy
-old rendered with CSS one deploy new is a far smaller failure than no CSS at all. Bundles
-keep the strict 404, because stale JS can call into markup that moved.
-
-Checked on a local instance seeded to match the live settings (Vietnamese, JetBrains Mono
-chrome, the switch on, 720px column): eleven posts across two years, a three-part series,
-a paginated archive and an empty term page, in both palettes. The deployed bytes were then
-verified at the origin rather than through the CDN.
-
-## 2026-07-29 — the article's right gutter finally has a job
-
-The owner asked whether the tags, the categories, the related posts and the sign-up card
-should move into the empty right gutter of an article. Half of them should. Tags and
-categories are short labels about the file rather than content, which is what a margin is
-for; a related-post title is a long Vietnamese headline that wraps to five lines at 250px
-and stops being marginalia, and the sign-up card is a form that needs the width. The owner
-took that split and added the meta line to it, so the right gutter now carries the date,
-the word count, the reading time, the way into book mode, and then the taxonomy — one fact
-per line, because 250px is too narrow for a run of middots and the wrap lands mid-phrase.
-The article header on a desktop is now the title and the deck, and nothing else.
-
-**It does not scroll with the article**, on the owner's instruction and for a concrete
-reason: a sticky panel would ride down the gutter and sit on top of any wide image, which
-noses out into that same gutter by one rail width.
-
-That turned out not to be enough. A post that OPENS with a `#wide` image printed the panel's
-tag rows straight across the picture — photographed, not reasoned about. So a wide image or
-video in the first two blocks now stays in the column. Two blocks rather than one because
-the panel runs to six rows and the header is only the `h1` when the deck is switched off,
-which puts the second block level with it too. A wide image further down still noses out,
-which was checked separately.
-
-Mobile is unchanged, which was the owner's condition and the reason the same facts are in
-the markup twice: below the breakpoint there is no gutter, the panel is `display:none`, and
-the meta line and the taxonomy sit exactly where they always did. Measured at three widths —
-1584, 1184 and 500 — and at each one precisely one copy has a box, so a screen reader is
-never read the date twice. Two consequences worth remembering:
-
-- `book.ts` bound the FIRST `[data-book-open]`. There are two now and only one has a box, so
-  the button was dead on whichever layout lost the coin toss. It binds all of them.
-- The contents list's last row jumped to `#post-tags`, an id on a paragraph that is now
-  hidden on every desktop — and an anchor with no box cannot be scrolled to, so that row
-  would have died silently. The anchors are their own empty elements at the end of the
-  article now.
-
-Also this round, from the owner: the meta line's date and figures take the same brackets as
-everything else, with **the brackets a shade lighter than what they hold** — they are
-punctuation, not the value, and at equal weight the line reads as a row of boxes. And the
-rail's term counts, which were a filled ring for one deploy on the argument that a term
-cloud has no sequence to punctuate, are brackets again. The owner looked at the ring and
-said it was ugly. One bracket for every literal is the simpler rule anyway.
