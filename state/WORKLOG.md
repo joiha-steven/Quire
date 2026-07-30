@@ -7,6 +7,31 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-31 — deployed: 010b577 is live on manhhung.me
+
+Two commits, the 2.0.0 release and the drawer fix. `check:all` green at 1125 before the tar.
+The box is `sv1-usa-joiha`, the same webserver the other sites run on, and `quire2` serves
+:3100 from `/home/quire2/app` with `bun src/index.ts`.
+
+The runbook's trap held this time: both dist trees were removed before extracting, and the
+admin dist came back at **30 files**, not the 119 that tar-without-delete produced last time.
+
+Verified at the ORIGIN before the CDN: `/` 200, a post 200, a missing slug 404, `/admin` 302,
+health 200. The stylesheet hash moved `116u94xf2r` to `1pkfu0dxlg` — both sheets changed — so
+`/api/cron?purge=1` ran and the log confirmed `edge-cache: purged`.
+
+Then the actual complaint, measured through Cloudflare on the live site:
+
+    post @360    innerScrollers 0    rail-inner 259 (was 291)
+    post @390    innerScrollers 0    rail-inner 259
+    post @414    innerScrollers 0    rail-inner 259
+    home @390    innerScrollers 0
+    post @390, drawer open           innerScrollers 0
+    /tag/lego @390                   innerScrollers 0
+
+`nav.toc.rail` was `clientWidth 299` against `scrollWidth 331` before this. No version bump
+and no tag: 2.0.0 is already cut and the next number is the owner's call.
+
 ## 2026-07-31 — the drawer was a horizontal scroller, and the page never was
 
 Reported: the mobile sidebar and post still pan sideways. The seeded demo could not reproduce
