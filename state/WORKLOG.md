@@ -7,6 +7,18 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-31 (later) — one branch, and the local directory matches the repository
+
+The owner's call on the two branches left over from the rename cleanup: delete both.
+`codex/ui-review` was already merged into main, so nothing was lost. `preview/facelift` was
+five unmerged mockup commits from 2026-07-10, tip `fd93347`; `codex/ui-review` was `514466a`.
+Both SHAs are written here because that is the only trace left of them, and GitHub's restore
+window is not forever. `origin` now has exactly one branch.
+
+The working copy moved from `C:\dev\quire` to `C:\dev\quire-blog` to match. Nothing in the
+tree depends on the directory name, but two things cache absolute paths and had to go first:
+`tsconfig.tsbuildinfo` and `v1/.next`.
+
 ## 2026-07-31 — the repository is `quire-blog`, and every link says so
 
 Renamed `joiha-steven/Quire` to `joiha-steven/quire-blog` on GitHub, for one name across the
