@@ -22,6 +22,7 @@ const SHEETS: Array<{ file: string; decl: string }> = [
   { file: 'src/web/prose.css.ts', decl: 'export const PROSE_CSS = ' },
   { file: 'src/web/islands.css.ts', decl: 'export const ISLANDS_CSS = ' },
   { file: 'src/web/ide.css.ts', decl: 'export const IDE_CSS = ' },
+  { file: 'src/web/mobile.css.ts', decl: 'export const MOBILE_CSS = ' },
   { file: 'src/web/login.css.ts', decl: 'export const LOGIN_CSS = ' },
 ]
 
@@ -53,6 +54,21 @@ for (const { file, decl } of SHEETS) {
     const line = source.slice(0, open + 1 + body.indexOf('`')).split('\n').length
     console.error(`✗ check:css-literal: backtick inside the CSS literal, ${file}:${line}`)
     console.error('  It ends the string. Write the property name without backticks.')
+    failed = true
+  }
+
+  // A comment that never opened. `ide.css.ts` carried a paragraph of prose with a closing
+  // `*/` and no `/*`, so the browser read the prose as a selector, could not parse it, and
+  // discarded the whole rule that followed: seven selectors that were supposed to darken
+  // every count and date under the IDE chrome never applied, for as long as the switch has
+  // existed. Nothing failed, nothing logged, and the sheet looked fine in the editor —
+  // which is the argument for counting them here.
+  const opens = (body.match(/\/\*/g) ?? []).length
+  const closes = (body.match(/\*\//g) ?? []).length
+  if (opens !== closes) {
+    console.error(`✗ check:css-literal: unbalanced comments in ${file}`)
+    console.error(`  ${opens} opening /* against ${closes} closing */.`)
+    console.error('  An unopened comment is parsed as a selector and takes the next rule with it.')
     failed = true
   }
 }

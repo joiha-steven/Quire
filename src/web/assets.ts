@@ -9,6 +9,7 @@ import coreJs from '@/assets/dist/core.js' with { type: 'text' }
 import postJs from '@/assets/dist/post.js' with { type: 'text' }
 import loginJs from '@/assets/dist/login.js' with { type: 'text' }
 import { PUBLIC_CSS } from '@/web/public.css'
+import { minifyCss } from '@/web/css-min'
 
 /** Bundles by logical name. Adding one is an import and a line. */
 const BUNDLES: Record<string, string> = { core: coreJs, post: postJs, login: loginJs }
@@ -40,9 +41,17 @@ for (const [name, source] of Object.entries(BUNDLES)) {
  * So the STATIC half moves here and is cached for a year, and the settings half stays
  * inline. The cascade is unchanged because the link is emitted before that inline block,
  * which is where the sheet sat in the assembled string.
+ *
+ * Minified once, here, on the way to being hashed. The sheets are commented the way the
+ * rest of this codebase is, and those comments were going out on the wire: measured
+ * 2026-07-30, 34,438 of the 65,645 bytes served were comment text, and a first visit paid
+ * for all of it. Stripping them is worth about 14 KB compressed per cold visit, which is
+ * more than the entire JavaScript budget for a page. The prose stays in the .ts file.
  */
-export const PUBLIC_SHEET = `/assets/site.${hashOf(PUBLIC_CSS)}.css`
-BY_PATH.set(PUBLIC_SHEET, PUBLIC_CSS)
+const PUBLIC_CSS_SERVED = minifyCss(PUBLIC_CSS)
+
+export const PUBLIC_SHEET = `/assets/site.${hashOf(PUBLIC_CSS_SERVED)}.css`
+BY_PATH.set(PUBLIC_SHEET, PUBLIC_CSS_SERVED)
 
 /** The hashed URL for a bundle. Callers use this rather than writing paths by hand. */
 export function assetPath(name: keyof typeof BUNDLES & string): string {
@@ -75,7 +84,7 @@ export function scriptTag(name: string): string {
  * current URL and never asks again — so no client can observe a URL changing under it.
  */
 function staleSheet(path: string): string | null {
-  return /^\/assets\/site\.[a-z0-9]+\.css$/.test(path) ? PUBLIC_CSS : null
+  return /^\/assets\/site\.[a-z0-9]+\.css$/.test(path) ? PUBLIC_CSS_SERVED : null
 }
 
 /** The bundle served at a request path, or null when nothing matches. */

@@ -145,6 +145,14 @@ export function renderDocument(
   // Without this link the manifest route exists and nothing ever asks for it, so the site
   // is not installable no matter what the route returns.
   const manifest = '<link rel="manifest" href="/manifest.webmanifest">'
+  // Same failure as the manifest, and it went unnoticed for longer: /feed.xml answers
+  // correctly and NOTHING on the site points at it, so a reader's aggregator cannot find the
+  // feed and neither can anything crawling for one. Gated on the setting the route is gated
+  // on, so a site with the feed switched off does not advertise a 404.
+  const feed = settings.seo.rss
+    ? `<link rel="alternate" type="application/rss+xml"`
+      + ` title="${escapeAttr(settings.title)}" href="/feed.xml">`
+    : ''
 
   // `data-motion` and `data-chrome-font` are both read by CSS, not by script: the motion
   // switch zeroes every duration in one rule, and the chrome font selects the tracking
@@ -162,7 +170,7 @@ export function renderDocument(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(head.title)}</title>
-${description}${canonical}${icon}${manifest}${og}${sheet}${preloads}
+${description}${canonical}${icon}${manifest}${feed}${og}${sheet}${preloads}
 <style>${styles}</style>
 ${head.extra ?? ''}
 </head>

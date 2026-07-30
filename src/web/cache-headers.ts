@@ -39,8 +39,8 @@ export function cacheHeaders(): MiddlewareHandler {
     // A handler that has already said what it wants is left alone: the asset routes are
     // immutable-for-a-year, and the machine surfaces set their own.
     if (c.res.headers.has('cache-control')) return
-    // Anything that is not a 200 is refused a shared cache whatever its type: a 404 comes
-    // back as plain text from the framework, and a cached one outlives the reason for it.
+    // Anything that is not a 200 is refused a shared cache whatever its type: a public miss
+    // is now a rendered page in the site shell, and a cached 404 outlives the reason for it.
     if (c.res.status !== 200 || OWNER_PATH.test(c.req.path)) {
       c.res.headers.set('cache-control', PRIVATE)
       return

@@ -13,7 +13,13 @@ const STYLES: Record<Variant, string> = {
   secondary:
     'border border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700',
   ghost: 'bg-transparent text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800',
-  danger: 'bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200',
+  // OUTLINED, where primary is solid. It was byte-identical to primary, which made "Delete
+  // forever" the loudest control on its screen and the only thing between it and a deleted
+  // post a native confirm(). Monochrome can still rank three weights: a solid fill for the
+  // action you came to do, a strong outline for one that destroys something, and secondary's
+  // faint border for everything else. It inverts on hover, so it does not read as disabled.
+  danger:
+    'border border-neutral-900 bg-transparent text-neutral-900 hover:bg-neutral-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-neutral-900',
 }
 
 // `whitespace-nowrap` and `shrink-0` are load-bearing, not tidying. In a flex row beside

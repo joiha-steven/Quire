@@ -126,7 +126,10 @@ body:has(.book-overlay[open]){overflow:hidden}
   /* Reading text runs 15% larger in here. It MULTIPLIES the owner's --fs-* roles, so it
      tracks the site's own type setting rather than replacing it. */
   --type-scale:1.15;
-  --c-text:#211f1a;--c-heading:#16130d;--c-meta:#8d8676;--c-link:#2f2c25;
+  /* --c-meta measured 3.30:1 on this paper at #8d8676, which fails AA, and it is the running
+     head and the page count: the two things a reader checks WITHOUT stopping to read. #6f6a5c
+     is 4.93:1 on the same stock and still reads as pencil beside the ink. */
+  --c-text:#211f1a;--c-heading:#16130d;--c-meta:#6f6a5c;--c-link:#2f2c25;
   --c-accent:#2f2c25;--c-rule:#d8cfbc;color:var(--c-text);
   background-color:var(--book-paper);background-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.62'/%3E%3C/svg%3E")}
@@ -237,7 +240,7 @@ body:has(.book-overlay[open]){overflow:hidden}
 .overlay::backdrop{background:rgba(0,0,0,.4)}
 .search-close{position:absolute;top:.5rem;right:.5rem;border:0;background:none;color:var(--c-meta);
   font-size:1.25rem;line-height:1;cursor:pointer}
-.search-input{padding:.6rem .75rem;border:1px solid var(--c-rule);border-radius:.35rem;
+.search-input{padding:.6rem .75rem;border:1px solid var(--c-rule);border-radius:.5rem;
   background:var(--c-bg);color:var(--c-text);font:inherit;margin-right:2rem}
 .search-results{list-style:none;padding:0;margin:1rem 0 0;overflow-y:auto}
 .search-results li{margin:0 0 .6rem}
@@ -276,7 +279,9 @@ body:has(.book-overlay[open]){overflow:hidden}
 form.subscribe{display:flex;gap:.5rem;margin:0}
 form.subscribe input{min-width:0;flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);
   border-radius:.5rem;background:var(--c-bg);color:var(--c-text);font:inherit}
-form.subscribe input:focus{outline:none;border-color:var(--c-heading)}
+/* The border darkening stays, the outline:none does not: it was cancelling the site's one
+   focus ring on the only field in the header, so keyboard focus vanished here alone. */
+form.subscribe input:focus{border-color:var(--c-heading)}
 form.subscribe button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.5rem;
   background:var(--c-bg);color:var(--c-heading);font:inherit;font-weight:500;cursor:pointer}
 form.subscribe button:hover{background:var(--c-rule)}
@@ -318,8 +323,8 @@ form.subscribe button:disabled{opacity:.5}
 .comment-field{margin:0 0 .75rem}
 .comment-field label{display:block;color:var(--c-meta);margin-bottom:.25rem}
 .comment-form input,.comment-form textarea{width:100%;padding:.5rem .75rem;border:1px solid var(--c-rule);
-  border-radius:.35rem;background:var(--c-bg);color:var(--c-text);font:inherit}
-.comment-form button{margin-top:.75rem;padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.35rem;
+  border-radius:.5rem;background:var(--c-bg);color:var(--c-text);font:inherit}
+.comment-form button{margin-top:.75rem;padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.5rem;
   background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
 .comment-status:empty{display:none}
 .comment-status{color:var(--c-meta);margin:.5rem 0 0}
@@ -328,7 +333,7 @@ form.subscribe button:disabled{opacity:.5}
 .comment-identity{margin:0 0 .75rem;color:var(--c-meta)}
 .comment-identity strong{color:var(--c-heading);font-weight:600}
 .comment-google{display:inline-block;padding:.5rem 1rem;border:1px solid var(--c-rule);
-  border-radius:.35rem;color:var(--c-heading);font:inherit;text-decoration:none}
+  border-radius:.5rem;color:var(--c-heading);font:inherit;text-decoration:none}
 .comment-google:hover{border-color:var(--c-heading)}
 /* Two classes deep on purpose: the comment-form button rule above is more specific than a
    lone class, so a one-class rule here loses and sign-out renders as a second Post button. */

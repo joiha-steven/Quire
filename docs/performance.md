@@ -115,6 +115,44 @@ at ~11 ms and done at ~18 ms; LCP 100 ms home / 132 ms post; CLS 0. A loopback m
 cannot price the extra round trip a real network charges on the FIRST visit — that is the
 cost this trade accepts, and it is paid once.
 
+### The sheet is minified before it is hashed
+
+**Measured 2026-07-30**, against the live site: the served sheet was **65,645 bytes raw, of
+which 34,438 were comment text** — 52% of it — and 20,903 bytes compressed. These sheets are
+commented the way the rest of the codebase is, and that is worth keeping; it was worth
+keeping in the `.ts` file rather than on the wire. `web/css-min.ts` strips comments and
+collapses whitespace once at module init, and `PUBLIC_SHEET` hashes the MINIFIED bytes:
+**30,811 raw / 6,519 compressed**, a saving of 14.4 KB on every cold visit, which is more
+than the whole JavaScript budget for a page.
+
+The minifier is hand-written and string-aware because two things in this sheet break a naive
+one, and both break it silently:
+
+- **A quoted string may contain anything.** The book-mode paper grain is a `data:image/svg+xml`
+  URI full of spaces and slashes; `content:"("` exists too.
+- **Whitespace is load-bearing next to a colon and inside `calc()`.** `.book-flow :is(img,…)`
+  is a DESCENDANT selector, and deleting that one space silently rewrites it to
+  `.book-flow:is(…)`, which matches something else. So whitespace collapses to nothing only
+  beside `{ } ; ,` and to a single space everywhere else.
+
+It found a bug on the way in: `ide.css.ts` carried a paragraph of prose with a closing `*/`
+and **no opener**, so a browser read the prose as a selector, failed, and discarded the rule
+that followed it — seven selectors meant to darken every count and date under the IDE chrome,
+which had therefore never applied. `check:css-literal` now counts `/*` against `*/` in every
+sheet, because nothing about that failure was visible: no error, no log, and the sheet reads
+correctly in the editor.
+
+### A fourth sheet: the phone
+
+`web/mobile.css.ts` is appended LAST, after the islands and the IDE chrome, because several
+of its rules win on a specificity tie alone. The seam is a real one rather than a split at
+the line limit: a phone is not a narrow desktop. It carries the 16px floor on form controls
+(below that, iOS Safari zooms the page on focus and the site's small role is 14px),
+thumb-sized padding on the drawer rows and the tag cloud, `@media (hover:none)` for the
+copy-code button that was invisible on touch, a faint scrim behind the drawer, and the
+`env(safe-area-inset-*)` offsets. Nothing in it matches above 639px, so the desktop keeps
+the geometry it was measured into — verified by measuring the same element at both widths.
+
 ## The two entries — a reader never loads admin CSS
 
 Tailwind v4 scans content globally, so a single stylesheet would ship every admin utility
@@ -264,6 +302,12 @@ and **nothing in 2.0 ever read them** — the port dropped the call and kept the
 Measured through the CDN before writing any code, because a gap has to be real first:
 `cf-cache-status: HIT`, `Age: 165` against `s-maxage=60, stale-while-revalidate=600`.
 Unconfigured is a no-op, which is the normal state of a self-hosted install.
+
+It is the **only** purge path: the scheduled sweep, `/api/cron?purge=1` and the admin cache
+button all call it. They used to call a second, ported implementation (`server/cdn.ts`)
+that purged the same zone with no request timeout and logged Cloudflare's response body on
+failure — a body that echoes what was sent. That file is deleted; two ways to do one thing
+means the weaker one keeps being reached for.
 
 ## Compression
 

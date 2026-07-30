@@ -13,6 +13,7 @@
 
 import { ISLANDS_CSS } from '@/web/islands.css'
 import { IDE_CSS } from '@/web/ide.css'
+import { MOBILE_CSS } from '@/web/mobile.css'
 import { PROSE_CSS } from '@/web/prose.css'
 
 const BASE_CSS = `
@@ -48,6 +49,12 @@ button,input,select,textarea,optgroup{font:inherit;color:inherit;letter-spacing:
 img,video,iframe{max-width:100%;height:auto}
 a{color:var(--c-link);text-decoration:underline;text-underline-offset:.15em}
 a:hover{color:var(--c-heading)}
+/* ONE focus signature for the whole public site, the ring the sign-in page already used.
+   Everything out here relied on the browser default, except the sign-up field, which
+   replaced the outline with a 1px border-colour change: on a dark theme that is invisible,
+   so a reader navigating by keyboard lost the cursor entirely. :focus-visible, not :focus,
+   so a mouse click does not draw it. */
+:focus-visible{outline:2px solid var(--c-accent);outline-offset:2px}
 hr{border:0;border-top:1px solid var(--c-rule);margin:2.5rem 0}
 
 /* The column width is --shell-w, not a constant: the layout sets it from the owner's
@@ -59,14 +66,26 @@ hr{border:0;border-top:1px solid var(--c-rule);margin:2.5rem 0}
    admit: it says "px-8 sm:px-5", but no .sm\\:px-5 rule was ever compiled into its
    stylesheet, so 2rem is what actually shipped. Measured off the rendered page, not read
    off the class list — the two disagreed by 24px of column, which is one word per line. */
+/* dvh after vh, not instead of it: iOS counts the URL bar inside 100vh, so a full-height
+   shell overshoots the visible page by the height of the bar and the footer sits under it.
+   The vh line stays as the fallback for an engine that does not know dvh. */
 .wrap{max-width:var(--shell-w,42rem);margin:0 auto;padding:0 2rem;
-  display:flex;min-height:100vh;flex-direction:column}
+  display:flex;min-height:100vh;min-height:100dvh;flex-direction:column}
 /* The rail is absolutely placed against THIS box, not the page, so it never displaces the
    reading column and the column stays centred exactly as it does with no rail at all. It
    wraps the content and not the header, which is what puts the rail's first line level
    with the article's first line. */
 .with-rail{position:relative;display:flex;flex:1;flex-direction:column}
 main{flex:1;padding:3rem 0 1rem}
+
+/* Off-screen until it takes focus, then a real control at the top left of the page. Moved
+   rather than sized to nothing: a zero-size element is skipped by some screen readers, and
+   display:none would take it out of the tab order entirely, which is the one thing it must
+   never be. */
+.skip-link{position:absolute;left:-9999px;top:0;z-index:60}
+.skip-link:focus{left:.5rem;top:.5rem;padding:.5rem .75rem;background:var(--c-bg);
+  border:1px solid var(--c-rule);border-radius:.5rem;color:var(--c-heading);
+  text-decoration:none}
 
 header.site{padding:1.75rem 0}
 header.site .title{font-family:var(--font-sans);font-weight:600;color:var(--c-heading);
@@ -204,10 +223,19 @@ ${PROSE_CSS}
   font-size:var(--fs-small);line-height:var(--lh-small);letter-spacing:var(--ls-small)}
 .pager-count{color:var(--c-meta)}
 form.search{display:flex;gap:.5rem;margin:0 0 2rem}
-form.search input{flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);border-radius:.35rem;
-  background:var(--c-bg);color:var(--c-text);font:inherit}
-form.search button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.35rem;
-  background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
+/* min-width:0 is what stops this row leaving the viewport. An <input> carries an intrinsic
+   width from its size attribute, a flex item will not shrink below its own min-content by
+   default, so at 390px the pair measured wider than the column and the button's right
+   border sat off-screen: the page scrolled sideways. form.subscribe already carried this
+   rule; the search form was written from the same shape and lost it. */
+form.search input{min-width:0;flex:1;padding:.5rem .75rem;border:1px solid var(--c-rule);
+  border-radius:.5rem;background:var(--c-bg);color:var(--c-text);font:inherit}
+/* nowrap because the label is what pushed the row wide: "Tìm kiếm" broke over two lines and
+   took the whole control to 78px tall to make room for itself. */
+form.search button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.5rem;
+  background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer;white-space:nowrap}
+/* Stacked on a phone, exactly as the sign-up form stacks and at the same width. */
+@media (max-width:639px){form.search{flex-direction:column}}
 /* The series box: a bordered card at the TOP of the post, as the frozen tree had it. The
    port turned it into a plain rule at the foot of the article, which is the wrong end — the
    point of it is knowing you are in part 3 of 6 BEFORE reading, not after. */
@@ -226,7 +254,7 @@ p.tags{margin-top:1.5rem;font-size:var(--fs-small);line-height:var(--lh-small);
   letter-spacing:var(--ls-small);color:var(--c-meta)}
 
 figure{margin:calc(var(--sp) * 2) 0}
-figure img{display:block;margin:0 auto;border-radius:.25rem}
+figure img{display:block;margin:0 auto;border-radius:.5rem}
 figcaption{color:var(--c-meta);font-size:var(--fs-caption);line-height:var(--lh-caption);
   letter-spacing:var(--ls-caption);text-align:center;margin-top:calc(var(--sp) * .5)}
 .img-left img{margin-left:0}
@@ -328,7 +356,11 @@ html[data-rail=open] .rail{transform:none}
 /* The brackets are CSS, not markup, so the IDE chrome can swap them for square ones and
    switching it off puts them back. They used to be typed into the sidebar renderer, which
    is why the taxonomy read "(7)" while the list beside it read "[7]". */
-.term-count{margin-left:.25rem;opacity:.6;font-variant-numeric:tabular-nums}
+/* No opacity. --c-meta is 4.56:1 against the page and passes AA with 0.06 to spare; at .6
+   the count measured 2.26:1, which is a fail at any size. It only ever looked acceptable
+   because the IDE chrome resets the opacity to 1, so the site the owner sees was never the
+   one shipping the failure: switching that off produced unreadable counts. */
+.term-count{margin-left:.25rem;font-variant-numeric:tabular-nums}
 .term-count::before{content:"("}
 .term-count::after{content:")"}
 .rail-row.is-active,.rail-tags a.is-active{font-weight:500;color:var(--c-heading)}
@@ -351,7 +383,13 @@ html[data-rail=open] .rail{transform:none}
 .toc li{margin-top:.5rem}
 `.trim()
 
-/** The document sheet plus the island sheet, in that order, inlined as one <style>. */
+/**
+ * The document sheet, the island sheet, the IDE chrome and the phone rules, in that order.
+ *
+ * The phone sheet is LAST because several of its rules win on a specificity tie alone: it
+ * raises a floor on a control that already states its size, and undoes a hover-only opacity.
+ */
 export const PUBLIC_CSS = `${BASE_CSS}
 ${ISLANDS_CSS}
-${IDE_CSS}`
+${IDE_CSS}
+${MOBILE_CSS}`

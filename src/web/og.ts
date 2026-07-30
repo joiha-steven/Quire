@@ -8,10 +8,27 @@
 // URL on the blog becomes a way to probe the machine's network from inside it. "This
 // site's own origin" is SITE_URL when it is configured, NOT the Host header the caller
 // sent — see the note in the handler.
+//
+// The same-origin test is the gate; `safeFetch` is the backstop underneath it, because the
+// fallback origin is the Host header and a Host header is not a fact about this server.
+// The alternative — refusing to fetch at all unless SITE_URL is set — was rejected: the
+// card URL is built from `settings.siteUrl` (the admin field), which an install configured
+// through the UI alone leaves the env unaware of, so that rule would silently drop the
+// background on a correctly configured site.
 
 import type { Context } from 'hono'
 import { readEnv } from '@/env'
+import { safeFetch } from '@/server/safe-fetch'
 import { renderOgCard, type OgCard } from '@/render/og-card'
+
+/**
+ * Neither fetch may hold the render open.
+ *
+ * This route is public and unauthenticated, the runtime has one thread, and the origin
+ * being fetched is by definition one an attacker chose: without a deadline, a host that
+ * accepts the connection and then says nothing parks a request per call.
+ */
+const FETCH_TIMEOUT_MS = 5_000
 
 /** Same-origin only. Anything else, including a malformed URL, is dropped. */
 function sameOrigin(candidate: string, origin: string): boolean {
@@ -32,7 +49,7 @@ function sameOrigin(candidate: string, origin: string): boolean {
  */
 async function inlineImage(url: string): Promise<string | undefined> {
   try {
-    const res = await fetch(url)
+    const res = await safeFetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
     if (!res.ok) return undefined
     const type = res.headers.get('content-type') ?? 'image/jpeg'
     if (!type.startsWith('image/')) return undefined
@@ -70,7 +87,7 @@ export async function handleOg(c: Context): Promise<Response> {
 
   const font = q.get('font') ?? ''
   if (sameOrigin(font, origin)) {
-    card.customFont = await fetch(font)
+    card.customFont = await safeFetch(font, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
       .then((r) => (r.ok ? r.arrayBuffer() : undefined))
       .catch(() => undefined)
   }

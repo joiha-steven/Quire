@@ -1,9 +1,112 @@
-# Worklog archive — the Quire 2.0 rewrite (2026-07-26 → 2026-07-28)
+# Worklog archive — the Quire 2.0 rewrite (2026-07-26 → 2026-07-29)
 
 Rolled out of `../WORKLOG.md` when it passed the 700-line cap. Same rules: newest first,
 append-only, never retro-edited. Everything from the freeze of 1.5.0 through M3.
 
 The entries after this point are in [`../WORKLOG.md`](../WORKLOG.md).
+
+## 2026-07-29 — the MCP server advertised itself over http
+
+The owner went to connect a client and it failed. Two things were wrong, and only one of
+them was a bug.
+
+**The admin never shows the endpoint URL.** `McpFields.tsx` is a token manager and nothing
+else, so there is no link to copy: `https://<site>/api/mcp`. That is a gap in the UI, still
+open.
+
+**The discovery documents were served over https and advertised http.** The CDN terminates
+TLS and forwards to the origin in plain HTTP, so `new URL(c.req.url).origin` was
+`http://manhhung.me` and every URL in both `.well-known` documents carried it — the
+resource, the issuer, and the authorize, token and registration endpoints. A connector
+fetches the document over https, reads an issuer on http, and refuses the pair: RFC 8414 and
+RFC 9728 both require the issuer to match the origin the document was served from, exactly.
+That is the whole of why it would not connect.
+
+`origin()` honours `x-forwarded-proto` now and falls back to the request's own scheme, which
+is the truth for a direct install with no proxy. Three tests, including the fallback.
+
+Measured against the live site before the fix:
+
+    {"resource":"http://manhhung.me/api/mcp","authorization_servers":["http://manhhung.me"]}
+
+## 2026-07-29 — the connector connected and never showed a tool list
+
+Same evening, same feature. The OAuth flow completed cleanly — `register` 201, `authorize`
+302, `token` 200, then `POST /api/mcp 200` four times in the journal — so the client was
+talking to the server and being answered. It just never listed a tool.
+
+**The gzip added this afternoon.** `initialize` is under a kilobyte, so it fell below the
+1 KB floor and went out raw, and the handshake worked. `tools/list` is over it, so it went
+out gzipped, and the client reads that body itself rather than through a browser's HTTP
+stack. Connected, and silent.
+
+Nothing under `/api/` is compressed now. They are small payloads read by one caller, the
+saving was never the point of the change, and the risk is exactly this.
+
+The lesson is the shape of the bug rather than the bug: a size threshold means a feature can
+work for its small messages and fail for its large ones, so the failure looks like a
+different subsystem entirely.
+
+## 2026-07-29 — the tool list, actually: a notification the transport waited on forever
+
+The entry above is wrong about the cause. Excluding `/api/` from gzip was a real fix for a
+real hazard and it stays, but it was not why the tool list never came: the connector still
+spun, and then Claude reported the server unavailable.
+
+The v1 tree used `mcp-handler`; `src/web/admin/mcp-transport.ts` is the one piece of M3 that
+is a rewrite rather than a port. That is the only thing that differs between a version that
+worked and one that did not, and that is where it was.
+
+`SingleExchange.exchange` awaited a reply for EVERY message. A JSON-RPC notification has no
+`id` and is answered with nothing, so nothing ever resolved that promise. The only other
+thing that resolves it is `close()`, which the handler calls in its `finally` — unreachable
+while the handler is still parked on the await. So a notification did not merely wait, it
+deadlocked the request.
+
+The connector's first move after `initialize` is `notifications/initialized`. Every
+connection therefore completed its handshake, hung on the very next POST, and sat there.
+
+Measured before, with the handshake succeeding on the same connection:
+
+    INIT: {"result":{"protocolVersion":"2025-06-18",
+      "capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"quire",...}}}
+    NOTIFICATION: HUNG after 3013ms
+
+and after: `202` in 4ms. `capabilities.tools` was there the whole time, which retired the
+other hypothesis worth retiring.
+
+The regression test races the request against a timer, because a regression here HANGS, and
+a hanging test that eventually times out says far less than one that names the fault.
+
+Two lessons. The journal showed `POST /api/mcp 200` and I read that as every request being
+answered — a hung request logs nothing at all, and the 200s were the client's retries of the
+requests that DID return. Absence in a log is evidence and I treated it as silence. And when
+a rewritten seam sits between a version that worked and one that does not, read the seam
+first instead of the subsystems around it.
+
+## 2026-07-29 — the endpoint URL, and the nginx exception put back under git
+
+Two loose ends from the connector work, both about something being known and written
+nowhere.
+
+**The admin never said where to connect.** The MCP card was a toggle and a token manager,
+and a token is useless without an address. It now prints `<site>/api/mcp` with a copy button
+whenever the toggle is on. It prefers `settings.siteUrl` and falls back to the browser's
+origin, because a blank `siteUrl` is resolved from the environment and the admin cannot read
+that; the two agree on any ordinary install, and the fallback is the more useful of them
+when they do not, being reachable by definition.
+
+Looked at rather than assumed: driven headless with a session cookie set over CDP, the card
+renders `https://example.com/api/mcp` under a "Connection URL" heading, and the code box and
+the Copy button share a centre line to the pixel (both 1455).
+
+**The nginx exception was living only on the box.** `scripts/ops/nginx-manhhung.me.conf` is
+tracked and had drifted from what is actually deployed by exactly one block — the
+`/api/mcp/authorize` location added last night so the Approve button works. Moving the box
+would have lost it and the consent screen would have broken again with no clue why. The
+tracked copy is now byte-identical to the live file, and the rule is in `docs/mcp.md`
+alongside the trap that makes it necessary: an `add_header` inside a `location` REPLACES the
+inherited headers instead of adding to them.
 ## 2026-07-28 — the repository now describes the program that is actually running
 
 Cutover inverted every default in this repository and left them inverted. `src/` meant the

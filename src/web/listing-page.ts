@@ -5,6 +5,8 @@
 // router keeps the routing; this keeps what a listing page IS.
 
 import type { SiteSettings } from '@/types'
+import { t } from '@/i18n/i18n'
+import { escapeHtml } from '@/utils'
 import { getSettings, resolveSiteUrl } from '@/content/settings'
 import { paginate } from '@/content/paginate'
 import { pageCache } from '@/server/cache'
@@ -99,6 +101,35 @@ export async function renderFeedBody(
 }
 
 /**
+ * The page a reader gets for a URL that is not here.
+ *
+ * It is a real page in the site shell, and that is not a cosmetic point. A `text/plain` body
+ * carries no viewport meta, so a phone laid the two words out at the default 980px desktop
+ * width and let the reader pan the page sideways: measured at 390px, the document was 980px
+ * wide. Every public HTML miss comes through here, so that is fixed in one place.
+ *
+ * Never cached, in either cache. `cacheHeaders` already refuses a shared cache anything that
+ * is not a 200, and nothing is written to `pageCache`: one entry per URL a crawler invents
+ * would fill the map with pages that do not exist.
+ */
+export async function notFoundPage(): Promise<Response> {
+  const settings = await getSettings()
+  const s = t(settings.language)
+  const html = await listingPage({
+    title: `${s.notFoundTitle} · ${settings.title}`,
+    // The archive heading, the empty-state voice and the site's one link signature: a miss
+    // is an empty listing, so it is dressed as one rather than as a new kind of page.
+    body: `<div class="listing-head"><h1>${escapeHtml(s.notFoundTitle)}</h1></div>
+<p class="empty">${escapeHtml(s.notFoundText)}</p>
+<p class="mt-3"><a class="link-accent" href="/">${escapeHtml(s.backHome)}</a></p>`,
+  })
+  return new Response(html, {
+    status: 404,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+  })
+}
+
+/**
  * Serve an HTML route from the page cache, so the cache rule lives in ONE place.
  *
  * The owner can switch the cache off (Settings -> System). Off means neither read nor
@@ -114,7 +145,7 @@ export function cached(key: string, render: () => Promise<string | null>) {
       return new Response(hit, { headers: { 'content-type': 'text/html; charset=utf-8' } })
     }
     const html = await render()
-    if (html === null) return new Response('Not found', { status: 404 })
+    if (html === null) return notFoundPage()
     if (on) pageCache.set(key, html)
     return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } })
   }

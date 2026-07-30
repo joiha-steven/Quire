@@ -4,18 +4,56 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Now
 
-- [ ] **Fix `.github/workflows/ci.yml`.** It still runs `npm ci` + `npm run check:all` at
-      the repository root, which after the reshuffle ([ADR 0012](../docs/decisions/0012-flatten-repo-after-cutover.md))
-      is a Bun project with no `package-lock.json`. It should install Bun and run
-      `bun install --frozen-lockfile && bun run check:all`, plus `bun run build`.
-      **A human has to apply this**: the credential in use lacks the `workflow` scope, so a
-      push touching that file is rejected. Every CI run is red until then.
+- [ ] **Consolidate the HTML escapers.** `utils.ts` exports a five-replacement `escapeHtml`
+      (`& < > " '`) and a WEAKER three-replacement copy is re-declared privately in twelve
+      files (`web/app.ts`, `article.ts`, `chrome.ts`, `layout.ts`, `listing.ts`,
+      `login-page.ts`, `post-info.ts`, `preview.ts`, `search-page.ts`, `sidebar.ts`,
+      `admin/news.ts`, `render/post-content.ts`), plus nine `escapeAttr` copies. Two escapers
+      with different semantics under one name is the shape of an XSS regression: the next
+      person to move a call site between files silently changes which characters are escaped.
+      Import the canonical one. `post-content.ts` is inside the golden's blast radius, so run
+      the golden compare — if the output moves, stop rather than re-baselining.
+- [ ] **Fix the two links in the live admin's Help screen.**
+      `admin/components/HelpSections.tsx` builds GitHub URLs for `docs/self-host-native.md`
+      and `CHECKLIST.md`; both moved under `v1/` in the flatten and both 404 today. This is
+      the only drift from that reshuffle a USER hits.
+- [ ] **The dead-code sweep**, from the 2026-07-30 audit: `comments/comment-tree.ts` is dead
+      (only its own test imports it, and `docs/features.md` still documents it as live); five
+      dead exports (`analytics/buffer.ts analyticsBufferLimits`, `auth/users.ts updateProfile`,
+      `content/themes.ts enabledPaletteOptions`, `store/db.ts toDate`,
+      `admin/components/kit.tsx SettingGroup`); four orphaned routes in `web/uploads.ts`
+      (`POST /api/media/register`, `POST /api/files/register`, `GET /api/media/debug`,
+      `DELETE /api/files/by`) left from a removed direct-to-storage upload flow; and
+      `@tiptap/extension-link` + `@tiptap/extension-underline`, neither imported directly.
+      Prove each one unreachable before deleting it, and never touch `.well-known/*`,
+      `/api/mcp/*`, `/api/cron` or `/api/newsletter/open`, which are external contracts.
+- [ ] **Reconcile `docs/backups.md` with `docs/self-host.md`.** They describe two different
+      deployments: service `quire2` and `/var/lib/quire2` against `quire` and `/var/lib/quire`.
+      Follow both and the backup script points at a directory that does not exist and
+      `systemctl stop quire2` stops nothing. Also `backups.md` still says `.env` holds the
+      session secret and the SMTP password; in 2.0 the signing secret is generated into the
+      database (`auth/secret.ts`) and SMTP lives in the admin.
+- [ ] **Stale citations left by the flatten.** `.github/pull_request_template.md` asks for
+      `npm run check:all` and cites a root `ARCHITECTURE.md` that does not exist;
+      `scripts/port/LEDGER.md` still lists the backup routes, the MCP transport, the admin SPA
+      and Turnstile as "not moved yet" when all four shipped in M3; `docs/spec/01-schema.md`
+      cites `scripts/schema.sql` (it is `src/store/schema.sql`); `scripts/checks/file-size.ts`
+      and `scripts/import-v1.ts` still say `v2/` in their first line. Four ADRs do too, and
+      those are append-only, so leave them.
+- [ ] **Tests for the two untested modules that do arithmetic and send mail**:
+      `analytics/aggregate.ts` (the dashboard's aggregation join, next to the timezone work)
+      and `comments/comment-notify.ts` (its own SQL plus the self-notify suppression). Neither
+      is referenced by any test file.
 - [ ] **Take the instance data back out of `scripts/ops/`.** This repository is PUBLIC and
       its own rule is that no live domain, box path or bucket appears in a tracked file.
       `quire2-backup.sh` and the two nginx vhosts were committed with all three. Make them
       templates that read their instance values from an env file, install the templated
       version on the box, and verify by running it — the repository copy and the installed
-      copy have to stay the same file.
+      copy have to stay the same file. One of the three is also a live bug:
+      `quire2-backup.sh` defines `ALERT_ALIAS` to keep the host alias out of the repository
+      and then never reads it, so the literal alias shipped in the alert payload anyway.
+      Note the worklog is a more complete map of the box than `scripts/ops/` is (user, ports,
+      firewall rule, cert scope), and it is append-only, so decide on both together.
 - [ ] **Seven days of observation** before removing `old.manhhung.me`. Cutover was
       2026-07-28. Keep the frozen tree runnable for 3 to 6 months after that against a
       read-only copy, so "did we lose something?" stays answerable by comparison.

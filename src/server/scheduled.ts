@@ -16,7 +16,7 @@
 // in-process Map and a miss is a sub-millisecond SQLite read plus a render.
 
 import { clearCache } from '@/server/cache'
-import { purgeCloudflare } from '@/server/cdn'
+import { purgeEdge } from '@/server/edge-cache'
 import { all } from '@/store/query'
 import { liveOnly } from '@/store/db'
 
@@ -57,7 +57,7 @@ export async function sweepScheduled(lookbackMs: number): Promise<number> {
   )
   if (crossed.length > 0) {
     clearCache()
-    await purgeCloudflare()
+    await purgeEdge()
   }
   return crossed.length
 }

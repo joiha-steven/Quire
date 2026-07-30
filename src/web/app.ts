@@ -18,7 +18,7 @@ import { resolveTerm, tagText } from '@/content/taxonomy'
 import { t } from '@/i18n/i18n'
 import { foldAccents } from '@/utils'
 import { renderListing } from '@/web/listing'
-import { cached, listingPage, renderFeedBody } from '@/web/listing-page'
+import { cached, listingPage, notFoundPage, renderFeedBody } from '@/web/listing-page'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
 import { renderArticle } from '@/web/article'
 import { assetBody } from '@/web/assets'
@@ -121,7 +121,7 @@ export function createApp(): Hono {
 
   app.get('/page/:n', async (c) => {
     const page = pageNumber(c.req.param('n'))
-    if (page === null) return c.text('Not found', 404)
+    if (page === null) return notFoundPage()
     return cached(`/page/${page}`, () => home(page))()
   })
 
@@ -168,7 +168,7 @@ export function createApp(): Hono {
 
     app.get(`/${kind}/:slug/page/:n`, async (c) => {
       const page = pageNumber(c.req.param('n'))
-      if (page === null) return c.text('Not found', 404)
+      if (page === null) return notFoundPage()
       const slug = c.req.param('slug')
       return cached(`/${kind}/${slug}/page/${page}`, () => term(slug, page))()
     })

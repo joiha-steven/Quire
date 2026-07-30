@@ -45,3 +45,45 @@ export function writeRendered(key: string, html: string): void {
     /* see readRendered */
   }
 }
+
+/**
+ * How long a row is kept.
+ *
+ * Every deploy strands a generation of body rows, because the build commit is part of the
+ * body key — so the table grows with deploys as much as with writing, and nothing here was
+ * ever deleting. The rows are full HTML, so what grew was `quire.db` and every R2 snapshot
+ * taken of it.
+ */
+export const RENDER_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
+
+/**
+ * Rows per sweep. The delete scans `created_at`, which is not indexed, and this runtime has
+ * one thread: a first sweep over a table that has been filling for months must not be the
+ * request that blocks every reader. What is left over goes on the next tick.
+ */
+const PRUNE_BATCH = 5_000
+
+/**
+ * Delete rows older than `maxAgeMs`. Returns how many went.
+ *
+ * Age, not use: nothing records a read, and adding a `last_read` write to the read path
+ * would turn every cache HIT into a database write. The cost of getting it wrong is one
+ * re-render — the cache is content-addressed and self-healing, so a pruned row that was
+ * still hot comes straight back. There is deliberately no VACUUM: the database runs in WAL
+ * mode, the freed pages are reused by the next inserts, and a VACUUM here has cost this
+ * project a database before.
+ */
+export function pruneRendered(maxAgeMs = RENDER_CACHE_MAX_AGE_MS): number {
+  try {
+    // The subselect is how the batch is bounded: `delete ... limit` needs a SQLite compiled
+    // with SQLITE_ENABLE_UPDATE_DELETE_LIMIT, which is not something to depend on.
+    return run(
+      `delete from render_cache where key in (
+         select key from render_cache where created_at < ? limit ?
+       )`,
+      nowMs() - maxAgeMs, PRUNE_BATCH,
+    ).changes
+  } catch {
+    return 0 // see readRendered: a cache that cannot be swept is not a failed request
+  }
+}

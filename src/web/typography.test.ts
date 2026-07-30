@@ -45,6 +45,12 @@ describe('the public sheet', () => {
   it('sizes text only from role variables', () => {
     const literals = [...PUBLIC_CSS.matchAll(/font-size:\s*([^;}]+)/g)]
       .map((m) => m[1]!.trim())
+      // `max(16px,1em)` is exempt, and it is the one exemption worth naming: 16px there is
+      // not a type size, it is the threshold below which iOS Safari zooms the page when a
+      // field takes focus. It is a FLOOR over the inherited role rather than a replacement
+      // for it, so the owner's setting still decides the size everywhere above 16px, and it
+      // applies to form controls on phone widths only. A design size in px would still fail.
+      .filter((v) => v !== 'max(16px,1em)')
       .filter((v) => !/^var\(--fs-[a-z0-9]+\)$/.test(v) && v !== 'inherit' && !/^[\d.]+em$/.test(v))
     // What is left is the icon glyphs listed in scripts/checks/type-roles.ts.
     expect(literals.every((v) => /^[\d.]+rem$/.test(v))).toBe(true)

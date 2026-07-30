@@ -53,11 +53,14 @@ async function readFields(c: Context, names: string[]): Promise<{
  * Only a same-site ABSOLUTE PATH is honoured. A full URL here is the open-redirect that
  * turns a trustworthy sign-in page into a link an attacker can send: sign in on the real
  * site, get bounced somewhere else. `//evil.example` is rejected too — the browser reads a
- * protocol-relative URL as another origin, and it starts with a slash.
+ * protocol-relative URL as another origin, and it starts with a slash. `/\evil.example` is
+ * the same trick against a check that only knows about slashes: browsers normalise the
+ * backslash and leave the site just as readily. `safeReturnPath` in `web/comment-auth.ts`
+ * guards the identical pair, for the identical reason.
  */
 function safeNext(raw: string | undefined): string {
   if (raw === undefined || raw === '') return '/admin'
-  if (!raw.startsWith('/') || raw.startsWith('//')) return '/admin'
+  if (!raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) return '/admin'
   return raw
 }
 

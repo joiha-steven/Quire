@@ -207,7 +207,9 @@ describe('the redirect after signing in', () => {
   // An open redirect turns a trustworthy sign-in page into a link an attacker can send:
   // sign in on the real site, then get bounced somewhere else.
   it('refuses an absolute or protocol-relative next', async () => {
-    for (const next of ['https://evil.example/x', '//evil.example/x']) {
+    // `/\evil.example` is in the list because a check that only rejects `//` passes it and
+    // the browser normalises the backslash into exactly the same protocol-relative URL.
+    for (const next of ['https://evil.example/x', '//evil.example/x', '/\\evil.example/x']) {
       // Each password step mints a NEW ticket with a NEW secret, so the secret has to be
       // read from THIS response. Reading it once outside the loop made the enrol step 401
       // and the assertion below pass through a different path entirely.

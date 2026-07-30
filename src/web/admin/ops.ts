@@ -15,11 +15,12 @@ import { previewToken } from '@/content/preview'
 import { parseWxr } from '@/import/wordpress'
 import { finalizePendingThumbs, finalizePendingVariants } from '@/media/finalize'
 import { purgeExpiredSessions } from '@/auth/sessions'
+import { pruneRendered } from '@/render/render-cache'
 import {
   sweepScheduled, PUBLISH_TICK_LOOKBACK_MS, HOURLY_LOOKBACK_MS,
 } from '@/server/scheduled'
 import { maybeRunBackup } from '@/server/backup'
-import { purgeCloudflare } from '@/server/cdn'
+import { purgeEdge } from '@/server/edge-cache'
 import { clearCache } from '@/server/cache'
 import { clientIp, rateLimited } from '@/server/rate-limit'
 import { logActivity } from '@/server/activity'
@@ -159,7 +160,7 @@ export function publicOpsRoutes(): Hono {
     const doPurge = c.req.query('purge') === '1'
     if (doPurge) {
       clearCache()
-      await purgeCloudflare().catch(() => { /* the edge is best-effort */ })
+      await purgeEdge().catch(() => { /* the edge is best-effort */ })
     }
 
     // Each step is isolated: a finalize failure must not skip the publish sweep, and
@@ -193,6 +194,11 @@ export function publicOpsRoutes(): Hono {
       console.error(`[ERROR] cron session purge: ${(error as Error).message}`)
     }
 
+    // The render cache is insert-only for the same reason it needs no invalidation, so this
+    // is the only thing that ever removes a row from it. Bounded per tick, and it swallows
+    // its own failures, so it needs no isolation of its own.
+    const renderRows = pruneRendered()
+
     // Last, and isolated like the rest: a snapshot is the slowest thing in the tick (it
     // reads both databases and the whole uploads tree), and nothing above it should be
     // waiting on that or skipped by its failure.
@@ -204,7 +210,9 @@ export function publicOpsRoutes(): Hono {
       console.error(`[ERROR] cron backup: ${(error as Error).message}`)
     }
 
-    return json({ alive: true, purged: doPurge, finalized, thumbs, published, sessions, backup })
+    return json({
+      alive: true, purged: doPurge, finalized, thumbs, published, sessions, renderRows, backup,
+    })
   })
 
   // ----- the health probe -----------------------------------------------------

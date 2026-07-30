@@ -6,6 +6,80 @@ is `TASKS.md`). Keep entries short; the detail is in the commit.
 Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when this file
 passes its size cap. Rolling is a move, never a rewrite.
 
+
+## 2026-07-30 — a phone gets a page it can read, and the sheet stops shipping its own comments
+
+Audited the whole project against three questions the owner asked: whether the mono-minimal
+intent holds on both surfaces, whether the frontend is as light as it can be, and what bugs
+and dead weight are left. Then fixed what the audit found, mobile first, because the report
+that mattered was the owner's: the layout scrolled sideways.
+
+**The sideways scroll was the 404.** Not a stylesheet bug at all. Every public miss returned
+`text/plain`, and a plain-text body carries no viewport meta, so a phone laid two words out at
+the default 980px desktop width and let the reader pan. Measured at 390px: `/tag/lego`,
+`/page/2` and any unknown slug all reported `documentElement.clientWidth` of **980**, while
+the home page and every post reported 390. The strings for a real 404 page had existed in all
+six locales since the port and nothing ever rendered them. `notFoundPage()` now renders a miss
+in the site shell, dressed as an empty listing, and every HTML 404 goes through it. Re-measured:
+390px, no overflow. It is never cached in either cache.
+
+**The one real overflow was the search form.** `form.search` was written from the same shape as
+`form.subscribe` and lost its `min-width:0`, so the input would not shrink below its intrinsic
+size and pushed the button's right border off-screen (measured: `scrollWidth` 391 against a
+390 viewport, and both controls 78px tall because the label wrapped). It stacks on a phone now,
+like the sign-up form it was copied from.
+
+**The rest of the mobile work was measured, not guessed**, in a new `mobile.css.ts` appended
+last. Drawer rows 22px → **43px**, tag cloud 22px → **37px**, footer links 18px → **35px**;
+form controls floored at **16px** on phone widths (14.08px before, which is what makes iOS
+zoom the page on focus) and confirmed still 14.08px at 1440px, so the floor does not leak into
+the desktop. Copy-code is visible under `@media (hover:none)`; the drawer scrim has a faint
+dim, because two solid surfaces separated by one hairline gave the tap-to-close area no
+affordance at all; `100dvh` beside `100vh`; safe-area insets on the back-to-top button and the
+drawer. The IDE chrome's tokenised header buttons get `min-height:2.25rem` — that rule starts
+at 640px, which a phone in landscape clears while still being tapped with a thumb.
+
+**The sheet was 52% comment text.** See `docs/performance.md`: 65,645 bytes raw with 34,438 of
+comment, now 30,811 raw / **6,519 compressed against 20,903 live** — 14.4 KB off every cold
+visit. Minifying it is what surfaced the `ide.css.ts` comment that never opened, and with it a
+rule that had never applied since the IDE chrome shipped. `check:css-literal` counts comment
+delimiters now.
+
+**Contrast, discovery, keyboard.** `.term-count` carried `opacity:.6` over `--c-meta`, which
+measures **2.26:1** and fails AA at any size; it only ever looked acceptable because the IDE
+chrome resets the opacity, so the site the owner sees was never the one shipping the failure.
+Book mode's `--c-meta` was 3.30:1 on its paper (the running head and the page count, the two
+things a reader checks without stopping) and is now #6f6a5c at **4.93:1**. `/feed.xml` answered
+correctly and nothing on the site pointed at it: there is a `rel="alternate"` link now, gated
+on the same setting the route is. A skip link is the first tab stop on every public page, in
+`siteHeader` so both shells get it and the one-field sign-in page does not. One `:focus-visible`
+ring for the whole site, replacing the `outline:none` that had made the sign-up field the only
+control where keyboard focus vanished.
+
+**Admin.** Toasts are announced (`role="status"`, `alert` for a failure) and carry a glyph, so
+success and failure differ by more than inverted black and white. The `danger` button variant
+was byte-identical to `primary`, which made "Delete forever" the loudest control on its screen;
+it is outlined now, with primary's fill reserved for the action you came to do. Every admin
+field is floored at 16px on phone widths, same reason as the public side.
+
+**Security and dead weight** (the parts a subagent completed before the session limit cut it
+off): `safeNext` rejected `//host` but not `/\host`, which browsers normalise into a
+protocol-relative URL and follow off-site — its sibling `safeReturnPath` had guarded the pair
+correctly all along. `server/cdn.ts` is deleted: a second Cloudflare purge with no request
+timeout, three callers repointed at `purgeEdge`. `og.ts`'s two server-side fetches are bounded
+and no longer trust a Host header when `SITE_URL` is unset. `render_cache` was insert-only with
+nothing ever deleting; the hourly tick prunes it in bounded batches, with no VACUUM, because
+this database runs in WAL.
+
+Gate: `bun run check:all` exits 0, **1095 pass / 0 fail** across 85 files. CI has been green
+since 2026-07-29, so the "CI is red" item at the top of `TASKS.md` was already stale.
+
+**Not done, and not guessed at:** the escaper consolidation (`escapeHtml` is re-declared in 12
+files in a weaker three-replacement variant than the `utils.ts` export, which is the shape of a
+future XSS regression), the dead-code sweep (`comment-tree.ts`, five dead exports, four
+orphaned upload routes, two unused Tiptap dependencies), and the documentation drift — including
+two links in the live admin's Help screen that 404 because their targets moved under `v1/`.
+Those are listed in `TASKS.md`.
 ## 2026-07-30 (last) — every tab is two columns, and the public bar is gone
 
 **No tab is one column any more.** Two of seven behaving differently from the rest reads as a
@@ -572,105 +646,3 @@ tests, and the compression tests.
 scope), the instance data is still in `scripts/ops/`, and the seven-day watch on
 `old.manhhung.me` is still running.
 
-## 2026-07-29 — the MCP server advertised itself over http
-
-The owner went to connect a client and it failed. Two things were wrong, and only one of
-them was a bug.
-
-**The admin never shows the endpoint URL.** `McpFields.tsx` is a token manager and nothing
-else, so there is no link to copy: `https://<site>/api/mcp`. That is a gap in the UI, still
-open.
-
-**The discovery documents were served over https and advertised http.** The CDN terminates
-TLS and forwards to the origin in plain HTTP, so `new URL(c.req.url).origin` was
-`http://manhhung.me` and every URL in both `.well-known` documents carried it — the
-resource, the issuer, and the authorize, token and registration endpoints. A connector
-fetches the document over https, reads an issuer on http, and refuses the pair: RFC 8414 and
-RFC 9728 both require the issuer to match the origin the document was served from, exactly.
-That is the whole of why it would not connect.
-
-`origin()` honours `x-forwarded-proto` now and falls back to the request's own scheme, which
-is the truth for a direct install with no proxy. Three tests, including the fallback.
-
-Measured against the live site before the fix:
-
-    {"resource":"http://manhhung.me/api/mcp","authorization_servers":["http://manhhung.me"]}
-
-## 2026-07-29 — the connector connected and never showed a tool list
-
-Same evening, same feature. The OAuth flow completed cleanly — `register` 201, `authorize`
-302, `token` 200, then `POST /api/mcp 200` four times in the journal — so the client was
-talking to the server and being answered. It just never listed a tool.
-
-**The gzip added this afternoon.** `initialize` is under a kilobyte, so it fell below the
-1 KB floor and went out raw, and the handshake worked. `tools/list` is over it, so it went
-out gzipped, and the client reads that body itself rather than through a browser's HTTP
-stack. Connected, and silent.
-
-Nothing under `/api/` is compressed now. They are small payloads read by one caller, the
-saving was never the point of the change, and the risk is exactly this.
-
-The lesson is the shape of the bug rather than the bug: a size threshold means a feature can
-work for its small messages and fail for its large ones, so the failure looks like a
-different subsystem entirely.
-
-## 2026-07-29 — the tool list, actually: a notification the transport waited on forever
-
-The entry above is wrong about the cause. Excluding `/api/` from gzip was a real fix for a
-real hazard and it stays, but it was not why the tool list never came: the connector still
-spun, and then Claude reported the server unavailable.
-
-The v1 tree used `mcp-handler`; `src/web/admin/mcp-transport.ts` is the one piece of M3 that
-is a rewrite rather than a port. That is the only thing that differs between a version that
-worked and one that did not, and that is where it was.
-
-`SingleExchange.exchange` awaited a reply for EVERY message. A JSON-RPC notification has no
-`id` and is answered with nothing, so nothing ever resolved that promise. The only other
-thing that resolves it is `close()`, which the handler calls in its `finally` — unreachable
-while the handler is still parked on the await. So a notification did not merely wait, it
-deadlocked the request.
-
-The connector's first move after `initialize` is `notifications/initialized`. Every
-connection therefore completed its handshake, hung on the very next POST, and sat there.
-
-Measured before, with the handshake succeeding on the same connection:
-
-    INIT: {"result":{"protocolVersion":"2025-06-18",
-      "capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"quire",...}}}
-    NOTIFICATION: HUNG after 3013ms
-
-and after: `202` in 4ms. `capabilities.tools` was there the whole time, which retired the
-other hypothesis worth retiring.
-
-The regression test races the request against a timer, because a regression here HANGS, and
-a hanging test that eventually times out says far less than one that names the fault.
-
-Two lessons. The journal showed `POST /api/mcp 200` and I read that as every request being
-answered — a hung request logs nothing at all, and the 200s were the client's retries of the
-requests that DID return. Absence in a log is evidence and I treated it as silence. And when
-a rewritten seam sits between a version that worked and one that does not, read the seam
-first instead of the subsystems around it.
-
-## 2026-07-29 — the endpoint URL, and the nginx exception put back under git
-
-Two loose ends from the connector work, both about something being known and written
-nowhere.
-
-**The admin never said where to connect.** The MCP card was a toggle and a token manager,
-and a token is useless without an address. It now prints `<site>/api/mcp` with a copy button
-whenever the toggle is on. It prefers `settings.siteUrl` and falls back to the browser's
-origin, because a blank `siteUrl` is resolved from the environment and the admin cannot read
-that; the two agree on any ordinary install, and the fallback is the more useful of them
-when they do not, being reachable by definition.
-
-Looked at rather than assumed: driven headless with a session cookie set over CDP, the card
-renders `https://example.com/api/mcp` under a "Connection URL" heading, and the code box and
-the Copy button share a centre line to the pixel (both 1455).
-
-**The nginx exception was living only on the box.** `scripts/ops/nginx-manhhung.me.conf` is
-tracked and had drifted from what is actually deployed by exactly one block — the
-`/api/mcp/authorize` location added last night so the Approve button works. Moving the box
-would have lost it and the consent screen would have broken again with no clue why. The
-tracked copy is now byte-identical to the live file, and the rule is in `docs/mcp.md`
-alongside the trap that makes it necessary: an `add_header` inside a `location` REPLACES the
-inherited headers instead of adding to them.

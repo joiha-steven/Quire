@@ -8,8 +8,9 @@
 import { describe, expect, it, beforeEach, afterAll } from 'bun:test'
 import { freshDatabase, dropDatabase } from '@/test/db'
 import { db } from '@/store/db'
-import { all } from '@/store/query'
+import { all, run } from '@/store/query'
 import { renderPostContent } from '@/render/post-content'
+import { pruneRendered } from '@/render/render-cache'
 import { collapseBlob } from '@/media/blob'
 
 const DIR = './.tmp-test-body-cache'

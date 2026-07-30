@@ -120,7 +120,13 @@ export function siteHeader(settings: SiteSettings, opts: ChromeOptions): string 
   actions.push(`<button type="button" class="icon-btn rail-toggle" data-rail-toggle
  aria-expanded="false" aria-label="${escapeAttr(s.menu)}">${ICON.menu}${token(s.shortMenu)}</button>`)
 
+  // FIRST in the tab order on every public page, which is the whole point of it: without it
+  // a keyboard reader tabs through four header controls, the entire contents rail and the
+  // info panel before reaching the article. It lives here rather than in the two page shells
+  // because this is the first thing both of them render, and the sign-in page (which has one
+  // field and nothing to skip) does not call this function at all.
   return `<header class="site">
+<a class="skip-link" href="#content">${escapeHtml(s.skipToContent)}</a>
 <div class="site-bar">${siteTitle(settings)}<nav class="site-actions">${actions.join('')}</nav></div>${
     settings.showDescription && settings.description
       ? `<p class="tagline">${escapeHtml(settings.description)}</p>` : ''

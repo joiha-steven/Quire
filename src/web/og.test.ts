@@ -98,6 +98,34 @@ describe('GET /og', () => {
     const res = await get('/og?title=X&font=https://fonts.example.net/evil.woff')
     expect(res.status).toBe(200)
   })
+
+  it('refuses a loopback background even when the Host header claims to be this site', async () => {
+    // The hole under the same-origin test. With SITE_URL unset the origin is taken from the
+    // request, which the CALLER builds: `Host: 127.0.0.1:port` makes a loopback URL pass as
+    // same-origin and the server fetches it. `safeFetch` is what stops it, so the assertion
+    // is on the listener below — it must never be asked for anything.
+    const before = process.env.SITE_URL
+    delete process.env.SITE_URL
+    let hits = 0
+    const probe = Bun.serve({
+      port: 0,
+      fetch: () => {
+        hits++
+        return new Response('secret', { headers: { 'content-type': 'image/jpeg' } })
+      },
+    })
+    try {
+      const host = `127.0.0.1:${probe.port}`
+      const res = await app.request(`http://${host}/og?title=X&bg=http://${host}/bg.jpg`, {
+        headers: { host },
+      })
+      expect(res.status).toBe(200)
+      expect(hits).toBe(0)
+    } finally {
+      probe.stop(true)
+      if (before !== undefined) process.env.SITE_URL = before
+    }
+  })
 })
 
 describe('the card over a background image', () => {

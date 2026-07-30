@@ -45,7 +45,7 @@ files, about 6,500 lines. It keeps its tests.
 
 | Current | Destination | Change |
 |---|---|---|
-| `footnotes` `toc` `video` `inline-md` `comment-tree` `series-order` `paginate` `taxonomy` `ua` `utils` `slugs` `image` `mime` `cdn` `safe-fetch` `settings-sanitize` `redirect-path` `og` `preview` `wordpress-import` `themes` `email-brand` `newsletter-email` `comment-md` | same-named file under the matching folder | **none** |
+| `footnotes` `toc` `video` `inline-md` `comment-tree` `series-order` `paginate` `taxonomy` `ua` `utils` `slugs` `image` `mime` `safe-fetch` `settings-sanitize` `redirect-path` `og` `preview` `wordpress-import` `themes` `email-brand` `newsletter-email` `comment-md` | same-named file under the matching folder | **none** |
 | `db.ts` | `store/db.ts` | rewritten: `@supabase/postgrest-js` to `bun:sqlite`. 132 call sites across 28 files follow |
 | `posts` `pages` `revisions` `media` `files` `settings` `comments` `subscribers` `newsletter-log` `analytics` `activity` `redirects` `series` `integration-keys` `backup-state` | matching folder | query bodies rewritten, signatures and semantics unchanged |
 | `revalidate.ts` | `server/cache.ts` | collapses to one function, see below |

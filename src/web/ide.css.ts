@@ -61,7 +61,7 @@ html[data-ide-chrome=on] #comments .empty::before{content:none}
    The brackets are a shade LIGHTER than what they hold. They are punctuation, not the
    value, and at the same weight as the digits a meta line reads as a row of boxes rather
    than as a date followed by two figures. */
-   ONE bracket for every literal, and the term counts are in it too. They were a filled
+/* ONE bracket for every literal, and the term counts are in it too. They were a filled
    ring for one deploy, on the reasoning that a term cloud has no sequence to punctuate;
    the owner looked at it and said it was ugly, which settles it. Brackets everywhere is
    also the simpler rule to hold. */
@@ -140,7 +140,13 @@ html[data-ide-chrome=on] .tl-year-tag::after{content:"/";margin-left:-.5rem;colo
      own — so a WORD in it inherited the 18px BODY size and the row came out as five large
      words spread wide. The token is caption-sized (islands.css.ts) and the box shrinks to
      it: this row is the quietest chrome on the page, not a menu bar. */
-  html[data-ide-chrome=on] .icon-btn{width:auto;height:auto;padding:.15rem .2rem}
+  /* min-height, though: the box shrinking to caption-sized text left the four header
+     controls 24px tall, and this rule starts at 640px, which a phone in landscape and a
+     small tablet both clear while still being tapped with a thumb. The row stays visually
+     the same height, because the text is centred in a box that is only taller than it
+     needs to be. */
+  html[data-ide-chrome=on] .icon-btn{width:auto;height:auto;padding:.15rem .2rem;
+    min-height:2.25rem}
   html[data-ide-chrome=on] .site-actions{gap:.4rem;margin-right:-.2rem}
 }
 

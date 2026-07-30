@@ -22,7 +22,7 @@ import { collapseBlob } from '@/media/blob'
 import { restoreFilesBatch, purgeFilesBatch, emptyFilesTrash } from '@/media/files'
 import { restoreComment, purgeComment, emptyCommentsTrash } from '@/comments/comments'
 import { getRedirects, saveRedirect, deleteRedirect, RedirectInputError } from '@/server/redirects'
-import { purgeCloudflare } from '@/server/cdn'
+import { purgeEdge } from '@/server/edge-cache'
 import { clearCache } from '@/server/cache'
 import { clearActivity, getActivity, logActivity, type ActivityAction } from '@/server/activity'
 import { fail, json } from '@/web/api'
@@ -160,7 +160,7 @@ export function siteRoutes() {
     clearCache()
     // The origin cache is a Map and is already empty; what is left to purge is the edge,
     // which this server does not control and cannot re-render.
-    await purgeCloudflare()
+    await purgeEdge()
     void logActivity('cache.clear')
     return json({ purged: true })
   })
