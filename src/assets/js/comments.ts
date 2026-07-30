@@ -130,30 +130,42 @@ function buildForm(postSlug: string, parentId: number | null): HTMLFormElement {
     return el('p', { class: 'comment-field' }, text, input)
   }
 
-  const area = el('textarea', { name: 'content', rows: '4', required: 'required' })
-  area.setAttribute('aria-label', label('commentBody'))
+  // A visible label, not just an `aria-label`. The textarea was the one control on the form
+  // with nothing above it, so it read as a stray box rather than as the field the whole form
+  // exists for. The string is already in every locale, which is why this costs nothing.
+  const areaId = `c-content-${parentId ?? 'root'}`
+  const area = el('textarea', { name: 'content', id: areaId, rows: '5', required: 'required' })
+  const areaLabel = el('label', { for: areaId })
+  areaLabel.textContent = label('commentBody')
+  const bodyField = el('p', { class: 'comment-field comment-body-field' }, areaLabel, area)
 
   const button = el('button', { type: 'submit' })
   button.textContent = label('commentSubmit')
+  // The submit sits in a row of its own so the Turnstile widget can share it. Left on their
+  // own they were two unrelated objects stacked with dead space between them.
+  const actions = el('div', { class: 'comment-actions' }, button)
 
   const root = document.querySelector<HTMLElement>('#comments')
   const identity = root ? identityRow(root, parentId) : null
   // A signed-in reader is not asked for the three things Google already answered. The
   // server ignores them for that reader anyway, so leaving them on screen would be asking
   // for input that goes nowhere.
+  // Grouped in one element so the three of them can share a grid: name and email are short
+  // fields and were each stretching the full reading width, which is what made a three-field
+  // form look like a page of empty boxes.
   const details = signedInAs === null
-    ? [
+    ? [el('div', { class: 'comment-fields' },
         field('name', 'text', 'commentName', true),
         field('email', 'email', 'commentEmail', true),
         field('website', 'url', 'commentWebsite', false),
-      ]
+      )]
     : []
 
   const form = el('form', { class: 'comment-form' },
     ...(identity ? [identity] : []),
     ...details,
-    area,
-    button,
+    bodyField,
+    actions,
     el('p', { class: 'comment-status', role: 'status' }),
   ) as HTMLFormElement
 

@@ -82,8 +82,13 @@ const BUDGET: Record<string, number> = {
   // frozen tree had between spreads. Raised to 11,000 for comment sign-in: an identity
   // strip, the second fetch that fills it, and a sign-out. That cost is paid by every
   // reader of every post, including the ones who will never sign in, which is why it is
-  // written down here rather than absorbed.
-  'post.js': 11_000,
+  // written down here rather than absorbed. Raised to 11,200 for the comment form's layout:
+  // a visible label on the textarea (the one control with nothing above it), a wrapper so
+  // the three short detail fields can share a grid instead of each spanning the reading
+  // width, and an actions row so the Turnstile widget and the submit stop being two objects
+  // stacked with dead space between them. 200 bytes for the section reading as part of the
+  // site rather than as something pasted into it.
+  'post.js': 11_200,
   // /login only, and NOT loaded with core.js: the sign-in page carries no beacon, no
   // search overlay and no listing controls, so it pays for the reveal toggle, the caps-lock
   // warning and the one-time-code paste, and nothing else.

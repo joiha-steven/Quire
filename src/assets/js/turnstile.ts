@@ -57,7 +57,13 @@ export function mountTurnstile(form: HTMLFormElement, siteKey: string): void {
   const token = document.createElement('input')
   token.type = 'hidden'
   token.name = 'turnstileToken'
-  form.insertBefore(holder, form.querySelector('button'))
+  // Into the actions row, beside the submit, rather than as a block of its own above it.
+  // `insertBefore` needs a DIRECT child, so the anchor has to be the button's own parent:
+  // reading the button off the form while inserting into the form throws once the button is
+  // nested, which is exactly what the widget row did the first time.
+  const actions = form.querySelector('.comment-actions')
+  const anchor: Element = actions ?? form
+  anchor.insertBefore(holder, anchor.querySelector('button'))
   form.appendChild(token)
 
   void load().then(() => {

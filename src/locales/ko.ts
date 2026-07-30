@@ -97,7 +97,7 @@ const ko = {
   commentEmail: '이메일',
   commentEmailNote: '공개되지 않음',
   commentWebsite: '웹사이트 (선택)',
-  commentBody: '댓글 작성…',
+  commentBody: '댓글 내용',
   commentFormatHint: '**굵게**, *기울임*',
   commentSubmit: '댓글 등록',
   commentSubmitting: '등록 중…',

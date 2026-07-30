@@ -554,6 +554,16 @@ Text-only reader comments, **off by default** (`settings.comments.enabled`). Ide
 manual (name + email + optional website, optionally behind Cloudflare Turnstile) or a signed-in
 Google account.
 
+- **The form is a card, on the same terms as the newsletter block above it** (border, radius and
+  padding all match `.subscribe-card`). Until 2026-07-31 it was the one thing on a post with no
+  boundary at all: a Google button, three fields, a textarea, a Turnstile widget and a submit,
+  each floating separately on the page background, which is what made the section read as pasted
+  in from somewhere else. Name and email now share a two-column grid (they were each spanning the
+  full reading width, so a three-field form looked like a column of wide empty boxes), the
+  textarea has a VISIBLE label rather than only an `aria-label`, and the Turnstile widget shares
+  one row with the submit. Everything collapses to a single column below 640px. A reply form
+  opens inside the thread and drops the border, because a card inside a card boxes a box.
+
 - **Instant, never cached — by design.** The page itself is cached; the comment block is an
   island (`assets/js/comments.ts`) that fetches `/api/comments?post=<slug>`, and that route is
   refused a shared cache like everything under `/api`, so its read is always live. A new comment

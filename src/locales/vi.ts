@@ -97,7 +97,7 @@ const vi = {
   commentEmail: 'Email',
   commentEmailNote: 'Không hiển thị',
   commentWebsite: 'Website (không bắt buộc)',
-  commentBody: 'Viết bình luận…',
+  commentBody: 'Nội dung bình luận',
   commentFormatHint: '**đậm**, *nghiêng*',
   commentSubmit: 'Gửi bình luận',
   commentSubmitting: 'Đang gửi…',

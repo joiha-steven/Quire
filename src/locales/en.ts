@@ -97,7 +97,7 @@ const en = {
   commentEmail: 'Email',
   commentEmailNote: 'Not published',
   commentWebsite: 'Website (optional)',
-  commentBody: 'Write a comment…',
+  commentBody: 'Your comment',
   commentFormatHint: '**bold**, *italic*',
   commentSubmit: 'Post comment',
   commentSubmitting: 'Posting…',

@@ -97,7 +97,7 @@ const de = {
   commentEmail: 'E-Mail',
   commentEmailNote: 'Nicht veröffentlicht',
   commentWebsite: 'Website (optional)',
-  commentBody: 'Kommentar schreiben…',
+  commentBody: 'Dein Kommentar',
   commentFormatHint: '**fett**, *kursiv*',
   commentSubmit: 'Kommentar senden',
   commentSubmitting: 'Senden…',

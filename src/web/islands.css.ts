@@ -301,9 +301,14 @@ form.subscribe button:disabled{opacity:.5}
 #comments h2{font-size:var(--fs-h3);line-height:var(--lh-h3);letter-spacing:var(--ls-h3);
   color:var(--c-heading);font-weight:600;margin:0 0 1.5rem}
 .comment-list,.comment-replies{list-style:none;padding:0;margin:0}
-.comment-replies{margin-left:1.25rem;padding-left:1rem;border-left:1px solid var(--c-rule)}
-.comment{margin:0 0 1.5rem}
-.comment-meta{color:var(--c-meta);margin:0 0 .35rem}
+/* Structure from a rule between top-level comments, not from margins alone. A thread with
+   only whitespace between entries reads as one long block, and the reply indent was too
+   shallow to say which entry a reply belonged to. */
+.comment{margin:0}
+.comment-list>.comment+.comment{border-top:1px solid var(--c-rule);margin-top:1.5rem;padding-top:1.5rem}
+.comment-replies{margin:1.25rem 0 0;padding-left:1.25rem;border-left:1px solid var(--c-rule)}
+.comment-replies .comment+.comment{margin-top:1.25rem}
+.comment-meta{color:var(--c-meta);margin:0 0 .5rem}
 .comment-name{color:var(--c-heading);font-weight:600}
 /* A comment is somebody's WORDS, so it is set in the reading face like the article is —
    the frozen tree did this and the port dropped it, which left every comment in the chrome
@@ -313,24 +318,49 @@ form.subscribe button:disabled{opacity:.5}
 .comment-body{font-family:var(--font-reading);letter-spacing:var(--ls-small);
   color:var(--c-text)}
 .comment-body p:last-child{margin-bottom:0}
-.comment-reply{border:0;background:none;padding:0;margin-top:.35rem;color:var(--c-meta);
+.comment-reply{border:0;background:none;padding:0;margin-top:.5rem;color:var(--c-meta);
   font:inherit;cursor:pointer;text-decoration:underline}
 .comment-reply:hover{color:var(--c-heading)}
 /* The empty state is meta, not body: "no comments yet" is the absence of a conversation,
    and setting it at reading size made it the loudest thing under the article. */
 #comments .empty{color:var(--c-meta);margin:0}
-.comment-form{margin-top:1.5rem}
-.comment-field{margin:0 0 .75rem}
-.comment-field label{display:block;color:var(--c-meta);margin-bottom:.25rem}
+/* The form is a CARD, on the same terms as the newsletter block sitting directly above it
+   on every post: same border, same radius, same padding. Before this it was the only thing
+   on the page with no boundary at all — a Google button, three fields, a textarea, a
+   Turnstile widget and a submit, each floating separately on the page background. That is
+   what made the section read as belonging to some other site. */
+.comment-form{margin-top:2rem;border:1px solid var(--c-rule);border-radius:.5rem;padding:1.25rem}
+/* A reply form opens INSIDE the thread, where a second bordered card boxes a box. */
+.comment .comment-form{margin-top:.75rem;padding:0;border:0}
+/* Name and email are short. Full width each, they turned a three-field form into a column
+   of wide empty boxes; side by side they read as one block of details. */
+.comment-fields{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.comment-fields .comment-field:last-child{grid-column:1/-1}
+@media (max-width:639px){.comment-fields{grid-template-columns:1fr}}
+.comment-field{margin:0}
+.comment-field label{display:block;color:var(--c-meta);margin-bottom:.375rem}
+.comment-body-field{margin-top:1rem}
 .comment-form input,.comment-form textarea{width:100%;padding:.5rem .75rem;border:1px solid var(--c-rule);
   border-radius:.5rem;background:var(--c-bg);color:var(--c-text);font:inherit}
-.comment-form button{margin-top:.75rem;padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.5rem;
-  background:var(--c-bg);color:var(--c-heading);font:inherit;cursor:pointer}
+/* The focus treatment the newsletter field already had, applied to the same-looking field. */
+.comment-form input:focus,.comment-form textarea:focus{border-color:var(--c-heading)}
+.comment-form textarea{display:block;resize:vertical}
+/* Verification and the action share one line, the submit pushed to the far end. It wraps
+   below 640px because the Turnstile widget is a fixed 300px and will not share the row. */
+.comment-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin-top:1rem}
+.comment-form .comment-actions button{margin:0 0 0 auto}
+@media (max-width:639px){.comment-form .comment-actions button{margin-left:0}}
+.comment-form button{padding:.5rem 1rem;border:1px solid var(--c-rule);border-radius:.5rem;
+  background:var(--c-bg);color:var(--c-heading);font:inherit;font-weight:500;cursor:pointer}
+.comment-form button:hover{background:var(--c-rule)}
 .comment-status:empty{display:none}
-.comment-status{color:var(--c-meta);margin:.5rem 0 0}
+.comment-status{color:var(--c-meta);margin:.75rem 0 0}
 /* The identity strip. The sign-in control is an anchor and the sign-out control a button,
    so both are given the surrounding type explicitly rather than a UA default. */
-.comment-identity{margin:0 0 .75rem;color:var(--c-meta)}
+/* Ruled off from the fields below it, so the two ways in read as a choice rather than as a
+   button that happens to sit above a form. */
+.comment-identity{margin:0 0 1rem;padding-bottom:1rem;border-bottom:1px solid var(--c-rule);
+  color:var(--c-meta)}
 .comment-identity strong{color:var(--c-heading);font-weight:600}
 .comment-google{display:inline-block;padding:.5rem 1rem;border:1px solid var(--c-rule);
   border-radius:.5rem;color:var(--c-heading);font:inherit;text-decoration:none}

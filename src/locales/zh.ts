@@ -97,7 +97,7 @@ const zh = {
   commentEmail: '邮箱',
   commentEmailNote: '不会公开',
   commentWebsite: '网站（选填）',
-  commentBody: '写下评论…',
+  commentBody: '评论内容',
   commentFormatHint: '**加粗**、*斜体*',
   commentSubmit: '发表评论',
   commentSubmitting: '发送中…',

@@ -97,7 +97,7 @@ const ja = {
   commentEmail: 'メール',
   commentEmailNote: '公開されません',
   commentWebsite: 'ウェブサイト（任意）',
-  commentBody: 'コメントを書く…',
+  commentBody: 'コメント',
   commentFormatHint: '**太字**、*斜体*',
   commentSubmit: 'コメントを送信',
   commentSubmitting: '送信中…',
