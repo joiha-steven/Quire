@@ -3,6 +3,13 @@
 // HTML-escape every special char so nothing user/author-typed becomes markup. The
 // escape-first half of the limited-markdown security model (Invariant 5): shared by
 // comment-md + inline-md, which then inject only their own whitelisted tags.
+//
+// Both quote forms are escaped, which is what makes this safe inside an attribute as well as
+// in text. That is not a detail: a dozen renderers had grown their OWN three-replacement
+// `escapeHtml` covering `& < >` alone, and one of them was interpolating the reader's search
+// query straight into `value="…"`. `/search?q=" onfocus=alert(1) autofocus x="` came back as
+// a live event handler on the public page. Two functions with one name, and the weaker one
+// reached for by whoever wrote the next line.
 export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -11,6 +18,15 @@ export function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 }
+
+/**
+ * The same escaping, named for the place it is going.
+ *
+ * An alias on purpose: the distinction that matters is not what the two functions DO, it is
+ * that a reader of the call site can see which context the value lands in. Where they differ
+ * is where the bug was, so here they cannot.
+ */
+export const escapeAttr = escapeHtml
 
 // Convert arbitrary text to a URL-safe slug (supports Vietnamese diacritics).
 export function slugify(input: string): string {

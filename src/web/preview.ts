@@ -17,8 +17,11 @@ import { renderPostContent } from '@/render/post-content'
 import { renderDocument, pageStyles } from '@/web/layout'
 import { PUBLIC_SHEET } from '@/web/assets'
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+// The canonical pair rather than a private three-replacement copy, for the reason written out
+// in `web/search-page.ts`: the copy did not escape a quote and line 34 puts a value in an
+// attribute. Nothing reaches that one but an ISO date, so it was not exploitable here. It was
+// the same wrong shape, which is what the next person copies.
+import { escapeAttr, escapeHtml } from '@/utils'
 
 export async function handlePreview(c: Context): Promise<Response> {
   // Typed as optional because a bare `Context` does not know the route's shape.
@@ -31,7 +34,7 @@ export async function handlePreview(c: Context): Promise<Response> {
 
   const body = await renderPostContent({ markdown: entry.content })
   const meta = post
-    ? `<p class="meta"><time datetime="${escapeHtml(post.date)}">${
+    ? `<p class="meta"><time datetime="${escapeAttr(post.date)}">${
         escapeHtml(formatDate(post.date, settings.language))}</time></p>`
     : ''
 

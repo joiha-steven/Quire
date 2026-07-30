@@ -127,3 +127,30 @@ describe('what a shared cache is told about the machine-readable surfaces', () =
     expect(res.headers.get('cache-control')).toBe('private, no-store')
   })
 })
+
+describe('the reader\'s own text, put back into the page', () => {
+  // A live reflected XSS, found on 2026-07-30 and reproduced against a local instance before
+  // it was fixed: `search-page.ts` had grown its own escaper covering `& < >` and nothing
+  // else, and it interpolated the query into value="…". The response carried
+  // `value="" onfocus=alert(1) autofocus x=""` — an event handler that fires on load, on a
+  // public page, from a link anybody can send.
+  it('cannot break out of the search field to add an event handler', async () => {
+    const res = await get('/search?q=' + encodeURIComponent('" onfocus=alert(1) autofocus x="'))
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    const input = /<input type="search"[^>]*>/.exec(html)?.[0] ?? ''
+    // The whole payload is INSIDE the value, entities and all, so `onfocus=` is text the
+    // reader typed rather than an attribute the browser will honour.
+    expect(input).toContain('value="&quot; onfocus=alert(1) autofocus x=&quot;"')
+    // Four attributes (type, name, value, aria-label), so eight quote characters. Breaking out
+    // of the value adds more, which is the failure this asserts against without depending on
+    // what the payload happens to be.
+    expect((input.match(/"/g) ?? []).length).toBe(8)
+  })
+
+  it('escapes a tag in the query rather than rendering it', async () => {
+    const html = await (await get('/search?q=' + encodeURIComponent('<img src=x onerror=alert(1)>'))).text()
+    expect(html).not.toContain('<img src=x')
+    expect(html).toContain('&lt;img')
+  })
+})

@@ -7,6 +7,44 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-30 (later) — a reflected XSS on the public search page
+
+Found while consolidating the HTML escapers, which is the one thing on the audit's list that
+was filed as tidying. It was not tidying.
+
+`web/search-page.ts` had grown its own `escapeHtml` covering `& < >` and nothing else, and
+line 45 interpolates the reader's query into an attribute:
+
+    <input type="search" name="q" value="${escapeHtml(q)}" ...>
+
+So `/search?q=" onfocus=alert(1) autofocus x="` came back as
+
+    <input type="search" name="q" value="" onfocus=alert(1) autofocus x="" aria-label="Search">
+
+which is an event handler that fires on load, on a public page, from a link anybody can send.
+Reproduced against a local instance on port 3199 before anything was changed, never against
+production. `<` and `>` were escaped, so a script TAG could not be injected; the quote was all
+it took, and the weak escaper was the only reason it was there.
+
+Fixed by importing the canonical pair from `utils.ts`, which escapes both quote forms, and
+`utils.ts` now exports `escapeAttr` as a named alias so a call site reads as the context it is
+writing into. `preview.ts` had the identical shape on a `datetime` attribute, unexploitable
+because only an ISO date reaches it, and is fixed the same way. Two regression tests: the
+payload must stay inside the value, asserted by the attribute's own quote count rather than by
+the payload's text, and a tag in the query must come back as an entity.
+
+Then checked the whole tree rather than assuming: every other attribute interpolation in every
+file that declares a private escaper already goes through that file's `escapeAttr`. So these
+two were the only reachable instances, and what remains is the tidying the task was originally
+filed as. That is now written down as such in `TASKS.md`, with the note that the strong escaper
+also escapes an apostrophe and will therefore move the golden output.
+
+The lesson is the one the audit stated and I under-rated: two functions with one name, where
+the difference is which characters are escaped, is not a style problem. The weaker one gets
+reached for by whoever writes the next line, and nothing fails when they do.
+
+check:all exits 0, 1096 pass.
+
 ## 2026-07-30 — a phone gets a page it can read, and the sheet stops shipping its own comments
 
 Audited the whole project against three questions the owner asked: whether the mono-minimal

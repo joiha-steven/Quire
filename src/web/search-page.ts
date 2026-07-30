@@ -16,8 +16,12 @@ import { clientIp, rateLimited } from '@/server/rate-limit'
 import { renderListing } from '@/web/listing'
 import { listingPage } from '@/web/listing-page'
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+// The canonical pair, NOT a private copy. The copy that used to live here escaped `& < >`
+// and nothing else, and line 45 interpolates the reader's own query into an attribute:
+// `/search?q=" onfocus=alert(1) autofocus x="` came back as
+// `value="" onfocus=alert(1) autofocus x=""`, which is a live event handler on a public page.
+// Reproduced against a local instance before this line was written; there is a test for it.
+import { escapeAttr, escapeHtml } from '@/utils'
 
 /** Matches `/api/search`. One feature, one cap, whichever half of it a reader reaches. */
 const PER_MINUTE = 60
@@ -42,7 +46,7 @@ export async function handleSearchPage(c: Context): Promise<Response> {
     empty: q ? tx.searchEmpty : tx.searchHint,
   }, settings)
   const form = `<form class="search" action="/search" method="get" role="search">
-<input type="search" name="q" value="${escapeHtml(q)}" aria-label="${escapeHtml(tx.search)}">
+<input type="search" name="q" value="${escapeAttr(q)}" aria-label="${escapeAttr(tx.search)}">
 <button type="submit">${escapeHtml(tx.search)}</button>
 </form>`
   return c.html(await listingPage({

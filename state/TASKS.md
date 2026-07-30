@@ -4,15 +4,19 @@ In order. A task leaves this file when it is done and lands in `WORKLOG.md`.
 
 ## Now
 
-- [ ] **Consolidate the HTML escapers.** `utils.ts` exports a five-replacement `escapeHtml`
-      (`& < > " '`) and a WEAKER three-replacement copy is re-declared privately in twelve
-      files (`web/app.ts`, `article.ts`, `chrome.ts`, `layout.ts`, `listing.ts`,
-      `login-page.ts`, `post-info.ts`, `preview.ts`, `search-page.ts`, `sidebar.ts`,
-      `admin/news.ts`, `render/post-content.ts`), plus nine `escapeAttr` copies. Two escapers
-      with different semantics under one name is the shape of an XSS regression: the next
-      person to move a call site between files silently changes which characters are escaped.
-      Import the canonical one. `post-content.ts` is inside the golden's blast radius, so run
-      the golden compare — if the output moves, stop rather than re-baselining.
+- [ ] **Consolidate the remaining HTML escapers.** The hazard this task was written for has
+      already fired once and is fixed: `search-page.ts` reflected the query into `value="…"`
+      through a three-replacement escaper and produced a live event handler
+      (2026-07-30, see `WORKLOG.md`). `search-page.ts` and `preview.ts` now import the
+      canonical pair from `utils.ts`; **the other ten files still declare their own**
+      (`web/app.ts`, `article.ts`, `chrome.ts`, `layout.ts`, `listing.ts`, `login-page.ts`,
+      `post-info.ts`, `sidebar.ts`, `admin/news.ts`, `render/post-content.ts`), and each of
+      those uses its local `escapeAttr` correctly for attributes today — verified by grepping
+      every attribute interpolation. So what is left is tidying, not a hole: import the
+      canonical pair everywhere so the weak variant cannot be reached for again.
+      `post-content.ts` is inside the golden's blast radius, so run the golden compare; the
+      strong escaper also escapes `'`, so a title or alt text with an apostrophe WILL move the
+      output. Decide that deliberately rather than re-baselining on autopilot.
 - [ ] **Fix the two links in the live admin's Help screen.**
       `admin/components/HelpSections.tsx` builds GitHub URLs for `docs/self-host-native.md`
       and `CHECKLIST.md`; both moved under `v1/` in the flatten and both 404 today. This is
