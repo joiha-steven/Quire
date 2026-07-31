@@ -139,7 +139,10 @@ not be one. It caught a forgotten `/api/auth/enrol/done` the first time it ran.
 2. **Posts and pages share one `/{slug}` namespace.** `ensureSlugFree` on create and
    rename; trashed rows still reserve their slug.
 3. **Image refs are stored store-relative.** `collapseBlob` on write, `expandBlob` on
-   read, in the data layer only.
+   read, in the data layer only. Both anchor the `/uploads/` prefix to where a URL
+   BEGINS — string start, or right after `](` / `src="` / `href="`. Stripping it
+   wherever it appears also eats the segment out of a foreign URL, and every WordPress
+   site serves images from `/wp-content/uploads/…`.
 4. **Write routes are owner-gated by router-group membership**, not by a per-handler
    check.
 5. **Raw HTML in markdown is escaped, never executed.** `marked` with the existing

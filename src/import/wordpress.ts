@@ -138,7 +138,12 @@ export function parseWxr(xml: string, now: string): WxrResult {
     posts.push({
       title,
       slug,
-      date: toIso(item['wp:post_date_gmt'] ?? item['wp:post_date'], now),
+      // WordPress leaves `post_date_gmt` as "0000-00-00 00:00:00" on posts that were never
+      // published, so `??` would take that zero date and every draft would import dated
+      // today. Fall back to the local `post_date`, which WordPress does fill in. It carries
+      // no zone, so it is read as UTC — off by the site's offset, but a draft keeping its
+      // real month is worth more than the hours.
+      date: toIso(item['wp:post_date_gmt'], toIso(item['wp:post_date'], now)),
       status: mappedStatus,
       categories: [...new Set(cats)],
       tags: [...new Set(tags)],

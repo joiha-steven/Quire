@@ -7,6 +7,33 @@ Older entries roll into [`worklog/`](worklog/2026-07-quire-2-rewrite.md) when th
 passes its size cap. Rolling is a move, never a rewrite.
 
 
+## 2026-07-31: importing a real WordPress site broke two things nobody had run into
+
+Migrated a 58-post WordPress blog into a second Quire instance, and doing it for real
+surfaced two bugs that every synthetic test had missed.
+
+**`collapseBlob` was eating a segment out of other people's URLs.** The prefix regex was a
+global `/(?:https?:\/\/[^/]+)?\/uploads\//gi`, so it matched `/uploads/` anywhere in a
+string, not only where a URL starts. Every WordPress site serves images from
+`/wp-content/uploads/…`, so saving an imported post rewrote
+`edcmeo.com/wp-content/uploads/photo.jpg` to `edcmeo.com/wp-contentphoto.jpg` — 252 images
+pointing at files that had never existed, in silence, on write. It now anchors the same way
+`expandWith` already did: string start, or right after `](` / `src="` / `href="`. The old
+tests all passed because every fixture used our own `/uploads/` URL, where the bug is
+invisible.
+
+**Every imported draft was dated today.** `toIso(item['wp:post_date_gmt'] ?? item['wp:post_date'])`
+looks like a fallback chain and is not one: WordPress fills `post_date_gmt` with
+`0000-00-00 00:00:00` on anything never published, so `??` took the zero and the function
+fell through to `now`. Thirteen drafts written over fourteen months all landed on the same
+afternoon. Nested the two `toIso` calls instead.
+
+`src/import/wordpress.ts` had no test file at all; it has twelve now, including both
+regressions. The import and image-rehost tooling stayed OUT of the repo — `conventions.md`
+says the WordPress import is an in-app feature and not a script, and one migration is not a
+reason to reverse that.
+
+
 ## 2026-07-31 (last): a contributor has somewhere to land
 
 Putting the archive banner on `v1/CONTRIBUTING.md` left the repository with no contributing

@@ -634,10 +634,12 @@ Google account.
 
 - **One-click import** from a WordPress export (`Tools → Export → All content` = a WXR `.xml`).
   `ImportFields` uploads the file (multipart) to owner-gated `POST /api/import/wordpress`.
-- **`parseWxr(xml, now)` is PURE** (no I/O; unit-tested in `wordpress-import.test.ts`): each `item`
+- **`parseWxr(xml, now)` is PURE** (no I/O; unit-tested in `src/import/wordpress.test.ts`): each `item`
   with `wp:post_type` post/page and a live status → a post/page. HTML `content:encoded` → Markdown
   (`turndown` + GFM), `<figure><figcaption>` folded INTO the image alt (Quire renders captions from
-  alt). Categories/tags split by `@_domain`, `Uncategorized` dropped; dates via `wp:post_date_gmt`;
+  alt). Categories/tags split by `@_domain`, `Uncategorized` dropped; dates via `wp:post_date_gmt`
+  **falling back to `wp:post_date`** (WordPress leaves the GMT date as `0000-00-00` on anything
+  never published, so drafts would otherwise all import dated today) and then to `now`;
   status `publish`→`published` else `draft`; excerpt from `excerpt:encoded` or `deriveExcerpt`.
 - **The route persists** via `savePost`/`savePage` — new content is ADDED, a slug that collides with
   existing content gets a numeric suffix (nothing overwritten). One `clearCache()` at the

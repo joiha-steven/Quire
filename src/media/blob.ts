@@ -12,7 +12,16 @@ const LOCAL_BASE = '/uploads' // serving-route prefix; also the public URL prefi
 
 // Strip the `/uploads/` prefix (with or without an origin) → store-relative pathname,
 // so stored content carries no origin and renders after a host change (Invariant 3).
-const STORE_PREFIX_RE = /(?:https?:\/\/[^/]+)?\/uploads\//gi
+//
+// The prefix only counts where a URL BEGINS: at the start of the string, or right after
+// `](` / `src="` / `href="`, mirroring how expandWith() anchors. An unanchored global
+// `/uploads/` also matches mid-path in somebody else's URL, and every WordPress site
+// serves its images from `/wp-content/uploads/…` — collapsing that silently rewrote
+// imported posts to point at `…/wp-contentphoto.jpg`, an image that does not exist.
+const STORE_PREFIX = String.raw`(?:https?:\/\/[^/\s"')<]+)?\/uploads\/`
+const STORE_PREFIX_HEAD_RE = new RegExp(`^${STORE_PREFIX}`, 'i')
+const STORE_PREFIX_MD_RE = new RegExp(`(\\]\\()${STORE_PREFIX}`, 'gi')
+const STORE_PREFIX_ATTR_RE = new RegExp(`((?:src|href)=["'])${STORE_PREFIX}`, 'gi')
 
 // Expand store-relative `media/`/`files/` refs to `${base}/...` (idempotent;
 // external links + body text outside link/src/href positions untouched).
@@ -32,7 +41,10 @@ export function blobUrl(pathname: string): string {
 
 // Persist form: strip the store prefix → store-relative pathname. Idempotent.
 export function collapseBlob(s: string): string {
-  return s.replace(STORE_PREFIX_RE, '')
+  return s
+    .replace(STORE_PREFIX_HEAD_RE, '')
+    .replace(STORE_PREFIX_MD_RE, '$1')
+    .replace(STORE_PREFIX_ATTR_RE, '$1')
 }
 
 // Render form: pathname → public URL. Idempotent; external links untouched.
