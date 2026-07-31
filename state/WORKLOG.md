@@ -580,3 +580,11 @@ never reaches an HTML context, and its input is HTML we generated. Dismissed, no
 
 Also: an explicit `permissions: contents: read` on the CI workflow, and `drive.ts` resolves
 its callback to a value and checks it before calling. Neither changes behaviour.
+
+**Deployed.** The box was on `55e8eeb`, so this shipped the WordPress-import and blob work
+from the previous session alongside it. Both databases snapshotted first (`vacuum into`,
+49 MB), the two `dist` directories moved to `/tmp` before extracting, `chown quire2`,
+restart. `35072a1` is live: 30 files in `src/admin/dist` and 3 in `src/assets/dist`, the
+counts the runbook expects. Verified at the origin, not through the CDN: health 200,
+`/admin` 302, and the unsubscribe page now URL-encodes a `"><script>` token into its form
+action with nothing raw leaking. Edge cache purged. No errors in the journal.
