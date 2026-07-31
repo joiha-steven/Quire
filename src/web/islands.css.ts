@@ -312,11 +312,17 @@ form.subscribe button:disabled{opacity:.5}
 .comment-name{color:var(--c-heading);font-weight:600}
 /* A comment is somebody's WORDS, so it is set in the reading face like the article is —
    the frozen tree did this and the port dropped it, which left every comment in the chrome
-   font. On this site that is JetBrains Mono, so the thread was rendering as monospace. */
-/* Tracking too, not just the family: #comments is chrome and carries the mono-chrome
-   correction, which a comment written in the reading face has no business inheriting. */
-.comment-body{font-family:var(--font-reading);letter-spacing:var(--ls-small);
-  color:var(--c-text)}
+   font. On this site that is JetBrains Mono, so the thread was rendering as monospace.
+
+   And at the ARTICLE's size, not the thread's. The #comments section runs at --fs-small
+   because it is chrome, and the body inherited that: the same face as the piece, two steps
+   smaller
+   than the piece, which reads as a caption rather than as somebody talking. The rest of the
+   thread — the meta line, the reply link, the whole form — stays small. Only the words grow.
+   Tracking and leading come with the size, or the line spacing stays tuned for a smaller
+   face and the paragraph sets too tight. */
+.comment-body{font-family:var(--font-reading);font-size:var(--fs-body);
+  line-height:var(--lh-body);letter-spacing:var(--ls-body);color:var(--c-text)}
 .comment-body p:last-child{margin-bottom:0}
 .comment-reply{border:0;background:none;padding:0;margin-top:.5rem;color:var(--c-meta);
   font:inherit;cursor:pointer;text-decoration:underline}

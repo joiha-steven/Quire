@@ -28,8 +28,11 @@ await savePost({
 })
 
 const settings = await getSettings()
+// IDE chrome ON: it is what the live site runs, and it is the layer that puts the `//` on a
+// label and the brackets around a date. Photographing without it shows a page nobody sees.
 await saveSettings({
   ...settings,
+  ideChrome: true,
   comments: { ...settings.comments, enabled: true, googleAuth: true, turnstile: true },
 })
 

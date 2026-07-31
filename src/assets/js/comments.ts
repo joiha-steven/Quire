@@ -47,9 +47,12 @@ function render(comment: Comment): HTMLElement {
     who.textContent = comment.name
   }
 
+  // Date AND time. A thread is a conversation, and two replies on the same day said nothing
+  // about their order while only the date was shown. The `datetime` attribute keeps the full
+  // ISO instant either way; this is only what the reader sees, in their own zone.
   const when = el('time', { datetime: comment.createdAt })
-  when.textContent = new Date(comment.createdAt).toLocaleDateString(document.documentElement.lang || 'en', {
-    year: 'numeric', month: 'long', day: 'numeric',
+  when.textContent = new Date(comment.createdAt).toLocaleString(document.documentElement.lang || 'en', {
+    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 
   const body = el('div', { class: 'comment-body' })

@@ -48,6 +48,13 @@ html[data-ide-chrome=on] .info-action::before{content:"// ";color:var(--c-meta)}
 /* ...except in the comment thread. "Be the first to comment" is an invitation to the
    reader, not a label on a section, and the owner asked for the marker off it. */
 html[data-ide-chrome=on] #comments .empty::before{content:none}
+/* The commenter's name takes the marker too. Not because it is a label — it is a person —
+   but because it opens an entry, the way every other marker on the page opens a block, and
+   the meta line was the one row in the thread with nothing saying where an entry begins.
+   The name keeps its own weight and colour; only the marker is meta.
+   NO BACKTICKS IN THIS FILE: the whole sheet is one template literal and a backtick in a
+   comment ends it, which turns the rest of the CSS into TypeScript. It has now done that. */
+html[data-ide-chrome=on] .comment-name::before{content:"// ";color:var(--c-meta);font-weight:400}
 
 /* Counts are literals, bracketed like an index — every count, in the same brackets. The
    rail's own counts were bracketed and the taxonomy's were in ROUND ones, because those

@@ -564,6 +564,14 @@ Google account.
   one row with the submit. Everything collapses to a single column below 640px. A reply form
   opens inside the thread and drops the border, because a card inside a card boxes a box.
 
+- **A comment body is set at the ARTICLE's size**, not the thread's. It already used the
+  reading face; running it at `--fs-small` like the rest of `#comments` meant the same
+  typeface as the piece two steps smaller, which reads as a caption rather than as somebody
+  talking. Only the words grow: the meta line, the reply link and the whole form stay small.
+  The meta line itself is `// name · [date at time]` — the marker is the one every block on
+  the page opens with (IDE chrome only), and the time is there because two replies on the
+  same day said nothing about their order without it.
+
 - **Instant, never cached — by design.** The page itself is cached; the comment block is an
   island (`assets/js/comments.ts`) that fetches `/api/comments?post=<slug>`, and that route is
   refused a shared cache like everything under `/api`, so its read is always live. A new comment
