@@ -131,6 +131,39 @@ describe('parseWxr content', () => {
     expect(out.posts[0]?.content.trim()).toBe('![The caption](https://x.test/a.jpg)')
   })
 
+  // Regression: a gallery is a <figure> of nested <figure><img>, and the figure rule read
+  // querySelector('img') — the FIRST one — so importing a real site dropped 152 of its 407
+  // photographs, one page losing 139 of 169, with nothing reported.
+  it('keeps every image in a gallery, not just the first', () => {
+    const gallery =
+      '<figure class="wp-block-gallery has-nested-images columns-4">' +
+      '<figure class="wp-block-image"><img src="https://x.test/a.jpg" alt="A"/></figure>' +
+      '<figure class="wp-block-image"><img src="https://x.test/b.jpg" alt="B"/></figure>' +
+      '<figure class="wp-block-image"><img src="https://x.test/c.jpg" alt="C"/></figure>' +
+      '</figure>'
+    const body = parseWxr(wxr(item({ name: 'p', content: gallery })), NOW).posts[0]?.content ?? ''
+    expect(body).toContain('https://x.test/a.jpg')
+    expect(body).toContain('https://x.test/b.jpg')
+    expect(body).toContain('https://x.test/c.jpg')
+  })
+
+  it('marks gallery images #grid so Quire regroups them into a grid', () => {
+    const gallery =
+      '<figure class="wp-block-gallery has-nested-images columns-2">' +
+      '<figure class="wp-block-image"><img src="https://x.test/a.jpg" alt="A"/></figure>' +
+      '<figure class="wp-block-image"><img src="https://x.test/b.jpg" alt="B"/></figure>' +
+      '</figure>'
+    const body = parseWxr(wxr(item({ name: 'p', content: gallery })), NOW).posts[0]?.content ?? ''
+    expect(body).toContain('![A](https://x.test/a.jpg#grid)')
+    expect(body).toContain('![B](https://x.test/b.jpg#grid)')
+  })
+
+  it('does not mark a standalone image #grid', () => {
+    const single = '<figure class="wp-block-image"><img src="https://x.test/solo.jpg" alt="Solo"/></figure>'
+    const body = parseWxr(wxr(item({ name: 'p', content: single })), NOW).posts[0]?.content ?? ''
+    expect(body.trim()).toBe('![Solo](https://x.test/solo.jpg)')
+  })
+
   it('derives an excerpt when the export has none', () => {
     const out = parseWxr(wxr(item({ name: 'p', content: '<p>First sentence here.</p>' })), NOW)
     expect(out.posts[0]?.excerpt.length).toBeGreaterThan(0)

@@ -637,7 +637,10 @@ Google account.
 - **`parseWxr(xml, now)` is PURE** (no I/O; unit-tested in `src/import/wordpress.test.ts`): each `item`
   with `wp:post_type` post/page and a live status → a post/page. HTML `content:encoded` → Markdown
   (`turndown` + GFM), `<figure><figcaption>` folded INTO the image alt (Quire renders captions from
-  alt). Categories/tags split by `@_domain`, `Uncategorized` dropped; dates via `wp:post_date_gmt`
+  alt). A **gallery** (`figure.wp-block-gallery`, which nests one `<figure><img>` per photo)
+  emits EVERY nested image, each tagged `#grid` so `groupGalleries` rebuilds it as a grid —
+  reading only the first nested image drops the rest of the gallery on the floor.
+  Categories/tags split by `@_domain`, `Uncategorized` dropped; dates via `wp:post_date_gmt`
   **falling back to `wp:post_date`** (WordPress leaves the GMT date as `0000-00-00` on anything
   never published, so drafts would otherwise all import dated today) and then to `now`;
   status `publish`→`published` else `draft`; excerpt from `excerpt:encoded` or `deriveExcerpt`.

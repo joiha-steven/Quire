@@ -24,7 +24,13 @@ export type WxrResult = { posts: ImportedPost[]; pages: ImportedPage[]; skipped:
 
 // A single figure/img subtree, narrowed from turndown's DOM node (no `any`).
 type FigureEl = {
+  getAttribute(name: string): string | null
   querySelector(sel: string): { getAttribute(name: string): string | null; textContent: string | null } | null
+}
+
+/** Tag every markdown image in a converted subtree as a gallery item. */
+function markGridItems(md: string): string {
+  return md.replace(/(!\[[^\]]*\]\([^)\s]+?)\)/g, '$1#grid)')
 }
 
 function makeTurndown(): TurndownService {
@@ -37,6 +43,15 @@ function makeTurndown(): TurndownService {
     filter: 'figure',
     replacement: (content, node) => {
       const el = node as unknown as FigureEl
+      // A WordPress gallery is a <figure> wrapping one nested <figure><img> per photo.
+      // Turndown has already converted those children, so `content` holds all of them —
+      // whereas the single-image path below reads querySelector('img'), which is the
+      // FIRST one, and silently dropped the rest of the gallery. One page here lost 139
+      // of its 169 photographs that way. Tag each image `#grid` instead, which is how
+      // Quire regroups a run of images back into a grid.
+      if ((el.getAttribute('class') ?? '').includes('wp-block-gallery')) {
+        return `\n\n${markGridItems(content).trim()}\n\n`
+      }
       const img = el.querySelector('img')
       const src = img?.getAttribute('src') ?? ''
       if (!src) return content

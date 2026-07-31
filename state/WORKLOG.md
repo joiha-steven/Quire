@@ -28,7 +28,17 @@ looks like a fallback chain and is not one: WordPress fills `post_date_gmt` with
 fell through to `now`. Thirteen drafts written over fourteen months all landed on the same
 afternoon. Nested the two `toIso` calls instead.
 
-`src/import/wordpress.ts` had no test file at all; it has twelve now, including both
+**And the one that actually lost content: galleries kept their first photo and threw away
+the rest.** A Gutenberg gallery is a `<figure class="wp-block-gallery">` wrapping one nested
+`<figure><img>` per photo. The figure rule read `querySelector('img')` — the first match in
+the whole subtree — and returned that single image as the replacement for the entire block.
+152 of the site's 407 photographs never arrived; the photo library page kept 30 of its 169.
+Nothing errored, and the imported page looked plausible, which is why the first verification
+pass missed it: I checked that every image present rendered, never that every image expected
+was present. Galleries now emit all their children, each tagged `#grid`, so `groupGalleries`
+rebuilds the grid instead of leaving a vertical stack.
+
+`src/import/wordpress.ts` had no test file at all; it has fifteen now, including all three
 regressions. The import and image-rehost tooling stayed OUT of the repo — `conventions.md`
 says the WordPress import is an in-app feature and not a script, and one migration is not a
 reason to reverse that.
