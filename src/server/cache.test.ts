@@ -48,16 +48,19 @@ describe('the flush', () => {
 })
 
 describe('warming', () => {
-  it('renders every public post back into the page cache', async () => {
+  it('renders every public post back into the page cache, and the homepage', async () => {
     await savePost({ title: 'One', content: 'body text', status: 'published', date: PAST })
     await savePost({ title: 'Two', content: 'body text', status: 'published', date: PAST })
     clearCache()
     expect(pageCache.size).toBe(0)
 
     const { warmed } = await warmCache()
-    expect(warmed).toBe(2)
+    // Two posts and `/`. The homepage was claimed by this function's own comment long
+    // before it was true, so it is asserted rather than described (ADR 0014).
+    expect(warmed).toBe(3)
     expect(pageCache.get('/one')).toContain('One')
     expect(pageCache.get('/two')).toContain('Two')
+    expect(pageCache.has('/')).toBe(true)
   })
 
   it('leaves out a draft and a future-dated post, which are not public', async () => {
@@ -68,7 +71,7 @@ describe('warming', () => {
       date: '2099-01-01T00:00:00.000Z',
     })
     const { warmed } = await warmCache()
-    expect(warmed).toBe(1)
+    expect(warmed).toBe(2) // the one live post, plus `/`
     expect(pageCache.has('/draft')).toBe(false)
     expect(pageCache.has('/later')).toBe(false)
   })

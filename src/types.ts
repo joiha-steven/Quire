@@ -207,6 +207,7 @@ export type SiteSettings = {
   themes: Record<string, ThemeSettings> // per-palette reading colors (owner-customizable); keyed by preset id
   typography: TypographySettings // type scale + reading rhythm → CSS vars (--fs-*, --lh-body, --ls-body)
   customFont: FontSettings // owner-uploaded typeface (files/); '' = bundled Inter
+  home: HomeSettings // what `/` serves, and where the post list lives when it is not there
   seo: SeoSettings // SEO / crawler feature toggles
   features: FeatureSettings // reader-facing feature toggles
   comments: CommentSettings // reader comment system (off by default)
@@ -263,6 +264,19 @@ export type AdminComment = {
 // `mcp_tokens` table (hashed), managed from Admin → Settings → Advanced.
 export type McpSettings = {
   enabled: boolean // when false, /api/mcp + the OAuth flow are disabled
+}
+
+/**
+ * What `/` serves. ADR 0014.
+ *
+ * `list` is what this has always been and stays the default, byte for byte: an install that
+ * upgrades into this feature must see no change until somebody chooses one. The composed
+ * front page (`front`) is part 2 and is not in the union until it renders.
+ */
+export type HomeSettings = {
+  mode: 'list' | 'page' // 'list' = page 1 of the post list at /; 'page' = a chosen page at /
+  page: string // the slug rendered at / in 'page' mode. Empty, missing, unpublished or trashed falls back to the list
+  listPath: string // where the post list is mounted once it leaves / ('/post' by default). Leading slash, no trailing one
 }
 
 // Motion engine: ONE site-wide switch for all UI animation (public + admin). When

@@ -72,12 +72,13 @@ const TAB_IDS: Tab[] = ['site', 'layout', 'reading', 'appearance', 'seo', 'conne
 const GRID = 'grid items-start gap-5 xl:grid-cols-2'
 const COL = 'space-y-5'
 
-export function SettingsView({ settings, presets, commentEnv, integrations, posts }: {
+export function SettingsView({ settings, presets, commentEnv, integrations, posts, pages }: {
   settings: SiteSettings
   presets: ThemePreset[]
   commentEnv: CommentEnv
   integrations: IntegrationStatus
   posts: { slug: string; title: string }[]
+  pages: { slug: string; title: string }[]
 }) {
   const t = useAdminT()
   const router = useRouter()
@@ -162,7 +163,7 @@ export function SettingsView({ settings, presets, commentEnv, integrations, post
         <div className={GRID}>
           <div className={COL}>
             <Card title={t.cardLayout}>
-              <LayoutMenuFields s={s} update={update} posts={posts} />
+              <LayoutMenuFields s={s} update={update} posts={posts} pages={pages} />
             </Card>
           </div>
           <div className={COL}>

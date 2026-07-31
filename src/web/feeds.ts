@@ -5,7 +5,7 @@
 // than serving an empty document: an empty feed looks like a broken site to a reader's
 // aggregator, while a 404 looks like what it is.
 
-import type { Page, Post, SiteSettings } from '@/types'
+import type { HomeSettings, Page, Post, SiteSettings } from '@/types'
 import { toPlainText, clampExcerpt } from '@/utils'
 
 const escapeXml = (s: string) =>
@@ -38,13 +38,19 @@ ${items}
 `
 }
 
-export function renderSitemap(posts: Post[], pages: Page[], site: string): string {
+export function renderSitemap(posts: Post[], pages: Page[], site: string, home: HomeSettings): string {
   const url = (loc: string, lastmod?: string) =>
     `  <url><loc>${escapeXml(loc)}</loc>${lastmod ? `<lastmod>${isoDay(lastmod)}</lastmod>` : ''}</url>`
+  // Once `/` belongs to a page, that page has two URLs and its own slug 301s to `/`
+  // (ADR 0014). Naming both here asks a crawler to index a redirect, so the slug goes and
+  // the root stays. The post list, meanwhile, has moved somewhere that is not in either
+  // table and would otherwise appear nowhere.
+  const homeSlug = home.mode === 'page' ? home.page : ''
   const entries = [
     url(site),
-    ...posts.map((p) => url(`${site}/${p.slug}`, p.updatedAt ?? p.date)),
-    ...pages.map((p) => url(`${site}/${p.slug}`)),
+    ...(home.mode === 'list' ? [] : [url(`${site}${home.listPath}`)]),
+    ...posts.filter((p) => p.slug !== homeSlug).map((p) => url(`${site}/${p.slug}`, p.updatedAt ?? p.date)),
+    ...pages.filter((p) => p.slug !== homeSlug).map((p) => url(`${site}/${p.slug}`)),
   ]
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

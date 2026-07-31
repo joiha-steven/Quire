@@ -21,6 +21,7 @@ import { getSettings } from '@/content/settings'
 import { isPublicallyVisible } from '@/utils'
 import { pageCache, onFlush } from '@/server/cache'
 import { renderArticle } from '@/web/article'
+import { renderHome } from '@/web/home-mode'
 import { purgeEdge } from '@/server/edge-cache'
 
 /** Wait this long after the LAST write before warming: a bulk import is one burst. */
@@ -30,11 +31,15 @@ let pending: ReturnType<typeof setTimeout> | null = null
 let running = false
 
 /**
- * Render every public article back into the page cache.
+ * Render every public article back into the page cache, plus `/`.
  *
- * Articles only. A listing re-renders in about 6ms because it never touches a body, and
- * warming 200 taxonomy pages to save 6ms each would cost more than it saves. The home page
- * is included because it is the one listing everybody lands on.
+ * Articles and the homepage. A taxonomy listing re-renders in about 6ms because it never
+ * touches a body, and warming 200 of them to save 6ms each would cost more than it saves.
+ *
+ * `/` is the exception, and it was CLAIMED here long before it was true: this comment said
+ * the home page was included and the loop below only ever walked posts and pages, so the
+ * first reader after every single write paid for it. It also matters more than 6ms now that
+ * `/` may be a page with a body to render (ADR 0014).
  */
 export async function warmCache(): Promise<{ warmed: number; ms: number }> {
   const t0 = performance.now()
@@ -44,6 +49,11 @@ export async function warmCache(): Promise<{ warmed: number; ms: number }> {
   const posts = (await getPublicPosts()).filter((p) => isPublicallyVisible(p.status, p.date))
   const pages = (await getPublicPages()).filter((p) => p.status === 'published')
   let warmed = 0
+  const homeHtml = await renderHome()
+  if (homeHtml !== null) {
+    pageCache.set('/', homeHtml)
+    warmed += 1
+  }
   for (const { slug } of [...posts, ...pages]) {
     // One at a time, on purpose. The point is to use the idle time BETWEEN requests, and a
     // Promise.all over seventy 360ms renders would block the loop for the whole burst.

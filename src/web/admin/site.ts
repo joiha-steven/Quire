@@ -10,6 +10,8 @@ import type { Context } from 'hono'
 import type { SiteSettings } from '@/types'
 import { reorderSeries, updateSeries } from '@/content/series'
 import { saveSettings } from '@/content/settings'
+import { sanitizeListPath } from '@/content/settings-sanitize'
+import { one } from '@/store/query'
 import {
   restorePost, purgePost, emptyPostsTrash, updateTerm, type TermKind,
 } from '@/content/posts'
@@ -136,7 +138,20 @@ export function siteRoutes() {
   // No public GET: every public read goes through `getSettings()` server-side.
 
   router.put('/api/settings', async (c) => {
-    const next = await saveSettings(await body<SiteSettings>(c))
+    const input = await body<SiteSettings>(c)
+    // The other half of the slug guard in `content/slugs.ts`. That one stops a POST taking
+    // the list's path; this stops the list being pointed at a path a post already holds,
+    // which the sanitizer cannot see because it is pure and this needs the database.
+    // Refusing is the only honest answer: whichever of the two lost would simply disappear.
+    const listPath = sanitizeListPath(input?.home?.listPath, '')
+    if (input?.home?.mode && input.home.mode !== 'list' && listPath) {
+      const slug = listPath.slice(1)
+      if (one<{ slug: string }>(`select slug from posts where slug = ?`, slug)
+        || one<{ slug: string }>(`select slug from pages where slug = ?`, slug)) {
+        return fail(c, `list_path_taken: ${slug}`, 409)
+      }
+    }
+    const next = await saveSettings(input)
     // The frozen tree purged everything and then re-warmed several pages, because a cold
     // ISR miss was expensive. Here a page re-renders from SQLite in well under a
     // millisecond, so warming would be work done to avoid work that is already free.

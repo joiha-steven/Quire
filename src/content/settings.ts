@@ -9,7 +9,7 @@ import { one, run } from '@/store/query'
 import { isSiteLang } from '@/locales/langs'
 import { DEFAULT_PRESET_ID, isPresetId, isFontPresetId, defaultThemes, ALL_PALETTE_IDS, DEFAULT_TYPOGRAPHY, DEFAULT_FONT, DEFAULT_FONT_PRESET, isChromeFontId, DEFAULT_CHROME_FONT, TYPE_ROLES } from '@/content/themes'
 import {
-  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeMcp, sanitizeMotion, sanitizeCache,
+  sanitizeMenu, migrateThemes, sanitizeThemes, sanitizeEnabledPalettes, sanitizeSeo, sanitizeFeatures, sanitizeHome, sanitizeMcp, sanitizeMotion, sanitizeCache,
   sanitizeBackups, sanitizeComments, sanitizeCss, sanitizeUrl, sanitizeTypography, sanitizeFont, fontFormat, clampNumber,
 } from '@/content/settings-sanitize'
 
@@ -153,6 +153,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   themes: defaultThemes(),
   typography: DEFAULT_TYPOGRAPHY,
   customFont: DEFAULT_FONT,
+  // `list` is what `/` has always been. An install that upgrades into this feature sees no
+  // change at all until somebody chooses otherwise, which is the constraint in ADR 0014.
+  home: { mode: 'list', page: '', listPath: '/post' },
   seo: DEFAULT_SEO,
   features: DEFAULT_FEATURES,
   comments: DEFAULT_COMMENTS,
@@ -238,6 +241,7 @@ export async function getSettings(): Promise<SiteSettings> {
       })(),
       seo: { ...seo, ogFallbackImage: expandBlob(seo.ogFallbackImage) },
       features: sanitizeFeatures(stored.features, DEFAULT_FEATURES),
+      home: sanitizeHome(stored.home, DEFAULT_SETTINGS.home),
       comments: sanitizeComments(stored.comments, DEFAULT_COMMENTS),
       mcp: sanitizeMcp(stored.mcp, DEFAULT_SETTINGS.mcp),
       motion: sanitizeMotion(stored.motion, DEFAULT_SETTINGS.motion),
@@ -350,6 +354,7 @@ export async function saveSettings(input: Partial<SiteSettings>): Promise<SiteSe
     customFont: sanitizeFont(input.customFont, current.customFont),
     seo: sanitizeSeo(input.seo, current.seo),
     features: sanitizeFeatures(input.features, current.features),
+    home: sanitizeHome(input.home, current.home),
     comments: sanitizeComments(input.comments, current.comments),
     mcp: sanitizeMcp(input.mcp, current.mcp),
     motion: sanitizeMotion(input.motion, current.motion),

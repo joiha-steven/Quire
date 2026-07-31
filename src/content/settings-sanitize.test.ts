@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@/test/vitest'
-import { sanitizeEnabledPalettes, sanitizeComments, sanitizeThemes, sanitizeFontUrl } from '@/content/settings-sanitize'
+import { sanitizeEnabledPalettes, sanitizeComments, sanitizeThemes, sanitizeFontUrl, sanitizeHome, sanitizeListPath } from '@/content/settings-sanitize'
 import { ALL_PALETTE_IDS, defaultThemes } from '@/content/themes'
 
 const COMMENTS_OFF = { enabled: false, turnstile: false, googleAuth: false }
@@ -83,5 +83,37 @@ describe('sanitizeFontUrl', () => {
     expect(sanitizeFontUrl('/a b.woff2')).toBe('')
     expect(sanitizeFontUrl(42)).toBe('')
     expect(sanitizeFontUrl('')).toBe('')
+  })
+})
+
+// ADR 0014. The mode decides what `/` serves, so an unreadable value has to land on the
+// one option that changes nothing rather than on whatever the string happened to say.
+describe('sanitizeHome', () => {
+  const FALLBACK = { mode: 'list' as const, page: '', listPath: '/post' }
+
+  it('falls back to the list for anything it does not recognise', () => {
+    expect(sanitizeHome(undefined, FALLBACK).mode).toBe('list')
+    expect(sanitizeHome({ mode: 'front' }, FALLBACK).mode).toBe('list')
+    expect(sanitizeHome({ mode: 42 }, FALLBACK).mode).toBe('list')
+  })
+
+  it('keeps a page mode and strips the slug of leading slashes', () => {
+    expect(sanitizeHome({ mode: 'page', page: '/welcome' }, FALLBACK))
+      .toEqual({ mode: 'page', page: 'welcome', listPath: '/post' })
+  })
+})
+
+describe('sanitizeListPath', () => {
+  it('normalises to exactly one leading slash and one lowercase segment', () => {
+    expect(sanitizeListPath('blog', '/post')).toBe('/blog')
+    expect(sanitizeListPath('//Writing//', '/post')).toBe('/writing')
+  })
+
+  // A path the router could not mount, or one that would need a second reservation rule.
+  it('rejects a nested, empty or malformed path', () => {
+    expect(sanitizeListPath('/a/b', '/post')).toBe('/post')
+    expect(sanitizeListPath('/', '/post')).toBe('/post')
+    expect(sanitizeListPath('-lead', '/post')).toBe('/post')
+    expect(sanitizeListPath(7, '/post')).toBe('/post')
   })
 })

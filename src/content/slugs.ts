@@ -3,6 +3,7 @@
 // them. Queries the tables directly (not via content/posts|pages) to avoid a
 // circular import.
 import { one } from '@/store/query'
+import { getSettings } from '@/content/settings'
 
 // Thrown by save* when a slug is already taken by a different post/page.
 // Route handlers map this to a 409 with the `slug_taken` error code.
@@ -24,6 +25,12 @@ export async function ensureSlugFree(
   selfKind: 'post' | 'page',
   selfSlug?: string,
 ): Promise<void> {
+  // The post list is a THIRD occupant of this namespace once it leaves `/` (ADR 0014), and
+  // it has no row to be found by the two queries below. Without this, saving a post at the
+  // list's path succeeds and one of the two silently stops being reachable — the router
+  // answers the list first, so it is the post that vanishes, with no error anywhere.
+  const { home } = await getSettings()
+  if (home.mode !== 'list' && slug === home.listPath.slice(1)) throw new SlugConflictError(slug)
   const post = one<{ slug: string }>(`select slug from posts where slug = ?`, slug)
   const page = one<{ slug: string }>(`select slug from pages where slug = ?`, slug)
   const postHit = !!post && !(selfKind === 'post' && post.slug === selfSlug)

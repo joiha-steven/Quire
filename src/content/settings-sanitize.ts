@@ -2,7 +2,7 @@
 // back-compat shims). No DB, no Blob, no React. settings.ts depends on this ONE
 // WAY (settings -> settings-sanitize, never back) for its getSettings/saveSettings merge.
 
-import type { BackupSettings, CacheSettings, CommentSettings, FeatureSettings, FontFace, FontSettings, McpSettings, MenuItem, MotionSettings, SeoSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
+import type { BackupSettings, CacheSettings, CommentSettings, FeatureSettings, FontFace, FontSettings, HomeSettings, McpSettings, MenuItem, MotionSettings, SeoSettings, ThemeColors, ThemeSettings, TypeStyle, TypographySettings } from '@/types'
 import { DEFAULT_PRESET_ID, isPresetId, defaultThemes, THEME_PRESETS, DEFAULT_FONT, TYPE_ROLES, FONT_WEIGHTS } from '@/content/themes'
 
 // Keep only well-formed menu items (label + href both present).
@@ -131,6 +131,31 @@ export function sanitizeComments(input: unknown, fallback: CommentSettings): Com
 export function sanitizeMcp(input: unknown, fallback: McpSettings): McpSettings {
   const o = (input ?? {}) as Partial<McpSettings>
   return { enabled: bool(o.enabled, fallback.enabled) }
+}
+
+/**
+ * A mount path for the post list: one leading slash, one segment, no trailing slash.
+ *
+ * Kept to a single segment on purpose. The list shares the `/{slug}` namespace with every
+ * post and page, and a one-segment path is the only shape whose collisions can be checked
+ * against that namespace at all — `/a/b` would need a second, deeper reservation rule for
+ * no gain. Anything malformed falls back rather than mounting the list somewhere unreachable.
+ */
+export function sanitizeListPath(input: unknown, fallback: string): string {
+  if (typeof input !== 'string') return fallback
+  const slug = input.trim().replace(/^\/+|\/+$/g, '').toLowerCase()
+  return /^[a-z0-9][a-z0-9-]*$/.test(slug) ? `/${slug}` : fallback
+}
+
+export function sanitizeHome(input: unknown, fallback: HomeSettings): HomeSettings {
+  const o = (input ?? {}) as Partial<HomeSettings>
+  return {
+    // Anything unrecognised is `list`, which is the mode that changes nothing. A settings
+    // blob written by a NEWER version naming a mode this build cannot render lands here.
+    mode: o.mode === 'page' ? 'page' : 'list',
+    page: typeof o.page === 'string' ? o.page.trim().replace(/^\/+/, '').slice(0, 200) : fallback.page,
+    listPath: sanitizeListPath(o.listPath, fallback.listPath),
+  }
 }
 
 export function sanitizeCache(input: unknown, fallback: CacheSettings): CacheSettings {

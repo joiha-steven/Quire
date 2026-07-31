@@ -8,13 +8,72 @@ import { useAdminT } from './I18nProvider'
 const MENU_FIELD =
   'w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:border-neutral-400'
 
-type Props = { s: SiteSettings; update: (p: Partial<SiteSettings>) => void; posts: { slug: string; title: string }[] }
+type Props = {
+  s: SiteSettings
+  update: (p: Partial<SiteSettings>) => void
+  posts: { slug: string; title: string }[]
+  pages: { slug: string; title: string }[]
+}
 
-export function LayoutMenuFields({ s, update, posts }: Props) {
+export function LayoutMenuFields({ s, update, posts, pages }: Props) {
   const t = useAdminT()
+  const home = s.home
 
   return (
     <div className="space-y-5">
+      {/* What `/` serves, and where the post list goes when it is no longer there. ADR 0014. */}
+      <div className="space-y-2">
+        <span className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.homeModeLabel}</span>
+        <div className="grid grid-cols-2 gap-2">
+          {(['list', 'page'] as const).map((v) => {
+            const active = home.mode === v
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => update({ home: { ...home, mode: v } })}
+                aria-pressed={active}
+                className={`border px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? 'border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900'
+                    : 'border-neutral-300 text-neutral-700 hover:border-neutral-500 dark:border-neutral-700 dark:text-neutral-300'
+                }`}
+              >
+                {v === 'list' ? t.homeModeList : t.homeModePage}
+              </button>
+            )
+          })}
+        </div>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.homeModeHint}</p>
+      </div>
+
+      {/* Only the page mode needs a page and a new address for the list. Showing either one
+          while the homepage is still the list would be asking about nothing. */}
+      {home.mode === 'page' && (
+        <div className="space-y-4 border-l-2 border-neutral-200 pl-4 dark:border-neutral-800">
+          <div className="space-y-1.5">
+            <span className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t.homePageLabel}</span>
+            <select
+              value={home.page}
+              onChange={(e) => update({ home: { ...home, page: e.target.value } })}
+              className={MENU_FIELD}
+            >
+              <option value="">{t.homePageNone}</option>
+              {pages.map((p) => <option key={p.slug} value={p.slug}>{p.title}</option>)}
+            </select>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.homePageHint}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Input
+              label={t.listPathLabel}
+              value={home.listPath}
+              onChange={(e) => update({ home: { ...home, listPath: e.target.value } })}
+            />
+            <p className="text-xs text-neutral-400 dark:text-neutral-500">{t.listPathHint}</p>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-1.5">
         <Input
           label={t.siteWidth}

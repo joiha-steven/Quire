@@ -19,6 +19,7 @@ import { t } from '@/i18n/i18n'
 import { escapeHtml, foldAccents } from '@/utils'
 import { renderListing } from '@/web/listing'
 import { cached, listingPage, notFoundPage, renderFeedBody } from '@/web/listing-page'
+import { renderHome, renderPostList, slugRole } from '@/web/home-mode'
 import { renderFeed, renderLlms, renderRobots, renderSitemap } from '@/web/feeds'
 import { renderArticle } from '@/web/article'
 import { assetBody } from '@/web/assets'
@@ -100,26 +101,14 @@ export function createApp(): Hono {
   // uncompressed. Outermost of the three, so it sees the finished body of every route.
   app.use('*', compression())
 
-  const home = async (page: number) => {
-    const settings = await getSettings()
-    const built = await renderFeedBody(await getPublicPosts(), page, {
-      basePath: '', empty: t(settings.language).emptyPosts,
-    })
-    if (!built) return null
-    return listingPage({
-      title: page === 1 ? settings.title : `${settings.title} · page ${page}`,
-      body: built.body,
-      css: built.css,
-      canonicalPath: page === 1 ? '/' : `/page/${page}`,
-    })
-  }
-
-  app.get('/', async () => cached('/', () => home(1))())
+  // `/` is the post list, or a page the owner chose. Resolved per request rather than when
+  // the routes are built, because the mode is a setting: see `web/home-mode.ts`.
+  app.get('/', async () => cached('/', renderHome)())
 
   app.get('/page/:n', async (c) => {
     const page = pageNumber(c.req.param('n'))
     if (page === null) return notFoundPage()
-    return cached(`/page/${page}`, () => home(page))()
+    return cached(`/page/${page}`, () => renderPostList(page))()
   })
 
   // ----- taxonomy -------------------------------------------------------------
@@ -367,7 +356,7 @@ export function createApp(): Hono {
   feedRoute('/feed.xml', (s) => s.seo.rss, 'application/rss+xml; charset=utf-8',
     ({ posts, settings, site }) => renderFeed(posts, settings, site))
   feedRoute('/sitemap.xml', (s) => s.seo.sitemap, 'application/xml; charset=utf-8',
-    ({ posts, pages, site }) => renderSitemap(posts, pages, site))
+    ({ posts, pages, settings, site }) => renderSitemap(posts, pages, site, settings.home))
   feedRoute('/robots.txt', (s) => s.seo.robots, 'text/plain; charset=utf-8',
     ({ settings, site }) => renderRobots(settings, site))
   feedRoute('/llms.txt', (s) => s.seo.llms, 'text/plain; charset=utf-8',
@@ -377,6 +366,12 @@ export function createApp(): Hono {
 
   app.get('/:slug', async (c) => {
     const slug = c.req.param('slug')
+    // ...and two slugs in this namespace may not be a document at all once `/` has been
+    // given away: one is the post list's new home, and one is the page already served at
+    // `/`, whose own slug is then a second URL for one document (ADR 0014).
+    const role = await slugRole(slug)
+    if (role === 'list') return cached(`/${slug}`, () => renderPostList(1))()
+    if (role === 'home') return c.redirect('/', 301)
     // An agent that asks for Markdown gets the source it was written in rather than HTML
     // it would have to parse back into prose. Same URL, same visibility rules.
     if (wantsMarkdown(c.req.header('accept'))) return handleMarkdown(c)

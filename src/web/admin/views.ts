@@ -17,7 +17,7 @@ import { getAdminComments, countsByPosts, getTrashedComments } from '@/comments/
 import { getCommentEnv } from '@/comments/comment-env'
 import { getIntegrationStatus } from '@/store/integration-keys'
 import { getIndex, getCategories, getTags, getPublicPosts, getTrashedPosts } from '@/content/posts'
-import { getPageIndex, getTrashedPages, getPage } from '@/content/pages'
+import { getPageIndex, getTrashedPages, getPage, getPublicPages } from '@/content/pages'
 import { getPost } from '@/content/posts'
 import { getAllSeriesNames } from '@/content/series'
 import { getSettings } from '@/content/settings'
@@ -118,8 +118,8 @@ export function viewRoutes(): OwnerRouter {
   })
 
   routes.get('/api/admin/view/settings', async (c) => {
-    const [settings, commentEnv, integrations, posts] = await Promise.all([
-      getSettings(), getCommentEnv(), getIntegrationStatus(), getPublicPosts(),
+    const [settings, commentEnv, integrations, posts, pages] = await Promise.all([
+      getSettings(), getCommentEnv(), getIntegrationStatus(), getPublicPosts(), getPublicPages(),
     ])
     return c.json({
       data: {
@@ -129,6 +129,9 @@ export function viewRoutes(): OwnerRouter {
         integrations,
         // Published posts only: the Featured picker cannot offer a draft.
         posts: posts.map((p) => ({ slug: p.slug, title: p.title })),
+        // ...and published pages, for the homepage picker (ADR 0014). Same rule: a draft
+        // cannot be the front door, and offering one would only produce the fallback.
+        pages: pages.filter((p) => p.status === 'published').map((p) => ({ slug: p.slug, title: p.title })),
       },
     })
   })

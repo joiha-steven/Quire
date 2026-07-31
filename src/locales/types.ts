@@ -480,6 +480,16 @@ export type AdminStrings = {
   sidebarLayoutSingle: string
   sidebarLayoutTwo: string
   sidebarLayoutHint: string
+  // What `/` serves, and where the post list goes when it is not there. ADR 0014.
+  homeModeLabel: string
+  homeModeList: string
+  homeModePage: string
+  homeModeHint: string
+  homePageLabel: string
+  homePageNone: string
+  homePageHint: string
+  listPathLabel: string
+  listPathHint: string
   commentsEnable: string
   commentsEnableDesc: string
   commentsTurnstile: string
