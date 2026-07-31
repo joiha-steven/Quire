@@ -136,6 +136,11 @@ export async function sendMail(msg: {
       to: msg.to,
       subject: msg.subject,
       html: msg.html,
+      // Tag-strip for the plain-text alternative. Deliberately naive, and CodeQL flags it
+      // as an incomplete sanitizer (alert #10, dismissed): it is not a sanitizer. The
+      // output is the `text/plain` part of an email, never an HTML context, and the input
+      // is HTML this codebase generated. If either of those ever stops being true, this
+      // needs a real html-to-text pass, not a better regex.
       text: msg.text || msg.html.replace(/<[^>]+>/g, ''),
     })
     await record(true)

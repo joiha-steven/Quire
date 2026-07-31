@@ -47,7 +47,12 @@ let nextId = 1
 const pending = new Map<number, (value: Record<string, unknown>) => void>()
 socket.addEventListener('message', (e) => {
   const msg = JSON.parse(String(e.data)) as { id?: number; result?: Record<string, unknown> }
-  if (msg.id !== undefined) pending.get(msg.id)?.(msg.result ?? {})
+  if (msg.id === undefined) return
+  // `id` comes off the wire, so resolve it to a value and check what came back before
+  // calling it. A Map lookup cannot hand back an inherited method the way a plain object
+  // can, but that is a fact about Map rather than something visible at the call site.
+  const resolve = pending.get(msg.id)
+  if (typeof resolve === 'function') resolve(msg.result ?? {})
 })
 
 const send = (method: string, params: Record<string, unknown> = {}) =>

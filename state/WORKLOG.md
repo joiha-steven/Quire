@@ -549,3 +549,34 @@ into`, 27 MB), tarball extracted as the service user, `build-sha` written, servi
 Verified at the origin and then through the CDN, which the boot purge had already cleared:
 `/api/health` ok, 75 pages warmed, and the served `core.<hash>.js` and `site.<hash>.css` both
 carry the new navigation bar.
+
+## 2026-07-31 — thirteen code-scanning alerts, and what they were actually worth
+
+The Security tab looked alarming: thirteen open alerts, three of them **critical**. It was
+mostly an illusion of scope. Seven live in `v1/`, including all three criticals, and `v1/`
+has not run anywhere since the shutdown earlier today. Code scanning is on GitHub's default
+setup, which offers no path filter, so it re-reports the retired tree on every push. The
+repeated analyses in the log are the same twelve findings, not twelve new ones each time.
+
+**The one real defect was a divergence, not a mistake.** `newsletter-html.ts` had two local
+copies of the same escaper, one per page. `confirmPage` escaped `"`; `resultPage` did not,
+and then interpolated into `href="${esc(homeUrl)}"`. The value is the owner's own site URL,
+so this was never reachable by a reader, but the two copies are the whole story: the moment
+there are two, one of them is behind. There is one escaper now, at module scope, and it
+escapes `"`. Both pages have tests for the attribute case.
+
+**Rejection sampling in the recovery codes, and the old comment was not wrong.** It argued
+that `% 30` bias is irrelevant at 49 bits against five attempts an hour, and it is. But the
+fix is four lines and the alternative is that every future reader re-runs the same argument.
+Bytes at or above 240 are re-drawn now. The test asserts the whole alphabet still appears,
+because getting a rejection bound wrong shows up as a silently truncated character set.
+
+**`mail.ts` I tried to fix and then put back.** The alert says the tag-strip feeding an
+email's `text/plain` part "may still contain `<script`". I wrote a fixpoint loop, then ran
+it: `<scr<x>ipt>` came out as `ipt>alert(1)ipt>` and `<script src=x`, with no closing angle
+bracket to match, passed through completely untouched. The loop fixed nothing it claimed to.
+The honest position is the one the comment now states: this is not a sanitizer, its output
+never reaches an HTML context, and its input is HTML we generated. Dismissed, not patched.
+
+Also: an explicit `permissions: contents: read` on the CI workflow, and `drive.ts` resolves
+its callback to a value and checks it before calling. Neither changes behaviour.

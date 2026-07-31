@@ -22,13 +22,20 @@ export const CODE_COUNT = 10
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTVWXYZ'
 const GROUP = 5
 
-/** One code, formatted `xxxxx-xxxxx`. */
-function generateCode(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(GROUP * 2))
-  // Modulo bias: 256 % 30 is 16, so the first sixteen letters are very slightly favoured.
-  // Irrelevant at 49 bits against a five-attempt-per-hour limit, and rejection sampling
-  // here would be ceremony rather than security.
-  const chars = [...bytes].map((b) => ALPHABET[b % ALPHABET.length])
+// 256 is not a multiple of 30, so a plain `% 30` would favour the first sixteen letters.
+// The bias is negligible here (49 bits, five attempts per hour), but it is cheap to remove
+// and a biased draw from a CSPRNG is a claim nobody should have to re-audit: bytes at or
+// above 240 are thrown away and re-drawn instead.
+const CEILING = 256 - (256 % ALPHABET.length)
+
+/** One code, formatted `xxxxx-xxxxx`. Exported only so the sampling loop can be tested. */
+export function generateCode(): string {
+  const chars: string[] = []
+  while (chars.length < GROUP * 2) {
+    for (const b of crypto.getRandomValues(new Uint8Array(GROUP * 2))) {
+      if (b < CEILING && chars.length < GROUP * 2) chars.push(ALPHABET[b % ALPHABET.length])
+    }
+  }
   return `${chars.slice(0, GROUP).join('')}-${chars.slice(GROUP).join('')}`
 }
 

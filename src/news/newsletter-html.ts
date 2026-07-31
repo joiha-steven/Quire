@@ -2,9 +2,14 @@
 // (they open in the reader's browser from an email, so they can't be a React route
 // that assumes the app shell). Server-only; text is pre-escaped by the caller's i18n.
 
+// One escaper for both pages, and it escapes `"` as well as the text-node characters:
+// several of these values land inside an attribute (`href`, `action`). Two local copies is
+// how the pages drifted apart in the first place, with only one of them attribute-safe.
+const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 export function resultPage(title: string, body: string, homeUrl: string, homeLabel: string): Response {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const html = `<!doctype html><html><head><meta charset="utf-8">
+  const html =`<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${esc(title)}</title>
@@ -28,8 +33,7 @@ ${body ? `<p>${esc(body)}</p>` : ''}
 // GETs and would otherwise unsubscribe a reader with no click). `action` is the URL the
 // button POSTs to (carrying the token).
 export function confirmPage(title: string, body: string, button: string, action: string): Response {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-  const html = `<!doctype html><html><head><meta charset="utf-8">
+  const html =`<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${esc(title)}</title>
