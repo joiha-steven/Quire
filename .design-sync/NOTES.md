@@ -81,25 +81,31 @@ components call `useAdminT`.
 
 ## Known render warns
 
-None outstanding. The final build reports 130/130 previews rendering cleanly, 0 flagged.
+None outstanding. The final build reports 117/117 previews rendering cleanly, 0 flagged.
 
-## Still on the floor card (44 of 130)
+## The route screens are OUT (decided 2026-08-01)
+
+`src/admin/pages` is deliberately absent from `DIRS` in `gen-entry.mjs`. The thirteen route
+screens each fetch on mount through `@/admin/api`, so with no server they rendered a red
+`HTTP 404` box — which the render check counts as "rendered" while teaching the design agent a
+failure state, and which no prop can fix. Everything they are made OF is still synced. To
+bring them back, add the directory and stub the API at bundle-build time first.
+
+## Still on the floor card (11 of 117)
 
 Fully importable, with real `.d.ts` and `.prompt.md`; they just have no authored preview yet.
 Authoring one on a later re-sync is additive and cheap — grades and previews carry forward.
 
-Two groups are worth knowing about before picking any of them up:
+Two groups remain, and they are the hard ones:
 
-- **The 13 route screens under `components/pages/`** (`Analytics`, `Comments`, `Content`,
-  `Dashboard`, `Help`, `Log`, `Media`, `Newsletter`, `PageEditor`, `PostEditor`, `Settings`,
-  `Trash`, `NotFound`) fetch on mount through `@/admin/api`. With no server they render a red
-  `HTTP 404` box, which the render check counts as "rendered" but is worse than a floor card —
-  it teaches the design agent a failure state. They cannot be fixed with props: the fetch is
-  internal to the component. Either stub the API at bundle-build time, or drop them from
-  `componentSrcMap` (they are routes, not design surface). **This is the first thing to decide
-  on the next sync.**
-- **`Editor`, `Toolbar`, `BubbleBar`, `TimeMachine`** need a live Tiptap editor instance or a
-  revisions fetch, so they have no honest static composition.
+- **Composite dashboards** — `Overview`, `SettingsView`, `AnalyticsView`, `AnalyticsPageDetail`,
+  `DashboardWidgets`, `TrashView`, `PostSettings`, `PageSettings`. Each takes one large nested
+  fixture (`DashboardData`, `SeoHealth`, `SystemInfo`, `TrafficSources`, `Draft`, `PageDraft`).
+  Tractable, just not cheap: build the object in `_fixtures.ts` and follow the pattern the
+  other settings panels already use.
+- **Editor-bound** — `Toolbar` and `BubbleBar` need a live Tiptap editor instance, and
+  `TimeMachine` fetches revisions on mount. These have NO honest static composition, so leaving
+  them on the floor card is the correct end state rather than a gap to close.
 
 ## Re-sync risks
 

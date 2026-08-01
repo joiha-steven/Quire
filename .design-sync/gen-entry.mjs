@@ -12,7 +12,19 @@ import { join, relative, resolve } from 'node:path'
 import { Project, Node, ts } from '../.ds-sync/node_modules/ts-morph/dist/ts-morph.js'
 
 const ROOT = resolve(import.meta.dirname, '..')
-const DIRS = ['src/admin/ui', 'src/admin/components', 'src/admin/pages', 'src/admin']
+
+// `src/admin/pages` is DELIBERATELY absent.
+//
+// The thirteen route screens are not design surface, they are routes: each one fetches its
+// own data on mount through `@/admin/api`, so outside a running server it renders a red
+// `HTTP 404` box. That is worse than shipping no card at all — the render check counts it as
+// "rendered", and the design agent learns a failure state as if it were the component's look.
+// No prop can fix it either, because the fetch is internal.
+//
+// Whatever these screens are made OF is already synced: PageHeader, the tables, the settings
+// panels, the stat tiles. To bring the screens themselves back, add the directory here and
+// stub the API at bundle-build time first.
+const DIRS = ['src/admin/ui', 'src/admin/components', 'src/admin']
 
 // Not components, and each one would otherwise ship a meaningless card:
 //  - help-kit is inline markup glue for the Help page (`A`, `C`, `P`, `UL`, …)

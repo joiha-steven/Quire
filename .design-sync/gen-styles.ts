@@ -10,7 +10,7 @@
 // Run: bun .design-sync/gen-styles.ts   (regenerate whenever themes/typography change)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { DEFAULT_SETTINGS, typographyToCss, fontToCss } from '@/content/settings'
-import { themesToCss, fontPresetCss, chromeFontCss } from '@/content/themes'
+import { themesToCss, fontPresetCss, chromeFontCss, THEME_PRESETS } from '@/content/themes'
 import { allFontFaceCss, MONO_TRACKING } from '@/render/font-faces'
 
 const OUT = new URL('./generated/', import.meta.url)
@@ -66,6 +66,9 @@ writeFileSync(new URL('admin.css', OUT), `${compiled}\n${tokens}\n`)
 // preview bundle is browser code. Serialising it here keeps the previews on the product's
 // real defaults without dragging the server graph into the browser.
 writeFileSync(new URL('settings.json', OUT), JSON.stringify(s, null, 2) + '\n')
+
+// The palette list the theme editor renders, from the same module the admin reads it from.
+writeFileSync(new URL('presets.json', OUT), JSON.stringify(THEME_PRESETS, null, 2) + '\n')
 
 const faces = (fonts.match(/@font-face/g) ?? []).length
 console.log(`tokens.css: ${tokens.length} bytes`)

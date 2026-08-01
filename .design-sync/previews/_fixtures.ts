@@ -10,8 +10,48 @@
 // humans and imitated by the design agent, so "foo / bar" would teach it the wrong thing
 // about how a Quire Ink screen reads.
 import SETTINGS_JSON from '../generated/settings.json'
+import PRESETS_JSON from '../generated/presets.json'
 
 export const SETTINGS: any = SETTINGS_JSON
+/** The six palettes the theme editor offers, from `THEME_PRESETS`. */
+export const PRESETS: any[] = PRESETS_JSON as any[]
+
+/** `{ slug, title }` pairs — what the pickers (featured, menu, front page) take. */
+export const POST_REFS = [
+  { slug: 'ban-phim-co-va-go-tieng-viet', title: 'Bàn phím cơ và chuyện gõ tiếng Việt' },
+  { slug: 'what-a-static-blog-gives-up', title: 'What a static blog gives up, and what it buys' },
+  { slug: 'measuring-a-page', title: 'Notes on measuring a page instead of guessing' },
+]
+
+export const PAGE_REFS = [
+  { slug: 'about', title: 'About' },
+  { slug: 'colophon', title: 'Colophon' },
+  { slug: 'now', title: 'Now' },
+]
+
+export const CATEGORIES = ['Bàn phím', 'Engineering', 'Reading']
+
+/** `CommentEnv` — which comment integrations the server found configured. */
+export const COMMENT_ENV = {
+  turnstileConfigured: true,
+  googleConfigured: false,
+  turnstileSiteKey: '0x4AAAAAAA_example_site_key',
+}
+
+/** `SendablePost[]` for the newsletter composer. */
+export const SENDABLE = [
+  { slug: 'ban-phim-co-va-go-tieng-viet', title: 'Bàn phím cơ và chuyện gõ tiếng Việt', date: '2026-07-28T09:00:00.000Z', stats: { sent: 214, opened: 131 } },
+  { slug: 'what-a-static-blog-gives-up', title: 'What a static blog gives up, and what it buys', date: '2026-07-14T11:30:00.000Z', stats: null },
+]
+
+/** Daily points for the analytics chart. */
+export const DAILY: any[] = Array.from({ length: 30 }, (_, i) => ({
+  day: `2026-07-${String(i + 1).padStart(2, '0')}`,
+  views: [82, 96, 130, 118, 240, 410, 386, 210, 175, 168, 190, 205, 260, 330, 298,
+    245, 220, 208, 196, 188, 240, 285, 340, 402, 368, 300, 265, 248, 232, 220][i],
+  visitors: [51, 60, 78, 71, 142, 238, 221, 130, 110, 104, 118, 127, 158, 196, 179,
+    148, 136, 128, 121, 116, 148, 172, 203, 238, 219, 181, 160, 151, 142, 136][i],
+}))
 
 export const POSTS: any[] = [
   {
@@ -98,23 +138,23 @@ export const COMMENTS: any[] = [
 ]
 
 export const ACTIVITY: any[] = [
-  { at: '2026-08-01T09:14:00.000Z', action: 'post.publish', detail: 'ban-phim-co-va-go-tieng-viet' },
-  { at: '2026-08-01T08:52:00.000Z', action: 'settings.save', detail: 'appearance' },
-  { at: '2026-07-31T21:30:00.000Z', action: 'media.upload', detail: 'keyboard-hero.jpg' },
-  { at: '2026-07-31T20:11:00.000Z', action: 'comment.approve', detail: '#1' },
+  { id: 4, at: '2026-08-01T09:14:00.000Z', action: 'post.publish', detail: 'ban-phim-co-va-go-tieng-viet' },
+  { id: 3, at: '2026-08-01T08:52:00.000Z', action: 'settings.save', detail: 'appearance' },
+  { id: 2, at: '2026-07-31T21:30:00.000Z', action: 'media.upload', detail: 'keyboard-hero.jpg' },
+  { id: 1, at: '2026-07-31T20:11:00.000Z', action: 'comment.approve', detail: '#1' },
 ]
 
 // Bar rows for the analytics lists: `{ label, value }` with an optional href.
 export const BAR_ROWS: any[] = [
-  { label: '/ban-phim-co-va-go-tieng-viet', value: 4218 },
-  { label: '/what-a-static-blog-gives-up', value: 1907 },
-  { label: '/about', value: 612 },
-  { label: '/colophon', value: 88 },
+  { key: '/ban-phim-co-va-go-tieng-viet', label: '/ban-phim-co-va-go-tieng-viet', value: 4218 },
+  { key: '/what-a-static-blog-gives-up', label: '/what-a-static-blog-gives-up', value: 1907 },
+  { key: '/about', label: '/about', value: 612 },
+  { key: '/colophon', label: '/colophon', value: 88 },
 ]
 
 export const REFERRERS: any[] = [
-  { label: 'google.com', value: 2841 },
-  { label: 'news.ycombinator.com', value: 1663 },
-  { label: 'x.com', value: 402 },
-  { label: '(direct)', value: 1319 },
+  { key: 'google.com', label: 'google.com', value: 2841 },
+  { key: 'news.ycombinator.com', label: 'news.ycombinator.com', value: 1663 },
+  { key: 'direct', label: '(direct)', value: 1319 },
+  { key: 'x.com', label: 'x.com', value: 402 },
 ]
