@@ -1,17 +1,32 @@
-# design-sync notes — Quire Ink admin UI
+# design-sync notes — Quire Ink
 
-Repo-specific gotchas for anyone re-running this sync. Read before touching the config.
+Repo-specific gotchas for anyone re-running either sync. Read before touching a config.
 
-## What is synced, and what cannot be
+## Two design systems, two projects, two configs
 
-- The synced design system is the **admin SPA** (`src/admin`): 130 React components, Tailwind v4,
-  class-based `.dark`, deliberately monochrome neutral scale.
-- The **public reader site is not syncable as components**. `src/web` contains no `.tsx` at all —
-  every page is built as escaped HTML strings in `.ts` (`front-card.ts`), with CSS held in TS
-  constants (`front.css.ts`, `prose.css.ts`). Claude Design renders React, so there is nothing to
-  bind. Hùng chose (2026-08-01) to cover the reader look with a SECOND, tokens-only project rather
-  than hand-writing React lookalikes, which would be a reimplementation and would rot on the first
-  change to `front-card.ts`.
+| &nbsp;What | Config | Build into | Contents |
+|---|---|---|---|
+| &nbsp;**Admin UI** | `config.json` | `ds-bundle/` | 117 React components, Tailwind v4, monochrome |
+| &nbsp;**Reading site** | `reader.config.json` | `ds-bundle-reader/` | Tokens + stylesheet + fonts, NO components |
+
+Both run the same converter; pass `--config` and `--entry` for the one you mean.
+
+- The **reading site is not syncable as components, and that is a fact about the product**.
+  `src/web` contains no `.tsx` at all: every page is built as escaped HTML strings in `.ts`
+  (`front-card.ts`), with CSS held in TS constants. Claude Design renders React, so there is
+  nothing to import. Hand-writing React lookalikes would be a reimplementation that rots on the
+  first change to `front-card.ts`. So the reader project ships the LOOK instead — the real
+  palette, type scale, prose rules and six self-hosted families — with an empty
+  `window.QuireInkReader` by design.
+- `gen-reader.ts` composes it from the product's own exports, in the document's own order:
+  `PUBLIC_CSS` (which already folds in prose/front/utility/islands/ide/mobile) followed by
+  `pageStyles(DEFAULT_SETTINGS)`, matching `renderDocument`, which links the static sheet
+  immediately before the inline block. The `@font-face` rules are stripped out and repointed at
+  the woff2 files on disk, because `pageStyles` writes them with the server route.
+- **The default reading face is Inter, not a serif.** `DEFAULT_FONT_PRESET` is `'inter'`;
+  Literata, Source Serif 4 and Source Sans 3 ship but are opt-in. Measured by rendering a sample
+  page and reading `getComputedStyle`, after the conventions header first claimed Literata.
+  Never state a family from memory — render and check.
 
 ## Traps that cost real debugging time
 
